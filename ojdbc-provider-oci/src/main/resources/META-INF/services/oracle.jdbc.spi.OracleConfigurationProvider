@@ -1,0 +1,2 @@
+oracle.jdbc.provider.oci.configuration.OciObjectStorageProvider
+oracle.jdbc.provider.oci.configuration.OciDatabaseToolsConnectionProvider
