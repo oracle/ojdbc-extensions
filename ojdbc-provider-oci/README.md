@@ -177,7 +177,7 @@ For the JSON type of provider (OCI Object Storage, HTTP/HTTPS, File) the passwor
     - optional parameters (depends on the cloud provider, applies the same logic as [Config Provider for Azure](../ojdbc-provider-azure/README.md#config-provider-for-azure)).
 
 ## Database Connection String Provider
-Provides Oracle JDBC with the connection string of an
+The Database Connection String Provider provides Oracle JDBC with the connection string of an
 Autonomous Database. This is a Resource Provider identified by the name
 `ojdbc-provider-oci-database-connection-string`.
 
@@ -267,6 +267,7 @@ An example of a
 [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/21/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
 that configures this provider can be found in
 [example-adb.properties](example-adb.properties).
+
 ## Vault Password Provider
 The Vault Password Provider provides Oracle JDBC with a password that is managed
 by the OCI Vault service. This is a Resource Provider identified by the
@@ -302,7 +303,7 @@ that configures this provider can be found in
 [example-vault.properties](example-vault.properties).
 
 ## Vault Username Provider
-Provides Oracle JDBC with a username that is managed by the
+The Vault Username Provider provides Oracle JDBC with a username that is managed by the
 OCI Vault service. This is a Resource Provider identified by the name
 `ojdbc-provider-oci-vault-username`.
 
@@ -336,7 +337,7 @@ that configures this provider can be found in
 [example-vault.properties](example-vault.properties).
 
 ## Access Token Provider
-Provides Oracle JDBC with an access token that authorizes logins to an Autonomous Database. This is a Resource Provider identified by 
+The Access Token Provider provides Oracle JDBC with an access token that authorizes logins to an Autonomous Database. This is a Resource Provider identified by 
 the name `ojdbc-provider-oci-token`.
 
 This provider must be configured to <a href="#configuring-authentication">authenticate</a> as
@@ -360,14 +361,15 @@ also supports the parameters listed below.
 Specifies the scope of databases that may be accessed with the token. See
 <a href="#configuring-a-scope">Configuring a Scope</a> for details.
 <td>
-<i>A URN in any of the following forms is accepted:</i><br>
-urn:oracle:db::id::<i>compartment-ocid</i>::<i>database-ocid</i><br>
-urn:oracle:db::id::<i>compartment-ocid</i><br>
+<i>A URN in any of the following forms is accepted:</i><pre>
+urn:oracle:db::id::<i>compartment-ocid</i>::<i>database-ocid</i>
+urn:oracle:db::id::<i>compartment-ocid</i>
 urn:oracle:db::id::*
+</pre>
 </td>
-<td>
+<td><pre>
 urn:oracle:db::id::*
-</td>
+</pre></td>
 </tr></tbody>
 </table>
 
