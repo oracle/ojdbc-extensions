@@ -128,7 +128,7 @@ Are you having trouble with Oracle JDBC Driver Extensions? We want to help!
 
 For help programming with Oracle JDBC Driver Extensions:
 
-- Ask questions on Stack Overflow tagged with [[ojdbc-providers]](https://tackoverflow.com/tags/ojdbc-providers).
+- Ask questions on Stack Overflow tagged with [[ojdbc-providers]](https://stackoverflow.com/tags/ojdbc-providers).
   The development team monitors Stack Overflow regularly.
 - Ask a question on Discord channel #java_jdbc.
 
