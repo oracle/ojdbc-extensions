@@ -152,7 +152,7 @@ logins to an Autonomous Database. This is a Resource Provider
 identified by the name `ojdbc-provider-azure-token`.
 
 This provider must be configured to 
-<a href="#configuring-authentication">authenticate</a> as
+<a href="#configuring-authentication-for-resource-providers">authenticate</a> as
 an Active Directory application that has been mapped to a database user. 
 Instructions  can be found in the
 <a href="https://docs.oracle.com/en/cloud/paas/autonomous-database/adbsa/manage-users-azure-ad.html#GUID-562655CA-4D8B-41D2-9165-6515BC824E07">
@@ -312,7 +312,7 @@ common set of parameters.
       </a>
       </td>
       <td>
-      Accepted values are defined in: <a href="#configuring-authentication">
+      Accepted values are defined in: <a href="#configuring-authentication-for-resource-providers">
       Configuring Authentication
       </a>
       <td>
@@ -488,8 +488,8 @@ Connection properties which identify and configure a provider may appear in a
 or be configured programmatically. Configuration with JVM system properties is
 not supported.
 
-### Configuring Authentication
-Providers in this module must authenticate with Azure. By default, a provider will
+### Configuring Authentication for Resource Providers
+Resource Providers in this module must authenticate with Azure. By default, a provider will
 automatically detect any available credentials. A specific credential
 may be configured using the "authenticationMethod" parameter. The parameter may
 be set to any of the following values:
