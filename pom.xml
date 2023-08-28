@@ -28,8 +28,7 @@
     <dependency>
       <groupId>com.oracle.database.jdbc</groupId>
       <artifactId>ojdbc8</artifactId>
-      <!--TODO: Change this to 23.3.0.0 when released -->
-      <version>[23.1.0.23.02,23.1.0.23.23)</version>
+      <version>23.4.0.23.0</version>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
@@ -44,27 +43,6 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
-  <repositories>
-    <!-- TODO: Remove this internal repository reference when released -->
-    <repository>
-      <id>jdbc-dev-local</id>
-      <url>https://artifacthub-phx.oci.oraclecorp.com/jdbc-dev-local</url>
-    </repository>
-  </repositories>
-  <distributionManagement>
-    <!--
-      Credentials for this server must be configured as enivronment variables
-      named "JDBC_DEV_LOCAL_USERNAME" and "JDBC_DEV_LOCAL_APIKEY". These
-      environment variables are referenced in the jdbc-dev-local-settings.xml
-      file, found in the same directory as this pom.xml.
-      TODO: Remove this internal repository reference when released.
-    -->
-    <repository>
-      <id>jdbc-dev-local</id>
-      <url>https://artifacthub-phx.oci.oraclecorp.com/jdbc-dev-local</url>
-    </repository>
-  </distributionManagement>
 
   <build>
     <plugins>
