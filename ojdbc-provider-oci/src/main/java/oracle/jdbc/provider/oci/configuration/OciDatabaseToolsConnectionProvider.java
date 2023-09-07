@@ -91,6 +91,13 @@ public class OciDatabaseToolsConnectionProvider
         .request(commonParameters)
         .getContent();
 
+    LifecycleState state = connection.getLifecycleState();
+    if (!(state.equals(LifecycleState.Active) || state.equals(
+        LifecycleState.Updating))) {
+      throw new IllegalStateException(
+          "This DB tools connection does not have a valid state like ACTIVE or UPDATING. Instead, its state is : " + state);
+    }
+
     Properties properties = new Properties();
     properties.put("URL",
       "jdbc:oracle:thin:@" + connection.getConnectionString());
