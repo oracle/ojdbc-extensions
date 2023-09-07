@@ -60,7 +60,7 @@ public class OciDatabaseToolsConnectionProviderTest {
    * IllegalStateException
    **/
   @Test
-  public void testGetPropertiesFromDeletedConneciton() throws IOException {
+  public void testGetPropertiesFromDeletedConneciton() {
     String OCI_USERNAME = TestProperties.getOrAbort(
         OciTestProperty.OCI_USERNAME);
     String OCI_PASSWORD_OCID = TestProperties.getOrAbort(
@@ -115,7 +115,7 @@ public class OciDatabaseToolsConnectionProviderTest {
   private CreateDatabaseToolsConnectionResponse sendCreateConnRequest(
       String OCI_USERNAME, String OCI_PASSWORD_OCID, String OCI_DISPLAY_NAME,
       String OCI_COMPARTMENT_ID, String OCI_DATABASE_CONNECTION_STRING,
-      String OCI_DATABASE_OCID) throws IOException {
+      String OCI_DATABASE_OCID) {
 
     /* Create a request and dependent object(s). */
     CreateDatabaseToolsConnectionDetails createDatabaseToolsConnectionDetails = CreateDatabaseToolsConnectionOracleDatabaseDetails
@@ -153,7 +153,7 @@ public class OciDatabaseToolsConnectionProviderTest {
    * @return DeleteDatabaseToolsConnectionResponse
    */
   private DeleteDatabaseToolsConnectionResponse sendDeleteConnRequest(
-      String ocid) throws IOException {
+      String ocid) {
 
     /* Create a request and dependent object(s). */
     DeleteDatabaseToolsConnectionRequest deleteDatabaseToolsConnectionRequest = DeleteDatabaseToolsConnectionRequest
@@ -172,8 +172,7 @@ public class OciDatabaseToolsConnectionProviderTest {
    * @param ocid The OCID of DB Tools Connection
    * @return GetDatabaseToolsConnectionResponse
    */
-  private GetDatabaseToolsConnectionResponse sendGetConnRequest(String ocid)
-      throws IOException {
+  private GetDatabaseToolsConnectionResponse sendGetConnRequest(String ocid) {
 
     /* Create a request and dependent object(s). */
     GetDatabaseToolsConnectionRequest getDatabaseToolsConnectionRequest = GetDatabaseToolsConnectionRequest
