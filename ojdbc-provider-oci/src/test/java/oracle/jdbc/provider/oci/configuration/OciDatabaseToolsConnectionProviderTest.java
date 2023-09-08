@@ -3,6 +3,9 @@ package oracle.jdbc.provider.oci.configuration;
 import com.oracle.bmc.ConfigFileReader;
 import com.oracle.bmc.auth.AuthenticationDetailsProvider;
 import com.oracle.bmc.auth.ConfigFileAuthenticationDetailsProvider;
+import com.oracle.bmc.database.DatabaseClient;
+import com.oracle.bmc.database.requests.GetAutonomousDatabaseRequest;
+import com.oracle.bmc.database.responses.GetAutonomousDatabaseResponse;
 import com.oracle.bmc.databasetools.DatabaseToolsClient;
 import com.oracle.bmc.databasetools.model.*;
 import com.oracle.bmc.databasetools.requests.CreateDatabaseToolsConnectionRequest;
@@ -31,13 +34,19 @@ public class OciDatabaseToolsConnectionProviderTest {
       OracleConfigurationProvider.find("ocidbtools");
 
   private static DatabaseToolsClient client;
+  private static DatabaseClient dbClient;
+
   static {
     try {
       ConfigFileReader.ConfigFile configFile = ConfigFileReader.parseDefault();
-      AuthenticationDetailsProvider provider = new ConfigFileAuthenticationDetailsProvider(configFile);
+      AuthenticationDetailsProvider provider = new ConfigFileAuthenticationDetailsProvider(
+          configFile);
 
-      /* Create a service client */
+      /* Create a database tool client */
       client = DatabaseToolsClient.builder().build(provider);
+
+      /* Create a database client */
+      dbClient = DatabaseClient.builder().build(provider);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -61,18 +70,16 @@ public class OciDatabaseToolsConnectionProviderTest {
    **/
   @Test
   public void testGetPropertiesFromDeletedConneciton() {
-    String OCI_USERNAME = TestProperties.getOrAbort(
-        OciTestProperty.OCI_USERNAME);
+    String OCI_DISPLAY_NAME = "display_name_for_connection";
+    String OCI_USERNAME = "admin";
     String OCI_PASSWORD_OCID = TestProperties.getOrAbort(
         OciTestProperty.OCI_PASSWORD_OCID);
-    String OCI_DISPLAY_NAME = TestProperties.getOrAbort(
-        OciTestProperty.OCI_DISPLAY_NAME);
     String OCI_DATABASE_OCID = TestProperties.getOrAbort(
         OciTestProperty.OCI_DATABASE_OCID);
     String OCI_COMPARTMENT_ID = TestProperties.getOrAbort(
         OciTestProperty.OCI_COMPARTMENT_ID);
-    String OCI_DATABASE_CONNECTION_STRING = TestProperties.getOrAbort(
-        OciTestProperty.OCI_DATABASE_CONNECTION_STRING);
+    String OCI_DATABASE_CONNECTION_STRING = getConnectionStringFromAutonomousDatabase(
+        OCI_DATABASE_OCID);
 
     /* Create new Connection */
     CreateDatabaseToolsConnectionResponse createResponse = sendCreateConnRequest(
@@ -116,7 +123,6 @@ public class OciDatabaseToolsConnectionProviderTest {
       String OCI_USERNAME, String OCI_PASSWORD_OCID, String OCI_DISPLAY_NAME,
       String OCI_COMPARTMENT_ID, String OCI_DATABASE_CONNECTION_STRING,
       String OCI_DATABASE_OCID) {
-
     /* Create a request and dependent object(s). */
     CreateDatabaseToolsConnectionDetails createDatabaseToolsConnectionDetails = CreateDatabaseToolsConnectionOracleDatabaseDetails
         .builder()
@@ -154,7 +160,6 @@ public class OciDatabaseToolsConnectionProviderTest {
    */
   private DeleteDatabaseToolsConnectionResponse sendDeleteConnRequest(
       String ocid) {
-
     /* Create a request and dependent object(s). */
     DeleteDatabaseToolsConnectionRequest deleteDatabaseToolsConnectionRequest = DeleteDatabaseToolsConnectionRequest
         .builder()
@@ -173,7 +178,6 @@ public class OciDatabaseToolsConnectionProviderTest {
    * @return GetDatabaseToolsConnectionResponse
    */
   private GetDatabaseToolsConnectionResponse sendGetConnRequest(String ocid) {
-
     /* Create a request and dependent object(s). */
     GetDatabaseToolsConnectionRequest getDatabaseToolsConnectionRequest = GetDatabaseToolsConnectionRequest
         .builder()
@@ -184,5 +188,35 @@ public class OciDatabaseToolsConnectionProviderTest {
     GetDatabaseToolsConnectionResponse response = client.getDatabaseToolsConnection(
         getDatabaseToolsConnectionRequest);
     return response;
+  }
+
+  /**
+   * Helper function: send get Autonomous Database request
+   * @param OCI_DATABASE_OCID The OCID of the Autonomous Database
+   * @return The connection string of the Autonomous Database. There are
+   * several connection strings and the first one (high) is retrieved here,
+   * for sake of convenience.
+   **/
+  @Test
+  private String getConnectionStringFromAutonomousDatabase(
+      String OCI_DATABASE_OCID) {
+    /* Create a request and dependent object(s). */
+    GetAutonomousDatabaseRequest getAutonomousDatabaseRequest = GetAutonomousDatabaseRequest
+        .builder()
+        .autonomousDatabaseId(OCI_DATABASE_OCID)
+        .build();
+
+    /* Send request to the Database Client */
+    GetAutonomousDatabaseResponse response = dbClient.getAutonomousDatabase(
+        getAutonomousDatabaseRequest);
+    Assertions.assertEquals(200, response.get__httpStatusCode__());
+
+    String CONNECTION_STRING = response
+        .getAutonomousDatabase()
+        .getConnectionStrings()
+        .getProfiles()
+        .get(0)
+        .getValue();
+    return CONNECTION_STRING;
   }
 }
