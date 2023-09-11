@@ -93,9 +93,10 @@ public class OciDatabaseToolsConnectionProvider
 
     LifecycleState state = connection.getLifecycleState();
     if (!(state.equals(LifecycleState.Active) || state.equals(
-        LifecycleState.Updating))) {
+      LifecycleState.Updating))) {
       throw new IllegalStateException(
-          "This DB tools connection does not have a valid state like ACTIVE or UPDATING. Instead, its state is : " + state);
+        "Connection requested is in invalid state. Only ACTIVE or UPDATING " +
+          "are valid. Current state: " + state);
     }
 
     Properties properties = new Properties();
