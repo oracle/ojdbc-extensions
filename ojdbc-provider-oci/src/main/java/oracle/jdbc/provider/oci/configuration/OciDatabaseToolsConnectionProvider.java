@@ -95,11 +95,20 @@ public class OciDatabaseToolsConnectionProvider
         params[0])
       .build();
 
-    DatabaseToolsConnectionOracleDatabase connection =
+    DatabaseToolsConnection dbToolsConnection =
       DatabaseToolsConnectionFactory.getInstance()
         .request(commonParameters)
         .getContent();
 
+    /* check Type is Oracle Database */
+    if(!(dbToolsConnection instanceof DatabaseToolsConnectionOracleDatabase)){
+      throw new IllegalStateException(
+        "Connection requested is using a database that is not Oracle Database");
+    }
+    DatabaseToolsConnectionOracleDatabase connection =
+      (DatabaseToolsConnectionOracleDatabase) dbToolsConnection;
+
+    /* check state is valid */
     LifecycleState state = connection.getLifecycleState();
     if (!(state.equals(LifecycleState.Active) || state.equals(
       LifecycleState.Updating))) {

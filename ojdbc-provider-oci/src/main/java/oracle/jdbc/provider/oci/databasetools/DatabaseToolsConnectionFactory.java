@@ -69,18 +69,18 @@ import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
  * </p>
  */
 public class DatabaseToolsConnectionFactory extends
-    OciResourceFactory<DatabaseToolsConnectionOracleDatabase> {
+    OciResourceFactory<DatabaseToolsConnection> {
 
   public static final Parameter<String> CONNECTION_OCID =
       Parameter.create(REQUIRED);
-  private static final ResourceFactory<DatabaseToolsConnectionOracleDatabase>
+  private static final ResourceFactory<DatabaseToolsConnection>
       INSTANCE = new DatabaseToolsConnectionFactory();
   private DatabaseToolsConnectionFactory() {}
 
   /**
    * @return a singleton of {@code DatabaseToolsConnectionFactory}
    */
-  public static ResourceFactory<DatabaseToolsConnectionOracleDatabase> getInstance() {
+  public static ResourceFactory<DatabaseToolsConnection> getInstance() {
     return INSTANCE;
   }
 
@@ -105,7 +105,7 @@ public class DatabaseToolsConnectionFactory extends
    * {@code ObjectStorageClient} cannot be acquired.
    */
   @Override
-  protected Resource<DatabaseToolsConnectionOracleDatabase> request(
+  protected Resource<DatabaseToolsConnection> request(
     AbstractAuthenticationDetailsProvider authenticationDetails,
     ParameterSet parameterSet) {
     String connectionOcid = parameterSet.getRequired(CONNECTION_OCID);
@@ -121,7 +121,6 @@ public class DatabaseToolsConnectionFactory extends
                   .build());
 
       return Resource.createPermanentResource(
-          (DatabaseToolsConnectionOracleDatabase)
           getResponse.getDatabaseToolsConnection(), true);
 
     } catch (Exception e) {
