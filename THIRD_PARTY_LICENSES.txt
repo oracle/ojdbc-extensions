@@ -1,9 +1,10 @@
 
------------------------- Third Party Components ---------------------------------
-OCI SDK for Java 3.2.2
-azure-identity 1.6.1
-azure-core 1.34.0-beta.1
-azure-data-appconfiguration 1.3.7
+------------------------ Third-Party Components ---------------------------------
+OCI SDK for Java 3.2.2 (UPL + Apache 2.0)
+azure-identity 1.6.1 (MIT)
+azure-core 1.34.0-beta.1 (MIT
+azure-data-appconfiguration 1.3.7 (MIT
+opentelemetry-java 1.29.0 (Apache 2.0) 
 
 ------------------------------- License and Notices for OCI SDK for Java
 Copyright (c) 2016, 2020, Oracle and/or its affiliates.Copyright (c) 2016, 2020, Oracle and/or its affiliates.  All rights reserved.
