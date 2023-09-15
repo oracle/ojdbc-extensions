@@ -14,6 +14,7 @@ import com.oracle.bmc.databasetools.requests.GetDatabaseToolsConnectionRequest;
 import com.oracle.bmc.databasetools.responses.CreateDatabaseToolsConnectionResponse;
 import com.oracle.bmc.databasetools.responses.DeleteDatabaseToolsConnectionResponse;
 import com.oracle.bmc.databasetools.responses.GetDatabaseToolsConnectionResponse;
+import oracle.jdbc.pool.OracleDataSource;
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.oci.OciTestProperty;
 import oracle.jdbc.spi.OracleConfigurationProvider;
@@ -21,7 +22,10 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Properties;
 
 /**
@@ -53,14 +57,41 @@ public class OciDatabaseToolsConnectionProviderTest {
   }
 
   /**
-   * Verifies the properties can be obtained using the provided Database Tools
-   * Connection OCID.
+   * Validates the connection can be established using the Database Tools
+   * Connection provdier.
    */
   @Test
-  public void testGetProperties() throws SQLException {
+  public void testConnection() throws SQLException {
     String ocid =
         TestProperties.getOrAbort(OciTestProperty.OCI_DB_TOOLS_CONNECTION_OCID);
+    String url = "jdbc:oracle:thin:@config-ocidbtools:" + ocid;
+
+    OracleDataSource ds = new OracleDataSource();
+    ds.setURL(url);
+
+    // Standard JDBC code
+    Connection cn = ds.getConnection();
+    Statement st = cn.createStatement();
+    ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
+    if (rs.next())
+      Assertions.assertEquals("Hello, db", rs.getString(1));
+    else
+      Assertions.fail("Should get 'Hello, db'");
+  }
+
+  /**
+   * Verifies the properties assiciated with the Wallet can be obtained using
+   * the provided Database Tools Connection OCID.
+   */
+  @Test
+  public void testWallet() throws SQLException {
+    String ocid =
+      TestProperties.getOrAbort(
+        OciTestProperty.OCI_DB_TOOLS_CONNECTION_OCID_KEYSTORE);
     Properties props = PROVIDER.getConnectionProperties(ocid);
+
+
+
     Assertions.assertNotEquals(0, props.size());
   }
 
@@ -69,7 +100,7 @@ public class OciDatabaseToolsConnectionProviderTest {
    * IllegalStateException
    **/
   @Test
-  public void testGetPropertiesFromDeletedConneciton() {
+  public void testGetPropertiesFromDeletedConnection() {
     String OCI_DISPLAY_NAME = "display_name_for_connection";
     String OCI_USERNAME = "admin";
     String OCI_PASSWORD_OCID = TestProperties.getOrAbort(
@@ -197,7 +228,6 @@ public class OciDatabaseToolsConnectionProviderTest {
    * several connection strings and the first one (high) is retrieved here,
    * for sake of convenience.
    **/
-  @Test
   private String getConnectionStringFromAutonomousDatabase(
       String OCI_DATABASE_OCID) {
     /* Create a request and dependent object(s). */

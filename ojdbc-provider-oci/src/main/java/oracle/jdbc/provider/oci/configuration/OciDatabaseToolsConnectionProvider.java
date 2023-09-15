@@ -27,6 +27,8 @@ public class OciDatabaseToolsConnectionProvider
   private final OracleConfigurationCache cache = OracleConfigurationCache
     .create(100);
 
+  private ParameterSet commonParameters;
+
   @Override
   public Properties getConnectionProperties(String location)
       throws SQLException {
@@ -78,13 +80,13 @@ public class OciDatabaseToolsConnectionProvider
       options = new HashMap<>();
     }
 
-    ParameterSet commonParameters =
-      OciConfigurationParameters.getParser()
-        .parseNamedValues(options)
-        .copyBuilder()
-        .add("connection_ocid",
-          DatabaseToolsConnectionFactory.CONNECTION_OCID,
-          params[0]).build();
+    commonParameters =OciConfigurationParameters.getParser()
+      .parseNamedValues(options)
+      .copyBuilder()
+      .add("connection_ocid",
+        DatabaseToolsConnectionFactory.CONNECTION_OCID,
+        params[0])
+      .build();
 
     DatabaseToolsConnectionOracleDatabase connection =
       DatabaseToolsConnectionFactory.getInstance()
@@ -117,25 +119,65 @@ public class OciDatabaseToolsConnectionProvider
         .getContent()
         .toCharArray()));
 
-    // Get Wallet from Secret
-    if (connection.getKeyStores() != null
-      && !connection.getKeyStores().isEmpty()) {
-      DatabaseToolsKeyStore keyStore = connection.getKeyStores().get(0);
-      String secretId =
-        ((DatabaseToolsKeyStoreContentSecretId) keyStore.getKeyStoreContent())
-          .getSecretId();
+    // Get properties that are associated with Wallet
+    if (connection.getKeyStores() != null) {
+      Properties walletProps = new Properties();
 
-      ParameterSet walletParameters = commonParameters.copyBuilder()
-        .add("value", SecretFactory.OCID, secretId)
-        .build();
+      for (DatabaseToolsKeyStore keyStore : connection.getKeyStores()) {
+        // Get the base64 content of the Wallet, which has a format of KeyStore,
+        // TrustStore, PKCS12, or SSO
+        String keyStoreSecretId =
+          ((DatabaseToolsKeyStoreContentSecretId) keyStore.getKeyStoreContent())
+            .getSecretId();
 
-      properties.put(
-        OracleConnection.CONNECTION_PROPERTY_WALLET_LOCATION,
-        "data:;base64," +
-          SecretFactory.getInstance()
-            .request(walletParameters)
-            .getContent()
-            .getBase64Secret());
+        String base64Content = getBase64SecretContent(keyStoreSecretId);
+
+        switch (keyStore.getKeyStoreType()) {
+        case JavaKeyStore:
+          walletProps.setProperty(
+            OracleConnection.CONNECTION_PROPERTY_THIN_JAVAX_NET_SSL_KEYSTORETYPE,
+            "JKS");
+          walletProps.setProperty(
+            OracleConnection.CONNECTION_PROPERTY_THIN_JAVAX_NET_SSL_KEYSTORE,
+            "data:;base64," + base64Content);
+
+          String keyStorePasswordSecretId =
+            ((DatabaseToolsKeyStorePasswordSecretId)
+              keyStore.getKeyStorePassword()).getSecretId();
+          walletProps.setProperty(
+            OracleConnection.CONNECTION_PROPERTY_THIN_JAVAX_NET_SSL_KEYSTOREPASSWORD,
+            getBase64SecretContent(keyStorePasswordSecretId));
+          break;
+        case JavaTrustStore:
+          walletProps.setProperty(
+            OracleConnection.CONNECTION_PROPERTY_THIN_JAVAX_NET_SSL_TRUSTSTORETYPE,
+            "JKS");
+          walletProps.setProperty(
+            OracleConnection.CONNECTION_PROPERTY_THIN_JAVAX_NET_SSL_TRUSTSTORE,
+            "data:;base64," + base64Content);
+
+          String trustStorePasswordSecretId =
+            ((DatabaseToolsKeyStorePasswordSecretId)
+              keyStore.getKeyStorePassword()).getSecretId();
+          walletProps.setProperty(
+            OracleConnection.CONNECTION_PROPERTY_THIN_JAVAX_NET_SSL_TRUSTSTOREPASSWORD,
+            getBase64SecretContent(trustStorePasswordSecretId));
+          break;
+        case Pkcs12:
+        case Sso:
+          walletProps.put(
+            OracleConnection.CONNECTION_PROPERTY_WALLET_LOCATION,
+            "data:;base64," + base64Content);
+          break;
+        case UnknownEnumValue:
+        default:
+          throw new IllegalStateException(
+            "Unknown keyStore type: " + keyStore.getKeyStoreType());
+        }
+      }
+
+      // Add all the wallet-associated properties
+      properties.putAll(walletProps);
     }
 
     Map<String, String> advancedProps = connection.getAdvancedProperties();
@@ -152,5 +194,16 @@ public class OciDatabaseToolsConnectionProvider
     } catch (BmcException bmcException) {
       throw new OracleConfigurationProviderNetworkError(bmcException);
     }
+  }
+
+  private String getBase64SecretContent(String secretId) {
+    ParameterSet walletParameters = commonParameters.copyBuilder()
+      .add("value", SecretFactory.OCID, secretId)
+      .build();
+
+    return SecretFactory.getInstance()
+      .request(walletParameters)
+      .getContent()
+      .getBase64Secret();
   }
 }
