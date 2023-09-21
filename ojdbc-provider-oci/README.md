@@ -3,9 +3,21 @@
 This module contains providers for integration between Oracle JDBC and
 Oracle Cloud Infrastructure (OCI).
 
+## Centralized Config Providers
+
 <dl>
-<dt><a href="#config-provider-for-oracle-cloud-infrastructure">Config Provider for Oracle Cloud Infrastructure</a></dt>
+<dt><a href="#oci-database-tools-connections-config-provider">OCI Database 
+Tools Connections Config Provider</a></dt>
+<dd>Provides connection properties managed by the Database Tools Connection 
+service</dd>
+<dt><a href="#oci-object-storage-config-provider">OCI Object Storage Config 
+Provider</a></dt>
 <dd>Provides connection properties managed by the Object Storage service</dd>
+</dl>
+<dl>
+
+## Resource Providers
+
 <dt><a href="#database-connection-string-provider">Database Connection String Provider</a></dt>
 <dd>Provides connection strings for an Autonomous Database</dd>
 <dt><a href="#database-tls-provider">Database TLS Provider</a></dt>
@@ -33,10 +45,19 @@ JDK versions. The coordinates for the latest release are:
 </dependency>
 ```
 
-## Config Provider for Oracle Cloud Infrastructure
+## OCI Database Tools Connections Config Provider
 
-The Config Provider for Oracle Cloud Infrastructure is a Centralized Config Provider that provides Oracle JDBC with connection properties from the Object Storage service and the Vault service.
+The OCI Database Tools Connections is a managed service that can be used to configure connections to a database. 
+The created resource stores connection properties, including user, password and wallets (these last two optionally as references to a secret in OCI Vault).
+Each configuration has an identifier (OCID) that is used to identify which connection is requested by the driver.
 
+JDBC URL Sample that uses the OCI DBTools provider:
+
+<pre>
+jdbc:oracle:thin:@config-ocidbtools:ocid1.databasetoolsconnection.oc1.phx.ama ...
+</pre>
+
+## OCI Object Storage Config Provider
 The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-ociobject:` to be able to identify that the configuration parameters should be loaded using OCI Object Storage. Users only need to indicate the URL Path of the Object containing the JSON payload, with the following syntax:
 
 <pre>
@@ -69,15 +90,7 @@ And the JSON Payload for the file **payload_ojdbc_objectstorage.json** in the **
   "user": "scott",
   "password": { 
     "type": "vault-oci",
-    "value": "ocid1.vaultsecret.oc1.phx.amaaaaaxxxx",
-    "authentication": {
-      "method": "OCI_DEFAULT",
-      "OCI_PROFILE": "DEFAULT",
-      "OCI_TENANCY": "ocid1.tenancy.oc1..aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      "OCI_USER": "ocid1.user.oc1..aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      "OCI_FINGERPRINT": "1a:2b:3c:4d:5e:6f:7a:8b:9c:0d:1e:2f:3a:4b:5c:6d",
-      "OCI_KEY_FILE": "/path/to/my/private_key.pem"
-    }
+    "value": "ocid1.vaultsecret.oc1.phx.amaaaaaxxxx"
   },
   "jdbc": {
     "oracle.jdbc.ReadTimeout": 1000,

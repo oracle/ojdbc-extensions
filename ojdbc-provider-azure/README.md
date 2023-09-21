@@ -2,9 +2,16 @@
 
 This module contains providers for integration between Oracle JDBC and Azure.
 
+## Centralized Config Providers
+
 <dl>
 <dt><a href="#config-provider-for-azure">Config Provider for Azure</a></dt>
 <dd>Provides connection properties managed by the App Configuration service</dd>
+</dl>
+
+## Resource Providers
+
+<dl>
 <dt><a href="#access-token-provider">Access Token Provider</a></dt>
 <dd>Provides access tokens issued by the Active Directory service</dd>
 <dt><a href="#key-vault-username-provider">Key Vault Username Provider</a></dt>
