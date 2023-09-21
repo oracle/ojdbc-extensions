@@ -9,6 +9,7 @@ import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.spi.OracleConfigurationProvider;
 import oracle.jdbc.util.OracleConfigurationCache;
 import oracle.jdbc.util.OracleConfigurationProviderNetworkError;
+import org.bouncycastle.util.encoders.Base64;
 
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -145,12 +146,15 @@ public class OciDatabaseToolsConnectionProvider
             ((DatabaseToolsKeyStorePasswordSecretId)
               keyStore.getKeyStorePassword()).getSecretId();
           walletProps.setProperty(
-            OracleConnection.CONNECTION_PROPERTY_THIN_JAVAX_NET_SSL_KEYSTOREPASSWORD,
-            getBase64SecretContent(keyStorePasswordSecretId));
+            OracleConnection
+              .CONNECTION_PROPERTY_THIN_JAVAX_NET_SSL_KEYSTOREPASSWORD,
+            new String(
+              Base64.decode(getBase64SecretContent(keyStorePasswordSecretId))));
           break;
         case JavaTrustStore:
           walletProps.setProperty(
-            OracleConnection.CONNECTION_PROPERTY_THIN_JAVAX_NET_SSL_TRUSTSTORETYPE,
+            OracleConnection
+              .CONNECTION_PROPERTY_THIN_JAVAX_NET_SSL_TRUSTSTORETYPE,
             "JKS");
           walletProps.setProperty(
             OracleConnection.CONNECTION_PROPERTY_THIN_JAVAX_NET_SSL_TRUSTSTORE,
@@ -160,8 +164,11 @@ public class OciDatabaseToolsConnectionProvider
             ((DatabaseToolsKeyStorePasswordSecretId)
               keyStore.getKeyStorePassword()).getSecretId();
           walletProps.setProperty(
-            OracleConnection.CONNECTION_PROPERTY_THIN_JAVAX_NET_SSL_TRUSTSTOREPASSWORD,
-            getBase64SecretContent(trustStorePasswordSecretId));
+            OracleConnection
+              .CONNECTION_PROPERTY_THIN_JAVAX_NET_SSL_TRUSTSTOREPASSWORD,
+            new String(
+              Base64.decode(
+                getBase64SecretContent(trustStorePasswordSecretId))));
           break;
         case Pkcs12:
         case Sso:
