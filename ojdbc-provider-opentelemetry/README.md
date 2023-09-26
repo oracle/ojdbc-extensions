@@ -5,7 +5,7 @@ Open Telemetry.
 
 This module is distributed as a single jar on the Maven Central Repository. The 
 jar is compiled for JDK 8, and is forward compatible with later JDK versions. 
-The coordinates for the latest release are:
+<!-- The coordinates for the latest release are:
 
 ```xml
 <dependency>
@@ -13,7 +13,7 @@ The coordinates for the latest release are:
   <artifactId>ojdbc-extensions</artifactId>
   <version>0.1.0</version>
 </dependency>
-```
+``` -->
 
 This provider implements the TraceEventListener interface provided by the JDBC
 driver which will be notified whenever events are generated in the driver and 
@@ -47,9 +47,8 @@ The following attributes are added the the traces for each event:
     * Connection data *(only present if sensitive data is enabled)*
 
 **Usage**
-To use the Oracle JDBC provider for Open Telemetry just add the artifact, and a
-file  to the
-application's classpath and the
+To use the Oracle JDBC provider for Open Telemetry just add the artifact to the
+application's classpath.
 
 **Configuration**
 
