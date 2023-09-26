@@ -1,0 +1,66 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <name>TraceEventListener for Open Telemetry</name>
+
+    <groupId>com.oracle.database.jdbc</groupId>
+    <artifactId>ojdbc-provider-opentelemetry</artifactId>
+    <packaging>jar</packaging>
+
+    <parent>
+      <groupId>com.oracle.database.jdbc</groupId>
+      <artifactId>ojdbc-extensions</artifactId>
+      <version>${parent.version}</version>
+    </parent>
+
+    <properties>
+        <jdbc.version>23.4.0.23.00.230901</jdbc.version>
+        <opentelemetry.version>1.29.0</opentelemetry.version>
+    </properties>
+
+    <dependencies>
+      <dependency>
+        <groupId>com.oracle.database.jdbc</groupId>
+        <artifactId>ojdbc8</artifactId>
+        <version>${jdbc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.oracle.database.jdbc</groupId>
+        <artifactId>ucp</artifactId>
+        <version>${jdbc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.opentelemetry</groupId>
+        <artifactId>opentelemetry-api</artifactId>
+        <version>${opentelemetry.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+	<build>
+		<plugins>
+			<plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.6.0</version>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>
