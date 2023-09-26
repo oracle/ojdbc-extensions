@@ -282,7 +282,7 @@ public class OpenTelemetryTraceEventListener
 
   private String getTraceValue(Span span) {
     final String traceParent = initAndGetTraceParent(span);
-    final String traceState = initAndGetTraceState();
+    final String traceState = initAndGetTraceState(span);
     return traceParent + traceState;
   }
 
@@ -299,11 +299,10 @@ public class OpenTelemetryTraceEventListener
         version, traceId, parentId, traceFlags);
   }
 
-  private String initAndGetTraceState() {
-    final TraceState traceState = TraceState.builder()
-        .put("demostate", "t61rcWkgMzE").build();
-
+  private String initAndGetTraceState(Span span) {
+    final TraceState traceState = span.getSpanContext().getTraceState();
     final StringBuilder stringBuilder = new StringBuilder();
+
     traceState.forEach((k, v) -> stringBuilder.append(k).append("=").append(v));
     return String.format("tracestate: %s\r\n", stringBuilder);
   }
