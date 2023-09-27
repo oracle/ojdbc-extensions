@@ -63,12 +63,13 @@ import io.opentelemetry.context.Scope;
  * </p>
  * <p>
  * These events include:
+ * </p>
  * <ul>
  * <li>roundtrips to the database server</li>
  * <li>AC begin and sucess</li>
  * <li>VIP down event</li>
  * </ul>
- * </p>
+ *
  */
 public class OpenTelemetryTraceEventListener
     implements TraceEventListener, OpenTelemetryTraceEventListenerMBean {
