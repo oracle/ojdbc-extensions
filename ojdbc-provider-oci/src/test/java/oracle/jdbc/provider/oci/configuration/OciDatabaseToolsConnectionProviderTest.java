@@ -63,7 +63,7 @@ public class OciDatabaseToolsConnectionProviderTest {
   @Test
   public void testConnection() throws SQLException {
     String ocid =
-        TestProperties.getOrAbort(OciTestProperty.OCI_DB_TOOLS_CONNECTION_OCID);
+        TestProperties.getOrAbort(OciTestProperty.OCI_DB_TOOLS_CONNECTION_OCID_SSO);
     String url = "jdbc:oracle:thin:@config-ocidbtools:" + ocid;
 
     OracleDataSource ds = new OracleDataSource();
