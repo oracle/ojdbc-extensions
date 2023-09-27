@@ -26,7 +26,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Properties;
+import java.util.Arrays;
 
 /**
  * Verifies the {@link OciDatabaseToolsConnectionProvider} as implementing
@@ -80,19 +80,29 @@ public class OciDatabaseToolsConnectionProviderTest {
   }
 
   /**
-   * Verifies the properties assiciated with the Wallet can be obtained using
-   * the provided Database Tools Connection OCID.
+   * Verifies the properties can be obtained with the provided Database Tools
+   * Connection OCID. Each referenced Database Tools Connections is configured
+   * with a different type of Wallet for SSL connection.
    */
   @Test
-  public void testWallet() throws SQLException {
-    String ocid =
-      TestProperties.getOrAbort(
-        OciTestProperty.OCI_DB_TOOLS_CONNECTION_OCID_KEYSTORE);
-    Properties props = PROVIDER.getConnectionProperties(ocid);
+  public void testWallet() {
+    OciTestProperty[] parameters = new OciTestProperty[]{
+      OciTestProperty.OCI_DB_TOOLS_CONNECTION_OCID_KEYSTORE,
+      OciTestProperty.OCI_DB_TOOLS_CONNECTION_OCID_PKCS12,
+      OciTestProperty.OCI_DB_TOOLS_CONNECTION_OCID_SSO
+    };
 
-
-
-    Assertions.assertNotEquals(0, props.size());
+    Arrays.stream(parameters)
+      .map(TestProperties::getOptional)
+      .map(ocid -> {
+        try {
+          return PROVIDER.getConnectionProperties(ocid);
+        } catch (SQLException e) {
+          throw new RuntimeException(e);
+        }
+      })
+      .forEach(properties ->
+        Assertions.assertNotEquals(0, properties.size()));
   }
 
   /**
@@ -228,6 +238,7 @@ public class OciDatabaseToolsConnectionProviderTest {
    * several connection strings and the first one (high) is retrieved here,
    * for sake of convenience.
    **/
+  @Test
   private String getConnectionStringFromAutonomousDatabase(
       String OCI_DATABASE_OCID) {
     /* Create a request and dependent object(s). */
