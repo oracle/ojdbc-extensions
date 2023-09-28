@@ -126,11 +126,11 @@ For the JSON type of provider (OCI Object Storage, HTTP/HTTPS, File) the passwor
   - Mandatory
   - Possible values
     - OCID of the secret (if vault-oci)
-    - URI Azure Key Vault URI (if (vault-azure)
+    - Azure Key Vault URI (if vault-azure)
     - Base64 Encoded password (if base64)
     - Text
 - authentication
-  - Optional (it will apply defaults in the same way that described in [Configuring Authentication](#configuring-authentication)).
+  - Optional (it will apply defaults in the same way as described in [Configuring Authentication](#configuring-authentication)).
   - Possible Values
     - method
     - optional parameters (depends on the cloud provider, applies the same logic as [Config Provider for Azure](../ojdbc-provider-azure/README.md#config-provider-for-azure)).
@@ -191,7 +191,7 @@ in Optional Parameters</td>
 </tbody>
 </table>
 
-<i>*Note: this parameter is introduced to align with the entries in config file. For region that is used for calling Object Storage, Database Tools Connection and Secret services, will be extracted from the Object Storage URL, Database Tools Connection OCID or Secret OCID</i>
+<i>*Note: this parameter is introduced to align with entries of the config file. The region that is used for calling Object Storage, Database Tools Connection, and Secret services will be extracted from the Object Storage URL, Database Tools Connection OCID or Secret OCID</i>
 
 ## Database Connection String Provider
 The Database Connection String Provider provides Oracle JDBC with the connection string of an
