@@ -104,7 +104,7 @@ public class OciDatabaseToolsConnectionProvider
       "jdbc:oracle:thin:@" + connection.getConnectionString());
     String username = connection.getUserName();
     if (Objects.nonNull(username))
-      properties.put("user", connection.getUserName());
+      properties.put("user", username);
 
     // Get password from Secret
     DatabaseToolsUserPassword dbToolsUserPassword = connection.getUserPassword();
