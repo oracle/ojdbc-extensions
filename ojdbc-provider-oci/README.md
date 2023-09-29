@@ -112,10 +112,37 @@ The sample code below executes as expected with the previous configuration.
       System.out.println("select sysdate from dual: " + rs.getString(1));
 ```
 
+### Password JSON Object
+
+For the JSON type of provider (OCI Object Storage, HTTP/HTTPS, File) the password is an object itself with the following spec:
+
+- type
+  - Mandatory
+  - Possible values
+    - vault-oci
+    - vault-azure
+    - base64
+- value
+  - Mandatory
+  - Possible values
+    - OCID of the secret (if vault-oci)
+    - Azure Key Vault URI (if vault-azure)
+    - Base64 Encoded password (if base64)
+    - Text
+- authentication
+  - Optional (it will apply defaults in the same way as described in [Configuring Authentication](#configuring-authentication)).
+  - Possible Values
+    - method
+    - optional parameters (depends on the cloud provider, applies the same logic as [Config Provider for Azure](../ojdbc-provider-azure/README.md#config-provider-for-azure)).
+
+## Common Parameters for Centralized Config Providers
+OCI Database Tools Connections Config Provider and OCI Object Storage Config Provider
+share the same sets of parameters for authentication configuration.
+
 ### Configuring Authentication
 
-This provider uses the [OCI SDK Authentication Methods](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdk_authentication_methods.htm) to provide authorization and authentication to the Object Storage and Vault services.
-
+The Centralized Config Providers in this module use the 
+[OCI SDK Authentication Methods](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdk_authentication_methods.htm) to provide authorization and authentication to the Object Storage, Database Tools Connection and Vault services.
 The user can provide an optional parameter `AUTHENTICATION` (case-ignored) which is mapped with the following Credential Class.
 
 <table>
@@ -164,30 +191,7 @@ in Optional Parameters</td>
 </tbody>
 </table>
 
-<i>*Note: this parameter is introduced to align with the entries in config file. For region that is used for calling ObjectStorage and Secret services, will be extracted from the Object Storage URL or Secret OCID</i>
-
-### Password JSON Object
-
-For the JSON type of provider (OCI Object Storage, HTTP/HTTPS, File) the password is an object itself with the following spec:
-
-- type
-  - Mandatory
-  - Possible values
-    - vault-oci
-    - vault-azure
-    - base64
-- value
-  - Mandatory
-  - Possible values
-    - OCID of the secret (if vault-oci)
-    - URI Azure Key Vault URI (if (vault-azure)
-    - Base64 Encoded password (if base64)
-    - Text
-- authentication
-  - Optional (it will apply defaults in the same way that described in [Configuring Authentication](#configuring-authentication)).
-  - Possible Values
-    - method
-    - optional parameters (depends on the cloud provider, applies the same logic as [Config Provider for Azure](../ojdbc-provider-azure/README.md#config-provider-for-azure)).
+<i>*Note: this parameter is introduced to align with entries of the config file. The region that is used for calling Object Storage, Database Tools Connection, and Secret services will be extracted from the Object Storage URL, Database Tools Connection OCID or Secret OCID</i>
 
 ## Database Connection String Provider
 The Database Connection String Provider provides Oracle JDBC with the connection string of an
