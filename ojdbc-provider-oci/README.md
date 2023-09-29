@@ -47,7 +47,7 @@ JDK versions. The coordinates for the latest release are:
 
 ## OCI Database Tools Connections Config Provider
 
-The OCI Database Tools Connections is a managed service that can be used to configure connections to a database.
+The OCI Database Tools Connections is a managed service that can be used to configure connections to a database. 
 The created resource stores connection properties, including user, password and wallets (these last two optionally as references to a secret in OCI Vault).
 Each configuration has an identifier (OCID) that is used to identify which connection is requested by the driver.
 
@@ -88,7 +88,7 @@ And the JSON Payload for the file **payload_ojdbc_objectstorage.json** in the **
 {
   "connect_descriptor": "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=adb.us-phoenix-1.oraclecloud.com))(connect_data=(service_name=xsxsxs_dbtest_medium.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))",
   "user": "scott",
-  "password": {
+  "password": { 
     "type": "vault-oci",
     "value": "ocid1.vaultsecret.oc1.phx.amaaaaaxxxx"
   },
@@ -104,12 +104,12 @@ The sample code below executes as expected with the previous configuration.
 
 ```java
     OracleDataSource ds = new OracleDataSource();
-        ds.setURL("jdbc:oracle:thin:@config-ociobject:https://objectstorage.us-phoenix-1.oraclecloud.com/n/mytenancy/b/bucket1/o/payload_ojdbc_objectstorage.json");
-        Connection cn = ds.getConnection();
-        Statement st = cn.createStatement();
-        ResultSet rs = st.executeQuery("select sysdate from dual");
-        if (rs.next())
-        System.out.println("select sysdate from dual: " + rs.getString(1));
+    ds.setURL("jdbc:oracle:thin:@config-ociobject:https://objectstorage.us-phoenix-1.oraclecloud.com/n/mytenancy/b/bucket1/o/payload_ojdbc_objectstorage.json");
+    Connection cn = ds.getConnection();
+    Statement st = cn.createStatement();
+    ResultSet rs = st.executeQuery("select sysdate from dual");
+    if (rs.next())
+      System.out.println("select sysdate from dual: " + rs.getString(1));
 ```
 
 ### Password JSON Object
@@ -141,7 +141,7 @@ share the same sets of parameters for authentication configuration.
 
 ### Configuring Authentication
 
-The Centralized Config Providers in this module use the
+The Centralized Config Providers in this module use the 
 [OCI SDK Authentication Methods](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdk_authentication_methods.htm) to provide authorization and authentication to the Object Storage, Database Tools Connection and Vault services.
 The user can provide an optional parameter `AUTHENTICATION` (case-ignored) which is mapped with the following Credential Class.
 
@@ -198,7 +198,7 @@ The Database Connection String Provider provides Oracle JDBC with the connection
 Autonomous Database. This is a Resource Provider identified by the name
 `ojdbc-provider-oci-database-connection-string`.
 
-For databases that require mutual TLS (mTLS) authentication, it is recommended
+For databases that require mutual TLS (mTLS) authentication, it is recommended 
 to use the <a href="#database-tls-provider">
 Database TLS Provider</a>
 in conjunction with this provider.
@@ -250,7 +250,7 @@ that configures this provider can be found in
 
 
 ## Database TLS Provider
-The Database TLS Provider provides Oracle JDBC with keys and certificates for
+The Database TLS Provider provides Oracle JDBC with keys and certificates for 
 [mutual TLS authentication](https://docs.oracle.com/en/cloud/paas/autonomous-database/adbsa/connect-introduction.html#GUID-9A472E49-3B2B-4D9F-9DC2-D3E6E4454285)
 (mTLS)
 with an Autonomous Database. This is a Resource Provider identified by the name
@@ -290,7 +290,7 @@ The Vault Password Provider provides Oracle JDBC with a password that is managed
 by the OCI Vault service. This is a Resource Provider identified by the
 name `ojdbc-provider-oci-vault-password`.
 
-In addition to the set of [common parameters](#common-parameters-for-single-resource-providers), this provider
+In addition to the set of [common parameters](#common-parameters-for-single-resource-providers), this provider 
 also supports the parameters listed below.
 <table>
 <thead><tr>
@@ -354,7 +354,7 @@ that configures this provider can be found in
 [example-vault.properties](example-vault.properties).
 
 ## Access Token Provider
-The Access Token Provider provides Oracle JDBC with an access token that authorizes logins to an Autonomous Database. This is a Resource Provider identified by
+The Access Token Provider provides Oracle JDBC with an access token that authorizes logins to an Autonomous Database. This is a Resource Provider identified by 
 the name `ojdbc-provider-oci-token`.
 
 This provider must be configured to <a href="#configuring-authentication">authenticate</a> as
@@ -409,14 +409,14 @@ compartment that contains the database.
 urn:oracle:db::id::<i>comparment-ocid</i>::<i>database-ocid</i>
 </pre>
 A more privileged scope is one that authorizes logins to all databases within a
-compartment. This scope is expressed as a URN in the form shown below, where
+compartment. This scope is expressed as a URN in the form shown below, where 
 <i>compartment-ocid</i> is the OCID of the compartment that contains the
 databases.
 <pre>
 urn:oracle:db::id::<i>comparment-ocid</i>
 </pre>
 The most privileged scope is one that authorizes logins to all databases within
-a tenancy. This scope is expressed as the URN shown below, which contains the
+a tenancy. This scope is expressed as the URN shown below, which contains the 
 `*` symbol.
 <pre>
 urn:oracle:db::id::*
@@ -424,7 +424,7 @@ urn:oracle:db::id::*
 
 ## Common Parameters for Resource Providers
 
-Providers classified as Resource Providers in this module all support a
+Providers classified as Resource Providers in this module all support a 
 common set of parameters.
 <table>
   <thead><tr>
