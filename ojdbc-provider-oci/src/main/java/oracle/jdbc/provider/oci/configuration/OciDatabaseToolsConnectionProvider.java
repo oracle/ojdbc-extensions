@@ -102,20 +102,25 @@ public class OciDatabaseToolsConnectionProvider
     Properties properties = new Properties();
     properties.put("URL",
       "jdbc:oracle:thin:@" + connection.getConnectionString());
-    properties.put("user", connection.getUserName());
+    String username = connection.getUserName();
+    if (Objects.nonNull(username))
+      properties.put("user", username);
 
     // Get password from Secret
-    ParameterSet passwordParameters = commonParameters.copyBuilder()
-      .add("value", SecretFactory.OCID,
-        ((DatabaseToolsUserPasswordSecretId) connection.getUserPassword())
-          .getSecretId())
-      .build();
+    DatabaseToolsUserPassword dbToolsUserPassword = connection.getUserPassword();
+    if (Objects.nonNull(dbToolsUserPassword)) {
+      ParameterSet passwordParameters = commonParameters.copyBuilder()
+        .add("value", SecretFactory.OCID,
+          ((DatabaseToolsUserPasswordSecretId)dbToolsUserPassword)
+            .getSecretId())
+        .build();
 
-    properties.put("password", new String(
-      SecretFactory.getInstance()
-        .request(passwordParameters)
-        .getContent()
-        .toCharArray()));
+      properties.put("password", new String(
+        SecretFactory.getInstance()
+          .request(passwordParameters)
+          .getContent()
+          .toCharArray()));
+    }
 
     // Get Wallet from Secret
     if (connection.getKeyStores() != null
