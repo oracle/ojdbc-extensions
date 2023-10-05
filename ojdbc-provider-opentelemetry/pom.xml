@@ -15,7 +15,7 @@
     </parent>
 
     <properties>
-        <jdbc.version>23.4.0.23.00.230901</jdbc.version>
+        <jdbc.version>23.3.0.23.09</jdbc.version>
         <opentelemetry.version>1.29.0</opentelemetry.version>
     </properties>
 

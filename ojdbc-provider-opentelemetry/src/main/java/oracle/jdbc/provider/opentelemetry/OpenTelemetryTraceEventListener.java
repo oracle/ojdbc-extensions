@@ -45,6 +45,8 @@ import java.time.Instant;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
@@ -74,6 +76,16 @@ import io.opentelemetry.context.Scope;
 public class OpenTelemetryTraceEventListener
     implements TraceEventListener, OpenTelemetryTraceEventListenerMBean {
 
+  /**
+   * Name of the property used to enable or disable this listener.
+   */
+  public static final String OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_ENABLED = "oracle.jdbc.provider.opentelemetry.enabled";
+  /**
+   * Name of the property used to enable or disable sensitive data for this
+   * listener.
+   */
+  public static final String OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED = "oracle.jdbc.provider.opentelemetry.sensitive-enabled";
+
   private static final String TRACE_KEY = "clientcontext.ora$opentelem$tracectx";
 
   // Number of parameters expected for each execution event
@@ -86,15 +98,19 @@ public class OpenTelemetryTraceEventListener
     }
   };
 
+  private static Logger logger = Logger.getLogger(OpenTelemetryTraceEventListener.class.getName());
+
   private Tracer tracer;
 
   /**
    * <p>
-   * Singleton enumeration containing the TraceEventListener's configuration.
-   * Two configuration parameters are available:
-   * (i) <b>enabled</b> - enables/disables the traces, and
-   * (ii) <b>sensitive data enabled</b> - enables/disables sensitive data like SQL
-   * statements in the traces.
+   * Singleton enumeration containing the TraceEventListener's configuration. Two
+   * configuration parameters are available:
+   * <ul>
+   * <li><b>enabled</b> - enables/disables the traces,</li>
+   * <li><b>sensitive data enabled</b> - enables/disables sensitive data like SQL
+   * statements in the traces.</li>
+   * </ul>
    * </p>
    * <p>
    * By default traces are enabled and sensitive data is disabled.
@@ -107,8 +123,11 @@ public class OpenTelemetryTraceEventListener
     private AtomicBoolean sensitiveDataEnabled;
 
     private Configuration(boolean enabled, boolean sensitiveDataEnabled) {
-      this.enabled = new AtomicBoolean(enabled);
-      this.sensitiveDataEnabled = new AtomicBoolean(sensitiveDataEnabled);
+      String enabledStr = System.getProperty(OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_ENABLED);
+      String sensitiveStr = System.getProperty(OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED);
+      this.enabled = new AtomicBoolean(enabledStr == null ? enabled : Boolean.parseBoolean(enabledStr));
+      this.sensitiveDataEnabled = new AtomicBoolean(
+          sensitiveStr == null ? sensitiveDataEnabled : Boolean.parseBoolean(sensitiveStr));
     }
 
     private boolean isEnabled() {
@@ -174,7 +193,7 @@ public class OpenTelemetryTraceEventListener
    * trip.
    */
   public Object roundTrip(Sequence sequence, TraceContext traceContext, Object userContext) {
-    if (!Configuration.INSTANCE.isEnabled())
+    if (!isEnabled())
       return null;
     if (sequence == Sequence.BEFORE) {
       // Create the Span before the round-trip.
@@ -182,7 +201,7 @@ public class OpenTelemetryTraceEventListener
       try (Scope ignored = span.makeCurrent()) {
         traceContext.setClientInfo(TRACE_KEY, getTraceValue(span));
       } catch (Exception ex) {
-        System.out.println(ex.getMessage());
+        logger.log(Level.WARNING, ex.getMessage(), ex);
       }
       // Return the Span instance to the driver. The driver holds this instance and
       // supplies it
@@ -206,37 +225,41 @@ public class OpenTelemetryTraceEventListener
    */
   public Object onExecutionEventReceived(JdbcExecutionEvent event, Object userContext, Object... params) {
     // Noop if not enabled or parameter count is not correct
-    if (!Configuration.INSTANCE.isEnabled() || (EXECUTION_EVENTS_PARAMETERS.get(event) != params.length))
+    if (!isEnabled())
       return null;
-    SpanBuilder spanBuilder = tracer
-        .spanBuilder(event.getDescription());
-    if (event == TraceEventListener.JdbcExecutionEvent.VIP_RETRY && params.length == 8) {
-      spanBuilder.setAttribute("Error message", params[0].toString())
-          .setAttribute("VIP Address", params[7].toString());
-      // Add sensitive information (URL and SQL) if it is enabled
-      if (Configuration.INSTANCE.isSensitiveDataEnabled()) {
-        spanBuilder.setAttribute("Protocol", params[1].toString())
-            .setAttribute("Host", params[2].toString())
-            .setAttribute("Port", params[3].toString())
-            .setAttribute("Service name", params[4].toString())
-            .setAttribute("SID", params[5].toString())
-            .setAttribute("Connection data", params[6].toString());
-      }
-
-    } else {
-      if ((event == TraceEventListener.JdbcExecutionEvent.AC_REPLAY_STARTED
-          || event == TraceEventListener.JdbcExecutionEvent.AC_REPLAY_SUCCESSFUL) && params.length == 3) {
-        spanBuilder.setAttribute("Error Message", params[0].toString())
+    if (EXECUTION_EVENTS_PARAMETERS.get(event) == params.length) {
+      if (event == TraceEventListener.JdbcExecutionEvent.VIP_RETRY) {
+        SpanBuilder spanBuilder = tracer
+            .spanBuilder(event.getDescription())
+            .setAttribute("Error message", params[0].toString())
+            .setAttribute("VIP Address", params[7].toString());
+        // Add sensitive information (URL and SQL) if it is enabled
+        if (Configuration.INSTANCE.isSensitiveDataEnabled()) {
+          spanBuilder.setAttribute("Protocol", params[1].toString())
+              .setAttribute("Host", params[2].toString())
+              .setAttribute("Port", params[3].toString())
+              .setAttribute("Service name", params[4].toString())
+              .setAttribute("SID", params[5].toString())
+              .setAttribute("Connection data", params[6].toString());
+        }
+        return spanBuilder.startSpan();
+      } else if (event == TraceEventListener.JdbcExecutionEvent.AC_REPLAY_STARTED
+          || event == TraceEventListener.JdbcExecutionEvent.AC_REPLAY_SUCCESSFUL) {
+        SpanBuilder spanBuilder = tracer
+            .spanBuilder(event.getDescription())
+            .setAttribute("Error Message", params[0].toString())
             .setAttribute("Error code", ((SQLException) params[1]).getErrorCode())
             .setAttribute("SQL state", ((SQLException) params[1]).getSQLState())
             .setAttribute("Current replay retry count", params[2].toString());
+        return spanBuilder.startSpan();
       } else {
-        for (int i = 0; i < params.length; i++) {
-          spanBuilder.setAttribute("Parameter " + i, params[i].toString());
-        }
+        logger.log(Level.WARNING, "Unknown event received : " + event.toString());
       }
+    } else {
+      // log wrong number of parameters returned for execution event
+      logger.log(Level.WARNING, "Wrong number of parameters received for event " + event.toString());
     }
-    return spanBuilder.startSpan();
+    return null;
   }
 
   @Override

@@ -45,14 +45,18 @@ import static org.mockito.Mockito.never;
 import java.sql.SQLException;
 import java.time.Instant;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.api.trace.Tracer;
 import oracle.jdbc.TraceEventListener.JdbcExecutionEvent;
 import oracle.jdbc.TraceEventListener.Sequence;
@@ -61,6 +65,9 @@ import oracle.jdbc.TraceEventListener.TraceContext;
 public class OpenTelemetryTraceEventListenerTest {
 
   private Span span = Mockito.mock(Span.class);
+  private SpanContext spanContext = Mockito.mock(SpanContext.class);
+  private TraceFlags traceFlags = Mockito.mock(TraceFlags.class);
+  private TraceState traceState = Mockito.mock(TraceState.class);
   private SpanBuilder spanBuilder = Mockito.mock(SpanBuilder.class);
   private Tracer tracer = Mockito.mock(Tracer.class);
   private TraceContext traceContext = Mockito.mock(TraceContext.class);
@@ -68,6 +75,9 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @BeforeEach
   public void setupMocks() throws Exception {
+    Mockito.when(spanContext.getTraceFlags()).thenReturn(traceFlags);
+    Mockito.when(spanContext.getTraceState()).thenReturn(traceState);
+    Mockito.when(span.getSpanContext()).thenReturn(spanContext);
     Mockito.when(spanBuilder.setAttribute(Mockito.anyString(), Mockito.anyString())).thenReturn(spanBuilder);
     Mockito.when(spanBuilder.setAttribute(Mockito.anyString(), Mockito.anyLong())).thenReturn(spanBuilder);
     Mockito.when(spanBuilder.setAttribute(Mockito.anyString(), Mockito.anyBoolean())).thenReturn(spanBuilder);
@@ -83,6 +93,24 @@ public class OpenTelemetryTraceEventListenerTest {
     Mockito.when(traceContext.originalSqlText()).thenReturn("Original SQL");
     Mockito.when(traceContext.tenant()).thenReturn("tenant");
     Mockito.when(traceContext.user()).thenReturn("user");
+  }
+
+  @Test
+  void testPropertiesDisabled() throws Exception {
+    System.setProperty(OpenTelemetryTraceEventListener.OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_ENABLED, "false");
+    System.setProperty(OpenTelemetryTraceEventListener.OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED, "false");
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
+    Assertions.assertFalse(traceEventListener.isEnabled(), "Set to false using system property");
+    Assertions.assertFalse(traceEventListener.isSensitiveDataEnabled(), "Set to false using system property");
+  }
+
+  @Test
+  void testPropertiesEnabled() throws Exception {
+    System.setProperty(OpenTelemetryTraceEventListener.OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_ENABLED, "true");
+    System.setProperty(OpenTelemetryTraceEventListener.OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED, "true");
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
+    Assertions.assertTrue(traceEventListener.isEnabled(), "Set to false using system property");
+    Assertions.assertTrue(traceEventListener.isSensitiveDataEnabled(), "Set to false using system property");
   }
 
   @Test
