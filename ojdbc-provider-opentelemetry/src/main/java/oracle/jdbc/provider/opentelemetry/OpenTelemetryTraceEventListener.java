@@ -68,7 +68,7 @@ import io.opentelemetry.context.Scope;
  * </p>
  * <ul>
  * <li>roundtrips to the database server</li>
- * <li>AC begin and sucess</li>
+ * <li>AC begin and success</li>
  * <li>VIP down event</li>
  * </ul>
  *
