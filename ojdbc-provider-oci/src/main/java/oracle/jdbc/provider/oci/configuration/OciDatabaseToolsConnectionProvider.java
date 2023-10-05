@@ -1,8 +1,11 @@
 package oracle.jdbc.provider.oci.configuration;
 
+import com.oracle.bmc.databasetools.model.DatabaseToolsConnection;
 import com.oracle.bmc.databasetools.model.DatabaseToolsConnectionOracleDatabase;
 import com.oracle.bmc.databasetools.model.DatabaseToolsKeyStore;
+import com.oracle.bmc.databasetools.model.DatabaseToolsKeyStoreContent;
 import com.oracle.bmc.databasetools.model.DatabaseToolsKeyStoreContentSecretId;
+import com.oracle.bmc.databasetools.model.DatabaseToolsKeyStorePassword;
 import com.oracle.bmc.databasetools.model.DatabaseToolsKeyStorePasswordSecretId;
 import com.oracle.bmc.databasetools.model.DatabaseToolsUserPassword;
 import com.oracle.bmc.databasetools.model.DatabaseToolsUserPasswordSecretId;
@@ -101,10 +104,9 @@ public class OciDatabaseToolsConnectionProvider
         .getContent();
 
     /* check Type is Oracle Database */
-    if(!(dbToolsConnection instanceof DatabaseToolsConnectionOracleDatabase)){
+    if(!(dbToolsConnection instanceof DatabaseToolsConnectionOracleDatabase))
       throw new IllegalStateException(
-        "Connection requested is using a database that is not Oracle Database");
-    }
+        "Unsupported class type: " + dbToolsConnection.getClass().getTypeName());
     DatabaseToolsConnectionOracleDatabase connection =
       (DatabaseToolsConnectionOracleDatabase) dbToolsConnection;
 
@@ -124,34 +126,25 @@ public class OciDatabaseToolsConnectionProvider
     if (Objects.nonNull(username))
       properties.put("user", username);
 
-    // Get password from Secret
+    /* Get password from Secret */
     DatabaseToolsUserPassword dbToolsUserPassword = connection.getUserPassword();
-    if (Objects.nonNull(dbToolsUserPassword)) {
-      ParameterSet passwordParameters = commonParameters.copyBuilder()
-        .add("value", SecretFactory.OCID,
-          ((DatabaseToolsUserPasswordSecretId)dbToolsUserPassword)
-            .getSecretId())
-        .build();
+    properties.put(
+      "password",
+      String.valueOf(getSecret(dbToolsUserPassword).toCharArray()));
 
-      properties.put("password", new String(
-        SecretFactory.getInstance()
-          .request(passwordParameters)
-          .getContent()
-          .toCharArray()));
-    }
-
-    // Get properties that are associated with Wallet
+    /* Get properties that are associated with Wallet */
     if (connection.getKeyStores() != null) {
       Properties walletProps = new Properties();
 
       for (DatabaseToolsKeyStore keyStore : connection.getKeyStores()) {
         // Get the base64 content of the Wallet, which has a format of KeyStore,
         // TrustStore, PKCS12, or SSO
-        String keyStoreSecretId =
-          ((DatabaseToolsKeyStoreContentSecretId) keyStore.getKeyStoreContent())
-            .getSecretId();
+        String base64KeyStoreContent =
+          getSecret(keyStore.getKeyStoreContent())
+            .getBase64Secret();
 
-        String base64Content = getSecret(keyStoreSecretId).getBase64Secret();
+        DatabaseToolsKeyStorePassword keyStorePassword =
+          keyStore.getKeyStorePassword();
 
         switch (keyStore.getKeyStoreType()) {
         case JavaKeyStore:
@@ -160,15 +153,11 @@ public class OciDatabaseToolsConnectionProvider
             "JKS");
           walletProps.setProperty(
             OracleConnection.CONNECTION_PROPERTY_THIN_JAVAX_NET_SSL_KEYSTORE,
-            "data:;base64," + base64Content);
-
-          String keyStorePasswordSecretId =
-            ((DatabaseToolsKeyStorePasswordSecretId)
-              keyStore.getKeyStorePassword()).getSecretId();
+            "data:;base64," + base64KeyStoreContent);
           walletProps.setProperty(
             OracleConnection
               .CONNECTION_PROPERTY_THIN_JAVAX_NET_SSL_KEYSTOREPASSWORD,
-            new String(getSecret(keyStorePasswordSecretId).toCharArray()));
+            String.valueOf(getSecret(keyStorePassword).toCharArray()));
           break;
         case JavaTrustStore:
           walletProps.setProperty(
@@ -177,21 +166,17 @@ public class OciDatabaseToolsConnectionProvider
             "JKS");
           walletProps.setProperty(
             OracleConnection.CONNECTION_PROPERTY_THIN_JAVAX_NET_SSL_TRUSTSTORE,
-            "data:;base64," + base64Content);
-
-          String trustStorePasswordSecretId =
-            ((DatabaseToolsKeyStorePasswordSecretId)
-              keyStore.getKeyStorePassword()).getSecretId();
+            "data:;base64," + base64KeyStoreContent);
           walletProps.setProperty(
             OracleConnection
               .CONNECTION_PROPERTY_THIN_JAVAX_NET_SSL_TRUSTSTOREPASSWORD,
-            new String(getSecret(trustStorePasswordSecretId).toCharArray()));
+            String.valueOf(getSecret(keyStorePassword).toCharArray()));
           break;
         case Pkcs12:
         case Sso:
           walletProps.put(
             OracleConnection.CONNECTION_PROPERTY_WALLET_LOCATION,
-            "data:;base64," + base64Content);
+            "data:;base64," + base64KeyStoreContent);
           break;
         case UnknownEnumValue:
         default:
@@ -211,16 +196,70 @@ public class OciDatabaseToolsConnectionProvider
     return properties;
   }
 
-  private Properties refreshProperties(String location)
-    throws OracleConfigurationProviderNetworkError {
-    try {
-      return getRemoteProperties(location);
-    } catch (BmcException bmcException) {
-      throw new OracleConfigurationProviderNetworkError(bmcException);
-    }
+  /**
+   * Returns a {@code Secret} from the given {@code userPassword}.
+   * @param userPassword the user password of a Database Tools Connection
+   * @return a {@code Secret} managed by the OCI Vault service
+   */
+  private Secret getSecret(DatabaseToolsUserPassword userPassword) {
+    /* check the value type of Database Tools user password is SECRETID */
+    if (!(userPassword instanceof DatabaseToolsUserPasswordSecretId))
+      throw new IllegalStateException(
+        "Unsupported class type: " + userPassword.getClass().getTypeName());
+
+    String secretId = ((DatabaseToolsUserPasswordSecretId) userPassword)
+      .getSecretId();
+
+    return requestSecretFromOCI(secretId);
   }
 
-  private Secret getSecret(String secretId) {
+  /**
+   * Returns a {@code Secret} from the given {@code keyStoreContent}.
+   * @param keyStoreContent the content of a key store of Database Tools
+   *                        Connection
+   * @return a {@code Secret} managed by the OCI Vault service
+   */
+  private Secret getSecret(
+    DatabaseToolsKeyStoreContent keyStoreContent) {
+    /* check the value type of Database Tools Key Store content is SECRETID */
+    if (!(keyStoreContent instanceof DatabaseToolsKeyStoreContentSecretId))
+      throw new IllegalStateException(
+        "Unsupported class type: " + keyStoreContent.getClass().getTypeName());
+
+      String secretId =
+        ((DatabaseToolsKeyStoreContentSecretId) keyStoreContent)
+          .getSecretId();
+
+    return requestSecretFromOCI(secretId);
+  }
+
+  /**
+   * Returns a {@code Secret} from the given {@code keyStorePassword}.
+   * @param keyStorePassword the password of a key store of Database Tools
+   *                         Connection
+   * @return a {@code Secret} managed by the OCI Vault service
+   */
+  private Secret getSecret(
+    DatabaseToolsKeyStorePassword keyStorePassword) {
+    /* check the value type of Database Tools Key Store password is SECRETID */
+    if (!(keyStorePassword instanceof DatabaseToolsKeyStorePasswordSecretId))
+      throw new IllegalStateException(
+        "Unsupported class type: " + keyStorePassword.getClass().getTypeName());
+
+    String secretId =
+      ((DatabaseToolsKeyStorePasswordSecretId) keyStorePassword)
+        .getSecretId();
+
+    return requestSecretFromOCI(secretId);
+  }
+
+  /**
+   * Requests a {@code Secret} from OCI using the given {@code secretId} and the
+   * common parameters that is already configured.
+   * @param secretId the Secret OCID
+   * @return a {@code Secret} managed by the OCI Vault service
+   */
+  private Secret requestSecretFromOCI(String secretId) {
     ParameterSet walletParameters = commonParameters.copyBuilder()
       .add("value", SecretFactory.OCID, secretId)
       .build();
@@ -228,5 +267,14 @@ public class OciDatabaseToolsConnectionProvider
     return SecretFactory.getInstance()
       .request(walletParameters)
       .getContent();
+  }
+
+  private Properties refreshProperties(String location)
+    throws OracleConfigurationProviderNetworkError {
+    try {
+      return getRemoteProperties(location);
+    } catch (BmcException bmcException) {
+      throw new OracleConfigurationProviderNetworkError(bmcException);
+    }
   }
 }
