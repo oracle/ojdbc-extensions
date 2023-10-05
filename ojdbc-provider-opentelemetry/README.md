@@ -48,7 +48,11 @@ The following attributes are added the the traces for each event:
 
 **Usage**
 To use the Oracle JDBC provider for Open Telemetry just add the artifact to the
-application's classpath.
+application's classpath and set the following connection property :
+
+```java
+oracle.jdbc.provider.traceEventListener=open-telemetry-trace-event-listener-provider
+```
 
 **Configuration**
 
