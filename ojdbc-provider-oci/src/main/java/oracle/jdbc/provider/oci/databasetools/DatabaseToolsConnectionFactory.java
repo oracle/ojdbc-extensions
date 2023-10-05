@@ -37,28 +37,16 @@
  */
 package oracle.jdbc.provider.oci.databasetools;
 
-import com.oracle.bmc.Region;
 import com.oracle.bmc.auth.AbstractAuthenticationDetailsProvider;
 import com.oracle.bmc.databasetools.DatabaseToolsClient;
 import com.oracle.bmc.databasetools.model.DatabaseToolsConnection;
-import com.oracle.bmc.databasetools.model.DatabaseToolsConnectionOracleDatabase;
 import com.oracle.bmc.databasetools.requests.GetDatabaseToolsConnectionRequest;
 import com.oracle.bmc.databasetools.responses.GetDatabaseToolsConnectionResponse;
-import com.oracle.bmc.objectstorage.ObjectStorageClient;
-import com.oracle.bmc.objectstorage.requests.GetObjectRequest;
-import com.oracle.bmc.objectstorage.responses.GetObjectResponse;
 import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.oci.OciResourceFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
 
