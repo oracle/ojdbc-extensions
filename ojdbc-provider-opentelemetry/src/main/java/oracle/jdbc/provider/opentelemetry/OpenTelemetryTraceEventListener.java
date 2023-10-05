@@ -72,6 +72,15 @@ import io.opentelemetry.context.Scope;
  * <li>VIP down event</li>
  * </ul>
  *
+ * The system properties
+ * {@value #OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_ENABLED}
+ * and
+ * {@value #OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED}
+ * can be used
+ * to enable/disable this listener and the use of sensitive data by this
+ * listener. A MBean registered by the {@link
+ * OpenTelemetryTraceEventListenerProvider} can be used to change these values
+ * at runtime.
  */
 public class OpenTelemetryTraceEventListener
     implements TraceEventListener, OpenTelemetryTraceEventListenerMBean {
