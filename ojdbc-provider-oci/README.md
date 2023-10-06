@@ -3,9 +3,21 @@
 This module contains providers for integration between Oracle JDBC and
 Oracle Cloud Infrastructure (OCI).
 
+## Centralized Config Providers
+
 <dl>
-<dt><a href="#config-provider-for-oracle-cloud-infrastructure">Config Provider for Oracle Cloud Infrastructure</a></dt>
+<dt><a href="#oci-database-tools-connections-config-provider">OCI Database 
+Tools Connections Config Provider</a></dt>
+<dd>Provides connection properties managed by the Database Tools Connection 
+service</dd>
+<dt><a href="#oci-object-storage-config-provider">OCI Object Storage Config 
+Provider</a></dt>
 <dd>Provides connection properties managed by the Object Storage service</dd>
+</dl>
+<dl>
+
+## Resource Providers
+
 <dt><a href="#database-connection-string-provider">Database Connection String Provider</a></dt>
 <dd>Provides connection strings for an Autonomous Database</dd>
 <dt><a href="#database-tls-provider">Database TLS Provider</a></dt>
@@ -33,10 +45,19 @@ JDK versions. The coordinates for the latest release are:
 </dependency>
 ```
 
-## Config Provider for Oracle Cloud Infrastructure
+## OCI Database Tools Connections Config Provider
 
-The Config Provider for Oracle Cloud Infrastructure is a Centralized Config Provider that provides Oracle JDBC with connection properties from the Object Storage service and the Vault service.
+The OCI Database Tools Connections is a managed service that can be used to configure connections to a database. 
+The created resource stores connection properties, including user, password and wallets (these last two optionally as references to a secret in OCI Vault).
+Each configuration has an identifier (OCID) that is used to identify which connection is requested by the driver.
 
+JDBC URL Sample that uses the OCI DBTools provider:
+
+<pre>
+jdbc:oracle:thin:@config-ocidbtools:ocid1.databasetoolsconnection.oc1.phx.ama ...
+</pre>
+
+## OCI Object Storage Config Provider
 The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-ociobject:` to be able to identify that the configuration parameters should be loaded using OCI Object Storage. Users only need to indicate the URL Path of the Object containing the JSON payload, with the following syntax:
 
 <pre>
@@ -69,15 +90,7 @@ And the JSON Payload for the file **payload_ojdbc_objectstorage.json** in the **
   "user": "scott",
   "password": { 
     "type": "vault-oci",
-    "value": "ocid1.vaultsecret.oc1.phx.amaaaaaxxxx",
-    "authentication": {
-      "method": "OCI_DEFAULT",
-      "OCI_PROFILE": "DEFAULT",
-      "OCI_TENANCY": "ocid1.tenancy.oc1..aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      "OCI_USER": "ocid1.user.oc1..aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      "OCI_FINGERPRINT": "1a:2b:3c:4d:5e:6f:7a:8b:9c:0d:1e:2f:3a:4b:5c:6d",
-      "OCI_KEY_FILE": "/path/to/my/private_key.pem"
-    }
+    "value": "ocid1.vaultsecret.oc1.phx.amaaaaaxxxx"
   },
   "jdbc": {
     "oracle.jdbc.ReadTimeout": 1000,
@@ -99,10 +112,37 @@ The sample code below executes as expected with the previous configuration.
       System.out.println("select sysdate from dual: " + rs.getString(1));
 ```
 
+### Password JSON Object
+
+For the JSON type of provider (OCI Object Storage, HTTP/HTTPS, File) the password is an object itself with the following spec:
+
+- type
+  - Mandatory
+  - Possible values
+    - vault-oci
+    - vault-azure
+    - base64
+- value
+  - Mandatory
+  - Possible values
+    - OCID of the secret (if vault-oci)
+    - Azure Key Vault URI (if vault-azure)
+    - Base64 Encoded password (if base64)
+    - Text
+- authentication
+  - Optional (it will apply defaults in the same way as described in [Configuring Authentication](#configuring-authentication)).
+  - Possible Values
+    - method
+    - optional parameters (depends on the cloud provider, applies the same logic as [Config Provider for Azure](../ojdbc-provider-azure/README.md#config-provider-for-azure)).
+
+## Common Parameters for Centralized Config Providers
+OCI Database Tools Connections Config Provider and OCI Object Storage Config Provider
+share the same sets of parameters for authentication configuration.
+
 ### Configuring Authentication
 
-This provider uses the [OCI SDK Authentication Methods](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdk_authentication_methods.htm) to provide authorization and authentication to the Object Storage and Vault services.
-
+The Centralized Config Providers in this module use the 
+[OCI SDK Authentication Methods](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdk_authentication_methods.htm) to provide authorization and authentication to the Object Storage, Database Tools Connection and Vault services.
 The user can provide an optional parameter `AUTHENTICATION` (case-ignored) which is mapped with the following Credential Class.
 
 <table>
@@ -151,30 +191,7 @@ in Optional Parameters</td>
 </tbody>
 </table>
 
-<i>*Note: this parameter is introduced to align with the entries in config file. For region that is used for calling ObjectStorage and Secret services, will be extracted from the Object Storage URL or Secret OCID</i>
-
-### Password JSON Object
-
-For the JSON type of provider (OCI Object Storage, HTTP/HTTPS, File) the password is an object itself with the following spec:
-
-- type
-  - Mandatory
-  - Possible values
-    - vault-oci
-    - vault-azure
-    - base64
-- value
-  - Mandatory
-  - Possible values
-    - OCID of the secret (if vault-oci)
-    - URI Azure Key Vault URI (if (vault-azure)
-    - Base64 Encoded password (if base64)
-    - Text
-- authentication
-  - Optional (it will apply defaults in the same way that described in [Configuring Authentication](#configuring-authentication)).
-  - Possible Values
-    - method
-    - optional parameters (depends on the cloud provider, applies the same logic as [Config Provider for Azure](../ojdbc-provider-azure/README.md#config-provider-for-azure)).
+<i>*Note: this parameter is introduced to align with entries of the config file. The region that is used for calling Object Storage, Database Tools Connection, and Secret services will be extracted from the Object Storage URL, Database Tools Connection OCID or Secret OCID</i>
 
 ## Database Connection String Provider
 The Database Connection String Provider provides Oracle JDBC with the connection string of an
