@@ -90,7 +90,7 @@ public class OciDatabaseToolsConnectionProvider
       options = new HashMap<>();
     }
 
-    commonParameters =OciConfigurationParameters.getParser()
+    commonParameters = OciConfigurationParameters.getParser()
       .parseNamedValues(options)
       .copyBuilder()
       .add("connection_ocid",
@@ -123,14 +123,15 @@ public class OciDatabaseToolsConnectionProvider
     properties.put("URL",
       "jdbc:oracle:thin:@" + connection.getConnectionString());
     String username = connection.getUserName();
-    if (Objects.nonNull(username))
+    if (username != null)
       properties.put("user", username);
 
     /* Get password from Secret */
     DatabaseToolsUserPassword dbToolsUserPassword = connection.getUserPassword();
-    properties.put(
-      "password",
-      String.valueOf(getSecret(dbToolsUserPassword).toCharArray()));
+    if (dbToolsUserPassword != null)
+      properties.put(
+        "password",
+        String.valueOf(getSecret(dbToolsUserPassword).toCharArray()));
 
     /* Get properties that are associated with Wallet */
     if (connection.getKeyStores() != null) {
