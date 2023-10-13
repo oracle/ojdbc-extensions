@@ -1,0 +1,23 @@
+# Miscellaneous
+**/.DS_Store
+
+# Maven
+**/target/
+
+# IntelliJ
+*.iml
+.idea
+out/
+
+# Eclipse
+.project
+.settings
+.classpath
+
+# Assume all properties file might contain security sensitive information,
+# such as a password. The first expression below excludes them all.
+# The second expression overrides the first one to allow example properties
+# files. Example files follow a naming convention; They have a prefix of:
+# "example-"
+**/*.properties
+!**/example-*.properties

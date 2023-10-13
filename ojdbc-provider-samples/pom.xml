@@ -28,7 +28,7 @@
     <dependency>
       <groupId>com.oracle.database.security</groupId>
       <artifactId>oraclepki</artifactId>
-      <version>23.2.0.0</version>
+      <version>23.3.0.23.09</version>
       <scope>runtime</scope>
     </dependency>
   </dependencies>
