@@ -64,6 +64,12 @@
       <groupId>com.oracle.oci.sdk</groupId>
       <artifactId>oci-java-sdk-common-httpclient-jersey</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.oracle.database.security</groupId>
+      <artifactId>oraclepki</artifactId>
+      <version>23.3.0.23.09</version>
+      <scope>test</scope>
+    </dependency>
 
     <!--
       A test-jar type dependency. This allows test code in this module to depend
