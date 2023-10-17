@@ -12,8 +12,9 @@
   <properties>
     <maven.compiler.target>8</maven.compiler.target>
     <maven.compiler.source>8</maven.compiler.source>
-    <junit.version>5.9.1</junit.version>
     <jdbc.version>23.3.0.23.09</jdbc.version>
+    <junit.version>5.9.0</junit.version>
+    <mockito.version>4.11.0</mockito.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>
@@ -23,6 +24,7 @@
     <module>ojdbc-provider-azure</module>
     <module>ojdbc-provider-oci</module>
     <module>ojdbc-provider-samples</module>
+    <module>ojdbc-provider-opentelemetry</module>
   </modules>
 
   <dependencyManagement>
@@ -57,9 +59,14 @@
         <type>test-jar</type>
         <scope>test</scope>
       </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>${mockito.version}</version>
+        <scope>test</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
-
   <build>
     <plugins>
       <plugin>
