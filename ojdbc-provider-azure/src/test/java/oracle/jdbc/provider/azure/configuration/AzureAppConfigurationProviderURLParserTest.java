@@ -70,7 +70,6 @@ public class AzureAppConfigurationProviderURLParserTest {
    * Verifies {@link AzureAuthenticationMethod#SERVICE_PRINCIPLE}
    * with a client secret.
    */
-  @Disabled
   @Nested
   class TestServicePrincipleSecret {
     String[] options;
