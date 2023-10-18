@@ -1,19 +1,7 @@
-# Oracle JDBC Providers for OpenTelemetry
+# Oracle JDBC OpenTelemetry Provider
 
 This module contains a provider for integration between Oracle JDBC and
 Open Telemetry.
-
-This module is distributed as a single jar on the Maven Central Repository. The 
-jar is compiled for JDK 8, and is forward compatible with later JDK versions. 
-<!-- The coordinates for the latest release are:
-
-```xml
-<dependency>
-  <groupId>com.oracle.database.jdbc</groupId>
-  <artifactId>ojdbc-extensions</artifactId>
-  <version>0.1.0</version>
-</dependency>
-``` -->
 
 This provider implements the TraceEventListener interface provided by the JDBC
 driver which will be notified whenever events are generated in the driver and 
@@ -48,9 +36,9 @@ The following attributes are added the the traces for each event:
 
 ## Installation
 
-All providers in this module are distributed as single jar on the Maven Central
-Repository. The jar is compiled for JDK 8, and is forward compatible with later
-JDK versions. The coordinates for the latest release are:
+This provider is distributed as single jar on the Maven Central Repository. The 
+jar is compiled for JDK 8, and is forward compatible with later JDK versions. 
+The coordinates for the latest release are:
 
 ```xml
 <dependency>

@@ -120,6 +120,8 @@ this project:
 
 [ojdbc-provider-azure](ojdbc-provider-azure/README.md#installation)
 
+[ojdbc-provider-opentelemetry](ojdbc-provider-opentelemetry/README.md#installation)
+
 Each module listed above is distributed on the Maven Central Repository as a
 separate jar file. Coordinates can be found by visiting the links above.
 
