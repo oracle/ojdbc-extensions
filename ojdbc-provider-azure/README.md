@@ -166,7 +166,7 @@ Instructions  can be found in the
 ADB product documentation.
 </a>
 
-In addition to the set of [common parameters](#common-parameters-for-single-resource-providers),
+In addition to the set of [common parameters](#common-parameters-for-resource-providers),
 this provider also supports the parameters listed below.
 <table>
 <thead><tr>
@@ -215,7 +215,7 @@ The Key Vault Username Provider provides Oracle JDBC with a database username
 that is managed by the Key Vault service. This is a Resource Provider
 identified by the name `ojdbc-provider-azure-key-vault-username`.
 
-In addition to the set of [common parameters](#common-parameters-for-single-resource-providers),
+In addition to the set of [common parameters](#common-parameters-for-resource-providers),
 this provider also supports the parameters listed below.
 <table>
 <thead><tr>
@@ -260,7 +260,7 @@ The Key Vault Password Provider provides Oracle JDBC with a database password
 that is managed by the Key Vault service. This is a Resource Provider
 identified by the name `ojdbc-provider-azure-key-vault-password`.
 
-In addition to the set of [common parameters](#common-parameters-for-single-resource-providers),
+In addition to the set of [common parameters](#common-parameters-for-resource-providers),
 this provider also supports the parameters listed below.
 <table>
 <thead><tr>
