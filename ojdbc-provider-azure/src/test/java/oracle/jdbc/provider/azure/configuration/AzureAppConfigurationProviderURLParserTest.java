@@ -70,7 +70,6 @@ public class AzureAppConfigurationProviderURLParserTest {
    * Verifies {@link AzureAuthenticationMethod#SERVICE_PRINCIPLE}
    * with a client secret.
    */
-  @Disabled
   @Nested
   class TestServicePrincipleSecret {
     String[] options;
@@ -173,7 +172,8 @@ public class AzureAppConfigurationProviderURLParserTest {
         ds.setURL(invalidUrl);
         ds.getConnection();},
       "Should throw an Exception");
-    assertEquals(exception.getMessage(), "No provider found",
+
+    assertTrue(exception.getMessage().contains("Cannot find the provider type"),
       "Something went unexpected: " + exception.getMessage());
   }
 
