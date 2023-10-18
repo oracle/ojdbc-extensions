@@ -1,4 +1,4 @@
-# Oracle JDBC OpenTelemetry Provider
+# Oracle JDBC Open Telemetry Provider
 
 This module contains a provider for integration between Oracle JDBC and
 Open Telemetry.
