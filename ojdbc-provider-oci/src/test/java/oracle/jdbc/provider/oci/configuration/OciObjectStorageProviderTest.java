@@ -77,10 +77,8 @@ public class OciObjectStorageProviderTest {
   }
 
   private static String composeUrl(String... options) {
-    return String.format("jdbc:oracle:thin:@config-ociobject://n/%s/b/%s/o/%s?%s",
-      TestProperties.getOrAbort(OciTestProperty.OCI_NAMESPACE_NAME),
-      getOrAbort(OciTestProperty.OCI_BUCKET_NAME),
-      getOrAbort(OciTestProperty.OCI_OBJECT_NAME),
+    return String.format("%s?%s",
+      TestProperties.getOrAbort(OciTestProperty.OCI_OBJECT_STORAGE_URL),
       String.join("&", options));
   }
 }
