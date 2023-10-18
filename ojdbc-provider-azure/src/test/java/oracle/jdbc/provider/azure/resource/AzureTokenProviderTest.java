@@ -217,7 +217,7 @@ public class AzureTokenProviderTest {
   public void testManagedIdentity() {
     Map<String, CharSequence> testParameters = new HashMap<>();
     TestProperties.abortIfNotEqual(AzureTestProperty.AZURE_MANAGED_IDENTITY, "true");
-    testParameters.put("authenticationMethod", "service-principal");
+    testParameters.put("authenticationMethod", "managed-identity");
     verifyAccessToken(testParameters);
   }
 
