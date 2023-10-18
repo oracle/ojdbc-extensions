@@ -244,6 +244,7 @@ public class OpenTelemetryTraceEventListener
             .setAttribute("VIP Address", params[7].toString());
         // Add sensitive information (URL and SQL) if it is enabled
         if (Configuration.INSTANCE.isSensitiveDataEnabled()) {
+          logger.log(Level.FINEST, "Sensitive information on");
           spanBuilder.setAttribute("Protocol", params[1].toString())
               .setAttribute("Host", params[2].toString())
               .setAttribute("Port", params[3].toString())
@@ -284,14 +285,10 @@ public class OpenTelemetryTraceEventListener
      * parent to this child span.
      */
     SpanBuilder spanBuilder = tracer
-        .spanBuilder(spanName);
-    spanBuilder
+        .spanBuilder(spanName)
         .setAttribute("thread.id", Thread.currentThread().getId())
         .setAttribute("thread.name", Thread.currentThread().getName())
-        // Set the relevant attributes only. Here all attributes are set for demo
-        // purpose.
-        .setAttribute("Connection ID", traceContext.getConnectionId());
-    spanBuilder
+        .setAttribute("Connection ID", traceContext.getConnectionId())
         .setAttribute("Database Operation", traceContext.databaseOperation())
         .setAttribute("Database User", traceContext.user())
         .setAttribute("Database Tenant", traceContext.tenant())
@@ -299,6 +296,7 @@ public class OpenTelemetryTraceEventListener
 
     // Add sensitive information (URL and SQL) if it is enabled
     if (this.isSensitiveDataEnabled()) {
+      logger.log(Level.FINEST, "Sensitive information on");
       spanBuilder.setAttribute("Original SQL Text", traceContext.originalSqlText())
           .setAttribute("Actual SQL Text", traceContext.actualSqlText());
     }
