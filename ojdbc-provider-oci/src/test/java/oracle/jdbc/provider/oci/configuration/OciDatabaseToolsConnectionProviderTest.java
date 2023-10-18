@@ -27,6 +27,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * Verifies the {@link OciDatabaseToolsConnectionProvider} as implementing
@@ -94,6 +95,7 @@ public class OciDatabaseToolsConnectionProviderTest {
 
     Arrays.stream(parameters)
       .map(TestProperties::getOptional)
+      .filter(Objects::nonNull)
       .map(ocid -> {
         try {
           return PROVIDER.getConnectionProperties(ocid);
