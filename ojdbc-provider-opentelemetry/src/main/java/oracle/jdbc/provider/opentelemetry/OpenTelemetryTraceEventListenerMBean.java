@@ -36,37 +36,18 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.oci;
+package oracle.jdbc.provider.opentelemetry;
 
 /**
- * Names of properties that configure OCI tests. Descriptions and examples of
- * each property can be found in the "example-test.properties" file within the
- * root directory of the project.
+ * MBean interface for the OpenTelemetryTraceEventListener, it exposes two
+ * attributes: Enabled and SensitiveDataEnabled.
  */
-public enum OciTestProperty {
-  OCI_CONFIG_FILE,
+public interface OpenTelemetryTraceEventListenerMBean {
+  void setEnabled(boolean enabled);
 
-  OCI_CONFIG_PROFILE,
+  void setSensitiveDataEnabled(boolean enabled);
 
-  OCI_CLOUD_SHELL,
+  boolean isEnabled();
 
-  OCI_INSTANCE_PRINCIPAL,
-
-  OCI_RESOURCE_PRINCIPAL,
-
-  OCI_TOKEN_SCOPE,
-
-  OCI_PASSWORD_OCID,
-
-  OCI_DATABASE_OCID,
-
-  OCI_OBJECT_STORAGE_URL,
-
-  OCI_DB_TOOLS_CONNECTION_OCID_KEYSTORE,
-
-  OCI_DB_TOOLS_CONNECTION_OCID_PKCS12,
-
-  OCI_DB_TOOLS_CONNECTION_OCID_SSO,
-
-  OCI_COMPARTMENT_ID;
+  boolean isSensitiveDataEnabled();
 }

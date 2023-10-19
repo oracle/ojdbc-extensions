@@ -41,7 +41,7 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-oci</artifactId>
-  <version>0.1.0</version>
+  <version>1.0.0</version>
 </dependency>
 ```
 
@@ -203,7 +203,7 @@ to use the <a href="#database-tls-provider">
 Database TLS Provider</a>
 in conjunction with this provider.
 
-In addition to the set of [common parameters](#common-parameters-for-single-resource-providers), this provider
+In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider
 also supports the parameters listed below.
 <table>
 <thead><tr>
@@ -256,7 +256,7 @@ The Database TLS Provider provides Oracle JDBC with keys and certificates for
 with an Autonomous Database. This is a Resource Provider identified by the name
 `ojdbc-provider-oci-database-tls`.
 
-In addition to the set of [common parameters](#common-parameters-for-single-resource-providers), this provider
+In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider
 also supports the parameters listed below.
 <table>
 <thead><tr>
@@ -290,7 +290,7 @@ The Vault Password Provider provides Oracle JDBC with a password that is managed
 by the OCI Vault service. This is a Resource Provider identified by the
 name `ojdbc-provider-oci-vault-password`.
 
-In addition to the set of [common parameters](#common-parameters-for-single-resource-providers), this provider 
+In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider 
 also supports the parameters listed below.
 <table>
 <thead><tr>
@@ -324,7 +324,7 @@ The Vault Username Provider provides Oracle JDBC with a username that is managed
 OCI Vault service. This is a Resource Provider identified by the name
 `ojdbc-provider-oci-vault-username`.
 
-In addition to the set of [common parameters](#common-parameters-for-single-resource-providers), this provider
+In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider
 also supports the parameters listed below.
 <table>
 <thead><tr>
@@ -363,7 +363,7 @@ can be found in the <a href="https://docs.oracle.com/en/cloud/paas/autonomous-da
 ADB product documentation.
 </a>
 
-In addition to the set of [common parameters](#common-parameters-for-single-resource-providers), this provider
+In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider
 also supports the parameters listed below.
 <table>
 <thead><tr>
@@ -524,13 +524,13 @@ OCI configuration file
 <dt>instance-principal</dt>
 <dd>
 Authenticate as an <a href="https://docs.oracle.com/en-us/iaas/Content/Identity/Tasks/callingservicesfrominstances.htm">
-instance principal.
+instance principal
 </a>.
 </dd>
 <dt>resource-principal</dt>
 <dd>
 Authenticate as a <a href="https://docs.oracle.com/en-us/iaas/Content/Functions/Tasks/functionsaccessingociresources.htm">
-resource principal.
+resource principal
 </a>.
 </dd>
 <dt>cloud-shell</dt>
