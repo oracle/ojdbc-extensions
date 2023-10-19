@@ -5,13 +5,13 @@
   <name>Oracle JDBC OCI Providers</name>
 
   <artifactId>ojdbc-provider-oci</artifactId>
-  <version>${revision}</version>
+  <version>1.0.0</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>com.oracle.database.jdbc</groupId>
     <artifactId>ojdbc-extensions</artifactId>
-    <version>${revision}</version>
+    <version>1.0.0</version>
   </parent>
 
   <dependencyManagement>
@@ -30,7 +30,7 @@
     <dependency>
       <groupId>com.oracle.database.jdbc</groupId>
       <artifactId>ojdbc-provider-common</artifactId>
-      <version>${revision}</version>
+      <version>1.0.0</version>
     </dependency>
     <dependency>
       <groupId>com.oracle.database.jdbc</groupId>
