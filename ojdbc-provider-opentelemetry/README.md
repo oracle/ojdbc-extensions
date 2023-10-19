@@ -1,19 +1,7 @@
-# Oracle JDBC Providers for OpenTelemetry
+# Oracle JDBC Open Telemetry Provider
 
 This module contains a provider for integration between Oracle JDBC and
 Open Telemetry.
-
-This module is distributed as a single jar on the Maven Central Repository. The 
-jar is compiled for JDK 8, and is forward compatible with later JDK versions. 
-<!-- The coordinates for the latest release are:
-
-```xml
-<dependency>
-  <groupId>com.oracle.database.jdbc</groupId>
-  <artifactId>ojdbc-extensions</artifactId>
-  <version>0.1.0</version>
-</dependency>
-``` -->
 
 This provider implements the TraceEventListener interface provided by the JDBC
 driver which will be notified whenever events are generated in the driver and 
@@ -46,7 +34,22 @@ The following attributes are added the the traces for each event:
     * SID *(only present if sensitive data is enabled)*
     * Connection data *(only present if sensitive data is enabled)*
 
-**Usage**
+## Installation
+
+This provider is distributed as single jar on the Maven Central Repository. The 
+jar is compiled for JDK 8, and is forward compatible with later JDK versions. 
+The coordinates for the latest release are:
+
+```xml
+<dependency>
+  <groupId>com.oracle.database.jdbc</groupId>
+  <artifactId>ojdbc-provider-opentelemetry</artifactId>
+  <version>1.0.0</version>
+</dependency>
+```
+
+## Usage 
+
 To use the Oracle JDBC provider for Open Telemetry just add the artifact to the
 application's classpath and set the following connection property :
 
@@ -54,7 +57,7 @@ application's classpath and set the following connection property :
 oracle.jdbc.provider.traceEventListener=open-telemetry-trace-event-listener-provider
 ```
 
-**Configuration**
+## Configuration
 
 A MBean with object name "com.oracle.jdbc.extension.opentelemetry:type=OpenTelemetryTraceEventListener"
 is registered by the provider. It exposes two attributes that  allows the configuration 
