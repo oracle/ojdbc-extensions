@@ -8,6 +8,23 @@
   <packaging>pom</packaging>
 
   <name>Extensions for the Oracle JDBC Driver</name>
+  <description>Oracle JDBC Extensions include providers for multiple resources</description>
+  <url>https://github.com/oracle-samples/ojdbc-extensions</url>
+  <licenses>
+    <license>
+      <name>Oracle Free Use Terms and Conditions (FUTC)</name>
+      <url>https://www.oracle.com/downloads/licenses/oracle-free-license.html</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <organization>Oracle America, Inc.</organization>
+      <organizationUrl>http://www.oracle.com</organizationUrl>
+    </developer>
+  </developers>
+  <scm>
+    <url/>
+  </scm>
 
   <properties>
     <maven.compiler.target>8</maven.compiler.target>
