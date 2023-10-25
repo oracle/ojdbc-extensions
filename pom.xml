@@ -8,6 +8,26 @@
   <packaging>pom</packaging>
 
   <name>Extensions for the Oracle JDBC Driver</name>
+  <description>Oracle JDBC Extensions include providers for multiple resources</description>
+  <url>https://github.com/oracle-samples/ojdbc-extensions</url>
+  <licenses>
+    <license>
+      <name>The Universal Permissive License (UPL), Version 1.0</name>
+      <url>https://oss.oracle.com/licenses/upl/</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <organization>Oracle America, Inc.</organization>
+      <organizationUrl>http://www.oracle.com</organizationUrl>
+    </developer>
+  </developers>
+  <scm>
+    <url>https://github.com/oracle-samples/ojdbc-extensions</url>
+    <connection>scm:git:https://github.com/oracle-samples/ojdbc-extensions</connection>
+    <developerConnection>scm:git:https://github.com/oracle-samples/ojdbc-extensions</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
 
   <properties>
     <maven.compiler.target>8</maven.compiler.target>
