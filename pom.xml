@@ -12,8 +12,8 @@
   <url>https://github.com/oracle-samples/ojdbc-extensions</url>
   <licenses>
     <license>
-      <name>Oracle Free Use Terms and Conditions (FUTC)</name>
-      <url>https://www.oracle.com/downloads/licenses/oracle-free-license.html</url>
+      <name>The Universal Permissive License (UPL), Version 1.0</name>
+      <url>https://oss.oracle.com/licenses/upl/</url>
     </license>
   </licenses>
   <developers>
@@ -23,7 +23,10 @@
     </developer>
   </developers>
   <scm>
-    <url/>
+    <url>https://github.com/oracle-samples/ojdbc-extensions</url>
+    <connection>scm:git:https://github.com/oracle-samples/ojdbc-extensions</connection>
+    <developerConnection>scm:git:https://github.com/oracle-samples/ojdbc-extensions</developerConnection>
+    <tag>HEAD</tag>
   </scm>
 
   <properties>
