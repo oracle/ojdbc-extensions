@@ -103,6 +103,31 @@
         </executions>
       </plugin>
     </plugins>
+    <resources>
+      <!-- Add THIRD_PARTY_LICENSES.txt from the basedir of each module -->
+      <resource>
+        <directory>${project.basedir}</directory>
+        <includes>
+          <include>THIRD_PARTY_LICENSES.txt</include>
+        </includes>
+        <targetPath>META-INF</targetPath>
+      </resource>
+      <!-- Add LICENSE.txt from the root directory -->
+      <resource>
+        <directory>${project.basedir}/..</directory>
+        <includes>
+          <include>LICENSE.txt</include>
+        </includes>
+        <targetPath>META-INF</targetPath>
+      </resource>
+      <!-- Add META-INF/services -->
+      <resource>
+        <directory>${project.basedir}/src/main/resources/META-INF/services/</directory>
+        <includes>
+          <include>oracle.jdbc.spi.*</include>
+        </includes>
+        <targetPath>META-INF/services/</targetPath>
+      </resource>
+    </resources>
   </build>
-
 </project>
