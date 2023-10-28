@@ -4,15 +4,37 @@
 
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-extensions</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <packaging>pom</packaging>
 
   <name>Extensions for the Oracle JDBC Driver</name>
+  <description>Oracle JDBC Extensions include providers for multiple resources</description>
+  <url>https://github.com/oracle-samples/ojdbc-extensions</url>
+  <licenses>
+    <license>
+      <name>The Universal Permissive License (UPL), Version 1.0</name>
+      <url>https://oss.oracle.com/licenses/upl/</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <organization>Oracle America, Inc.</organization>
+      <organizationUrl>http://www.oracle.com</organizationUrl>
+    </developer>
+  </developers>
+  <scm>
+    <url>https://github.com/oracle-samples/ojdbc-extensions</url>
+    <connection>scm:git:https://github.com/oracle-samples/ojdbc-extensions</connection>
+    <developerConnection>scm:git:https://github.com/oracle-samples/ojdbc-extensions</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
 
   <properties>
     <maven.compiler.target>8</maven.compiler.target>
     <maven.compiler.source>8</maven.compiler.source>
-    <junit.version>5.9.1</junit.version>
+    <jdbc.version>23.3.0.23.09</jdbc.version>
+    <junit.version>5.9.0</junit.version>
+    <mockito.version>4.11.0</mockito.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>
@@ -22,28 +44,49 @@
     <module>ojdbc-provider-azure</module>
     <module>ojdbc-provider-oci</module>
     <module>ojdbc-provider-samples</module>
+    <module>ojdbc-provider-opentelemetry</module>
   </modules>
 
-  <dependencies>
-    <dependency>
-      <groupId>com.oracle.database.jdbc</groupId>
-      <artifactId>ojdbc8</artifactId>
-      <version>23.3.0.23.09</version>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <version>${junit.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-engine</artifactId>
-      <version>${junit.version}</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
-
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.oracle.database.jdbc</groupId>
+        <artifactId>ojdbc8</artifactId>
+        <version>${jdbc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.oracle.database.security</groupId>
+        <artifactId>oraclepki</artifactId>
+        <version>${jdbc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-api</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-engine</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.oracle.database.jdbc</groupId>
+        <artifactId>ojdbc-provider-common</artifactId>
+        <version>1.0.0</version>
+        <classifier>tests</classifier>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>${mockito.version}</version>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
   <build>
     <plugins>
       <plugin>
