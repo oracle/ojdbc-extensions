@@ -163,6 +163,14 @@
         </includes>
         <targetPath>META-INF</targetPath>
       </resource>
+      <!-- Add META-INF/services -->
+      <resource>
+        <directory>${project.basedir}/src/main/resources/META-INF/services/</directory>
+        <includes>
+          <include>oracle.jdbc.spi.*</include>
+        </includes>
+        <targetPath>META-INF/services/</targetPath>
+      </resource>
     </resources>
   </build>
 </project>
