@@ -7,6 +7,9 @@ jobs:
       AZURE_TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
       AZURE_CLIENT_ID: ${{ secrets.TEST_AZURE_CLIENT_ID }}
       AZURE_CLIENT_SECRET: ${{ secrets.TEST_AZURE_CLIENT_SECRET }}
+      AZURE_USERNAME: ${{ secrets.TEST_AZURE_USERNAME }}
+      AZURE_PASSWORD: ${{ secrets.TEST_AZURE_PASSWORD }}
+      AZURE_CLIENT_CERTIFICATE_PATH: ${{ secrets.TEST_AZURE_CLIENT_CERTIFICATE_PATH }}
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
@@ -47,6 +50,8 @@ jobs:
           AZURE_CLIENT_CERTIFICATE_PATH=${{ secrets.TEST_AZURE_CLIENT_CERTIFICATE_PATH }}\n
           AZURE_CLIENT_PFX_CERTIFICATE_PATH=./ojdbc-provider-test-app.pfx\n
           AZURE_CLIENT_PFX_PASSWORD=${{ secrets.TEST_AZURE_CLIENT_PFX_PASSWORD }}\n
+          AZURE_USERNAME=${{ secrets.TEST_AZURE_USERNAME }}\n
+          AZURE_PASSWORD=${{ secrets.TEST_AZURE_PASSWORD }}\n
           AZURE_TOKEN_SCOPE=${{ secrets.TEST_AZURE_TOKEN_SCOPE }}\n
           AZURE_APP_CONFIG_NAME=${{ secrets.TEST_AZURE_APP_CONFIG_NAME }}\n
           AZURE_APP_CONFIG_KEY=${{ secrets.TEST_AZURE_APP_CONFIG_KEY }}\n
