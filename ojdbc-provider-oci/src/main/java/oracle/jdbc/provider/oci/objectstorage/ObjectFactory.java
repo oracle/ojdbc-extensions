@@ -139,6 +139,13 @@ public class ObjectFactory extends OciResourceFactory<InputStream> {
           + "\\/b\\/" + NAME
           + "\\/o\\/(.*)", // parameters to the provider
         Pattern.CASE_INSENSITIVE);
+    private static final Pattern NEW_URL_PATTERN = Pattern
+      .compile("https://" + NAME +
+          "\\.objectstorage\\." + NAME + "\\.oci\\.customer-oci\\.com"
+          + "\\/n\\/" + "\\1" // namespace should be the same as 1st NAME
+          + "\\/b\\/" + NAME
+          + "\\/o\\/(.*)", // parameters to the provider (new)
+        Pattern.CASE_INSENSITIVE);
     private Region region;
     private String namespaceName;
     private String bucketName;
@@ -146,12 +153,18 @@ public class ObjectFactory extends OciResourceFactory<InputStream> {
 
     ObjectUrl(String urlString) {
       Matcher urlMatcher = URL_PATTERN.matcher(urlString);
+      Matcher newUrlMatcher = NEW_URL_PATTERN.matcher(urlString);
 
       if (urlMatcher.matches()) {
         region = Region.fromRegionId(urlMatcher.group(1));
         namespaceName = urlMatcher.group(2);
         bucketName = urlMatcher.group(3);
         objectName = urlMatcher.group(4);
+      } else if (newUrlMatcher.matches()) {
+        namespaceName = newUrlMatcher.group(1);
+        region = Region.fromRegionId(newUrlMatcher.group(2));
+        bucketName = newUrlMatcher.group(3);
+        objectName = newUrlMatcher.group(4);
       } else {
         throw new IllegalArgumentException(
           "Fail to parse Object URL: " + urlString);
