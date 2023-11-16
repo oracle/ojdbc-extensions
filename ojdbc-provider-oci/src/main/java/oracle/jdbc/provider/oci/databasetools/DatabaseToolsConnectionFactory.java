@@ -45,6 +45,7 @@ import com.oracle.bmc.databasetools.responses.GetDatabaseToolsConnectionResponse
 import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.oci.OciResourceFactory;
+import oracle.jdbc.provider.oci.Ocid;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 
@@ -97,15 +98,22 @@ public class DatabaseToolsConnectionFactory extends
     AbstractAuthenticationDetailsProvider authenticationDetails,
     ParameterSet parameterSet) {
     String connectionOcid = parameterSet.getRequired(CONNECTION_OCID);
+    Ocid ocid = new Ocid(connectionOcid);
+    if (ocid.getRegion() == null) {
+      throw new IllegalStateException(
+        "Fail to get region from Database Tools Connection OCID: "
+          + ocid.getContent());
+    }
 
     try (DatabaseToolsClient client =
         DatabaseToolsClient.builder().build(authenticationDetails)) {
+      client.setRegion(ocid.getRegion());
 
       GetDatabaseToolsConnectionResponse getResponse = client
           .getDatabaseToolsConnection(
               GetDatabaseToolsConnectionRequest
                   .builder()
-                  .databaseToolsConnectionId(connectionOcid)
+                  .databaseToolsConnectionId(ocid.getContent())
                   .build());
 
       return Resource.createPermanentResource(
