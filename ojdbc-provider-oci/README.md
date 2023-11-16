@@ -57,6 +57,9 @@ JDBC URL Sample that uses the OCI DBTools provider:
 jdbc:oracle:thin:@config-ocidbtools:ocid1.databasetoolsconnection.oc1.phx.ama ...
 </pre>
 
+Provider can now accept Database Tools Connections with Proxy Authentication,
+only if username is provided in Proxy Authentication Info, without the password and roles.
+
 ## OCI Object Storage Config Provider
 The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-ociobject:` to be able to identify that the configuration parameters should be loaded using OCI Object Storage. Users only need to indicate the URL Path of the Object containing the JSON payload, with the following syntax:
 
