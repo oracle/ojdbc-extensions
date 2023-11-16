@@ -46,6 +46,7 @@ import com.oracle.bmc.secrets.requests.GetSecretBundleRequest;
 import oracle.jdbc.provider.cache.CachedResourceFactory;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.oci.OciResourceFactory;
+import oracle.jdbc.provider.oci.Ocid;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.factory.Resource;
@@ -93,8 +94,16 @@ public final class SecretFactory extends OciResourceFactory<Secret> {
       AbstractAuthenticationDetailsProvider authenticationDetails,
       ParameterSet parameterSet) {
 
-    String ocid = parameterSet.getRequired(OCID);
-    parseRegion(ocid);
+    String secretOcid = parameterSet.getRequired(OCID);
+    //parseRegion(ocid);
+    Ocid ocid = new Ocid(secretOcid);
+
+    // Ensure parsed region is not null to prevent failure in sending request
+    if (ocid.getRegion() == null) {
+      throw new IllegalStateException(
+        "Region is missing in Secret OCID: "
+          + ocid.getContent());
+    }
 
     SecretBundle secretBundle = requestSecret(authenticationDetails, ocid);
 
@@ -115,16 +124,16 @@ public final class SecretFactory extends OciResourceFactory<Secret> {
   /** Requests a secret from the OCI Vault service. */
   private SecretBundle requestSecret(
       AbstractAuthenticationDetailsProvider authenticationDetails,
-      String ocid) {
+      Ocid ocid) {
 
     try (SecretsClient client =
            SecretsClient.builder()
-             .region(parseRegion(ocid))
+             .region(ocid.getRegion())
              .build(authenticationDetails)) {
 
       GetSecretBundleRequest request =
         GetSecretBundleRequest.builder()
-          .secretId(ocid)
+          .secretId(ocid.getContent())
           .stage(GetSecretBundleRequest.Stage.Current)
           .build();
 

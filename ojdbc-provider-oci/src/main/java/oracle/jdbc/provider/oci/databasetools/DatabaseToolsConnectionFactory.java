@@ -99,9 +99,11 @@ public class DatabaseToolsConnectionFactory extends
     ParameterSet parameterSet) {
     String connectionOcid = parameterSet.getRequired(CONNECTION_OCID);
     Ocid ocid = new Ocid(connectionOcid);
+
+    // Ensure parsed region is not null to prevent failure in sending request
     if (ocid.getRegion() == null) {
       throw new IllegalStateException(
-        "Fail to get region from Database Tools Connection OCID: "
+        "Region is missing in Database Tools Connection OCID: "
           + ocid.getContent());
     }
 
