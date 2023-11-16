@@ -1,6 +1,17 @@
 package oracle.jdbc.provider.oci.configuration;
 
-import com.oracle.bmc.databasetools.model.*;
+import com.oracle.bmc.databasetools.model.DatabaseToolsConnection;
+import com.oracle.bmc.databasetools.model.DatabaseToolsConnectionOracleDatabase;
+import com.oracle.bmc.databasetools.model.DatabaseToolsKeyStore;
+import com.oracle.bmc.databasetools.model.DatabaseToolsKeyStoreContent;
+import com.oracle.bmc.databasetools.model.DatabaseToolsKeyStoreContentSecretId;
+import com.oracle.bmc.databasetools.model.DatabaseToolsKeyStorePassword;
+import com.oracle.bmc.databasetools.model.DatabaseToolsKeyStorePasswordSecretId;
+import com.oracle.bmc.databasetools.model.DatabaseToolsUserPassword;
+import com.oracle.bmc.databasetools.model.DatabaseToolsUserPasswordSecretId;
+import com.oracle.bmc.databasetools.model.LifecycleState;
+import com.oracle.bmc.databasetools.model.DatabaseToolsConnectionOracleDatabaseProxyClient;
+import com.oracle.bmc.databasetools.model.DatabaseToolsConnectionOracleDatabaseProxyClientUserName;
 import com.oracle.bmc.model.BmcException;
 import oracle.jdbc.OracleConnection;
 import oracle.jdbc.provider.oci.databasetools.DatabaseToolsConnectionFactory;
