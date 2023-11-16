@@ -33,13 +33,28 @@
     <java.version>8</java.version>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <maven.compiler.source>${java.version}</maven.compiler.source>
-    <maven.compiler.release>${java.version}</maven.compiler.release>
     <jdbc.version>23.3.0.23.09</jdbc.version>
     <junit.version>5.9.0</junit.version>
     <mockito.version>4.11.0</mockito.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>
+
+  <!--
+    This profile configures the "release" option for javac, which was added
+    in JDK 9. See https://github.com/oracle-samples/ojdbc-extensions/pull/46
+  -->
+  <profiles>
+    <profile>
+      <id>javac-release</id>
+      <activation>
+        <jdk>[9,)</jdk>
+      </activation>
+      <properties>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
+      </properties>
+    </profile>
+  </profiles>
 
   <modules>
     <module>ojdbc-provider-common</module>
