@@ -206,9 +206,9 @@ public class OciDatabaseToolsConnectionProvider
 
       /* check if proxyClient has password or roles */
       if (proxyClientUserName.getUserPassword() != null || proxyClientUserName.getRoles() != null) {
-        throw new UnsupportedOperationException("Unsupported feature: the " +
-          "proxyClient of this database tools connection has user password or" +
-          "roles");
+        throw new UnsupportedOperationException(
+          "Unsupported feature: the proxyClient of this database tools " +
+            "connection has user password or roles");
       }
       properties.put(OracleConnection.CONNECTION_PROPERTY_PROXY_CLIENT_NAME, proxyClientUserName.getUserName());
     }
