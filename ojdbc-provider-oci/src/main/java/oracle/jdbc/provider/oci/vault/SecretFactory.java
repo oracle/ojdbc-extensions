@@ -95,7 +95,6 @@ public final class SecretFactory extends OciResourceFactory<Secret> {
       ParameterSet parameterSet) {
 
     String secretOcid = parameterSet.getRequired(OCID);
-    //parseRegion(ocid);
     Ocid ocid = new Ocid(secretOcid);
 
     // Ensure parsed region is not null to prevent failure in sending request

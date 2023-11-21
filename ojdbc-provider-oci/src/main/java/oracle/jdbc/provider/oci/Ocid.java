@@ -6,21 +6,27 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Represents a general OCID class, which contains an ocid string as its
- * content. It parses out a region from the provided ocid string during
- * construction.
- *
- * Fields:
- * - String content: The full ocid as a string.
- * - Region region: The parsed region extracted from the ocid string.
+ * Represents a general Oracle Cloud ID (OCID) class, which contains an
+ * ocid string as its content. It parses out a region from the provided
+ * ocid string during construction.
  **/
-public class Ocid {
-  private String content;
-  private Region region;
+public final class Ocid {
+
+  /** The ocid string */
+  private final String content;
+
+  /** The parsed region extracted from the ocid string */
+  private final Region region;
+
+  /** The regular expression of ocid */
+  private static final String regex = "ocid1\\.[^.]+\\.[^.]+\\.([^.]*)\\..+";
+
+  /** The pattern of ocid */
+  private static final Pattern pattern = Pattern.compile(regex);
 
   public Ocid(String content) {
     this.content = content;
-    this.region = parseRegion();
+    this.region = parseRegion(content);
   }
 
   /**
@@ -34,9 +40,7 @@ public class Ocid {
    * @see <a href="https://docs.oracle.com/en-us/iaas/Content/General/Concepts/identifiers.htm">Resource Identifiers</a>
    * @return an {@code Region} which is extracted from the ocid string
    **/
-  private Region parseRegion(){
-    String regex = "ocid1\\.[^.]+\\.[^.]+\\.([^.]*)\\..+";
-    Pattern pattern = Pattern.compile(regex);
+  private static Region parseRegion(String content) {
     Matcher matcher = pattern.matcher(content);
     if (matcher.matches()) {
       String regionCode = matcher.group(1);
