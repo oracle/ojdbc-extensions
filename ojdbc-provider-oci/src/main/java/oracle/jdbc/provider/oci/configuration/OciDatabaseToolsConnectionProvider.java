@@ -10,6 +10,8 @@ import com.oracle.bmc.databasetools.model.DatabaseToolsKeyStorePasswordSecretId;
 import com.oracle.bmc.databasetools.model.DatabaseToolsUserPassword;
 import com.oracle.bmc.databasetools.model.DatabaseToolsUserPasswordSecretId;
 import com.oracle.bmc.databasetools.model.LifecycleState;
+import com.oracle.bmc.databasetools.model.DatabaseToolsConnectionOracleDatabaseProxyClient;
+import com.oracle.bmc.databasetools.model.DatabaseToolsConnectionOracleDatabaseProxyClientUserName;
 import com.oracle.bmc.model.BmcException;
 import oracle.jdbc.OracleConnection;
 import oracle.jdbc.provider.oci.databasetools.DatabaseToolsConnectionFactory;
@@ -193,6 +195,23 @@ public class OciDatabaseToolsConnectionProvider
     Map<String, String> advancedProps = connection.getAdvancedProperties();
     if (advancedProps != null)
       properties.putAll(connection.getAdvancedProperties());
+
+    /* check if database tools connection has proxy client info */
+    DatabaseToolsConnectionOracleDatabaseProxyClient proxyClient =
+      connection.getProxyClient();
+
+    if (proxyClient instanceof DatabaseToolsConnectionOracleDatabaseProxyClientUserName) {
+      DatabaseToolsConnectionOracleDatabaseProxyClientUserName proxyClientUserName =
+        (DatabaseToolsConnectionOracleDatabaseProxyClientUserName) proxyClient;
+
+      /* check if proxyClient has password or roles */
+      if (proxyClientUserName.getUserPassword() != null || proxyClientUserName.getRoles() != null) {
+        throw new UnsupportedOperationException(
+          "Unsupported feature: the proxyClient of this database tools " +
+            "connection has user password or roles");
+      }
+      properties.put(OracleConnection.CONNECTION_PROPERTY_PROXY_CLIENT_NAME, proxyClientUserName.getUserName());
+    }
 
     return properties;
   }
