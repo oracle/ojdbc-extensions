@@ -19,10 +19,10 @@ public final class Ocid {
   private final Region region;
 
   /** The regular expression of ocid */
-  private static final String regex = "ocid1\\.[^.]+\\.[^.]+\\.([^.]*)\\..+";
+  private static final String REGEX = "ocid1\\.[^.]+\\.[^.]+\\.([^.]*)\\..+";
 
   /** The pattern of ocid */
-  private static final Pattern pattern = Pattern.compile(regex);
+  private static final Pattern PATTERN = Pattern.compile(REGEX);
 
   public Ocid(String content) {
     this.content = content;
@@ -41,7 +41,7 @@ public final class Ocid {
    * @return an {@code Region} which is extracted from the ocid string
    **/
   private static Region parseRegion(String content) {
-    Matcher matcher = pattern.matcher(content);
+    Matcher matcher = PATTERN.matcher(content);
     if (matcher.matches()) {
       String regionCode = matcher.group(1);
       if (regionCode.equals("")) {
