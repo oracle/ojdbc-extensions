@@ -53,7 +53,7 @@ There are 3 fixed values that are looked at by the provider in the retrieved con
 - user (optional)
 - password (optional)
 
-The rest are dependent on the driver, in our case `/jdbc`. The key-value pairs that are with sub-prefix `/jdbc` will be applied to a DataSource. The key values are constant keys which are equivalent to the properties defined in the [OracleConnection](https://docs.oracle.com/en/database/oracle/oracle-database/21/jajdb/oracle/jdbc/OracleConnection.html) interface.
+The rest are dependent on the driver, in our case `/jdbc`. The key-value pairs that are with sub-prefix `/jdbc` will be applied to a DataSource. The key values are constant keys which are equivalent to the properties defined in the [OracleConnection](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html) interface.
 
 For example, let's suppose an url like:
 
@@ -191,7 +191,7 @@ Specifies the scope of databases that may be accessed with the token. See
 </table>
 
 An example of a
-[connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/21/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
+[connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
 that configures this provider can be found in
 [example-token.properties](example-token.properties).
 
@@ -251,7 +251,7 @@ Any valid secret name is accepted.
 </table>
 
 An example of a
-[connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/21/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
+[connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
 that configures this provider can be found in
 [example-vault.properties](example-key-vault.properties).
 
@@ -296,7 +296,7 @@ Any valid secret name is accepted.
 </table>
 
 An example of a
-[connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/21/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
+[connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
 that configures this provider can be found in
 [example-vault.properties](example-key-vault.properties).
 
@@ -491,7 +491,7 @@ oracle.jdbc.provider.accessToken.clientId=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 oracle.jdbc.provider.accessToken.clientCertificatePath=/users/app/certificate.pem
 ```
 Connection properties which identify and configure a provider may appear in a
-[connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/21/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
+[connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
 or be configured programmatically. Configuration with JVM system properties is
 not supported.
 
