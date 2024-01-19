@@ -50,7 +50,13 @@ public class OciVaultProvider extends OracleConfigurationJsonProvider {
     return inputStream;
   }
 
-  /***/
+  /**
+   * {@inheritDoc}
+   * Returns type of this provider, which is a unique identifier for the
+   * Service Provider Interface.
+   *
+   * @return type of this provider
+   */
   @Override
   public String getType() {
     return "vaultoci";
