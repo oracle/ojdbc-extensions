@@ -21,3 +21,6 @@ out/
 # "example-"
 **/*.properties
 !**/example-*.properties
+
+# Vim
+**/*.swp

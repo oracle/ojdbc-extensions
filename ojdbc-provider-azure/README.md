@@ -134,8 +134,7 @@ The user can provide an optional parameter `AUTHENTICATION` (case-ignored) which
   <td rowspan="2"><b>AZURE_INTERACTIVE</b></td>
   <td rowspan="2">InteractiveBrowserCredential</td>
   <td><b>AZURE_CLIENT_ID</b></td>
-  <td>&nbsp;</td></tr>
-  <tr><td><b>AZURE_REDIRECT_URL</b></td>
+  <td><b>AZURE_REDIRECT_URL</b></td>
 </tr>
 </tbody>
 </table>
@@ -446,18 +445,17 @@ common set of parameters.
       <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/reply-url">
       Redirect URL
       </a>
-      for `authentication-method=interactive`
+      for <code>authentication-method=interactive</code>
       </td>
       <td>
-      A URL of the form <code>http://localhost:{port-number}</code> is accepted.
+      A URL of the form <code>http://localhost[:port-number]</code> is accepted.
       <td>
       <i>
-        No default value. If interactive authentication is used, a value must 
-        be configured for this parameter.
+        <code>http://localhost</code>
+        (redirects to any available port in the ephemeral range)
       </i>
       </td>
     </tr>
-    
   </tbody>
 </table>
 
