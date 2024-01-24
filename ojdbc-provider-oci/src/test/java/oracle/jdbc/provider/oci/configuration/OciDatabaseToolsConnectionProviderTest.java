@@ -14,7 +14,7 @@ import com.oracle.bmc.databasetools.requests.GetDatabaseToolsConnectionRequest;
 import com.oracle.bmc.databasetools.responses.CreateDatabaseToolsConnectionResponse;
 import com.oracle.bmc.databasetools.responses.DeleteDatabaseToolsConnectionResponse;
 import com.oracle.bmc.databasetools.responses.GetDatabaseToolsConnectionResponse;
-import oracle.jdbc.pool.OracleDataSource;
+import oracle.jdbc.datasource.impl.OracleDataSource;
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.oci.OciTestProperty;
 import oracle.jdbc.spi.OracleConfigurationProvider;

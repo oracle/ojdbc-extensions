@@ -45,7 +45,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import oracle.jdbc.provider.Configuration;
-import oracle.jdbc.pool.OracleDataSource;
+import oracle.jdbc.datasource.impl.OracleDataSource;
 
 /**
  * A standalone example that configures Oracle JDBC to be provided with the
