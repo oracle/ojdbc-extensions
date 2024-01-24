@@ -77,10 +77,11 @@ public class SimpleVaultExample {
     ds.setURL(url);
 
     // Standard JDBC code
-    Connection cn = ds.getConnection();
-    Statement st = cn.createStatement();
-    ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
-    if (rs.next())
-      System.out.println(rs.getString(1));
+    try (Connection cn = ds.getConnection()) {
+      Statement st = cn.createStatement();
+      ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
+      if (rs.next())
+        System.out.println(rs.getString(1));
+    }
   }
 }
