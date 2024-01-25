@@ -1,10 +1,8 @@
 package oracle.jdbc.provider.oci.configuration;
 
 import oracle.jdbc.driver.OracleConfigurationJsonProvider;
-import oracle.jdbc.provider.configuration.JsonSecretUtil;
 import oracle.jdbc.provider.oci.vault.SecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.sql.json.OracleJsonObject;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -17,7 +15,7 @@ import java.util.Map;
  * A provider for JSON payload which contains configuration from OCI Vault.
  * See {@link #getJson(String)} for the spec of the JSON payload.
  **/
-public class OciVaultProvider extends OracleConfigurationJsonProvider {
+public class OciVaultJsonProvider extends OracleConfigurationJsonProvider {
 
   /**
    * {@inheritDoc}
