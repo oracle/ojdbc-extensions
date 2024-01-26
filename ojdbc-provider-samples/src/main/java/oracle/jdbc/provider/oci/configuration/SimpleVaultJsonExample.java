@@ -49,7 +49,7 @@ import oracle.jdbc.datasource.impl.OracleDataSource;
  * A standalone example that configures Oracle JDBC to be provided with the
  * connection properties retrieved from OCI Vault.
  */
-public class SimpleVaultExample {
+public class SimpleVaultJsonExample {
 
   private static String url;
 
