@@ -38,69 +38,64 @@
 
 package oracle.jdbc.provider.azure.configuration;
 
-import com.azure.core.util.UrlBuilder;
+import oracle.jdbc.driver.OracleConfigurationJsonProvider;
 import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
-import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
-import oracle.jdbc.provider.configuration.JsonSecretUtil;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.provider.parameter.ParameterSetBuilder;
-import oracle.jdbc.provider.parameter.ParameterSetParser;
-import oracle.sql.json.OracleJsonObject;
 
-import java.util.Base64;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static oracle.jdbc.provider.azure.configuration.AzureVaultURLParser.PARAMETER_SET_PARSER;
 
 /**
- * A provider of Secret values from Azure Key Vault.
+ * A provider for JSON payload which contains configuration from Azure Vault.
+ * See {@link #getJson(String)} for the spec of the JSON payload.
  */
-public final class AzureVaultSecretProvider
-    implements OracleConfigurationJsonSecretProvider {
+public class AzureVaultJsonProvider extends OracleConfigurationJsonProvider {
 
   /**
    * {@inheritDoc}
    * <p>
-   *   Returns the password of the Secret that is retrieved from Azure Key Vault.
-   * </p><p>
-   *   The {@code secretJsonObject} has the following form:
-   * </p><pre>{@code
-   *   "password": {
-   *       "type": "vault-azure",
-   *       "value": "https://myvault.vault.azure.net/secrets/mysecret",
-   *       "authentication": {
-   *           "method": "AZURE_DEFAULT"
-   *       }
-   *   }
-   * }</pre>
-   *
-   * @param secretJsonObject json object to be parsed
-   * @return encoded char array in base64 format that represents the retrieved
-   *         Secret.
-   */
+   * Returns the JSON payload stored in Azure Vault Secret.
+   * </p><p>The {@code secretIdentifier} is a identifier of Vault Secret which
+   * can be acquired on the Azure Web Console. The Json payload is stored in
+   * the Secret Value of Vault Secret.
+   * </p>
+   * @param secretIdentifier the identifier of secret used by this
+   *                         provider to retrieve JSON payload from AZURE
+   * @return JSON payload
+   **/
   @Override
-  public char[] getSecret(OracleJsonObject secretJsonObject) {
+  public InputStream getJson(String secretIdentifier) throws SQLException {
+    final String valueFieldName = "value";
+    Map<String, String> options = new HashMap<>();
+    options.put(valueFieldName, secretIdentifier);
 
-    ParameterSet parameterSet =
-      PARAMETER_SET_PARSER.parseNamedValues(
-        JsonSecretUtil.toNamedValues(secretJsonObject));
+    ParameterSet parameters = PARAMETER_SET_PARSER.parseNamedValues(options);
 
-    String secretString = KeyVaultSecretFactory.getInstance()
-      .request(parameterSet)
+    String secretContent = KeyVaultSecretFactory.getInstance()
+      .request(parameters)
       .getContent()
       .getValue();
 
-    return Base64.getEncoder()
-      .encodeToString(secretString.getBytes())
-      .toCharArray();
+    InputStream inputStream =
+      new ByteArrayInputStream(secretContent.getBytes());
+
+    return inputStream;
   }
 
   /**
    * {@inheritDoc}
+   * Returns type of this provider, which is a unique identifier for the
+   * Service Provider Interface.
    *
-   * @return secret type. Not null.
+   * @return type of this provider
    */
   @Override
-  public String getSecretType() {
-    return "vault-azure";
+  public String getType() {
+    return "vaultazure";
   }
 }

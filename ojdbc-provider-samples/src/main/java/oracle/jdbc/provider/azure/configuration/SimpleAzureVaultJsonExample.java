@@ -35,72 +35,67 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-
 package oracle.jdbc.provider.azure.configuration;
 
-import com.azure.core.util.UrlBuilder;
-import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
-import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
-import oracle.jdbc.provider.configuration.JsonSecretUtil;
-import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.provider.parameter.ParameterSetBuilder;
-import oracle.jdbc.provider.parameter.ParameterSetParser;
-import oracle.sql.json.OracleJsonObject;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
-import java.util.Base64;
+import oracle.jdbc.datasource.impl.OracleDataSource;
 
-import static oracle.jdbc.provider.azure.configuration.AzureVaultURLParser.PARAMETER_SET_PARSER;
 
 /**
- * A provider of Secret values from Azure Key Vault.
+ * <p>
+ * A standalone example that configures Oracle JDBC to be provided with the
+ * connection properties retrieved from Azure Vault Secret.
+ * For the default authentication, the following environment variables must be
+ * set:
+ * </p>
+ * <ul>
+ * <li>AZURE_TENANT_ID The Azure Active Directory tenant(directory) ID.</li>
+ * <li>AZURE_CLIENT_ID The client(application) ID of an App Registration in the
+ * tenant.</li>
+ * <li>AZURE_CLIENT_SECRET A client secret that was generated for the App
+ * Registration.</li>
+ * </ul>
+ * <p>The Oracle DataSource uses a new prefix
+ * jdbc:oracle:thin:@config-vaultazure:
+ * to be able to identify that the configuration parameters should be loaded
+ * using Azure Vault Secret. Users only need to indicate the Vault Secret's
+ * secret identifier, with the
+ * following syntax:
+ * </p>
+ * <pre>
+ * jdbc:oracle:thin:@config-vaultazure:{secret-identifier}
+ * </pre>
  */
-public final class AzureVaultSecretProvider
-    implements OracleConfigurationJsonSecretProvider {
+
+public class SimpleAzureVaultJsonExample {
+  private static String url;
 
   /**
-   * {@inheritDoc}
-   * <p>
-   *   Returns the password of the Secret that is retrieved from Azure Key Vault.
-   * </p><p>
-   *   The {@code secretJsonObject} has the following form:
-   * </p><pre>{@code
-   *   "password": {
-   *       "type": "vault-azure",
-   *       "value": "https://myvault.vault.azure.net/secrets/mysecret",
-   *       "authentication": {
-   *           "method": "AZURE_DEFAULT"
-   *       }
-   *   }
-   * }</pre>
-   *
-   * @param secretJsonObject json object to be parsed
-   * @return encoded char array in base64 format that represents the retrieved
-   *         Secret.
+   * @param args the command line arguments
+   * @throws SQLException if an error occurs during the database calls
    */
-  @Override
-  public char[] getSecret(OracleJsonObject secretJsonObject) {
+  public static void main(String[] args) throws SQLException {
+    // Sample default URL if non present
+    if (args.length == 0) {
+      url = "jdbc:oracle:thin:@config-vaultazure:https://{your-vault-name}.vault.azure.net/secrets/{secret-name}";
+    } else {
+      url = args[0];
+    }
 
-    ParameterSet parameterSet =
-      PARAMETER_SET_PARSER.parseNamedValues(
-        JsonSecretUtil.toNamedValues(secretJsonObject));
+    // No changes required, configuration provider is loaded at runtime
+    OracleDataSource ds = new OracleDataSource();
+    ds.setURL(url);
 
-    String secretString = KeyVaultSecretFactory.getInstance()
-      .request(parameterSet)
-      .getContent()
-      .getValue();
-
-    return Base64.getEncoder()
-      .encodeToString(secretString.getBytes())
-      .toCharArray();
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return secret type. Not null.
-   */
-  @Override
-  public String getSecretType() {
-    return "vault-azure";
+    // Standard JDBC code
+    try (Connection cn = ds.getConnection()) {
+      Statement st = cn.createStatement();
+      ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
+      if (rs.next())
+        System.out.println(rs.getString(1));
+    }
   }
 }
