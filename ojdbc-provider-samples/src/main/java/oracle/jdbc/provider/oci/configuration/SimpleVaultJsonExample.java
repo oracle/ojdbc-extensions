@@ -47,7 +47,7 @@ import oracle.jdbc.datasource.impl.OracleDataSource;
 
 /**
  * A standalone example that configures Oracle JDBC to be provided with the
- * connection properties retrieved from OCI Vault.
+ * connection properties retrieved from OCI Vault Secret.
  */
 public class SimpleVaultJsonExample {
 
@@ -55,19 +55,29 @@ public class SimpleVaultJsonExample {
 
   /**
    * <p>
-   * Simple example to retrieve connection properties from OCI Vault.
-   * </p><p>
+   * Simple example to retrieve connection properties from OCI Vault Secret.
+   * </p>
+   * <p>
    * For the default authentication, the only required local configuration is
    * to have a valid OCI Config in ~/.oci/config.
    * </p>
+   * <p>
+   * To run this example, the payload needs to be stored in OCI Vault Secret.
+   * The payload examples can be found in
+   * {@link oracle.jdbc.spi.OracleConfigurationProvider}.
+   * </p>
+   * Users need to indicate the OCID of the Secret with the following syntax:
+   * <pre>
+   * jdbc:oracle:thin:@config-ocivault:{secret-ocid}
+   * </pre>
    * @param args the command line arguments
    * @throws SQLException if an error occurs during the database calls
-   */
+   **/
   public static void main(String[] args) throws SQLException {
 
     // Sample default URL if non present
     if (args.length == 0) {
-      url = "jdbc:oracle:thin:@config-vaultoci:ocid1.vaultsecret.oc1.phx.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+      url = "jdbc:oracle:thin:@config-ocivault:ocid1.vaultsecret.oc1.phx.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
     } else {
       url = args[0];
     }
