@@ -58,6 +58,7 @@ jobs:
           AZURE_APP_CONFIG_LABEL=${{ secrets.TEST_AZURE_APP_CONFIG_LABEL }}\n
           AZURE_KEY_VAULT_URL=${{ secrets.TEST_AZURE_KEY_VAULT_URL }}\n
           AZURE_KEY_VAULT_SECRET_NAME=${{ secrets.TEST_AZURE_KEY_VAULT_SECRET_NAME }}\n
+          AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME=${{ secrets.TEST_AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME }}\n
           " >> ojdbc-provider-azure/test.properties
           
           # Generate ojdbc-provider-oci/test.properties
