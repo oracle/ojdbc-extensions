@@ -57,6 +57,6 @@ public class OciVaultJsonProvider extends OracleConfigurationJsonProvider {
    */
   @Override
   public String getType() {
-    return "vaultoci";
+    return "ocivault";
   }
 }

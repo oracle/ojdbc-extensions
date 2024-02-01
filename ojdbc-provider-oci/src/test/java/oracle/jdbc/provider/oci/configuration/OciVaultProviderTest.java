@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class OciVaultProviderTest {
   private static final OracleConfigurationProvider PROVIDER =
-    OracleConfigurationProvider.find("vaultoci");
+    OracleConfigurationProvider.find("ocivault");
 
   @Test
   public void testConfigFile() throws SQLException {
