@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class AzureVaultJsonProviderTest {
   private static final OracleConfigurationProvider PROVIDER =
-    OracleConfigurationProvider.find("vaultazure");
+    OracleConfigurationProvider.find("azurevault");
 
   @Test
   public void testConfigFile() throws SQLException {

@@ -96,6 +96,6 @@ public class AzureVaultJsonProvider extends OracleConfigurationJsonProvider {
    */
   @Override
   public String getType() {
-    return "vaultazure";
+    return "azurevault";
   }
 }

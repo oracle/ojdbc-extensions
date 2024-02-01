@@ -60,14 +60,14 @@ import oracle.jdbc.datasource.impl.OracleDataSource;
  * Registration.</li>
  * </ul>
  * <p>The Oracle DataSource uses a new prefix
- * jdbc:oracle:thin:@config-vaultazure:
+ * jdbc:oracle:thin:@config-azurevault:
  * to be able to identify that the configuration parameters should be loaded
  * using Azure Vault Secret. Users only need to indicate the Vault Secret's
  * secret identifier, with the
  * following syntax:
  * </p>
  * <pre>
- * jdbc:oracle:thin:@config-vaultazure:{secret-identifier}
+ * jdbc:oracle:thin:@config-azurevault:{secret-identifier}
  * </pre>
  */
 
@@ -81,7 +81,7 @@ public class SimpleAzureVaultJsonExample {
   public static void main(String[] args) throws SQLException {
     // Sample default URL if non present
     if (args.length == 0) {
-      url = "jdbc:oracle:thin:@config-vaultazure:https://{your-vault-name}.vault.azure.net/secrets/{secret-name}";
+      url = "jdbc:oracle:thin:@config-azurevault:https://{your-vault-name}.vault.azure.net/secrets/{secret-name}";
     } else {
       url = args[0];
     }
