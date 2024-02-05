@@ -59,6 +59,11 @@ import oracle.jdbc.datasource.impl.OracleDataSource;
  * <li>AZURE_CLIENT_SECRET A client secret that was generated for the App
  * Registration.</li>
  * </ul>
+ * <p>
+ * To run this example, the payload needs to be stored in Azure Vault Secret.
+ * The payload examples can be found in
+ * {@link oracle.jdbc.spi.OracleConfigurationProvider}.
+ * </p>
  * <p>The Oracle DataSource uses a new prefix
  * jdbc:oracle:thin:@config-azurevault:
  * to be able to identify that the configuration parameters should be loaded
