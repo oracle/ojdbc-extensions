@@ -9,7 +9,7 @@
 
   <name>Extensions for the Oracle JDBC Driver</name>
   <description>Oracle JDBC Extensions include providers for multiple resources</description>
-  <url>https://github.com/oracle-samples/ojdbc-extensions</url>
+  <url>https://github.com/oracle/ojdbc-extensions</url>
   <licenses>
     <license>
       <name>The Universal Permissive License (UPL), Version 1.0</name>
@@ -23,9 +23,9 @@
     </developer>
   </developers>
   <scm>
-    <url>https://github.com/oracle-samples/ojdbc-extensions</url>
-    <connection>scm:git:https://github.com/oracle-samples/ojdbc-extensions</connection>
-    <developerConnection>scm:git:https://github.com/oracle-samples/ojdbc-extensions</developerConnection>
+    <url>https://github.com/oracle/ojdbc-extensions</url>
+    <connection>scm:git:https://github.com/oracle/ojdbc-extensions</connection>
+    <developerConnection>scm:git:https://github.com/oracle/ojdbc-extensions</developerConnection>
     <tag>HEAD</tag>
   </scm>
 
@@ -42,7 +42,7 @@
   <profiles>
     <!--
       This profile configures the "release" option for javac, which was added
-      in JDK 9. See https://github.com/oracle-samples/ojdbc-extensions/pull/46
+      in JDK 9. See https://github.com/oracle/ojdbc-extensions/pull/46
     -->
     <profile>
       <id>javac-release</id>
