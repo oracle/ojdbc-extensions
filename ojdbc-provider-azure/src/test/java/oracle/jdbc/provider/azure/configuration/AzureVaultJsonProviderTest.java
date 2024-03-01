@@ -39,6 +39,7 @@ package oracle.jdbc.provider.azure.configuration;
 
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.azure.AzureTestProperty;
+import oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod;
 import oracle.jdbc.spi.OracleConfigurationProvider;
 import org.junit.jupiter.api.Test;
 
@@ -47,17 +48,32 @@ import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Verifies the {@link AzureVaultJsonProvider} as implementing behavior
+ * specified by its JavaDoc.
+ */
+
 public class AzureVaultJsonProviderTest {
   private static final OracleConfigurationProvider PROVIDER =
     OracleConfigurationProvider.find("azurevault");
 
+  /**
+   * <p>
+   * Verifies the AUTHENTICATION=AZURE_DEFAULT parameter setting.
+   * This test uses {@link AzureAuthenticationMethod#DEFAULT} as its
+   * authentication method.
+   * </p><p>
+   * About the required parameters for the authentication,
+   * please refer to <a href="https://learn.microsoft.com/en-us/java/api/com.azure.identity.defaultazurecredential?view=azure-java-stable">Configure DefaultAzureCredential</a>
+   * </p>
+   **/
   @Test
-  public void testConfigFile() throws SQLException {
+  public void testDefaultAuthentication() throws SQLException {
     verifyProperties("AUTHENTICATION=AZURE_DEFAULT");
   }
 
+  /** verifies a properties object returned with a URL with the given options **/
   private static void verifyProperties(String... options) throws SQLException {
-    System.out.println(composeUrl(options));
     Properties properties = PROVIDER
       .getConnectionProperties(composeUrl(options));
 

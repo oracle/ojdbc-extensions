@@ -60,21 +60,21 @@ public class AzureVaultJsonProvider extends OracleConfigurationJsonProvider {
    * {@inheritDoc}
    * <p>
    * Returns the JSON payload stored in Azure Vault Secret.
-   * </p><p>The {@code secretIdentifier} is a identifier of Vault Secret which
+   * </p><p>The {@code secretIdentifier} is an identifier of Vault Secret which
    * can be acquired on the Azure Web Console. The Json payload is stored in
    * the Secret Value of Vault Secret.
    * </p>
    * @param secretIdentifier the identifier of secret used by this
-   *                         provider to retrieve JSON payload from AZURE
+   *                         provider to retrieve JSON payload from Azure
    * @return JSON payload
    **/
   @Override
-  public InputStream getJson(String secretIdentifier) throws SQLException {
+  public InputStream getJson(String secretIdentifier) {
     final String valueFieldName = "value";
-    Map<String, String> options = new HashMap<>();
-    options.put(valueFieldName, secretIdentifier);
+    Map<String, String> optionsWithSecret = new HashMap<>(options);
+    optionsWithSecret.put(valueFieldName, secretIdentifier);
 
-    ParameterSet parameters = PARAMETER_SET_PARSER.parseNamedValues(options);
+    ParameterSet parameters = PARAMETER_SET_PARSER.parseNamedValues(optionsWithSecret);
 
     String secretContent = KeyVaultSecretFactory.getInstance()
       .request(parameters)
