@@ -46,7 +46,6 @@ import org.junit.jupiter.api.Test;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import static oracle.jdbc.provider.TestProperties.getOrAbort;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
@@ -59,12 +58,12 @@ public class OciObjectStorageProviderTest {
     OracleConfigurationProvider.find("ociobject");
 
   /**
-   * Verifies the authentication-method=config-file URI parameter setting.
+   * Verifies the AUTHENTICATION=OCI_DEFAULT parameter setting.
    * This test will fail if (~/.oci/config) or (~/.oraclebmc/config) or the
    * environmental variable OCI_CONFIG_FILE is not set.
    */
   @Test
-  public void testConfigFile() throws SQLException {
+  public void testDefaultAuthentication() throws SQLException {
     verifyProperties("AUTHENTICATION=OCI_DEFAULT");
   }
 
