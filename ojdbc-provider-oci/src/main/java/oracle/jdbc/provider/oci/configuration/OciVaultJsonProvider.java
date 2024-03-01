@@ -21,7 +21,7 @@ public class OciVaultJsonProvider extends OracleConfigurationJsonProvider {
    * {@inheritDoc}
    * <p>
    * Returns the JSON payload stored in OCI Vault Secret.
-   * </p><p>The {@code secretOcid} is a OCID of Vault Secret which can be
+   * </p><p>The {@code secretOcid} is an OCID of Vault Secret which can be
    * acquired on the OCI Web Console. The Json payload is stored in the Secret
    * Contents of Vault Secret.
    * </p>
@@ -30,14 +30,14 @@ public class OciVaultJsonProvider extends OracleConfigurationJsonProvider {
    * @return JSON payload
    **/
   @Override
-  public InputStream getJson(String secretOcid) throws SQLException {
+  public InputStream getJson(String secretOcid) {
     final String valueFieldName = "value";
-    Map<String, String> options = new HashMap<>();
-    options.put(valueFieldName, secretOcid);
+    Map<String, String> optionsWithOcid = new HashMap<>(options);
+    optionsWithOcid.put(valueFieldName, secretOcid);
 
     ParameterSet parameters =
       OciConfigurationParameters.getParser()
-        .parseNamedValues(options);
+        .parseNamedValues(optionsWithOcid);
 
     String secretContent = SecretFactory.getInstance()
       .request(parameters)
