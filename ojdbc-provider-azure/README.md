@@ -53,7 +53,7 @@ There are 3 fixed values that are looked at by the provider in the retrieved con
 - user (optional)
 - password (optional)
 
-The rest are dependent on the driver, in our case `/jdbc`. The key-value pairs that are with sub-prefix `/jdbc` will be applied to a DataSource. The key values are constant keys which are equivalent to the properties defined in the [OracleConnection](https://docs.oracle.com/en/database/oracle/oracle-database/21/jajdb/oracle/jdbc/OracleConnection.html) interface.
+The rest are dependent on the driver, in our case `/jdbc`. The key-value pairs that are with sub-prefix `/jdbc` will be applied to a DataSource. The key values are constant keys which are equivalent to the properties defined in the [OracleConnection](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html) interface.
 
 For example, let's suppose an url like:
 
@@ -134,8 +134,7 @@ The user can provide an optional parameter `AUTHENTICATION` (case-ignored) which
   <td rowspan="2"><b>AZURE_INTERACTIVE</b></td>
   <td rowspan="2">InteractiveBrowserCredential</td>
   <td><b>AZURE_CLIENT_ID</b></td>
-  <td>&nbsp;</td></tr>
-  <tr><td><b>AZURE_REDIRECT_URL</b></td>
+  <td><b>AZURE_REDIRECT_URL</b></td>
 </tr>
 </tbody>
 </table>
@@ -191,7 +190,7 @@ Specifies the scope of databases that may be accessed with the token. See
 </table>
 
 An example of a
-[connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/21/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
+[connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
 that configures this provider can be found in
 [example-token.properties](example-token.properties).
 
@@ -251,7 +250,7 @@ Any valid secret name is accepted.
 </table>
 
 An example of a
-[connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/21/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
+[connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
 that configures this provider can be found in
 [example-vault.properties](example-key-vault.properties).
 
@@ -296,7 +295,7 @@ Any valid secret name is accepted.
 </table>
 
 An example of a
-[connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/21/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
+[connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
 that configures this provider can be found in
 [example-vault.properties](example-key-vault.properties).
 
@@ -446,18 +445,17 @@ common set of parameters.
       <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/reply-url">
       Redirect URL
       </a>
-      for `authentication-method=interactive`
+      for <code>authentication-method=interactive</code>
       </td>
       <td>
-      A URL of the form <code>http://localhost:{port-number}</code> is accepted.
+      A URL of the form <code>http://localhost[:port-number]</code> is accepted.
       <td>
       <i>
-        No default value. If interactive authentication is used, a value must 
-        be configured for this parameter.
+        <code>http://localhost</code>
+        (redirects to any available port in the ephemeral range)
       </i>
       </td>
     </tr>
-    
   </tbody>
 </table>
 
@@ -491,7 +489,7 @@ oracle.jdbc.provider.accessToken.clientId=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 oracle.jdbc.provider.accessToken.clientCertificatePath=/users/app/certificate.pem
 ```
 Connection properties which identify and configure a provider may appear in a
-[connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/21/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
+[connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
 or be configured programmatically. Configuration with JVM system properties is
 not supported.
 
