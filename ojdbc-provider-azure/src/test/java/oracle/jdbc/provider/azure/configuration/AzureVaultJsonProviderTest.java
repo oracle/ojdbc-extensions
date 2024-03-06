@@ -35,69 +35,55 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
+package oracle.jdbc.provider.azure.configuration;
 
-package oracle.jdbc.provider.azure;
+import oracle.jdbc.provider.TestProperties;
+import oracle.jdbc.provider.azure.AzureTestProperty;
+import oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod;
+import oracle.jdbc.spi.OracleConfigurationProvider;
+import org.junit.jupiter.api.Test;
 
-import com.azure.core.util.Configuration;
+import java.sql.SQLException;
+import java.util.Properties;
 
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Names of properties that configure Azure tests. Descriptions and examples of
- * each property can be found in the "example-test.properties" file within the
- * root directory of the project.
+ * Verifies the {@link AzureVaultJsonProvider} as implementing behavior
+ * specified by its JavaDoc.
  */
-public enum AzureTestProperty {
 
-  AZURE_TENANT_ID,
-
-  AZURE_CLIENT_ID,
-
-  AZURE_CLIENT_SECRET,
-
-  AZURE_CLIENT_CERTIFICATE_PATH,
-
-  AZURE_CLIENT_PFX_CERTIFICATE_PATH,
-
-  AZURE_CLIENT_PFX_PASSWORD,
-
-  AZURE_USERNAME,
-
-  AZURE_PASSWORD,
-
-  AZURE_MANAGED_IDENTITY,
-
-  AZURE_APP_CONFIG_NAME,
-
-  AZURE_APP_CONFIG_KEY,
-
-  AZURE_APP_CONFIG_LABEL,
-
-  AZURE_TOKEN_SCOPE,
-
-  AZURE_KEY_VAULT_URL,
-
-  AZURE_KEY_VAULT_SECRET_NAME,
-
-  AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME;
+public class AzureVaultJsonProviderTest {
+  private static final OracleConfigurationProvider PROVIDER =
+    OracleConfigurationProvider.find("azurevault");
 
   /**
-   * Aborts the calling test if the given {@code names} are not configured in
-   * the environment read by the Azure SDK.
-   * @param names Names of configurable values that the Azure SDK reads from the
-   * environment.
-   */
-  public static void abortIfEnvNotConfigured(String... names) {
-    Configuration configuration = Configuration.getGlobalConfiguration();
-
-    for (String name : names) {
-      assumeTrue(
-        configuration.contains(name),
-        String.format(
-          "\"%s\" is not configured in the environment read by the" +
-            " Azure SDK for Java",
-          name));
-    }
+   * <p>
+   * Verifies the AUTHENTICATION=AZURE_DEFAULT parameter setting.
+   * This test uses {@link AzureAuthenticationMethod#DEFAULT} as its
+   * authentication method.
+   * </p><p>
+   * About the required parameters for the authentication,
+   * please refer to <a href="https://learn.microsoft.com/en-us/java/api/com.azure.identity.defaultazurecredential?view=azure-java-stable">Configure DefaultAzureCredential</a>
+   * </p>
+   **/
+  @Test
+  public void testDefaultAuthentication() throws SQLException {
+    verifyProperties("AUTHENTICATION=AZURE_DEFAULT");
   }
 
+  /** verifies a properties object returned with a URL with the given options **/
+  private static void verifyProperties(String... options) throws SQLException {
+    Properties properties = PROVIDER
+      .getConnectionProperties(composeUrl(options));
+
+    assertNotNull(properties);
+  }
+
+  private static String composeUrl(String... options) {
+    return String.format("%s/secrets/%s?%s",
+      TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL),
+      TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME),
+      String.join("&", options));
+  }
 }

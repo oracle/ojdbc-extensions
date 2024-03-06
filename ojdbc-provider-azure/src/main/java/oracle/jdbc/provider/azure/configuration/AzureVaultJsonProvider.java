@@ -36,68 +36,66 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.azure;
+package oracle.jdbc.provider.azure.configuration;
 
-import com.azure.core.util.Configuration;
+import oracle.jdbc.driver.OracleConfigurationJsonProvider;
+import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
+import oracle.jdbc.provider.parameter.ParameterSet;
 
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+
+import static oracle.jdbc.provider.azure.configuration.AzureVaultURLParser.PARAMETER_SET_PARSER;
 
 /**
- * Names of properties that configure Azure tests. Descriptions and examples of
- * each property can be found in the "example-test.properties" file within the
- * root directory of the project.
+ * A provider for JSON payload which contains configuration from Azure Vault.
+ * See {@link #getJson(String)} for the spec of the JSON payload.
  */
-public enum AzureTestProperty {
-
-  AZURE_TENANT_ID,
-
-  AZURE_CLIENT_ID,
-
-  AZURE_CLIENT_SECRET,
-
-  AZURE_CLIENT_CERTIFICATE_PATH,
-
-  AZURE_CLIENT_PFX_CERTIFICATE_PATH,
-
-  AZURE_CLIENT_PFX_PASSWORD,
-
-  AZURE_USERNAME,
-
-  AZURE_PASSWORD,
-
-  AZURE_MANAGED_IDENTITY,
-
-  AZURE_APP_CONFIG_NAME,
-
-  AZURE_APP_CONFIG_KEY,
-
-  AZURE_APP_CONFIG_LABEL,
-
-  AZURE_TOKEN_SCOPE,
-
-  AZURE_KEY_VAULT_URL,
-
-  AZURE_KEY_VAULT_SECRET_NAME,
-
-  AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME;
+public class AzureVaultJsonProvider extends OracleConfigurationJsonProvider {
 
   /**
-   * Aborts the calling test if the given {@code names} are not configured in
-   * the environment read by the Azure SDK.
-   * @param names Names of configurable values that the Azure SDK reads from the
-   * environment.
-   */
-  public static void abortIfEnvNotConfigured(String... names) {
-    Configuration configuration = Configuration.getGlobalConfiguration();
+   * {@inheritDoc}
+   * <p>
+   * Returns the JSON payload stored in Azure Vault Secret.
+   * </p><p>The {@code secretIdentifier} is an identifier of Vault Secret which
+   * can be acquired on the Azure Web Console. The Json payload is stored in
+   * the Secret Value of Vault Secret.
+   * </p>
+   * @param secretIdentifier the identifier of secret used by this
+   *                         provider to retrieve JSON payload from Azure
+   * @return JSON payload
+   **/
+  @Override
+  public InputStream getJson(String secretIdentifier) {
+    final String valueFieldName = "value";
+    Map<String, String> optionsWithSecret = new HashMap<>(options);
+    optionsWithSecret.put(valueFieldName, secretIdentifier);
 
-    for (String name : names) {
-      assumeTrue(
-        configuration.contains(name),
-        String.format(
-          "\"%s\" is not configured in the environment read by the" +
-            " Azure SDK for Java",
-          name));
-    }
+    ParameterSet parameters = PARAMETER_SET_PARSER.parseNamedValues(optionsWithSecret);
+
+    String secretContent = KeyVaultSecretFactory.getInstance()
+      .request(parameters)
+      .getContent()
+      .getValue();
+
+    InputStream inputStream =
+      new ByteArrayInputStream(secretContent.getBytes());
+
+    return inputStream;
   }
 
+  /**
+   * {@inheritDoc}
+   * Returns type of this provider, which is a unique identifier for the
+   * Service Provider Interface.
+   *
+   * @return type of this provider
+   */
+  @Override
+  public String getType() {
+    return "azurevault";
+  }
 }
