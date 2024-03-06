@@ -43,7 +43,7 @@ import com.azure.data.appconfiguration.ConfigurationClientBuilder;
 import com.azure.identity.ClientSecretCredentialBuilder;
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod;
-import oracle.jdbc.pool.OracleDataSource;
+import oracle.jdbc.datasource.impl.OracleDataSource;
 import oracle.jdbc.provider.azure.AzureTestProperty;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;

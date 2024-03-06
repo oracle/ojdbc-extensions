@@ -37,7 +37,7 @@
  */
 package oracle.jdbc.provider.oci.configuration;
 
-import oracle.jdbc.pool.OracleDataSource;
+import oracle.jdbc.datasource.impl.OracleDataSource;
 import oracle.jdbc.provider.Configuration;
 
 import java.sql.Connection;

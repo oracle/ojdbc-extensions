@@ -37,36 +37,47 @@
  */
 package oracle.jdbc.provider.oci.configuration;
 
-import oracle.jdbc.datasource.impl.OracleDataSource;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import oracle.jdbc.datasource.impl.OracleDataSource;
+
 
 /**
  * A standalone example that configures Oracle JDBC to be provided with the
- * connection properties retrieved from OCI Database Tools Connection.
+ * connection properties retrieved from OCI Vault Secret.
  */
-public class SimpleDatabaseToolsConnectionExample {
+public class SimpleVaultJsonExample {
+
   private static String url;
 
   /**
    * <p>
-   * Simple example to retrieve connection properties from OCI Database Tools
-   * Connection.</p><p>
+   * Simple example to retrieve connection properties from OCI Vault Secret.
+   * </p>
+   * <p>
    * For the default authentication, the only required local configuration is
    * to have a valid OCI Config in ~/.oci/config.
    * </p>
+   * <p>
+   * To run this example, the payload needs to be stored in OCI Vault Secret.
+   * The payload examples can be found in
+   * {@link oracle.jdbc.spi.OracleConfigurationProvider}.
+   * </p>
+   * Users need to indicate the OCID of the Secret with the following syntax:
+   * <pre>
+   * jdbc:oracle:thin:@config-ocivault:{secret-ocid}
+   * </pre>
    * @param args the command line arguments
    * @throws SQLException if an error occurs during the database calls
-   */
+   **/
   public static void main(String[] args) throws SQLException {
 
     // Sample default URL if non present
     if (args.length == 0) {
-      url = "jdbc:oracle:thin:@config-ocidbtools:ocid1.databasetoolsconnection.oc1.phx.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+      url = "jdbc:oracle:thin:@config-ocivault:ocid1.vaultsecret.oc1.phx.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
     } else {
       url = args[0];
     }
@@ -76,11 +87,11 @@ public class SimpleDatabaseToolsConnectionExample {
     ds.setURL(url);
 
     // Standard JDBC code
-    Connection cn = ds.getConnection();
-    Statement st = cn.createStatement();
-    ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
-    if (rs.next())
-      System.out.println(rs.getString(1));
+    try (Connection cn = ds.getConnection()) {
+      Statement st = cn.createStatement();
+      ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
+      if (rs.next())
+        System.out.println(rs.getString(1));
+    }
   }
-
 }
