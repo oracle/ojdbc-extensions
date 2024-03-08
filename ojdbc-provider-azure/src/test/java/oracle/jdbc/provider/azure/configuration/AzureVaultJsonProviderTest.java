@@ -59,17 +59,22 @@ public class AzureVaultJsonProviderTest {
 
   /**
    * <p>
-   * Verifies the AUTHENTICATION=AZURE_DEFAULT parameter setting.
-   * This test uses {@link AzureAuthenticationMethod#DEFAULT} as its
+   * Verifies AUTHENTICATION=AZURE_SERVICE_PRINCIPAL parameter setting.
+   * This test uses {@link AzureAuthenticationMethod#SERVICE_PRINCIPLE} as its
    * authentication method.
-   * </p><p>
-   * About the required parameters for the authentication,
-   * please refer to <a href="https://learn.microsoft.com/en-us/java/api/com.azure.identity.defaultazurecredential?view=azure-java-stable">Configure DefaultAzureCredential</a>
-   * </p>
    **/
   @Test
-  public void testDefaultAuthentication() throws SQLException {
-    verifyProperties("AUTHENTICATION=AZURE_DEFAULT");
+  public void testServicePrincipleAuthentication() throws SQLException {
+    String[] options = new String[] {
+            "AUTHENTICATION=AZURE_SERVICE_PRINCIPAL",
+            "AZURE_CLIENT_ID=" + TestProperties.getOrAbort(
+                    AzureTestProperty.AZURE_CLIENT_ID),
+            "AZURE_CLIENT_SECRET=" + TestProperties.getOrAbort(
+                    AzureTestProperty.AZURE_CLIENT_SECRET),
+            "AZURE_TENANT_ID=" + TestProperties.getOrAbort(
+                    AzureTestProperty.AZURE_TENANT_ID)};
+
+    verifyProperties(options);
   }
 
   /** verifies a properties object returned with a URL with the given options **/
