@@ -262,7 +262,7 @@ public class AzureAppConfigurationProviderURLParserTest {
         properties.getProperty(AzureTestProperty.AZURE_APP_CONFIG_LABEL.name()),
         optionsString);
     }
-    return String.format("jdbc:oracle:thin:@config-azure:%s?key=%s&%s",
+    return String.format("jdbc:oracle:thin:@config-azure://%s?key=%s&%s",
       TestProperties.getOrAbort(AzureTestProperty.AZURE_APP_CONFIG_NAME),
       TestProperties.getOrAbort(AzureTestProperty.AZURE_APP_CONFIG_KEY),
       optionsString);

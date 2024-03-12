@@ -71,6 +71,10 @@ public class OciObjectStorageProvider
    */
   @Override
   public InputStream getJson(String objectUrl) {
+    // Add implicit prefix if not informed
+    if (!objectUrl.startsWith("https://")) {
+      objectUrl = "https://" + objectUrl;
+    }
     // Add objectUrl to the "options" Map, so it can be parsed.
     Map<String, String> optionsWithUrl = new HashMap<>(options);
     optionsWithUrl.put("object_url", objectUrl);
