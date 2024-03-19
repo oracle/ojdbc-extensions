@@ -65,7 +65,7 @@ public final class AzureVaultSecretProvider
    *   The {@code secretJsonObject} has the following form:
    * </p><pre>{@code
    *   "password": {
-   *       "type": "vault-azure",
+   *       "type": "azurevault",
    *       "value": "https://myvault.vault.azure.net/secrets/mysecret",
    *       "authentication": {
    *           "method": "AZURE_DEFAULT"
@@ -101,6 +101,6 @@ public final class AzureVaultSecretProvider
    */
   @Override
   public String getSecretType() {
-    return "vault-azure";
+    return "azurevault";
   }
 }

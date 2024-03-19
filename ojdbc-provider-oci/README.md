@@ -92,7 +92,7 @@ And the JSON Payload for the file **payload_ojdbc_objectstorage.json** in the **
   "connect_descriptor": "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=adb.us-phoenix-1.oraclecloud.com))(connect_data=(service_name=xsxsxs_dbtest_medium.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))",
   "user": "scott",
   "password": { 
-    "type": "vault-oci",
+    "type": "ocivault",
     "value": "ocid1.vaultsecret.oc1.phx.amaaaaaxxxx"
   },
   "jdbc": {
@@ -122,14 +122,14 @@ For the JSON type of provider (OCI Object Storage, HTTP/HTTPS, File) the passwor
 - type
   - Mandatory
   - Possible values
-    - vault-oci
-    - vault-azure
+    - ocivault
+    - azurevault
     - base64
 - value
   - Mandatory
   - Possible values
-    - OCID of the secret (if vault-oci)
-    - Azure Key Vault URI (if vault-azure)
+    - OCID of the secret (if ocivault)
+    - Azure Key Vault URI (if azurevault)
     - Base64 Encoded password (if base64)
     - Text
 - authentication

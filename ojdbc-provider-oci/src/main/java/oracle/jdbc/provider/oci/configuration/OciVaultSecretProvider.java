@@ -58,7 +58,7 @@ public final class OciVaultSecretProvider
    *   The {@code secretJsonObject} has the following form:
    * </p><pre>{@code
    *   "password": {
-   *       "type": "vault-oci",
+   *       "type": "ocivault",
    *       "value": "ocid1.vaultsecret.oc1.phx.amaaaaaad...",
    *       "authentication": {
    *           "method": "OCI_DEFAULT"
@@ -90,6 +90,6 @@ public final class OciVaultSecretProvider
    */
   @Override
   public String getSecretType() {
-    return "vault-oci";
+    return "ocivault";
   }
 }
