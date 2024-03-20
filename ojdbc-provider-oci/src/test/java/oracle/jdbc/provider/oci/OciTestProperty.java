@@ -54,6 +54,8 @@ public enum OciTestProperty {
 
   OCI_RESOURCE_PRINCIPAL,
 
+  OCI_INTERACTIVE,
+
   OCI_TOKEN_SCOPE,
 
   OCI_PASSWORD_OCID,

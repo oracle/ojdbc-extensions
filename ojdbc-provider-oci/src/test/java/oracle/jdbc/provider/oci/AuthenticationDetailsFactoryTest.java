@@ -103,6 +103,16 @@ public class AuthenticationDetailsFactoryTest {
   }
 
   /**
+   * Verifies {@link AuthenticationMethod#INTERACTIVE}
+   */
+  @Test
+  public void testResourceInteractive() {
+    TestProperties.abortIfNotEqual(OciTestProperty.OCI_INTERACTIVE, "true");
+    verifyAuthenticationDetails(
+            buildParameterSet(AuthenticationMethod.INTERACTIVE).build());
+  }
+
+  /**
    * Returns a parameter set builder pre-configured with a given
    * {@code authenticationMethod}
    */
