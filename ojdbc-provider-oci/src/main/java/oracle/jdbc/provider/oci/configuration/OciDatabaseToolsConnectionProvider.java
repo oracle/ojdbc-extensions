@@ -79,14 +79,14 @@ public class OciDatabaseToolsConnectionProvider
         properties,
         configTimeToLive,
         () -> this.refreshProperties(location),
-          MS_REFRESH_TIMEOUT,
-          MS_RETRY_INTERVAL);
+        MS_REFRESH_TIMEOUT,
+        MS_RETRY_INTERVAL);
     } else {
       cache.put(location,
         properties,
         () -> this.refreshProperties(location),
-          MS_REFRESH_TIMEOUT,
-          MS_RETRY_INTERVAL);
+        MS_REFRESH_TIMEOUT,
+        MS_RETRY_INTERVAL);
     }
 
     return properties;
