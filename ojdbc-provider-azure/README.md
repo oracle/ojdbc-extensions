@@ -5,7 +5,7 @@ This module contains providers for integration between Oracle JDBC and Azure.
 ## Centralized Config Providers
 
 <dl>
-<dt><a href="#config-provider-for-azure">Config Provider for Azure</a></dt>
+<dt><a href="#azure-app-configuration-provider">Azure App Configuration Provider</a></dt>
 <dd>Provides connection properties managed by the App Configuration service</dd>
 <dt><a href="#common-parameters-for-centralized-config-providers">Common Parameters for Centralized Config Providers</a></dt>
 <dd>Common parameters supported by the config providers</dd>
@@ -40,7 +40,7 @@ JDK versions. The coordinates for the latest release are:
 </dependency>
 ```
 
-## App Config Provider
+## Azure App Configuration Provider
 
 The Config Provider for Azure is a Centralized Config Provider that provides Oracle JDBC with
 connection properties from the App Configuration service and the Key Vault service.
