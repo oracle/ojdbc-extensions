@@ -28,15 +28,30 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
+/**
+ * <p>
+ *   A provider of configuration from OCI Database Tools Connection.
+ * </p>
+ */
 public class OciDatabaseToolsConnectionProvider
     implements OracleConfigurationProvider {
 
   private static final String CONFIG_TIME_TO_LIVE =
     "config_time_to_live";
-  private static final long MS_TIMEOUT = 60_000L;
-  private static final long MS_REFRESH_INTERVAL = 60_000L;
+  /**
+   * Timeout value of the background thread that requests the configuration from
+   * remote location during soft-expiration period. The task will be interrupted
+   * after 60 seconds.
+   */
+  private static final long MS_REFRESH_TIMEOUT = 60_000L;
+  /**
+   * Retry interval of the background thread that requests the configuration
+   * from remote location during soft-expiration period. The thread will retry
+   * in a frequency of 60 seconds if the remote location is unreachable.
+   */
+  private static final long MS_RETRY_INTERVAL = 60_000L;
 
-  private final OracleConfigurationCache cache = OracleConfigurationCache
+  private static final OracleConfigurationCache cache = OracleConfigurationCache
     .create(100);
 
   private ParameterSet commonParameters;
@@ -64,14 +79,14 @@ public class OciDatabaseToolsConnectionProvider
         properties,
         configTimeToLive,
         () -> this.refreshProperties(location),
-        MS_TIMEOUT,
-        MS_REFRESH_INTERVAL);
+          MS_REFRESH_TIMEOUT,
+          MS_RETRY_INTERVAL);
     } else {
       cache.put(location,
         properties,
         () -> this.refreshProperties(location),
-        MS_TIMEOUT,
-        MS_REFRESH_INTERVAL);
+          MS_REFRESH_TIMEOUT,
+          MS_RETRY_INTERVAL);
     }
 
     return properties;
