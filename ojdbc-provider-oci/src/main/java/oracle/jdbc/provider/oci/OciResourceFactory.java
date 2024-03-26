@@ -45,6 +45,11 @@ import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static java.lang.String.format;
+
 /**
  * <p>
  * Common super class for {@link ResourceFactory} implementations that request
@@ -63,6 +68,32 @@ import oracle.jdbc.provider.factory.ResourceFactory;
  * </p>
  */
 public abstract class OciResourceFactory<T> implements ResourceFactory<T> {
+  private static final Logger LOGGER =
+          Logger.getLogger(OciResourceFactory.class.getName());
+
+  static {
+    String propertyKey = "oci.javasdk.apache.idle.connection.monitor.thread.enabled";
+    String propertyValue = System.getProperty(propertyKey);
+
+    if (propertyValue == null) {
+      try{
+        System.setProperty(propertyKey, "false");
+      } catch (Exception ex) {
+        if (LOGGER.isLoggable(Level.WARNING)) {
+          LOGGER.log(
+                  Level.WARNING,
+                  format("Failed to set System Property: %s to false", propertyKey),
+                  ex);
+        }
+      }
+    } else if (propertyValue.equals("true")) {
+      if (LOGGER.isLoggable(Level.WARNING)) {
+        LOGGER.log(
+                Level.WARNING,
+                format("System Property: %s is already set to true", propertyKey));
+      }
+    }
+  }
 
   /** Factory to create authentication details recognized by the OCI SDK */
   private final AuthenticationDetailsFactory authenticationDetailsFactory
