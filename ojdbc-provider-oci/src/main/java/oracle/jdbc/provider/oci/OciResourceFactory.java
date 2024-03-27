@@ -74,6 +74,7 @@ public abstract class OciResourceFactory<T> implements ResourceFactory<T> {
   static {
     String propertyKey = "oci.javasdk.apache.idle.connection.monitor.thread.enabled";
     String propertyValue = System.getProperty(propertyKey);
+    String message = "\nSetting this system property to false is necessary to disable the IdleConnectionMonitor thread and avoid a possible thread leak with OCI Java SDK.";
 
     if (propertyValue == null) {
       try{
@@ -82,7 +83,7 @@ public abstract class OciResourceFactory<T> implements ResourceFactory<T> {
         if (LOGGER.isLoggable(Level.WARNING)) {
           LOGGER.log(
                   Level.WARNING,
-                  format("Failed to set System Property: %s to false", propertyKey),
+                  format("Failed to set System Property '%s' to false.", propertyKey) + message,
                   ex);
         }
       }
@@ -90,7 +91,7 @@ public abstract class OciResourceFactory<T> implements ResourceFactory<T> {
       if (LOGGER.isLoggable(Level.WARNING)) {
         LOGGER.log(
                 Level.WARNING,
-                format("System Property: %s is already set to true", propertyKey));
+                format("System Property '%s' is already set to true.", propertyKey) + message);
       }
     }
   }
