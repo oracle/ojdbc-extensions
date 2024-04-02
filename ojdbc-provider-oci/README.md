@@ -13,11 +13,15 @@ service</dd>
 <dt><a href="#oci-object-storage-config-provider">OCI Object Storage Config 
 Provider</a></dt>
 <dd>Provides connection properties managed by the Object Storage service</dd>
+<dt><a href="#common-parameters-for-centralized-config-providers">Common Parameters for Centralized Config Providers</a></dt>
+<dd>Common parameters supported by the config providers</dd>
+<dt><a href="#caching-configuration">Caching configuration</a></dt>
+<dd>Caching mechanism adopted by Centralized Config Providers</dd>
 </dl>
-<dl>
 
 ## Resource Providers
 
+<dl>
 <dt><a href="#database-connection-string-provider">Database Connection String Provider</a></dt>
 <dd>Provides connection strings for an Autonomous Database</dd>
 <dt><a href="#database-tls-provider">Database TLS Provider</a></dt>
@@ -28,7 +32,10 @@ Provider</a></dt>
 <dd>Provides usernames managed by the Vault service</dd>
 <dt><a href="#access-token-provider">Access Token Provider</a></dt>
 <dd>Provides access tokens issued by the Dataplane service</dd>
+<dt><a href="#common-parameters-for-resource-providers">Common Parameters for Resource Providers</a></dt>
+<dd>Common parameters supported by the resource providers</dd>
 </dl>
+
 Visit any of the links above to find information and usage examples for a
 particular provider.
 
@@ -92,7 +99,7 @@ And the JSON Payload for the file **payload_ojdbc_objectstorage.json** in the **
   "connect_descriptor": "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=adb.us-phoenix-1.oraclecloud.com))(connect_data=(service_name=xsxsxs_dbtest_medium.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))",
   "user": "scott",
   "password": { 
-    "type": "vault-oci",
+    "type": "ocivault",
     "value": "ocid1.vaultsecret.oc1.phx.amaaaaaxxxx"
   },
   "jdbc": {
@@ -122,14 +129,14 @@ For the JSON type of provider (OCI Object Storage, HTTP/HTTPS, File) the passwor
 - type
   - Mandatory
   - Possible values
-    - vault-oci
-    - vault-azure
+    - ocivault
+    - azurevault
     - base64
 - value
   - Mandatory
   - Possible values
-    - OCID of the secret (if vault-oci)
-    - Azure Key Vault URI (if vault-azure)
+    - OCID of the secret (if ocivault)
+    - Azure Key Vault URI (if azurevault)
     - Base64 Encoded password (if base64)
     - Text
 - authentication
@@ -195,6 +202,13 @@ in Optional Parameters</td>
 </table>
 
 <i>*Note: this parameter is introduced to align with entries of the config file. The region that is used for calling Object Storage, Database Tools Connection, and Secret services will be extracted from the Object Storage URL, Database Tools Connection OCID or Secret OCID</i>
+
+## Caching configuration
+
+Config providers in this module store the configuration in caches to minimize
+the number of RPC requests to remote location. See
+[Caching configuration](../ojdbc-provider-azure/README.md#caching-configuration) for more 
+details of the caching mechanism.
 
 ## Database Connection String Provider
 The Database Connection String Provider provides Oracle JDBC with the connection string of an
