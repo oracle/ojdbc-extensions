@@ -64,7 +64,7 @@ public class OciObjectStorageProvider
    * </p><pre>{@code
    *   https://objectstorage.region.oraclecloud.com/n/object-storage-namespace/b/bucket/o/filename
    * }</pre>
-   *
+   * <p>The https:// prefix is optional.</p>
    * @param objectUrl the URL used by this provider to retrieve JSON payload
    *                 from OCI
    * @return JSON payload
