@@ -37,19 +37,19 @@
  */
 package oracle.jdbc.provider.oci.configuration;
 
+import oracle.ucp.jdbc.PoolDataSource;
+import oracle.ucp.jdbc.PoolDataSourceFactory;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import oracle.jdbc.datasource.impl.OracleDataSource;
-
-
 /**
  * A standalone example that configures Oracle JDBC to be provided with the
  * connection properties retrieved from OCI Vault Secret.
  */
-public class SimpleVaultJsonExample {
+public class SimpleVaultJsonExampleWithUCP {
 
   private static String url;
 
@@ -84,11 +84,12 @@ public class SimpleVaultJsonExample {
     }
 
     // No changes required, configuration provider is loaded at runtime
-    OracleDataSource ds = new OracleDataSource();
-    ds.setURL(url);
+    PoolDataSource pds = PoolDataSourceFactory.getPoolDataSource();
+    pds.setConnectionFactoryClassName("oracle.jdbc.pool.OracleDataSource");
+    pds.setURL(url);
 
     // Standard JDBC code
-    try (Connection cn = ds.getConnection()) {
+    try (Connection cn = pds.getConnection()) {
       Statement st = cn.createStatement();
       ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
       if (rs.next())
