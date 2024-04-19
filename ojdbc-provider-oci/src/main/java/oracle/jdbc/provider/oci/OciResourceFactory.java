@@ -71,13 +71,13 @@ public abstract class OciResourceFactory<T> implements ResourceFactory<T> {
   private static final Logger LOGGER =
           Logger.getLogger(OciResourceFactory.class.getName());
 
-  static {
+  private void ensurePropertySetToFalse() {
     String propertyKey = "oci.javasdk.apache.idle.connection.monitor.thread.enabled";
     String propertyValue = System.getProperty(propertyKey);
     String message = "\nSetting this system property to false is necessary to disable the IdleConnectionMonitor thread and avoid a possible thread leak with OCI Java SDK.";
 
     if (propertyValue == null) {
-      try{
+      try {
         System.setProperty(propertyKey, "false");
       } catch (Exception ex) {
         if (LOGGER.isLoggable(Level.WARNING)) {
@@ -105,6 +105,7 @@ public abstract class OciResourceFactory<T> implements ResourceFactory<T> {
     AbstractAuthenticationDetailsProvider authenticationDetails =
         authenticationDetailsFactory.request(parameterSet).getContent();
 
+    ensurePropertySetToFalse();
     try {
       return request(authenticationDetails, parameterSet);
     }
