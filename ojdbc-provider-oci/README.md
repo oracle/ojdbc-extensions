@@ -13,6 +13,8 @@ service</dd>
 <dt><a href="#oci-object-storage-config-provider">OCI Object Storage Config 
 Provider</a></dt>
 <dd>Provides connection properties managed by the Object Storage service</dd>
+<dt><a href="#oci-vault-config-provider">OCI Vault Config Provider</a></dt>
+<dd>Provides connection properties managed by the Vault service</dd>
 <dt><a href="#common-parameters-for-centralized-config-providers">Common Parameters for Centralized Config Providers</a></dt>
 <dd>Common parameters supported by the config providers</dd>
 <dt><a href="#caching-configuration">Caching configuration</a></dt>
@@ -144,6 +146,16 @@ For the JSON type of provider (OCI Object Storage, HTTP/HTTPS, File) the passwor
   - Possible Values
     - method
     - optional parameters (depends on the cloud provider, applies the same logic as [Config Provider for Azure](../ojdbc-provider-azure/README.md#config-provider-for-azure)).
+
+## OCI Vault Config Provider
+Apart from OCI Object Storage, users can also store JSON Payload in the content of OCI Vault Secret. Users need to indicate the OCID of the Secret with the following syntax:
+
+<pre>
+jdbc:oracle:thin:@config-ocivault:{secret-ocid}
+</pre>
+
+The JSON Payload retrieved by OCI Vault Config Provider follows the same format in [OCI Object Storage Config Provider](#json-payload-format).
+
 
 ## Common Parameters for Centralized Config Providers
 OCI Database Tools Connections Config Provider and OCI Object Storage Config Provider
