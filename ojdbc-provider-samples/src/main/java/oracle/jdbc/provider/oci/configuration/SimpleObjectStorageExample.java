@@ -70,7 +70,7 @@ public class SimpleObjectStorageExample {
 
     // Sample default URL if non present
     if (args.length == 0) {
-      url = "jdbc:oracle:thin:@config-ociobject:https://objectstorage.us-phoenix-1.oraclecloud.com/n/mytenancy/b/bucket1/o/payload_ojdbc_objectstorage.json";
+      url = "jdbc:oracle:thin:@config-ociobject://objectstorage.us-phoenix-1.oraclecloud.com/n/mytenancy/b/bucket1/o/payload_ojdbc_objectstorage.json";
     } else {
       url = args[0];
     }

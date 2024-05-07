@@ -79,7 +79,7 @@ public class SimpleAzureAppConfigExample {
   public static void main(String[] args) throws SQLException {
     // Sample default URL if non present
     if (args.length == 0) {
-      url = "jdbc:oracle:thin:@config-azure:myappconfig?key=/sales_app1/&label=dev";
+      url = "jdbc:oracle:thin:@config-azure://myappconfig?key=/sales_app1/&label=dev";
     } else {
       url = args[0];
     }

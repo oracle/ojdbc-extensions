@@ -69,7 +69,7 @@ public class OciDatabaseToolsConnectionProviderTest {
   public void testConnection() throws SQLException {
     String ocid =
         TestProperties.getOrAbort(OciTestProperty.OCI_DB_TOOLS_CONNECTION_OCID_SSO);
-    String url = "jdbc:oracle:thin:@config-ocidbtools:" + ocid;
+    String url = "jdbc:oracle:thin:@config-ocidbtools://" + ocid;
 
     OracleDataSource ds = new OracleDataSource();
     ds.setURL(url);

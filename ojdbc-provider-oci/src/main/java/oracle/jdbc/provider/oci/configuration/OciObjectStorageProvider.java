@@ -64,13 +64,17 @@ public class OciObjectStorageProvider
    * </p><pre>{@code
    *   https://objectstorage.region.oraclecloud.com/n/object-storage-namespace/b/bucket/o/filename
    * }</pre>
-   *
+   * <p>The https:// prefix is optional.</p>
    * @param objectUrl the URL used by this provider to retrieve JSON payload
    *                 from OCI
    * @return JSON payload
    */
   @Override
   public InputStream getJson(String objectUrl) {
+    // Add implicit prefix if not informed
+    if (!objectUrl.startsWith("https://")) {
+      objectUrl = "https://" + objectUrl;
+    }
     // Add objectUrl to the "options" Map, so it can be parsed.
     Map<String, String> optionsWithUrl = new HashMap<>(options);
     optionsWithUrl.put("object_url", objectUrl);

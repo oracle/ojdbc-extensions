@@ -45,10 +45,10 @@ JDK versions. The coordinates for the latest release are:
 The Config Provider for Azure is a Centralized Config Provider that provides Oracle JDBC with
 connection properties from the App Configuration service and the Key Vault service.
 
-A new prefix of the JDBC URL `jdbc:oracle:thin:@config-azure:` is used by the Oracle DataSource to be able to identify that the configuration parameters should be loaded using Azure App Configuration. Users only need to indicate the App Config's name, a prefix for the key-names and a label (both optional) with the following syntax:
+A new prefix of the JDBC URL `jdbc:oracle:thin:@config-azure://` is used by the Oracle DataSource to be able to identify that the configuration parameters should be loaded using Azure App Configuration. Users only need to indicate the App Config's name, a prefix for the key-names and a label (both optional) with the following syntax:
 
 <pre>
-jdbc:oracle:thin:@config-azure:{appconfig-name}[?key=prefix&label=value&option1=value1&option2=value2...]
+jdbc:oracle:thin:@config-azure://{appconfig-name}[?key=prefix&label=value&option1=value1&option2=value2...]
 </pre>
 
 If prefix and label are not informed, the provider will retrieve all the values that are not labeled or prefixed.
@@ -64,7 +64,7 @@ The rest are dependent on the driver, in our case `/jdbc`. The key-value pairs t
 For example, let's suppose an url like:
 
 <pre>
-jdbc:oracle:thin:@config-azure:myappconfig?key=/sales_app1/&label=dev
+jdbc:oracle:thin:@config-azure://myappconfig?key=/sales_app1/&label=dev
 </pre>
 
 And the configuration in App Configuration '**myappconfig**' as follows (note that some values such as password can be a reference to a Key Vault secret):
@@ -84,7 +84,7 @@ The sample code below executes as expected with the previous configuration (and 
 
 ```java
     OracleDataSource ds = new OracleDataSource();
-    ds.setURL("jdbc:oracle:thin:@config-azure:myappconfig?key=/sales_app1/&label=dev");
+    ds.setURL("jdbc:oracle:thin:@config-azure://myappconfig?key=/sales_app1/&label=dev");
     Connection cn = ds.getConnection();
     Statement st = cn.createStatement();
     ResultSet rs = st.executeQuery("select sysdate from dual");

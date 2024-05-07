@@ -66,7 +66,7 @@ public class SimpleDatabaseToolsConnectionExample {
 
     // Sample default URL if non present
     if (args.length == 0) {
-      url = "jdbc:oracle:thin:@config-ocidbtools:ocid1.databasetoolsconnection.oc1.phx.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+      url = "jdbc:oracle:thin:@config-ocidbtools://ocid1.databasetoolsconnection.oc1.phx.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
     } else {
       url = args[0];
     }

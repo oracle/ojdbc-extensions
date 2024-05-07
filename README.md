@@ -78,7 +78,7 @@ jdbc:oracle:thin:@config-{provider-name}:[path][?parameters]
 </pre>
 For example, the URL below identifies and configures the Centralized Config Provider for Azure:
 <pre>
-jdbc:oracle:thin:@config-azure:myappconfig?key=/sales_app1/&label=dev
+jdbc:oracle:thin:@config-azure://myappconfig?key=/sales_app1/&label=dev
 </pre>
 
 URLs of this form may be used with any framework, library, or tool that already
@@ -86,7 +86,7 @@ accepts a JDBC URL. For instance, the URL might appear in the
 application.properties file of a Spring application:
 
 ```properties
-spring.datasource.url=jdbc:oracle:thin:@config-azure:myappconfig?key=/sales_app1/&label=dev
+spring.datasource.url=jdbc:oracle:thin:@config-azure://myappconfig?key=/sales_app1/&label=dev
 ```
 
 ### Using Resource Providers

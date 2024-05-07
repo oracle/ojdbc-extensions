@@ -86,7 +86,7 @@ public class SimpleAzureVaultJsonExample {
   public static void main(String[] args) throws SQLException {
     // Sample default URL if non present
     if (args.length == 0) {
-      url = "jdbc:oracle:thin:@config-azurevault:https://{your-vault-name}.vault.azure.net/secrets/{secret-name}";
+      url = "jdbc:oracle:thin:@config-azurevault://{your-vault-name}.vault.azure.net/secrets/{secret-name}";
     } else {
       url = args[0];
     }
