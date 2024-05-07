@@ -54,6 +54,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 
 public class OciObjectStorageProviderTest {
+
+  static {
+    OracleConfigurationProvider.allowedProviders.add("ociobject");
+  }
+
   private static final OracleConfigurationProvider PROVIDER =
     OracleConfigurationProvider.find("ociobject");
 

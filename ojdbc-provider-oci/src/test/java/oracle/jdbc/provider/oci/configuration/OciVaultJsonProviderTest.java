@@ -16,6 +16,11 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 
 public class OciVaultJsonProviderTest {
+
+  static {
+    OracleConfigurationProvider.allowedProviders.add("ocivault");
+  }
+
   private static final OracleConfigurationProvider PROVIDER =
     OracleConfigurationProvider.find("ocivault");
 

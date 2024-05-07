@@ -36,6 +36,11 @@ import java.util.Objects;
  */
 
 public class OciDatabaseToolsConnectionProviderTest {
+
+  static {
+    OracleConfigurationProvider.allowedProviders.add("ocidbtools");
+  }
+
   private static final OracleConfigurationProvider PROVIDER =
       OracleConfigurationProvider.find("ocidbtools");
 
