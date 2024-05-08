@@ -54,6 +54,11 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 
 public class AzureVaultJsonProviderTest {
+
+  static {
+    OracleConfigurationProvider.allowedProviders.add("azurevault");
+  }
+
   private static final OracleConfigurationProvider PROVIDER =
     OracleConfigurationProvider.find("azurevault");
 
