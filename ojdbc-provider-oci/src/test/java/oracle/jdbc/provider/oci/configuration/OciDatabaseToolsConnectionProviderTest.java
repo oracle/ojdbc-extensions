@@ -14,12 +14,15 @@ import com.oracle.bmc.databasetools.requests.GetDatabaseToolsConnectionRequest;
 import com.oracle.bmc.databasetools.responses.CreateDatabaseToolsConnectionResponse;
 import com.oracle.bmc.databasetools.responses.DeleteDatabaseToolsConnectionResponse;
 import com.oracle.bmc.databasetools.responses.GetDatabaseToolsConnectionResponse;
+import com.oracle.bmc.http.internal.BaseSyncClient;
 import oracle.jdbc.datasource.impl.OracleDataSource;
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.oci.OciTestProperty;
 import oracle.jdbc.spi.OracleConfigurationProvider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -47,7 +50,8 @@ public class OciDatabaseToolsConnectionProviderTest {
   private static DatabaseToolsClient client;
   private static DatabaseClient dbClient;
 
-  static {
+  @BeforeAll
+  public static void setUp() {
     try {
       ConfigFileReader.ConfigFile configFile = ConfigFileReader.parseDefault();
       AuthenticationDetailsProvider provider = new ConfigFileAuthenticationDetailsProvider(
@@ -63,6 +67,18 @@ public class OciDatabaseToolsConnectionProviderTest {
       // file. Don't fail the test suite by throwing an exception, just print
       // the error message for awareness of users.
       System.out.println(e.getMessage());
+    }
+  }
+
+  @AfterAll
+  public static void tearDown() {
+    closeClient(client);
+    closeClient(dbClient);
+  }
+
+  private static void closeClient(BaseSyncClient client) {
+    if (client != null) {
+      client.close();
     }
   }
 
@@ -259,7 +275,6 @@ public class OciDatabaseToolsConnectionProviderTest {
    * several connection strings and the first one (high) is retrieved here,
    * for sake of convenience.
    **/
-  @Test
   private String getConnectionStringFromAutonomousDatabase(
       String OCI_DATABASE_OCID) {
 
