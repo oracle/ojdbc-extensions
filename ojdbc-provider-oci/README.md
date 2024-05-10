@@ -91,7 +91,7 @@ The rest are dependent on the driver, in our case `/jdbc`. The key-value pairs t
 For example, let's suppose an url like:
 
 <pre>
-jdbc:oracle:thin:@config-ociobject://objectstorage.us-phoenix-1.oraclecloud.com/n/mytenancy/b/bucket1/o/payload_ojdbc_objectstorage.json
+jdbc:oracle:thin:@config-ociobject://mytenancy.objectstorage.us-phoenix-1.oci.customer-oci.com/n/mytenancy/b/bucket1/o/payload_ojdbc_objectstorage.json
 </pre>
 
 And the JSON Payload for the file **payload_ojdbc_objectstorage.json** in the **bucket1** which namespace is **mytenancy** is as following:
@@ -116,7 +116,7 @@ The sample code below executes as expected with the previous configuration.
 
 ```java
     OracleDataSource ds = new OracleDataSource();
-    ds.setURL("jdbc:oracle:thin:@config-ociobject://objectstorage.us-phoenix-1.oraclecloud.com/n/mytenancy/b/bucket1/o/payload_ojdbc_objectstorage.json");
+    ds.setURL("jdbc:oracle:thin:@config-ociobject://mytenancy.objectstorage.us-phoenix-1.oci.customer-oci.com/n/mytenancy/b/bucket1/o/payload_ojdbc_objectstorage.json");
     Connection cn = ds.getConnection();
     Statement st = cn.createStatement();
     ResultSet rs = st.executeQuery("select sysdate from dual");
