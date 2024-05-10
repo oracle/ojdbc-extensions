@@ -18,6 +18,7 @@ import oracle.jdbc.provider.oci.databasetools.DatabaseToolsConnectionFactory;
 import oracle.jdbc.provider.oci.vault.Secret;
 import oracle.jdbc.provider.oci.vault.SecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.spi.OracleConfigurationCachableProvider;
 import oracle.jdbc.spi.OracleConfigurationProvider;
 import oracle.jdbc.util.OracleConfigurationCache;
 import oracle.jdbc.util.OracleConfigurationProviderNetworkError;
@@ -34,7 +35,7 @@ import java.util.Properties;
  * </p>
  */
 public class OciDatabaseToolsConnectionProvider
-    implements OracleConfigurationProvider {
+    implements OracleConfigurationCachableProvider {
 
   private static final String CONFIG_TIME_TO_LIVE =
     "config_time_to_live";
@@ -304,6 +305,12 @@ public class OciDatabaseToolsConnectionProvider
       .getContent();
   }
 
+  @Override
+  public Properties removeProperties(String location) {
+    Properties deletedProp = cache.remove(location);
+    return deletedProp;
+  }
+
   private Properties refreshProperties(String location)
     throws OracleConfigurationProviderNetworkError {
     try {
@@ -313,3 +320,4 @@ public class OciDatabaseToolsConnectionProvider
     }
   }
 }
+
