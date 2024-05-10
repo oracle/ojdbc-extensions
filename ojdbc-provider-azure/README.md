@@ -7,6 +7,8 @@ This module contains providers for integration between Oracle JDBC and Azure.
 <dl>
 <dt><a href="#azure-app-configuration-provider">Azure App Configuration Provider</a></dt>
 <dd>Provides connection properties managed by the App Configuration service</dd>
+<dt><a href="#azure-vault-config-provider">Azure Vault Config Provider</a></dt>
+<dd>Provides connection properties managed by the Key Vault service</dd>
 <dt><a href="#common-parameters-for-centralized-config-providers">Common Parameters for Centralized Config Providers</a></dt>
 <dd>Common parameters supported by the config providers</dd>
 <dt><a href="#caching-configuration">Caching configuration</a></dt>
@@ -91,6 +93,17 @@ The sample code below executes as expected with the previous configuration (and 
     if (rs.next())
       System.out.println("select sysdate from dual: " + rs.getString(1));
 ```
+## Azure Vault Config Provider
+Similar to [OCI Vault Config Provider](../ojdbc-provider-oci/README.md#oci-vault-config-provider), JSON Payload can also be stored in the content of Azure Key Vault Secret.
+The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-azurevault:`. Users only need to indicate the Vault Secret’s secret identifier, with the following syntax:
+
+<pre>
+jdbc:oracle:thin:@config-azurevault:{secret-identifier}
+</pre>
+
+To view an example format of JSON Payload, please refer to [JSON Payload format](../ojdbc-provider-oci/README.md#json-payload-format). 
+
+
 
 ## Common Parameters for Centralized Config Providers
 Provider that are classified as Centralized Config Providers in this module share the same sets of parameters for authentication configuration.
