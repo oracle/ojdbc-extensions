@@ -46,7 +46,6 @@ import org.junit.jupiter.api.Test;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import static oracle.jdbc.provider.TestProperties.getOrAbort;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
@@ -55,16 +54,21 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 
 public class OciObjectStorageProviderTest {
+
+  static {
+    OracleConfigurationProvider.allowedProviders.add("ociobject");
+  }
+
   private static final OracleConfigurationProvider PROVIDER =
     OracleConfigurationProvider.find("ociobject");
 
   /**
-   * Verifies the authentication-method=config-file URI parameter setting.
+   * Verifies the AUTHENTICATION=OCI_DEFAULT parameter setting.
    * This test will fail if (~/.oci/config) or (~/.oraclebmc/config) or the
    * environmental variable OCI_CONFIG_FILE is not set.
    */
   @Test
-  public void testConfigFile() throws SQLException {
+  public void testDefaultAuthentication() throws SQLException {
     verifyProperties("AUTHENTICATION=OCI_DEFAULT");
   }
 
@@ -77,10 +81,8 @@ public class OciObjectStorageProviderTest {
   }
 
   private static String composeUrl(String... options) {
-    return String.format("jdbc:oracle:thin:@config-ociobject://n/%s/b/%s/o/%s?%s",
-      TestProperties.getOrAbort(OciTestProperty.OCI_NAMESPACE_NAME),
-      getOrAbort(OciTestProperty.OCI_BUCKET_NAME),
-      getOrAbort(OciTestProperty.OCI_OBJECT_NAME),
+    return String.format("%s?%s",
+      TestProperties.getOrAbort(OciTestProperty.OCI_OBJECT_STORAGE_URL),
       String.join("&", options));
   }
 }

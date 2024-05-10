@@ -16,11 +16,15 @@ import com.oracle.bmc.databasetools.responses.CreateDatabaseToolsConnectionRespo
 import com.oracle.bmc.databasetools.responses.DeleteDatabaseToolsConnectionResponse;
 import com.oracle.bmc.databasetools.responses.GetDatabaseToolsConnectionResponse;
 import com.oracle.bmc.databasetools.responses.UpdateDatabaseToolsConnectionResponse;
-import oracle.jdbc.pool.OracleDataSource;
+import com.oracle.bmc.http.internal.BaseSyncClient;
+import oracle.jdbc.datasource.impl.OracleDataSource;
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.oci.OciTestProperty;
 import oracle.jdbc.spi.OracleConfigurationProvider;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -29,6 +33,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -38,13 +43,19 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 
 public class OciDatabaseToolsConnectionProviderTest {
+
+  static {
+    OracleConfigurationProvider.allowedProviders.add("ocidbtools");
+  }
+
   private static final OracleConfigurationProvider PROVIDER =
       OracleConfigurationProvider.find("ocidbtools");
 
   private static DatabaseToolsClient client;
   private static DatabaseClient dbClient;
 
-  static {
+  @BeforeAll
+  public static void setUp() {
     try {
       ConfigFileReader.ConfigFile configFile = ConfigFileReader.parseDefault();
       AuthenticationDetailsProvider provider = new ConfigFileAuthenticationDetailsProvider(
@@ -56,7 +67,22 @@ public class OciDatabaseToolsConnectionProviderTest {
       /* Create a database client */
       dbClient = DatabaseClient.builder().build(provider);
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      // This test may be run in an environment having no OCI configuration
+      // file. Don't fail the test suite by throwing an exception, just print
+      // the error message for awareness of users.
+      System.out.println(e.getMessage());
+    }
+  }
+
+  @AfterAll
+  public static void tearDown() {
+    closeClient(client);
+    closeClient(dbClient);
+  }
+
+  private static void closeClient(BaseSyncClient client) {
+    if (client != null) {
+      client.close();
     }
   }
 
@@ -68,7 +94,7 @@ public class OciDatabaseToolsConnectionProviderTest {
   public void testConnection() throws SQLException {
     String ocid =
         TestProperties.getOrAbort(OciTestProperty.OCI_DB_TOOLS_CONNECTION_OCID_SSO);
-    String url = "jdbc:oracle:thin:@config-ocidbtools:" + ocid;
+    String url = "jdbc:oracle:thin:@config-ocidbtools://" + ocid;
 
     OracleDataSource ds = new OracleDataSource();
     ds.setURL(url);
@@ -98,6 +124,7 @@ public class OciDatabaseToolsConnectionProviderTest {
 
     Arrays.stream(parameters)
       .map(TestProperties::getOptional)
+      .filter(Objects::nonNull)
       .map(ocid -> {
         try {
           return PROVIDER.getConnectionProperties(ocid);
@@ -173,19 +200,23 @@ public class OciDatabaseToolsConnectionProviderTest {
     String OCI_DATABASE_CONNECTION_STRING = getConnectionStringFromAutonomousDatabase(
       OCI_DATABASE_OCID);
 
-    /* Create new Connection */
+    // Create new Connection
     CreateDatabaseToolsConnectionResponse createResponse = sendCreateConnRequest(
       OCI_USERNAME, OCI_PASSWORD_OCID, OCI_DISPLAY_NAME, OCI_COMPARTMENT_ID,
       OCI_DATABASE_CONNECTION_STRING, OCI_DATABASE_OCID);
+
+    // The db tools connection is being created.
     Assertions.assertEquals(201,
-      createResponse.get__httpStatusCode__()); /* The db tools connection is being created. */
+      createResponse.get__httpStatusCode__());
 
+    // Retrieve OCID of Connection
     String ocid = createResponse
-      .getDatabaseToolsConnection().getId(); /* Retrieve OCID of Connection */
+      .getDatabaseToolsConnection().getId();
 
-    String url = "jdbc:oracle:thin:@config-ocidbtools:" + ocid; /* The url used to connect to Database */
+    // The url used to connect to Database
+    String url = "jdbc:oracle:thin:@config-ocidbtools://" + ocid;
 
-    /* Set value of 'user' wrong */
+    // Set value of 'user' wrong
     UpdateDatabaseToolsConnectionDetails updateDatabaseToolsConnectionDetails =
       UpdateDatabaseToolsConnectionOracleDatabaseDetails.builder()
         .userName(OCI_USERNAME + "wrong")
@@ -195,12 +226,12 @@ public class OciDatabaseToolsConnectionProviderTest {
       sendUpdateConnRequest(ocid, updateDatabaseToolsConnectionDetails);
     Assertions.assertEquals(202, updateResponse.get__httpStatusCode__());
 
-    /* Connection fails: hit 1017 */
+    // Connection fails: hit 1017
     SQLException exception = assertThrows(SQLException.class,
       () -> tryConnection(url), "Should throw an SQLException");
     Assertions.assertEquals(exception.getErrorCode(), 1017);
 
-    /* Set value of 'user' correct */
+    // Set value of 'user' correct
     UpdateDatabaseToolsConnectionDetails updateDatabaseToolsConnectionDetails2 = UpdateDatabaseToolsConnectionOracleDatabaseDetails.builder()
       .userName(OCI_USERNAME).build();
 
@@ -208,7 +239,7 @@ public class OciDatabaseToolsConnectionProviderTest {
       sendUpdateConnRequest(ocid, updateDatabaseToolsConnectionDetails2);
     Assertions.assertEquals(202, updateResponse2.get__httpStatusCode__());
 
-    /* Connection succeeds */
+    // Connection succeeds
     Connection conn = tryConnection(url);
     Assertions.assertNotNull(conn);
 
@@ -217,7 +248,7 @@ public class OciDatabaseToolsConnectionProviderTest {
     Assertions.assertNotNull(rs.next());
     Assertions.assertEquals("Hello, db", rs.getString(1));
 
-    /* Finally delete Connection */
+    // Finally delete Connection
     DeleteDatabaseToolsConnectionResponse deleteResponse = sendDeleteConnRequest(
       ocid);
     Assertions.assertEquals(202,
@@ -238,6 +269,10 @@ public class OciDatabaseToolsConnectionProviderTest {
       String OCI_USERNAME, String OCI_PASSWORD_OCID, String OCI_DISPLAY_NAME,
       String OCI_COMPARTMENT_ID, String OCI_DATABASE_CONNECTION_STRING,
       String OCI_DATABASE_OCID) {
+
+    // Ignore this test if the required configuration is missing.
+    Assumptions.assumeTrue(client != null);
+
     /* Create a request and dependent object(s). */
     CreateDatabaseToolsConnectionDetails createDatabaseToolsConnectionDetails = CreateDatabaseToolsConnectionOracleDatabaseDetails
         .builder()
@@ -275,6 +310,9 @@ public class OciDatabaseToolsConnectionProviderTest {
    */
   private DeleteDatabaseToolsConnectionResponse sendDeleteConnRequest(
       String ocid) {
+    // Ignore this test if the required configuration is missing.
+    Assumptions.assumeTrue(client != null);
+
     /* Create a request and dependent object(s). */
     DeleteDatabaseToolsConnectionRequest deleteDatabaseToolsConnectionRequest = DeleteDatabaseToolsConnectionRequest
         .builder()
@@ -293,6 +331,9 @@ public class OciDatabaseToolsConnectionProviderTest {
    * @return GetDatabaseToolsConnectionResponse
    */
   private GetDatabaseToolsConnectionResponse sendGetConnRequest(String ocid) {
+    // Ignore this test if the required configuration is missing.
+    Assumptions.assumeTrue(client != null);
+
     /* Create a request and dependent object(s). */
     GetDatabaseToolsConnectionRequest getDatabaseToolsConnectionRequest = GetDatabaseToolsConnectionRequest
         .builder()
@@ -333,9 +374,12 @@ public class OciDatabaseToolsConnectionProviderTest {
    * several connection strings and the first one (high) is retrieved here,
    * for sake of convenience.
    **/
-  @Test
   private String getConnectionStringFromAutonomousDatabase(
       String OCI_DATABASE_OCID) {
+
+    // Ignore this test if the required configuration is missing.
+    Assumptions.assumeTrue(dbClient != null);
+
     /* Create a request and dependent object(s). */
     GetAutonomousDatabaseRequest getAutonomousDatabaseRequest = GetAutonomousDatabaseRequest
         .builder()

@@ -1,0 +1,92 @@
+name: tests
+on: push
+jobs:
+  run_tests:
+    runs-on: ubuntu-latest
+    env:
+      AZURE_TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.TEST_AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.TEST_AZURE_CLIENT_SECRET }}
+      AZURE_USERNAME: ${{ secrets.TEST_AZURE_USERNAME }}
+      AZURE_PASSWORD: ${{ secrets.TEST_AZURE_PASSWORD }}
+      AZURE_CLIENT_CERTIFICATE_PATH: ${{ secrets.TEST_AZURE_CLIENT_CERTIFICATE_PATH }}
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 8
+      - name: Cache Maven packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Install dependencies
+        run: mvn install -DskipTests
+
+      - name: Prepare certificate and properties files
+        run: |
+          mkdir -p $HOME/.azure
+          mkdir -p $HOME/.oci
+          
+          # Prepare certificate
+          echo "${{ secrets.TEST_AZURE_CERTIFICATE }}" > $HOME/.azure/ojdbc-plugin-test-app.pem
+          
+          # Generate oci config
+          echo "${{ secrets.TEST_OCI_API_KEY }}" > $HOME/.oci/oci-api-key.pem
+          echo "${{ secrets.TEST_OCI_CONFIG_PROFILE }}" > $HOME/.oci/config
+          
+          # Convert .pem to .pfx file
+          openssl pkcs12 -export -in ${{ secrets.TEST_AZURE_CLIENT_CERTIFICATE_PATH }} -passout pass:${{ secrets.TEST_AZURE_CLIENT_PFX_PASSWORD }} -out ojdbc-provider-azure/ojdbc-provider-test-app.pfx
+          
+          # Generate ojdbc-provider-azure/test.properties
+          echo -e "AZURE_MANAGED_IDENTITY=false\n
+          AZURE_TENANT_ID=${{ secrets.TEST_AZURE_TENANT_ID }}\n
+          AZURE_CLIENT_ID=${{ secrets.TEST_AZURE_CLIENT_ID }}\n
+          AZURE_CLIENT_SECRET=${{ secrets.TEST_AZURE_CLIENT_SECRET }}\n
+          AZURE_CLIENT_CERTIFICATE_PATH=${{ secrets.TEST_AZURE_CLIENT_CERTIFICATE_PATH }}\n
+          AZURE_CLIENT_PFX_CERTIFICATE_PATH=./ojdbc-provider-test-app.pfx\n
+          AZURE_CLIENT_PFX_PASSWORD=${{ secrets.TEST_AZURE_CLIENT_PFX_PASSWORD }}\n
+          AZURE_USERNAME=${{ secrets.TEST_AZURE_USERNAME }}\n
+          AZURE_PASSWORD=${{ secrets.TEST_AZURE_PASSWORD }}\n
+          AZURE_TOKEN_SCOPE=${{ secrets.TEST_AZURE_TOKEN_SCOPE }}\n
+          AZURE_APP_CONFIG_NAME=${{ secrets.TEST_AZURE_APP_CONFIG_NAME }}\n
+          AZURE_APP_CONFIG_KEY=${{ secrets.TEST_AZURE_APP_CONFIG_KEY }}\n
+          AZURE_APP_CONFIG_LABEL=${{ secrets.TEST_AZURE_APP_CONFIG_LABEL }}\n
+          AZURE_KEY_VAULT_URL=${{ secrets.TEST_AZURE_KEY_VAULT_URL }}\n
+          AZURE_KEY_VAULT_SECRET_NAME=${{ secrets.TEST_AZURE_KEY_VAULT_SECRET_NAME }}\n
+          AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME=${{ secrets.TEST_AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME }}\n
+          " >> ojdbc-provider-azure/test.properties
+          
+          # Generate ojdbc-provider-oci/test.properties
+          echo -e "OCI_CONFIG_FILE=${{ secrets.TEST_OCI_CONFIG_FILE }}\n
+          OCI_CONFIG_PROFILE=DEFAULT\n
+          OCI_CLOUD_SHELL=false\n
+          OCI_INSTANCE_PRINCIPAL=false\n
+          OCI_RESOURCE_PRINCIPAL=false\n
+          OCI_TOKEN_SCOPE=${{ secrets.TEST_OCI_TOKEN_SCOPE }}\n
+          OCI_PASSWORD_OCID=${{ secrets.TEST_OCI_PASSWORD_OCID }}\n
+          OCI_DATABASE_OCID=${{ secrets.TEST_OCI_DATABASE_OCID }}\n
+          OCI_COMPARTMENT_ID=${{ secrets.TEST_OCI_COMPARTMENT_ID }}\n
+          OCI_DB_TOOLS_CONNECTION_OCID_KEYSTORE=${{ secrets.TEST_OCI_DB_TOOLS_CONNECTION_OCID_KEYSTORE }}\n
+          OCI_DB_TOOLS_CONNECTION_OCID_PKCS12=${{ secrets.TEST_OCI_DB_TOOLS_CONNECTION_OCID_PKCS12 }}\n
+          OCI_DB_TOOLS_CONNECTION_OCID_SSO=${{ secrets.TEST_OCI_DB_TOOLS_CONNECTION_OCID_SSO }}\n
+          OCI_OBJECT_STORAGE_URL=${{ secrets.TEST_OCI_OBJECT_STORAGE_URL }}\n
+          OCI_PASSWORD_PAYLOAD_OCID=${{ secrets.TEST_OCI_PASSWORD_PAYLOAD_OCID }}\n
+          " >> ojdbc-provider-oci/test.properties
+
+      - name: Run tests with Maven
+        run: mvn -B test --file pom.xml
+
+      - name: Clean up
+        run: |
+          rm $HOME/.oci/oci-api-key.pem
+          rm $HOME/.oci/config
+          rm ojdbc-provider-oci/test.properties
+            
+          rm $HOME/.azure/ojdbc-plugin-test-app.pem
+          rm ojdbc-provider-azure/ojdbc-provider-test-app.pfx
+          rm ojdbc-provider-azure/test.properties

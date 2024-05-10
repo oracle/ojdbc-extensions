@@ -10,6 +10,8 @@ import com.oracle.bmc.databasetools.model.DatabaseToolsKeyStorePasswordSecretId;
 import com.oracle.bmc.databasetools.model.DatabaseToolsUserPassword;
 import com.oracle.bmc.databasetools.model.DatabaseToolsUserPasswordSecretId;
 import com.oracle.bmc.databasetools.model.LifecycleState;
+import com.oracle.bmc.databasetools.model.DatabaseToolsConnectionOracleDatabaseProxyClient;
+import com.oracle.bmc.databasetools.model.DatabaseToolsConnectionOracleDatabaseProxyClientUserName;
 import com.oracle.bmc.model.BmcException;
 import oracle.jdbc.OracleConnection;
 import oracle.jdbc.provider.oci.databasetools.DatabaseToolsConnectionFactory;
@@ -27,15 +29,30 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
+/**
+ * <p>
+ *   A provider of configuration from OCI Database Tools Connection.
+ * </p>
+ */
 public class OciDatabaseToolsConnectionProvider
     implements OracleConfigurationCachableProvider {
 
   private static final String CONFIG_TIME_TO_LIVE =
     "config_time_to_live";
-  private static final long MS_TIMEOUT = 60_000L;
-  private static final long MS_REFRESH_INTERVAL = 60_000L;
+  /**
+   * Timeout value of the background thread that requests the configuration from
+   * remote location during soft-expiration period. The task will be interrupted
+   * after 60 seconds.
+   */
+  private static final long MS_REFRESH_TIMEOUT = 60_000L;
+  /**
+   * Retry interval of the background thread that requests the configuration
+   * from remote location during soft-expiration period. The thread will retry
+   * in a frequency of 60 seconds if the remote location is unreachable.
+   */
+  private static final long MS_RETRY_INTERVAL = 60_000L;
 
-  private final OracleConfigurationCache cache = OracleConfigurationCache
+  private static final OracleConfigurationCache cache = OracleConfigurationCache
     .create(100);
 
   private ParameterSet commonParameters;
@@ -63,14 +80,14 @@ public class OciDatabaseToolsConnectionProvider
         properties,
         configTimeToLive,
         () -> this.refreshProperties(location),
-        MS_TIMEOUT,
-        MS_REFRESH_INTERVAL);
+        MS_REFRESH_TIMEOUT,
+        MS_RETRY_INTERVAL);
     } else {
       cache.put(location,
         properties,
         () -> this.refreshProperties(location),
-        MS_TIMEOUT,
-        MS_REFRESH_INTERVAL);
+        MS_REFRESH_TIMEOUT,
+        MS_RETRY_INTERVAL);
     }
 
     return properties;
@@ -194,6 +211,23 @@ public class OciDatabaseToolsConnectionProvider
     Map<String, String> advancedProps = connection.getAdvancedProperties();
     if (advancedProps != null)
       properties.putAll(connection.getAdvancedProperties());
+
+    /* check if database tools connection has proxy client info */
+    DatabaseToolsConnectionOracleDatabaseProxyClient proxyClient =
+      connection.getProxyClient();
+
+    if (proxyClient instanceof DatabaseToolsConnectionOracleDatabaseProxyClientUserName) {
+      DatabaseToolsConnectionOracleDatabaseProxyClientUserName proxyClientUserName =
+        (DatabaseToolsConnectionOracleDatabaseProxyClientUserName) proxyClient;
+
+      /* check if proxyClient has password or roles */
+      if (proxyClientUserName.getUserPassword() != null || proxyClientUserName.getRoles() != null) {
+        throw new UnsupportedOperationException(
+          "Unsupported feature: the proxyClient of this database tools " +
+            "connection has user password or roles");
+      }
+      properties.put(OracleConnection.CONNECTION_PROPERTY_PROXY_CLIENT_NAME, proxyClientUserName.getUserName());
+    }
 
     return properties;
   }

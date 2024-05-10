@@ -49,23 +49,13 @@ import oracle.sql.json.OracleJsonObject;
 
 import java.util.Base64;
 
+import static oracle.jdbc.provider.azure.configuration.AzureVaultURLParser.PARAMETER_SET_PARSER;
+
 /**
  * A provider of Secret values from Azure Key Vault.
  */
 public final class AzureVaultSecretProvider
     implements OracleConfigurationJsonSecretProvider {
-
-  /**
-   * Parser that recognizes the "value" field and parses it as a Key Vault
-   * secret URL.
-   * {@link AzureConfigurationParameters#configureBuilder(ParameterSetParser.Builder)}
-   * configures the parser to recognize fields of the nested JSON object named
-   * "authentication".
-   */
-  private static final ParameterSetParser PARAMETER_SET_PARSER =
-    AzureConfigurationParameters.configureBuilder(ParameterSetParser.builder()
-        .addParameter("value", AzureVaultSecretProvider::parseVaultSecretUri))
-      .build();
 
   /**
    * {@inheritDoc}
@@ -75,7 +65,7 @@ public final class AzureVaultSecretProvider
    *   The {@code secretJsonObject} has the following form:
    * </p><pre>{@code
    *   "password": {
-   *       "type": "vault-azure",
+   *       "type": "azurevault",
    *       "value": "https://myvault.vault.azure.net/secrets/mysecret",
    *       "authentication": {
    *           "method": "AZURE_DEFAULT"
@@ -111,38 +101,6 @@ public final class AzureVaultSecretProvider
    */
   @Override
   public String getSecretType() {
-    return "vault-azure";
-  }
-
-  /**
-   * Parses the "value" field of a JSON object as a vault URI with the path
-   * of a named secret. An example URI is:
-   * <pre>
-   * https://mykeyvaultpfs.vault.azure.net/secrets/mySecret2
-   * </pre>
-   * This parser configures the given {@code builder} with two distinct
-   * parameters accepted by {@link KeyVaultSecretFactory}: One parameter for the
-   * vault URL, and another for the secret name.
-   * @param vaultSecretUri Vault Secret URI which contains the path of a secret.
-   *                      Not null.
-   * @param builder Builder to configure with parsed parameters. Not null.
-   */
-  private static void parseVaultSecretUri(
-    String vaultSecretUri, ParameterSetBuilder builder) {
-
-    UrlBuilder urlBuilder = UrlBuilder.parse(vaultSecretUri);
-
-    String vaultUrl = "https://" + urlBuilder.getHost();
-    builder.add("value", KeyVaultSecretFactory.VAULT_URL, vaultUrl);
-
-    String path = urlBuilder.getPath();
-
-    if (!path.contains("/secrets"))
-      throw new IllegalArgumentException("The Vault Secret URI should " +
-        "contain \"/secrets\" following by the name of the Secret: " +
-        vaultSecretUri);
-
-    String secretName = path.replace("/secrets", "");
-    builder.add("value", KeyVaultSecretFactory.SECRET_NAME, secretName);
+    return "azurevault";
   }
 }

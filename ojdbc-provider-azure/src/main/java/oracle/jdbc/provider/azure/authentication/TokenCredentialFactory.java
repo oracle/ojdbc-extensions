@@ -108,7 +108,7 @@ public final class TokenCredentialFactory
 
   /**
    * Redirect URL registered with Azure Active Directory. This parameter is
-   * required for {@link AzureAuthenticationMethod#INTERACTIVE} authentication
+   * optional for {@link AzureAuthenticationMethod#INTERACTIVE} authentication
    * in a web browser.
    */
   public static final Parameter<String> REDIRECT_URL = Parameter.create();
@@ -210,7 +210,7 @@ public final class TokenCredentialFactory
     ParameterSet parameterSet) {
     return new InteractiveBrowserCredentialBuilder()
       .clientId(parameterSet.getOptional(CLIENT_ID))
-      .redirectUrl(parameterSet.getRequired(REDIRECT_URL))
+      .redirectUrl(parameterSet.getOptional(REDIRECT_URL))
       .build();
   }
 

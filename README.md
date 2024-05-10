@@ -4,14 +4,19 @@ Implementations of service provider interfaces (SPIs) that extend the
 Oracle JDBC Driver for integration with cloud services and other specialized
 APIs. These SPI implementations are referred as "providers" for short.
 
-Each module of this project contains a set of providers for a particular cloud
-platform:
+Each module of this project contains a set of providers. Two of these modules 
+contain providers for a particular cloud platform:
 <dl>
-<dt><a href="ojdbc-provider-oci/README.md">Oracle JDBC Providers for OCI</a></dt>
+<dt><a href="ojdbc-provider-oci/README.md">Oracle JDBC OCI Providers</a></dt>
 <dd>Providers for integration with Oracle Cloud Infrastructure (OCI)</dd>
-<dt><a href="ojdbc-provider-azure/README.md">Oracle JDBC Providers for Azure</a></dt>
+<dt><a href="ojdbc-provider-azure/README.md">Oracle JDBC Azure Providers</a></dt>
 <dd>Providers for integration with Microsoft Azure</dd>
 </dl>
+And the last one contains a provider for Open Telemetry:
+<dl>
+<dt><a href="ojdbc-provider-opentelemetry/README.md">Oracle JDBC Open Telemetry Provider</a></dt>
+<dd>Provider for integration with Open Telemetry</dd>
+<dl>
 Visit any of the links above to learn about providers which are available for 
 a particular platform.
 
@@ -73,7 +78,7 @@ jdbc:oracle:thin:@config-{provider-name}:[path][?parameters]
 </pre>
 For example, the URL below identifies and configures the Centralized Config Provider for Azure:
 <pre>
-jdbc:oracle:thin:@config-azure:myappconfig?key=/sales_app1/&label=dev
+jdbc:oracle:thin:@config-azure://myappconfig?key=/sales_app1/&label=dev
 </pre>
 
 URLs of this form may be used with any framework, library, or tool that already
@@ -81,7 +86,7 @@ accepts a JDBC URL. For instance, the URL might appear in the
 application.properties file of a Spring application:
 
 ```properties
-spring.datasource.url=jdbc:oracle:thin:@config-azure:myappconfig?key=/sales_app1/&label=dev
+spring.datasource.url=jdbc:oracle:thin:@config-azure://myappconfig?key=/sales_app1/&label=dev
 ```
 
 ### Using Resource Providers
@@ -114,6 +119,8 @@ this project:
 [ojdbc-provider-oci](ojdbc-provider-oci/README.md#installation)
 
 [ojdbc-provider-azure](ojdbc-provider-azure/README.md#installation)
+
+[ojdbc-provider-opentelemetry](ojdbc-provider-opentelemetry/README.md#installation)
 
 Each module listed above is distributed on the Maven Central Repository as a
 separate jar file. Coordinates can be found by visiting the links above.

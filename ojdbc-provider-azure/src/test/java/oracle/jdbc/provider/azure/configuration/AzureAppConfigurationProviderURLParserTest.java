@@ -43,7 +43,7 @@ import com.azure.data.appconfiguration.ConfigurationClientBuilder;
 import com.azure.identity.ClientSecretCredentialBuilder;
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod;
-import oracle.jdbc.pool.OracleDataSource;
+import oracle.jdbc.datasource.impl.OracleDataSource;
 import oracle.jdbc.provider.azure.AzureTestProperty;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -172,7 +172,8 @@ public class AzureAppConfigurationProviderURLParserTest {
         ds.setURL(invalidUrl);
         ds.getConnection();},
       "Should throw an Exception");
-    assertEquals(exception.getMessage(), "No provider found",
+
+    assertTrue(exception.getMessage().contains("Cannot find the provider type"),
       "Something went unexpected: " + exception.getMessage());
   }
 
@@ -261,7 +262,7 @@ public class AzureAppConfigurationProviderURLParserTest {
         properties.getProperty(AzureTestProperty.AZURE_APP_CONFIG_LABEL.name()),
         optionsString);
     }
-    return String.format("jdbc:oracle:thin:@config-azure:%s?key=%s&%s",
+    return String.format("jdbc:oracle:thin:@config-azure://%s?key=%s&%s",
       TestProperties.getOrAbort(AzureTestProperty.AZURE_APP_CONFIG_NAME),
       TestProperties.getOrAbort(AzureTestProperty.AZURE_APP_CONFIG_KEY),
       optionsString);

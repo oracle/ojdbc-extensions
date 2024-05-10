@@ -1,2 +1,3 @@
 oracle.jdbc.provider.oci.configuration.OciObjectStorageProvider
 oracle.jdbc.provider.oci.configuration.OciDatabaseToolsConnectionProvider
+oracle.jdbc.provider.oci.configuration.OciVaultJsonProvider

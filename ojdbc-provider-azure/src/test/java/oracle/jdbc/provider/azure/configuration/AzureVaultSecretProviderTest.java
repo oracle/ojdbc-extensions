@@ -50,7 +50,7 @@ import static oracle.jdbc.provider.TestProperties.getOrAbort;
 
 public class AzureVaultSecretProviderTest {
   private static final OracleConfigurationJsonSecretProvider PROVIDER =
-    OracleConfigurationJsonSecretProvider.find("vault-azure");
+    OracleConfigurationJsonSecretProvider.find("azurevault");
 
   /**
    * Verifies {@link OracleConfigurationJsonSecretProvider} as implementing
@@ -74,7 +74,7 @@ public class AzureVaultSecretProviderTest {
    * Returns a JSON object in following format:
    * <pre>
    * {
-   *   "type": "vault-azure",
+   *   "type": "azurevault",
    *   "value": "{"uri":"https://ojdbc-plugin-test-vault.vault.azure.net/secrets/test-db-password"}",
    *   "authentication": {
    *     "method": "AZURE_SERVICE_PRINCIPAL",
@@ -97,7 +97,7 @@ public class AzureVaultSecretProviderTest {
     auth.put("AZURE_TENANT_ID", tenantId);
 
     OracleJsonObject password = factory.createObject();
-    password.put("type", "vault-azure");
+    password.put("type", "azurevault");
     password.put("value", constructSecretUri(vaultUrl, secretName));
     password.put("authentication", auth);
 
