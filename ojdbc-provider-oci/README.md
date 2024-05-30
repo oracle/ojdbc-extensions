@@ -151,7 +151,7 @@ For the JSON type of provider (OCI Object Storage, HTTP/HTTPS, File) the passwor
 Apart from OCI Object Storage, users can also store JSON Payload in the content of OCI Vault Secret. Users need to indicate the OCID of the Secret with the following syntax:
 
 <pre>
-jdbc:oracle:thin:@config-ocivault:{secret-ocid}
+jdbc:oracle:thin:@config-ocivault://{secret-ocid}
 </pre>
 
 The JSON Payload retrieved by OCI Vault Config Provider follows the same format in [OCI Object Storage Config Provider](#json-payload-format).
