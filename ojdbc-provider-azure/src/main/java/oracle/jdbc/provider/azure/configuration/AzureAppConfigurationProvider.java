@@ -48,6 +48,7 @@ import com.azure.data.appconfiguration.models.SettingSelector;
 import com.azure.security.keyvault.secrets.SecretClient;
 import com.azure.security.keyvault.secrets.SecretClientBuilder;
 import oracle.jdbc.OracleConnection;
+import oracle.jdbc.spi.OracleConfigurationCachableProvider;
 import oracle.jdbc.util.OracleConfigurationCache;
 import oracle.jdbc.util.OracleConfigurationProviderNetworkError;
 import oracle.jdbc.spi.OracleConfigurationProvider;
@@ -67,19 +68,29 @@ import java.util.Properties;
  * </p>
  */
 public class AzureAppConfigurationProvider
-  implements OracleConfigurationProvider {
+  implements OracleConfigurationCachableProvider {
   private static final OracleJsonFactory JSON_FACTORY = new OracleJsonFactory();
 
   private static final String CONNECT_DESCRIPTOR_PROPERTIES_NAME =
-      "connect_descriptor";
+    "connect_descriptor";
   private static final String WALLET_LOCATION_PROPERTIES_NAME =
     "wallet_location";
   private static final String JDBC_PROPERTIES_PREFIX = "jdbc/";
   private static final String CONFIG_TTL_JSON_OBJECT_NAME =
     "config_time_to_live";
 
-  private static final long MS_TIMEOUT = 60_000L;
-  private static final long MS_REFRESH_INTERVAL = 60_000L;
+  /**
+   * Timeout value of the background thread that requests the configuration from
+   * remote location during soft-expiration period. The task will be interrupted
+   * after 60 seconds.
+    */
+  private static final long MS_REFRESH_TIMEOUT = 60_000L;
+  /**
+   * Retry interval of the background thread that requests the configuration
+   * from remote location during soft-expiration period. The thread will retry
+   * in a frequency of 60 seconds if the remote location is unreachable.
+    */
+  private static final long MS_RETRY_INTERVAL = 60_000L;
   private final OracleConfigurationCache cache = OracleConfigurationCache
     .create(100);
 
@@ -107,27 +118,27 @@ public class AzureAppConfigurationProvider
       return cachedProp;
     }
 
-    // Retrieve and add the properties to the cache
     Properties properties = getRemoteProperties(location);
     if (properties.containsKey(CONFIG_TTL_JSON_OBJECT_NAME)) {
+      // Remove the TTL information from the properties, if presents
       long configTimeToLive = Long.parseLong(
         properties.getProperty(CONFIG_TTL_JSON_OBJECT_NAME));
 
-      // properties stored in the cache should not contain information of TTL
       properties.remove(CONFIG_TTL_JSON_OBJECT_NAME);
+
       cache.put(
         location,
         properties,
         configTimeToLive,
         () -> this.refreshProperties(location),
-        MS_TIMEOUT,
-        MS_REFRESH_INTERVAL);
+        MS_REFRESH_TIMEOUT,
+        MS_RETRY_INTERVAL);
     } else {
       cache.put(location,
         properties,
         () -> this.refreshProperties(location),
-        MS_TIMEOUT,
-        MS_REFRESH_INTERVAL);
+        MS_REFRESH_TIMEOUT,
+        MS_RETRY_INTERVAL);
     }
 
     return properties;
@@ -259,6 +270,12 @@ public class AzureAppConfigurationProvider
       } catch (AzureException e) {
         throw new OracleConfigurationProviderNetworkError(e);
       }
+  }
+
+  @Override
+  public Properties removeProperties(String location) {
+    Properties deletedProp = cache.remove(location);
+    return deletedProp;
   }
 }
 

@@ -5,8 +5,14 @@ This module contains providers for integration between Oracle JDBC and Azure.
 ## Centralized Config Providers
 
 <dl>
-<dt><a href="#config-provider-for-azure">Config Provider for Azure</a></dt>
+<dt><a href="#azure-app-configuration-provider">Azure App Configuration Provider</a></dt>
 <dd>Provides connection properties managed by the App Configuration service</dd>
+<dt><a href="#azure-vault-config-provider">Azure Vault Config Provider</a></dt>
+<dd>Provides connection properties managed by the Key Vault service</dd>
+<dt><a href="#common-parameters-for-centralized-config-providers">Common Parameters for Centralized Config Providers</a></dt>
+<dd>Common parameters supported by the config providers</dd>
+<dt><a href="#caching-configuration">Caching configuration</a></dt>
+<dd>Caching mechanism adopted by Centralized Config Providers</dd>
 </dl>
 
 ## Resource Providers
@@ -18,6 +24,8 @@ This module contains providers for integration between Oracle JDBC and Azure.
 <dd>Provides a username from the Key Vault service</dd>
 <dt><a href="#key-vault-password-provider">Key Vault Password Provider</a></dt>
 <dd>Provides a password from the Key Vault service</dd>
+<dt><a href="#common-parameters-for-resource-providers">Common Parameters for Resource Providers</a></dt>
+<dd>Common parameters supported by the resource providers</dd>
 </dl>
 
 ## Installation
@@ -30,19 +38,19 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-azure</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
 </dependency>
 ```
 
-## Config Provider for Azure
+## Azure App Configuration Provider
 
 The Config Provider for Azure is a Centralized Config Provider that provides Oracle JDBC with
 connection properties from the App Configuration service and the Key Vault service.
 
-A new prefix of the JDBC URL `jdbc:oracle:thin:@config-azure:` is used by the Oracle DataSource to be able to identify that the configuration parameters should be loaded using Azure App Configuration. Users only need to indicate the App Config's name, a prefix for the key-names and a label (both optional) with the following syntax:
+A new prefix of the JDBC URL `jdbc:oracle:thin:@config-azure://` is used by the Oracle DataSource to be able to identify that the configuration parameters should be loaded using Azure App Configuration. Users only need to indicate the App Config's name, a prefix for the key-names and a label (both optional) with the following syntax:
 
 <pre>
-jdbc:oracle:thin:@config-azure:{appconfig-name}[?key=prefix&label=value&option1=value1&option2=value2...]
+jdbc:oracle:thin:@config-azure://{appconfig-name}[?key=prefix&label=value&option1=value1&option2=value2...]
 </pre>
 
 If prefix and label are not informed, the provider will retrieve all the values that are not labeled or prefixed.
@@ -58,7 +66,7 @@ The rest are dependent on the driver, in our case `/jdbc`. The key-value pairs t
 For example, let's suppose an url like:
 
 <pre>
-jdbc:oracle:thin:@config-azure:myappconfig?key=/sales_app1/&label=dev
+jdbc:oracle:thin:@config-azure://myappconfig?key=/sales_app1/&label=dev
 </pre>
 
 And the configuration in App Configuration '**myappconfig**' as follows (note that some values such as password can be a reference to a Key Vault secret):
@@ -78,13 +86,27 @@ The sample code below executes as expected with the previous configuration (and 
 
 ```java
     OracleDataSource ds = new OracleDataSource();
-    ds.setURL("jdbc:oracle:thin:@config-azure:myappconfig?key=/sales_app1/&label=dev");
+    ds.setURL("jdbc:oracle:thin:@config-azure://myappconfig?key=/sales_app1/&label=dev");
     Connection cn = ds.getConnection();
     Statement st = cn.createStatement();
     ResultSet rs = st.executeQuery("select sysdate from dual");
     if (rs.next())
       System.out.println("select sysdate from dual: " + rs.getString(1));
 ```
+## Azure Vault Config Provider
+Similar to [OCI Vault Config Provider](../ojdbc-provider-oci/README.md#oci-vault-config-provider), JSON Payload can also be stored in the content of Azure Key Vault Secret.
+The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-azurevault:`. Users only need to indicate the Vault Secret’s secret identifier, with the following syntax:
+
+<pre>
+jdbc:oracle:thin:@config-azurevault:{secret-identifier}
+</pre>
+
+To view an example format of JSON Payload, please refer to [JSON Payload format](../ojdbc-provider-oci/README.md#json-payload-format). 
+
+
+
+## Common Parameters for Centralized Config Providers
+Provider that are classified as Centralized Config Providers in this module share the same sets of parameters for authentication configuration.
 
 ### Configuring Authentication
 
@@ -151,6 +173,40 @@ The Azure SDK `DefaultAzureCredential` class tries the following flow in order t
 - [AzureCliCredential](https://docs.microsoft.com/en-us/dotnet/api/azure.identity.azureclicredential?view=azure-dotnet)
 - [AzurePowerShellCredential](https://docs.microsoft.com/en-us/dotnet/api/azure.identity.azurepowershellcredential?view=azure-dotnet)
 - [InteractiveBrowserCredential](https://docs.microsoft.com/en-us/dotnet/api/azure.identity.interactivebrowsercredential?view=azure-dotnet)
+
+## Caching configuration
+
+Config providers in this module store the configuration in caches to minimize
+the number of RPC requests to remote location. Every stored items has a property
+that defines the time-to-live (TTL) value. When TTL expires, the configuration
+becomes "softly expired" and the stored configuration will be refreshed by a
+background thread. If configuration cannot be refreshed, it can still be used 
+for another 30 minutes until it becomes "hardly expired". In other words, it takes
+24 hours and 30 minutes for configuration before it becomes completely expired. 
+
+The default value of TTL is 24 hours and it can be configured using the
+"config_time_to_live" property in the unit of seconds.
+An example of App Configuration in Azure with TTL of 60 seconds is listed below.
+
+<table>
+<thead><tr>
+<th>Key</th>
+<th>Value</th>
+</tr></thead>
+<tbody><tr>
+<td>user</td>
+<td>myUsername</td>
+</tr><tr>
+<td>password</td>
+<td>myPassword</td>
+</tr><tr>
+<td>connect_descriptor</td>
+<td>myHost:5521/myService</td>
+</tr><tr>
+<td>config_time_to_live</td>
+<td>60</td>
+</tr></tbody>
+</table>
 
 ## Access Token Provider
 The Access Token Provider provides Oracle JDBC with an access token that authorizes 

@@ -36,41 +36,65 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.oci;
+package oracle.jdbc.provider.azure.configuration;
+
+import oracle.jdbc.driver.OracleConfigurationJsonProvider;
+import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
+import oracle.jdbc.provider.parameter.ParameterSet;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+
+import static oracle.jdbc.provider.azure.configuration.AzureVaultURLParser.PARAMETER_SET_PARSER;
 
 /**
- * Names of properties that configure OCI tests. Descriptions and examples of
- * each property can be found in the "example-test.properties" file within the
- * root directory of the project.
+ * A provider for JSON payload which contains configuration from Azure Vault.
+ * See {@link #getJson(String)} for the spec of the JSON payload.
  */
-public enum OciTestProperty {
-  OCI_CONFIG_FILE,
+public class AzureVaultJsonProvider extends OracleConfigurationJsonProvider {
 
-  OCI_CONFIG_PROFILE,
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Returns the JSON payload stored in Azure Vault Secret.
+   * </p><p>The {@code secretIdentifier} is an identifier of Vault Secret which
+   * can be acquired on the Azure Web Console. The Json payload is stored in
+   * the Secret Value of Vault Secret.
+   * </p>
+   * @param secretIdentifier the identifier of secret used by this
+   *                         provider to retrieve JSON payload from Azure
+   * @return JSON payload
+   **/
+  @Override
+  public InputStream getJson(String secretIdentifier) {
+    final String valueFieldName = "value";
+    Map<String, String> optionsWithSecret = new HashMap<>(options);
+    optionsWithSecret.put(valueFieldName, secretIdentifier);
 
-  OCI_CLOUD_SHELL,
+    ParameterSet parameters = PARAMETER_SET_PARSER.parseNamedValues(optionsWithSecret);
 
-  OCI_INSTANCE_PRINCIPAL,
+    String secretContent = KeyVaultSecretFactory.getInstance()
+      .request(parameters)
+      .getContent()
+      .getValue();
 
-  OCI_RESOURCE_PRINCIPAL,
+    InputStream inputStream =
+      new ByteArrayInputStream(secretContent.getBytes());
 
-  OCI_INTERACTIVE,
+    return inputStream;
+  }
 
-  OCI_TOKEN_SCOPE,
-
-  OCI_PASSWORD_OCID,
-
-  OCI_DATABASE_OCID,
-
-  OCI_OBJECT_STORAGE_URL,
-
-  OCI_DB_TOOLS_CONNECTION_OCID_KEYSTORE,
-
-  OCI_DB_TOOLS_CONNECTION_OCID_PKCS12,
-
-  OCI_DB_TOOLS_CONNECTION_OCID_SSO,
-
-  OCI_PASSWORD_PAYLOAD_OCID,
-
-  OCI_COMPARTMENT_ID;
+  /**
+   * {@inheritDoc}
+   * Returns type of this provider, which is a unique identifier for the
+   * Service Provider Interface.
+   *
+   * @return type of this provider
+   */
+  @Override
+  public String getType() {
+    return "azurevault";
+  }
 }

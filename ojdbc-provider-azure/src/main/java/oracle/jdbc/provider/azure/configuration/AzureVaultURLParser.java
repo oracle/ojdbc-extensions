@@ -40,67 +40,54 @@ package oracle.jdbc.provider.azure.configuration;
 
 import com.azure.core.util.UrlBuilder;
 import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
-import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
-import oracle.jdbc.provider.configuration.JsonSecretUtil;
-import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetBuilder;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
-import oracle.sql.json.OracleJsonObject;
-
-import java.util.Base64;
-
-import static oracle.jdbc.provider.azure.configuration.AzureVaultURLParser.PARAMETER_SET_PARSER;
 
 /**
- * A provider of Secret values from Azure Key Vault.
+ * A URL parser used by {@link AzureVaultSecretProvider} and {@link AzureVaultJsonProvider}.
  */
-public final class AzureVaultSecretProvider
-    implements OracleConfigurationJsonSecretProvider {
+public class AzureVaultURLParser {
+  /**
+   * Parser that recognizes the "value" field and parses it as a Key Vault
+   * secret URL.
+   * {@link AzureConfigurationParameters#configureBuilder(ParameterSetParser.Builder)}
+   * configures the parser to recognize fields of the nested JSON object named
+   * "authentication".
+   */
+  public static final ParameterSetParser PARAMETER_SET_PARSER =
+    AzureConfigurationParameters.configureBuilder(ParameterSetParser.builder()
+        .addParameter("value", AzureVaultURLParser::parseVaultSecretUri))
+      .build();
 
   /**
-   * {@inheritDoc}
-   * <p>
-   *   Returns the password of the Secret that is retrieved from Azure Key Vault.
-   * </p><p>
-   *   The {@code secretJsonObject} has the following form:
-   * </p><pre>{@code
-   *   "password": {
-   *       "type": "azurevault",
-   *       "value": "https://myvault.vault.azure.net/secrets/mysecret",
-   *       "authentication": {
-   *           "method": "AZURE_DEFAULT"
-   *       }
-   *   }
-   * }</pre>
-   *
-   * @param secretJsonObject json object to be parsed
-   * @return encoded char array in base64 format that represents the retrieved
-   *         Secret.
+   * Parses the "value" field of a JSON object as a vault URI with the path
+   * of a named secret. An example URI is:
+   * <pre>
+   * https://mykeyvaultpfs.vault.azure.net/secrets/mySecret2
+   * </pre>
+   * This parser configures the given {@code builder} with two distinct
+   * parameters accepted by {@link KeyVaultSecretFactory}: One parameter for the
+   * vault URL, and another for the secret name.
+   * @param vaultSecretUri Vault Secret URI which contains the path of a secret.
+   *                      Not null.
+   * @param builder Builder to configure with parsed parameters. Not null.
    */
-  @Override
-  public char[] getSecret(OracleJsonObject secretJsonObject) {
+  private static void parseVaultSecretUri(
+    String vaultSecretUri, ParameterSetBuilder builder) {
 
-    ParameterSet parameterSet =
-      PARAMETER_SET_PARSER.parseNamedValues(
-        JsonSecretUtil.toNamedValues(secretJsonObject));
+    UrlBuilder urlBuilder = UrlBuilder.parse(vaultSecretUri);
 
-    String secretString = KeyVaultSecretFactory.getInstance()
-      .request(parameterSet)
-      .getContent()
-      .getValue();
+    String vaultUrl = "https://" + urlBuilder.getHost();
+    builder.add("value", KeyVaultSecretFactory.VAULT_URL, vaultUrl);
 
-    return Base64.getEncoder()
-      .encodeToString(secretString.getBytes())
-      .toCharArray();
-  }
+    String path = urlBuilder.getPath();
 
-  /**
-   * {@inheritDoc}
-   *
-   * @return secret type. Not null.
-   */
-  @Override
-  public String getSecretType() {
-    return "azurevault";
+    if (!path.contains("/secrets"))
+      throw new IllegalArgumentException("The Vault Secret URI should " +
+        "contain \"/secrets\" following by the name of the Secret: " +
+        vaultSecretUri);
+
+    String secretName = path.replace("/secrets", "");
+    builder.add("value", KeyVaultSecretFactory.SECRET_NAME, secretName);
   }
 }

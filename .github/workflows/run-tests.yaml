@@ -58,6 +58,7 @@ jobs:
           AZURE_APP_CONFIG_LABEL=${{ secrets.TEST_AZURE_APP_CONFIG_LABEL }}\n
           AZURE_KEY_VAULT_URL=${{ secrets.TEST_AZURE_KEY_VAULT_URL }}\n
           AZURE_KEY_VAULT_SECRET_NAME=${{ secrets.TEST_AZURE_KEY_VAULT_SECRET_NAME }}\n
+          AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME=${{ secrets.TEST_AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME }}\n
           " >> ojdbc-provider-azure/test.properties
           
           # Generate ojdbc-provider-oci/test.properties
@@ -74,6 +75,7 @@ jobs:
           OCI_DB_TOOLS_CONNECTION_OCID_PKCS12=${{ secrets.TEST_OCI_DB_TOOLS_CONNECTION_OCID_PKCS12 }}\n
           OCI_DB_TOOLS_CONNECTION_OCID_SSO=${{ secrets.TEST_OCI_DB_TOOLS_CONNECTION_OCID_SSO }}\n
           OCI_OBJECT_STORAGE_URL=${{ secrets.TEST_OCI_OBJECT_STORAGE_URL }}\n
+          OCI_PASSWORD_PAYLOAD_OCID=${{ secrets.TEST_OCI_PASSWORD_PAYLOAD_OCID }}\n
           " >> ojdbc-provider-oci/test.properties
 
       - name: Run tests with Maven

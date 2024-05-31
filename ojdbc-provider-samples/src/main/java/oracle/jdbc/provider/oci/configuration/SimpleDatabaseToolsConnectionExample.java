@@ -37,7 +37,7 @@
  */
 package oracle.jdbc.provider.oci.configuration;
 
-import oracle.jdbc.pool.OracleDataSource;
+import oracle.jdbc.datasource.impl.OracleDataSource;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -66,7 +66,7 @@ public class SimpleDatabaseToolsConnectionExample {
 
     // Sample default URL if non present
     if (args.length == 0) {
-      url = "jdbc:oracle:thin:@config-ocidbtools:ocid1.databasetoolsconnection.oc1.phx.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+      url = "jdbc:oracle:thin:@config-ocidbtools://ocid1.databasetoolsconnection.oc1.phx.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
     } else {
       url = args[0];
     }

@@ -64,7 +64,7 @@ final class TNSNames {
 
   /**
    * Maximum size, in bytes, of a connection string.
-   * <a href="https://docs.oracle.com/en/database/oracle/oracle-database/21/netrf/syntax-rules-configuration-files.html#GUID-C1E7C97B-FF0A-4174-BC09-6F1B09B0B6E1">
+   * <a href="https://docs.oracle.com/en/database/oracle/oracle-database/23/netrf/syntax-rules-configuration-files.html#GUID-C1E7C97B-FF0A-4174-BC09-6F1B09B0B6E1">
    * The 4KB limit is specified here.
    * </a>
    */
@@ -101,9 +101,9 @@ final class TNSNames {
   /**
    * Creates a {@code TNSNames} object read from a tnsnames.ora stream. This
    * method parses the syntax defined here:
-   * https://docs.oracle.com/en/database/oracle/oracle-database/21/netrf/syntax-rules-configuration-files.html#GUID-D7E40356-7476-49E1-B0A8-5664DCE47E2F
+   * https://docs.oracle.com/en/database/oracle/oracle-database/23/netrf/syntax-rules-configuration-files.html#GUID-D7E40356-7476-49E1-B0A8-5664DCE47E2F
    * And here:
-   * https://docs.oracle.com/en/database/oracle/oracle-database/21/netrf/local-naming-parameters-in-tns-ora-file.html#GUID-47DAB4DF-1D35-46E5-B227-339FF912E058
+   * https://docs.oracle.com/en/database/oracle/oracle-database/23/netrf/local-naming-parameters-in-tns-ora-file.html#GUID-47DAB4DF-1D35-46E5-B227-339FF912E058
    */
   static TNSNames read(InputStream inputStream) {
 
@@ -143,7 +143,7 @@ final class TNSNames {
   /**
    * Returns {@code true} if a given {@code line} is the start of a new
    * parameter in a tnsnames.ora file.
-   * <a href="https://docs.oracle.com/en/database/oracle/oracle-database/21/netrf/syntax-rules-configuration-files.html#GUID-C1E7C97B-FF0A-4174-BC09-6F1B09B0B6E1">
+   * <a href="https://docs.oracle.com/en/database/oracle/oracle-database/23/netrf/syntax-rules-configuration-files.html#GUID-C1E7C97B-FF0A-4174-BC09-6F1B09B0B6E1">
    * New parameters must begin with a line that is not blank, indented, or
    * commented
    * </a>.

@@ -13,11 +13,17 @@ service</dd>
 <dt><a href="#oci-object-storage-config-provider">OCI Object Storage Config 
 Provider</a></dt>
 <dd>Provides connection properties managed by the Object Storage service</dd>
+<dt><a href="#oci-vault-config-provider">OCI Vault Config Provider</a></dt>
+<dd>Provides connection properties managed by the Vault service</dd>
+<dt><a href="#common-parameters-for-centralized-config-providers">Common Parameters for Centralized Config Providers</a></dt>
+<dd>Common parameters supported by the config providers</dd>
+<dt><a href="#caching-configuration">Caching configuration</a></dt>
+<dd>Caching mechanism adopted by Centralized Config Providers</dd>
 </dl>
-<dl>
 
 ## Resource Providers
 
+<dl>
 <dt><a href="#database-connection-string-provider">Database Connection String Provider</a></dt>
 <dd>Provides connection strings for an Autonomous Database</dd>
 <dt><a href="#database-tls-provider">Database TLS Provider</a></dt>
@@ -28,7 +34,10 @@ Provider</a></dt>
 <dd>Provides usernames managed by the Vault service</dd>
 <dt><a href="#access-token-provider">Access Token Provider</a></dt>
 <dd>Provides access tokens issued by the Dataplane service</dd>
+<dt><a href="#common-parameters-for-resource-providers">Common Parameters for Resource Providers</a></dt>
+<dd>Common parameters supported by the resource providers</dd>
 </dl>
+
 Visit any of the links above to find information and usage examples for a
 particular provider.
 
@@ -41,7 +50,7 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-oci</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
 </dependency>
 ```
 
@@ -54,7 +63,7 @@ Each configuration has an identifier (OCID) that is used to identify which conne
 JDBC URL Sample that uses the OCI DBTools provider:
 
 <pre>
-jdbc:oracle:thin:@config-ocidbtools:ocid1.databasetoolsconnection.oc1.phx.ama ...
+jdbc:oracle:thin:@config-ocidbtools://ocid1.databasetoolsconnection.oc1.phx.ama ...
 </pre>
 
 Provider can now support Database Tools Connections with Proxy Authentication,
@@ -82,7 +91,7 @@ The rest are dependent on the driver, in our case `/jdbc`. The key-value pairs t
 For example, let's suppose an url like:
 
 <pre>
-jdbc:oracle:thin:@config-ociobject:https://objectstorage.us-phoenix-1.oraclecloud.com/n/mytenancy/b/bucket1/o/payload_ojdbc_objectstorage.json
+jdbc:oracle:thin:@config-ociobject://mytenancy.objectstorage.us-phoenix-1.oci.customer-oci.com/n/mytenancy/b/bucket1/o/payload_ojdbc_objectstorage.json
 </pre>
 
 And the JSON Payload for the file **payload_ojdbc_objectstorage.json** in the **bucket1** which namespace is **mytenancy** is as following:
@@ -92,7 +101,7 @@ And the JSON Payload for the file **payload_ojdbc_objectstorage.json** in the **
   "connect_descriptor": "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=adb.us-phoenix-1.oraclecloud.com))(connect_data=(service_name=xsxsxs_dbtest_medium.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))",
   "user": "scott",
   "password": { 
-    "type": "vault-oci",
+    "type": "ocivault",
     "value": "ocid1.vaultsecret.oc1.phx.amaaaaaxxxx"
   },
   "jdbc": {
@@ -107,7 +116,7 @@ The sample code below executes as expected with the previous configuration.
 
 ```java
     OracleDataSource ds = new OracleDataSource();
-    ds.setURL("jdbc:oracle:thin:@config-ociobject:https://objectstorage.us-phoenix-1.oraclecloud.com/n/mytenancy/b/bucket1/o/payload_ojdbc_objectstorage.json");
+    ds.setURL("jdbc:oracle:thin:@config-ociobject://mytenancy.objectstorage.us-phoenix-1.oci.customer-oci.com/n/mytenancy/b/bucket1/o/payload_ojdbc_objectstorage.json");
     Connection cn = ds.getConnection();
     Statement st = cn.createStatement();
     ResultSet rs = st.executeQuery("select sysdate from dual");
@@ -122,14 +131,14 @@ For the JSON type of provider (OCI Object Storage, HTTP/HTTPS, File) the passwor
 - type
   - Mandatory
   - Possible values
-    - vault-oci
-    - vault-azure
+    - ocivault
+    - azurevault
     - base64
 - value
   - Mandatory
   - Possible values
-    - OCID of the secret (if vault-oci)
-    - Azure Key Vault URI (if vault-azure)
+    - OCID of the secret (if ocivault)
+    - Azure Key Vault URI (if azurevault)
     - Base64 Encoded password (if base64)
     - Text
 - authentication
@@ -137,6 +146,16 @@ For the JSON type of provider (OCI Object Storage, HTTP/HTTPS, File) the passwor
   - Possible Values
     - method
     - optional parameters (depends on the cloud provider, applies the same logic as [Config Provider for Azure](../ojdbc-provider-azure/README.md#config-provider-for-azure)).
+
+## OCI Vault Config Provider
+Apart from OCI Object Storage, users can also store JSON Payload in the content of OCI Vault Secret. Users need to indicate the OCID of the Secret with the following syntax:
+
+<pre>
+jdbc:oracle:thin:@config-ocivault:{secret-ocid}
+</pre>
+
+The JSON Payload retrieved by OCI Vault Config Provider follows the same format in [OCI Object Storage Config Provider](#json-payload-format).
+
 
 ## Common Parameters for Centralized Config Providers
 OCI Database Tools Connections Config Provider and OCI Object Storage Config Provider
@@ -195,6 +214,13 @@ in Optional Parameters</td>
 </table>
 
 <i>*Note: this parameter is introduced to align with entries of the config file. The region that is used for calling Object Storage, Database Tools Connection, and Secret services will be extracted from the Object Storage URL, Database Tools Connection OCID or Secret OCID</i>
+
+## Caching configuration
+
+Config providers in this module store the configuration in caches to minimize
+the number of RPC requests to remote location. See
+[Caching configuration](../ojdbc-provider-azure/README.md#caching-configuration) for more 
+details of the caching mechanism.
 
 ## Database Connection String Provider
 The Database Connection String Provider provides Oracle JDBC with the connection string of an

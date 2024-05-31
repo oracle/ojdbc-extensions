@@ -35,72 +35,65 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-
 package oracle.jdbc.provider.azure.configuration;
 
-import com.azure.core.util.UrlBuilder;
-import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
-import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
-import oracle.jdbc.provider.configuration.JsonSecretUtil;
-import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.provider.parameter.ParameterSetBuilder;
-import oracle.jdbc.provider.parameter.ParameterSetParser;
-import oracle.sql.json.OracleJsonObject;
+import oracle.jdbc.provider.TestProperties;
+import oracle.jdbc.provider.azure.AzureTestProperty;
+import oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod;
+import oracle.jdbc.spi.OracleConfigurationProvider;
+import org.junit.jupiter.api.Test;
 
-import java.util.Base64;
+import java.sql.SQLException;
+import java.util.Properties;
 
-import static oracle.jdbc.provider.azure.configuration.AzureVaultURLParser.PARAMETER_SET_PARSER;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * A provider of Secret values from Azure Key Vault.
+ * Verifies the {@link AzureVaultJsonProvider} as implementing behavior
+ * specified by its JavaDoc.
  */
-public final class AzureVaultSecretProvider
-    implements OracleConfigurationJsonSecretProvider {
 
-  /**
-   * {@inheritDoc}
-   * <p>
-   *   Returns the password of the Secret that is retrieved from Azure Key Vault.
-   * </p><p>
-   *   The {@code secretJsonObject} has the following form:
-   * </p><pre>{@code
-   *   "password": {
-   *       "type": "azurevault",
-   *       "value": "https://myvault.vault.azure.net/secrets/mysecret",
-   *       "authentication": {
-   *           "method": "AZURE_DEFAULT"
-   *       }
-   *   }
-   * }</pre>
-   *
-   * @param secretJsonObject json object to be parsed
-   * @return encoded char array in base64 format that represents the retrieved
-   *         Secret.
-   */
-  @Override
-  public char[] getSecret(OracleJsonObject secretJsonObject) {
+public class AzureVaultJsonProviderTest {
 
-    ParameterSet parameterSet =
-      PARAMETER_SET_PARSER.parseNamedValues(
-        JsonSecretUtil.toNamedValues(secretJsonObject));
-
-    String secretString = KeyVaultSecretFactory.getInstance()
-      .request(parameterSet)
-      .getContent()
-      .getValue();
-
-    return Base64.getEncoder()
-      .encodeToString(secretString.getBytes())
-      .toCharArray();
+  static {
+    OracleConfigurationProvider.allowedProviders.add("azurevault");
   }
 
+  private static final OracleConfigurationProvider PROVIDER =
+    OracleConfigurationProvider.find("azurevault");
+
   /**
-   * {@inheritDoc}
-   *
-   * @return secret type. Not null.
-   */
-  @Override
-  public String getSecretType() {
-    return "azurevault";
+   * <p>
+   * Verifies AUTHENTICATION=AZURE_SERVICE_PRINCIPAL parameter setting.
+   * This test uses {@link AzureAuthenticationMethod#SERVICE_PRINCIPLE} as its
+   * authentication method.
+   **/
+  @Test
+  public void testServicePrincipleAuthentication() throws SQLException {
+    String[] options = new String[] {
+            "AUTHENTICATION=AZURE_SERVICE_PRINCIPAL",
+            "AZURE_CLIENT_ID=" + TestProperties.getOrAbort(
+                    AzureTestProperty.AZURE_CLIENT_ID),
+            "AZURE_CLIENT_SECRET=" + TestProperties.getOrAbort(
+                    AzureTestProperty.AZURE_CLIENT_SECRET),
+            "AZURE_TENANT_ID=" + TestProperties.getOrAbort(
+                    AzureTestProperty.AZURE_TENANT_ID)};
+
+    verifyProperties(options);
+  }
+
+  /** verifies a properties object returned with a URL with the given options **/
+  private static void verifyProperties(String... options) throws SQLException {
+    Properties properties = PROVIDER
+      .getConnectionProperties(composeUrl(options));
+
+    assertNotNull(properties);
+  }
+
+  private static String composeUrl(String... options) {
+    return String.format("%s/secrets/%s?%s",
+      TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL),
+      TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME),
+      String.join("&", options));
   }
 }

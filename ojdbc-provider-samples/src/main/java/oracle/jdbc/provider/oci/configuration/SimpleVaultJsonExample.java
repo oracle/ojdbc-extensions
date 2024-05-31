@@ -35,42 +35,63 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
+package oracle.jdbc.provider.oci.configuration;
 
-package oracle.jdbc.provider.oci;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import oracle.jdbc.datasource.impl.OracleDataSource;
+
 
 /**
- * Names of properties that configure OCI tests. Descriptions and examples of
- * each property can be found in the "example-test.properties" file within the
- * root directory of the project.
+ * A standalone example that configures Oracle JDBC to be provided with the
+ * connection properties retrieved from OCI Vault Secret.
  */
-public enum OciTestProperty {
-  OCI_CONFIG_FILE,
+public class SimpleVaultJsonExample {
 
-  OCI_CONFIG_PROFILE,
+  private static String url;
 
-  OCI_CLOUD_SHELL,
+  /**
+   * <p>
+   * Simple example to retrieve connection properties from OCI Vault Secret.
+   * </p>
+   * <p>
+   * For the default authentication, the only required local configuration is
+   * to have a valid OCI Config in ~/.oci/config.
+   * </p>
+   * <p>
+   * To run this example, the payload needs to be stored in OCI Vault Secret.
+   * The payload examples can be found in
+   * {@link oracle.jdbc.spi.OracleConfigurationProvider}.
+   * </p>
+   * Users need to indicate the OCID of the Secret with the following syntax:
+   * <pre>
+   * jdbc:oracle:thin:@config-ocivault:{secret-ocid}
+   * </pre>
+   * @param args the command line arguments
+   * @throws SQLException if an error occurs during the database calls
+   **/
+  public static void main(String[] args) throws SQLException {
 
-  OCI_INSTANCE_PRINCIPAL,
+    // Sample default URL if non present
+    if (args.length == 0) {
+      url = "jdbc:oracle:thin:@config-ocivault://ocid1.vaultsecret.oc1.phx.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+    } else {
+      url = args[0];
+    }
 
-  OCI_RESOURCE_PRINCIPAL,
+    // No changes required, configuration provider is loaded at runtime
+    OracleDataSource ds = new OracleDataSource();
+    ds.setURL(url);
 
-  OCI_INTERACTIVE,
-
-  OCI_TOKEN_SCOPE,
-
-  OCI_PASSWORD_OCID,
-
-  OCI_DATABASE_OCID,
-
-  OCI_OBJECT_STORAGE_URL,
-
-  OCI_DB_TOOLS_CONNECTION_OCID_KEYSTORE,
-
-  OCI_DB_TOOLS_CONNECTION_OCID_PKCS12,
-
-  OCI_DB_TOOLS_CONNECTION_OCID_SSO,
-
-  OCI_PASSWORD_PAYLOAD_OCID,
-
-  OCI_COMPARTMENT_ID;
+    // Standard JDBC code
+    try (Connection cn = ds.getConnection()) {
+      Statement st = cn.createStatement();
+      ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
+      if (rs.next())
+        System.out.println(rs.getString(1));
+    }
+  }
 }

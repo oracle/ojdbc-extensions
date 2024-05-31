@@ -35,7 +35,7 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.oci.configuration;
+package oracle.jdbc.provider.azure.configuration;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -46,31 +46,47 @@ import oracle.jdbc.datasource.impl.OracleDataSource;
 
 
 /**
+ * <p>
  * A standalone example that configures Oracle JDBC to be provided with the
- * connection properties retrieved from OCI Object Storage.
+ * connection properties retrieved from Azure Vault Secret.
+ * For the default authentication, the following environment variables must be
+ * set:
+ * </p>
+ * <ul>
+ * <li>AZURE_TENANT_ID The Azure Active Directory tenant(directory) ID.</li>
+ * <li>AZURE_CLIENT_ID The client(application) ID of an App Registration in the
+ * tenant.</li>
+ * <li>AZURE_CLIENT_SECRET A client secret that was generated for the App
+ * Registration.</li>
+ * </ul>
+ * <p>
+ * To run this example, the payload needs to be stored in Azure Vault Secret.
+ * The payload examples can be found in
+ * {@link oracle.jdbc.spi.OracleConfigurationProvider}.
+ * </p>
+ * <p>The Oracle DataSource uses a new prefix
+ * jdbc:oracle:thin:@config-azurevault:
+ * to be able to identify that the configuration parameters should be loaded
+ * using Azure Vault Secret. Users only need to indicate the Vault Secret's
+ * secret identifier, with the
+ * following syntax:
+ * </p>
+ * <pre>
+ * jdbc:oracle:thin:@config-azurevault:{secret-identifier}
+ * </pre>
  */
-public class SimpleObjectStorageExample {
+
+public class SimpleAzureVaultJsonExample {
   private static String url;
 
   /**
-   * <p>
-   * Simple example to retrieve connection properties from OCI Object Storage.
-   * </p><p>
-   * For the default authentication, the only required local configuration is
-   * to have a valid OCI Config in ~/.oci/config.
-   * </p><p>
-   * If you are not sure about which parameter(s) to use in the URL, use
-   * {@link ObjectStorageExample} instead. You will need to fill in the fields
-   * in the configuration file, and the example will construct the URL for you.
-   * </p>
    * @param args the command line arguments
    * @throws SQLException if an error occurs during the database calls
    */
   public static void main(String[] args) throws SQLException {
-
     // Sample default URL if non present
     if (args.length == 0) {
-      url = "jdbc:oracle:thin:@config-ociobject://mytenancy.objectstorage.us-phoenix-1.oci.customer-oci.com/n/mytenancy/b/bucket1/o/payload_ojdbc_objectstorage.json";
+      url = "jdbc:oracle:thin:@config-azurevault://{your-vault-name}.vault.azure.net/secrets/{secret-name}";
     } else {
       url = args[0];
     }
@@ -80,11 +96,11 @@ public class SimpleObjectStorageExample {
     ds.setURL(url);
 
     // Standard JDBC code
-    Connection cn = ds.getConnection();
-    Statement st = cn.createStatement();
-    ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
-    if (rs.next())
-      System.out.println(rs.getString(1));
+    try (Connection cn = ds.getConnection()) {
+      Statement st = cn.createStatement();
+      ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
+      if (rs.next())
+        System.out.println(rs.getString(1));
+    }
   }
-
 }
