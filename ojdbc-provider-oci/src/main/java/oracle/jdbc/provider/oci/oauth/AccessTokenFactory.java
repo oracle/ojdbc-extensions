@@ -44,19 +44,17 @@ import com.oracle.bmc.identitydataplane.model.GenerateScopedAccessTokenDetails;
 import com.oracle.bmc.identitydataplane.model.SecurityToken;
 import com.oracle.bmc.identitydataplane.requests.GenerateScopedAccessTokenRequest;
 import oracle.jdbc.AccessToken;
-import oracle.jdbc.provider.cache.CachedResourceFactory;
 import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.oci.OciResourceFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.provider.util.JsonWebTokenParser;
 
 import javax.security.auth.DestroyFailedException;
 import java.security.*;
-import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.function.Supplier;
 
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
 
@@ -80,8 +78,9 @@ public final class AccessTokenFactory extends OciResourceFactory<AccessToken> {
    */
   public static final Parameter<String> SCOPE = Parameter.create(REQUIRED);
 
-  private static final ResourceFactory<AccessToken> INSTANCE =
-    CachedResourceFactory.create(new AccessTokenFactory());
+  private static ResourceFactory<AccessToken> INSTANCE = new AccessTokenFactory();
+
+  private Supplier<? extends AccessToken> tokenCache ;
 
   private AccessTokenFactory() { }
 
@@ -90,6 +89,8 @@ public final class AccessTokenFactory extends OciResourceFactory<AccessToken> {
    * @return a singleton of {@code AccessTokenFactory}
    */
   public static ResourceFactory<AccessToken> getInstance() {
+    if(INSTANCE == null)
+      INSTANCE = new AccessTokenFactory();
     return INSTANCE;
   }
 
@@ -104,19 +105,51 @@ public final class AccessTokenFactory extends OciResourceFactory<AccessToken> {
   public Resource<AccessToken> request(
       AbstractAuthenticationDetailsProvider authenticationDetails,
       ParameterSet parameterSet) {
+    if (tokenCache == null){
+      tokenCache = AccessToken.createJsonWebTokenCache(()->createAccessToken(parameterSet,authenticationDetails));
+    }
+    AccessToken token = tokenCache.get();
+
+    // driver will handle the expiring time
+    return Resource.createPermanentResource(token,  true);
+  }
+
+  /**
+   * Creates a JDBC access token using the provided authentication details and parameter set,
+   * This method serves as the supplier function used by the driver's cache to update the token.
+   * @param parameterSet the parameter set
+   * @param authenticationDetails authentication information used to authenticate in OCI
+   * @return the created JDBC access token
+   */
+  public  AccessToken createAccessToken(ParameterSet parameterSet, AbstractAuthenticationDetailsProvider authenticationDetails) {
 
     KeyPair keyPair = generateKeyPair();
     String scope = parameterSet.getRequired(SCOPE);
-    SecurityToken securityToken = requestSecurityToken(
-        authenticationDetails, scope, keyPair.getPublic());
-
+    String token = requestOciAccessToken(authenticationDetails, scope, keyPair);
     PrivateKey privateKey = keyPair.getPrivate();
+
+    final AccessToken accessToken;
+    char[] tokenChars = token.toCharArray();
     try {
-      return createResource(securityToken, privateKey);
+      accessToken = AccessToken.createJsonWebToken(tokenChars, privateKey);
     }
     finally {
-      tryDestroy(keyPair.getPrivate());
+      Arrays.fill(tokenChars, (char)0);
+      tryDestroy(privateKey);
     }
+    return accessToken;
+  }
+  /**
+   * Requests an Oci access token using the provided authentication details and scope and keyPair.
+   * @param authenticationDetails the authentication details to authenticate in oci
+   * @param scope the scope
+   * @param keyPair the key pair
+   * @return the requested Azure access token
+   */
+  public  String requestOciAccessToken(AbstractAuthenticationDetailsProvider authenticationDetails, String scope, KeyPair keyPair) {
+    SecurityToken securityToken = requestSecurityToken(
+            authenticationDetails, scope, keyPair.getPublic());
+    return securityToken.getToken();
   }
 
   /**
@@ -159,31 +192,6 @@ public final class AccessTokenFactory extends OciResourceFactory<AccessToken> {
       return client.generateScopedAccessToken(request)
           .getSecurityToken();
     }
-  }
-
-  /**
-   * Creates a resource that expires at the time specified by the exp claim of a
-   * {@code securityToken}. The resource wraps an instance of Oracle JDBC's
-   * {@link AccessToken}. The {@code AccessToken} object retains obfuscated
-   * copies of the {@code securityToken} and {@code privateKey}.
-   */
-  private static Resource<AccessToken> createResource(
-      SecurityToken securityToken, PrivateKey privateKey) {
-
-    String token = securityToken.getToken();
-
-    OffsetDateTime expireTime = JsonWebTokenParser.parseExp(token);
-
-    final AccessToken accessToken;
-    char[] tokenChars = token.toCharArray();
-    try {
-      accessToken = AccessToken.createJsonWebToken(tokenChars, privateKey);
-    }
-    finally {
-      Arrays.fill(tokenChars, (char)0);
-    }
-
-    return Resource.createExpiringResource(accessToken, expireTime, true);
   }
 
   /**

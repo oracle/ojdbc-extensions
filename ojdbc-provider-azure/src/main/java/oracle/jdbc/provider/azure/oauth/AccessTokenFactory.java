@@ -42,15 +42,13 @@ import com.azure.core.credential.TokenCredential;
 import com.azure.core.credential.TokenRequestContext;
 import oracle.jdbc.AccessToken;
 import oracle.jdbc.provider.azure.AzureResourceFactory;
-import oracle.jdbc.provider.cache.CachedResourceFactory;
 import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.provider.util.JsonWebTokenParser;
 
-import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.function.Supplier;
 
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
 
@@ -64,8 +62,8 @@ public final class AccessTokenFactory
   /** Scope of the provided token. This is a required parameter. */
   public static final Parameter<String> SCOPE = Parameter.create(REQUIRED);
 
-  private static final ResourceFactory<AccessToken> INSTANCE =
-    CachedResourceFactory.create(new AccessTokenFactory());
+  private static final   ResourceFactory<AccessToken> INSTANCE = new AccessTokenFactory();
+  private Supplier<? extends AccessToken> tokenCache ;
 
   private AccessTokenFactory() { }
 
@@ -81,30 +79,46 @@ public final class AccessTokenFactory
   public Resource<AccessToken> request(
     TokenCredential tokenCredential, ParameterSet parameterSet) {
 
-    String scope = parameterSet.getRequired(SCOPE);
+    if (tokenCache == null){
+      tokenCache = AccessToken.createJsonWebTokenCache(()->createJdbcAccessToken(tokenCredential,parameterSet));
+    }
+    AccessToken token = tokenCache.get();
 
+    return Resource.createPermanentResource(token,true);
+  }
+
+  /**
+   * Creates a JDBC access token using the provided token credential and parameter set,
+   * This method serves as the supplier function used by the driver's cache to update the token.
+   * @param tokenCredential the token credential
+   * @param parameterSet the parameter set
+   * @return the created JDBC access token
+   */
+  public AccessToken createJdbcAccessToken(TokenCredential tokenCredential,ParameterSet parameterSet){
+    String scope = parameterSet.getRequired(SCOPE);
+    String azureAccessToken = requestAzureAccessToken(tokenCredential, scope);
+
+    final AccessToken jdbcAccessToken;
+    char[] jsonWebToken = azureAccessToken.toCharArray();
+    try {
+      jdbcAccessToken = AccessToken.createJsonWebToken(jsonWebToken);
+    }finally {
+      Arrays.fill(jsonWebToken,(char)0);
+    }
+    return jdbcAccessToken;
+  }
+  /**
+   * Requests an Azure access token using the provided token credential and scope.
+   * @param tokenCredential the token credential
+   * @param scope the scope
+   * @return the requested Azure access token
+   */
+  public  String  requestAzureAccessToken(TokenCredential tokenCredential, String scope) {
     TokenRequestContext context = new TokenRequestContext();
     context.addScopes(scope);
 
     com.azure.core.credential.AccessToken azureAccessToken =
-      tokenCredential.getToken(context).block();
-
-    final AccessToken jdbcAccessToken;
-    char[] jsonWebToken = azureAccessToken.getToken().toCharArray();
-    try {
-      jdbcAccessToken = AccessToken.createJsonWebToken(jsonWebToken);
-    }
-    finally {
-      Arrays.fill(jsonWebToken, (char)0);
-    }
-
-    // TODO: Should azureAccessToken.getExpiresAt() be used here? In version
-    //  1.26 of the Azure SDK, the code appears to always return
-    //  OffsetDateTime.MAX. That does not seem correct, but maybe it is? If it
-    //  is correct, then prefer using the SDK's API over our JWT parser.
-    OffsetDateTime expireTime =
-      JsonWebTokenParser.parseExp(azureAccessToken.getToken());
-
-    return Resource.createExpiringResource(jdbcAccessToken, expireTime, true);
+            tokenCredential.getToken(context).block();
+    return azureAccessToken.getToken();
   }
 }
