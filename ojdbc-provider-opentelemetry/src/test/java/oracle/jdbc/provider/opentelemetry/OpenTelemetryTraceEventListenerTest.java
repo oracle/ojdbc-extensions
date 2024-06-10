@@ -71,7 +71,7 @@ public class OpenTelemetryTraceEventListenerTest {
   private SpanBuilder spanBuilder = Mockito.mock(SpanBuilder.class);
   private Tracer tracer = Mockito.mock(Tracer.class);
   private TraceContext traceContext = Mockito.mock(TraceContext.class);
-  private OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
+  private Tracer tracer2 = Mockito.mock(Tracer.class);
 
   @BeforeEach
   public void setupMocks() throws Exception {
@@ -115,6 +115,7 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @Test
   public void roundTripEnabledSensitiveSuccessTest() throws Exception {
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
     traceEventListener.setEnabled(true);
     traceEventListener.setSensitiveDataEnabled(true);
     Object userContext = traceEventListener.roundTrip(Sequence.BEFORE, traceContext, null);
@@ -136,6 +137,7 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @Test
   public void roundTripNotEnabledSensitiveSuccessTest() throws Exception {
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
     traceEventListener.setEnabled(false);
     traceEventListener.setSensitiveDataEnabled(true);
     Object userContext = traceEventListener.roundTrip(Sequence.BEFORE, traceContext, null);
@@ -157,6 +159,7 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @Test
   public void roundTripEnabledNotSensitiveSuccessTest() throws Exception {
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
     traceEventListener.setEnabled(true);
     traceEventListener.setSensitiveDataEnabled(false);
     Object userContext = traceEventListener.roundTrip(Sequence.BEFORE, traceContext, null);
@@ -178,6 +181,7 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @Test
   public void roundTripNotEnabledNotSensitiveSuccessTest() throws Exception {
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
     traceEventListener.setEnabled(false);
     traceEventListener.setSensitiveDataEnabled(true);
     Object userContext = traceEventListener.roundTrip(Sequence.BEFORE, traceContext, null);
@@ -199,6 +203,7 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @Test
   public void executionEventEnabledSensitiveACReplayStarted() throws Exception {
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
     traceEventListener.setEnabled(true);
     traceEventListener.setSensitiveDataEnabled(true);
     SQLException exception = Mockito.mock(SQLException.class);
@@ -219,6 +224,7 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @Test
   public void executionEventEnabledSensitiveACReplaySuccessful() throws Exception {
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
     traceEventListener.setEnabled(true);
     traceEventListener.setSensitiveDataEnabled(true);
     SQLException exception = Mockito.mock(SQLException.class);
@@ -239,6 +245,7 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @Test
   public void executionEventEnabledSensitiveVIPRetry() throws Exception {
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
     traceEventListener.setEnabled(true);
     traceEventListener.setSensitiveDataEnabled(true);
     Object[] params = new Object[] { "Error message", "Protocol", "Host", "Port", "Service name", "SID",
@@ -258,6 +265,7 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @Test
   public void executionEventEnabledNotSensitiveACReplayStarted() throws Exception {
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
     traceEventListener.setEnabled(true);
     traceEventListener.setSensitiveDataEnabled(false);
     SQLException exception = Mockito.mock(SQLException.class);
@@ -278,6 +286,7 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @Test
   public void executionEventEnabledNotSensitiveACReplaySuccessful() throws Exception {
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
     traceEventListener.setEnabled(true);
     traceEventListener.setSensitiveDataEnabled(false);
     SQLException exception = Mockito.mock(SQLException.class);
@@ -298,6 +307,7 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @Test
   public void executionEventEnabledNotSensitiveVIPRetry() throws Exception {
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
     traceEventListener.setEnabled(true);
     traceEventListener.setSensitiveDataEnabled(false);
     Object[] params = new Object[] { "Error message", "Protocol", "Host", "Port", "Service name", "SID",
@@ -317,6 +327,7 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @Test
   public void executionEventNotEnabledSensitiveACReplayStarted() throws Exception {
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
     traceEventListener.setEnabled(false);
     traceEventListener.setSensitiveDataEnabled(true);
     SQLException exception = Mockito.mock(SQLException.class);
@@ -337,6 +348,7 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @Test
   public void executionEventNotEnabledSensitiveACReplaySuccessful() throws Exception {
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
     traceEventListener.setEnabled(false);
     traceEventListener.setSensitiveDataEnabled(true);
     SQLException exception = Mockito.mock(SQLException.class);
@@ -357,6 +369,7 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @Test
   public void executionEventNotEnabledSensitiveVIPRetry() throws Exception {
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
     traceEventListener.setEnabled(false);
     traceEventListener.setSensitiveDataEnabled(true);
     Object[] params = new Object[] { "Error message", "Protocol", "Host", "Port", "Service name", "SID",
@@ -376,6 +389,7 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @Test
   public void executionEventNotEnabledNotSensitiveACReplayStarted() throws Exception {
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
     traceEventListener.setEnabled(false);
     traceEventListener.setSensitiveDataEnabled(false);
     SQLException exception = Mockito.mock(SQLException.class);
@@ -396,6 +410,7 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @Test
   public void executionEventNotEnabledNotSensitiveACReplaySuccessful() throws Exception {
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
     traceEventListener.setEnabled(false);
     traceEventListener.setSensitiveDataEnabled(false);
     SQLException exception = Mockito.mock(SQLException.class);
@@ -416,6 +431,7 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @Test
   public void executionEventNotEnabledNotSensitiveVIPRetry() throws Exception {
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
     traceEventListener.setEnabled(false);
     traceEventListener.setSensitiveDataEnabled(false);
     Object[] params = new Object[] { "Error message", "Protocol", "Host", "Port", "Service name", "SID",
@@ -435,6 +451,7 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @Test
   public void executionEventEnabledWrongParameterCountACReplayStarted() throws Exception {
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
     traceEventListener.setEnabled(true);
     traceEventListener.setSensitiveDataEnabled(true);
     Object[] params = new Object[] { "Only one marameter" };
@@ -445,6 +462,7 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @Test
   public void executionEventEnabledWrongParameterCountACReplaySuccessful() throws Exception {
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
     traceEventListener.setEnabled(true);
     traceEventListener.setSensitiveDataEnabled(true);
     Object[] params = new Object[] { "Only one marameter" };
@@ -455,12 +473,35 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @Test
   public void executionEventEnabledWrongParameterCountVIPRetry() throws Exception {
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
     traceEventListener.setEnabled(true);
     traceEventListener.setSensitiveDataEnabled(true);
     Object[] params = new Object[] { "Only one marameter" };
     traceEventListener.onExecutionEventReceived(JdbcExecutionEvent.VIP_RETRY,
         traceContext, params);
     Mockito.verify(spanBuilder, never()).startSpan();
+  }
+
+  @Test
+  public void testChangingTracer() throws Exception {
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer2);
+    traceEventListener.setTracer(tracer);
+    traceEventListener.setEnabled(true);
+    traceEventListener.setSensitiveDataEnabled(true);
+    Object[] params = new Object[] { "Error message", "Protocol", "Host", "Port", "Service name", "SID",
+        "Connection data", "VIP Address" };
+    traceEventListener.onExecutionEventReceived(JdbcExecutionEvent.VIP_RETRY,
+        traceContext, params);
+    Mockito.verify(spanBuilder, Mockito.times(1)).startSpan();
+    Mockito.verify(spanBuilder, Mockito.times(1)).setAttribute("Error message", params[0].toString());
+    Mockito.verify(spanBuilder, Mockito.times(1)).setAttribute("Protocol", params[1].toString());
+    Mockito.verify(spanBuilder, Mockito.times(1)).setAttribute("Host", params[2].toString());
+    Mockito.verify(spanBuilder, Mockito.times(1)).setAttribute("Port", params[3].toString());
+    Mockito.verify(spanBuilder, Mockito.times(1)).setAttribute("Service name", params[4].toString());
+    Mockito.verify(spanBuilder, Mockito.times(1)).setAttribute("SID", params[5].toString());
+    Mockito.verify(spanBuilder, Mockito.times(1)).setAttribute("Connection data", params[6].toString());
+    Mockito.verify(spanBuilder, Mockito.times(1)).setAttribute("VIP Address", params[7].toString());
+    Mockito.verify(tracer2, Mockito.times(0)).spanBuilder(Mockito.anyString());
   }
 
 }

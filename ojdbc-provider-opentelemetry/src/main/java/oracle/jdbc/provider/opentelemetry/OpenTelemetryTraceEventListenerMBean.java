@@ -38,16 +38,31 @@
 
 package oracle.jdbc.provider.opentelemetry;
 
+import io.opentelemetry.api.trace.Tracer;
+
 /**
- * MBean interface for the OpenTelemetryTraceEventListener, it exposes two
- * attributes: Enabled and SensitiveDataEnabled.
+ * MBean interface for the OpenTelemetryTraceEventListener, it exposes three
+ * attributes: Enabled, SensitiveDataEnabled and Tracer.
  */
 public interface OpenTelemetryTraceEventListenerMBean {
   void setEnabled(boolean enabled);
 
   void setSensitiveDataEnabled(boolean enabled);
 
+  /**
+   * Sets the tracer used by the OpenTelemetryTraceEventListener
+   *
+   * @param tracer Open Telemetry Tracer to use
+   */
+  void setTracer(Tracer tracer);
+
   boolean isEnabled();
 
   boolean isSensitiveDataEnabled();
+
+  /**
+   * @return returns the Open Telemetry Tracer used by the
+   *         OpenTelemetryTraceEventListener
+   */
+  Tracer getTracer();
 }
