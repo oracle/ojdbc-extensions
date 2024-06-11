@@ -70,10 +70,10 @@ Provider can now support Database Tools Connections with Proxy Authentication,
 only if username is provided in Proxy Authentication Info, without the password and roles.
 
 ## OCI Object Storage Config Provider
-The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-ociobject:` to be able to identify that the configuration parameters should be loaded using OCI Object Storage. Users only need to indicate the URL Path of the Object containing the JSON payload, with the following syntax:
+The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-ociobject://` to be able to identify that the configuration parameters should be loaded using OCI Object Storage. Users only need to indicate the URL Path of the Object containing the JSON payload, with the following syntax:
 
 <pre>
-jdbc:oracle:thin:@config-ociobject:{url_path}[?option1=value1&option2=value2...]
+jdbc:oracle:thin:@config-ociobject://{url_path}[?option1=value1&option2=value2...]
 </pre>
 
 The insturctions of obtaining a URL Path can be found in [Get the URI or Pre-Authenticated Request URL to Access the Object Store](https://docs.oracle.com/en/cloud/paas/autonomous-database/csgru/get-uri-access-object-store.html).
