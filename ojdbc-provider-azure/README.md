@@ -95,10 +95,10 @@ The sample code below executes as expected with the previous configuration (and 
 ```
 ## Azure Vault Config Provider
 Similar to [OCI Vault Config Provider](../ojdbc-provider-oci/README.md#oci-vault-config-provider), JSON Payload can also be stored in the content of Azure Key Vault Secret.
-The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-azurevault:`. Users only need to indicate the Vault Secret’s secret identifier, with the following syntax:
+The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-azurevault://`. Users only need to indicate the Vault Secret’s secret identifier, with the following syntax:
 
 <pre>
-jdbc:oracle:thin:@config-azurevault:{secret-identifier}
+jdbc:oracle:thin:@config-azurevault://{secret-identifier}
 </pre>
 
 To view an example format of JSON Payload, please refer to [JSON Payload format](../ojdbc-provider-oci/README.md#json-payload-format). 

@@ -68,7 +68,7 @@ public class SimpleVaultJsonExample {
    * </p>
    * Users need to indicate the OCID of the Secret with the following syntax:
    * <pre>
-   * jdbc:oracle:thin:@config-ocivault:{secret-ocid}
+   * jdbc:oracle:thin:@config-ocivault://{secret-ocid}
    * </pre>
    * @param args the command line arguments
    * @throws SQLException if an error occurs during the database calls
