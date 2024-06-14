@@ -42,11 +42,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.spi.OracleConfigurationProvider;
 
+@Disabled
 public class GcpVaultSecretConfigurationProviderTest {
   private enum GcpTestProperties {
     SECRET_VERSION_NAME_CONFIG

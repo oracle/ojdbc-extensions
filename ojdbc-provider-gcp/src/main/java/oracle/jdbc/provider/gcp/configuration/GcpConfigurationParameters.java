@@ -63,8 +63,9 @@ public class GcpConfigurationParameters {
 
   /**
    * @return A parser that recognizes parameters of URIs received by
-   *         {@link OciObjectStorageProvider}, and JSON objects received by
-   *         {@link GcpVaultSecretProvider}.
+   *         {@link GcpObjectStorageConfigurationProvider}, and JSON objects
+   *         received by
+   *         {@link GcpVaultSecretConfigurationProvider}.
    */
   public static ParameterSetParser getParser() {
     return PARAMETER_SET_PARSER;

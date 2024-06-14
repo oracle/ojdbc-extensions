@@ -55,7 +55,7 @@ public class GcpJsonVaultSecretProvider implements OracleConfigurationJsonSecret
    * Returns the password of the Secret that is retrieved from GCP Secrets.
    * </p>
    * <p>
-   * The {@code secretJsonObject} has the following form:
+   * The {@code jsonObject} has the following form:
    * </p>
    * 
    * <pre>{@code
@@ -65,14 +65,14 @@ public class GcpJsonVaultSecretProvider implements OracleConfigurationJsonSecret
    *   }
    * }</pre>
    *
-   * @param secretJsonObject json object to be parsed
+   * @param jsonObject json object to be parsed
    * @return encoded char array in base64 format that represents the retrieved
    *         Secret.
    */
   @Override
-  public char[] getSecret(OracleJsonObject oracleJsonObject) {
+  public char[] getSecret(OracleJsonObject jsonObject) {
     ParameterSet parameterSet = GcpConfigurationParameters.getParser().parseNamedValues(
-        JsonSecretUtil.toNamedValues(oracleJsonObject));
+        JsonSecretUtil.toNamedValues(jsonObject));
 
     ByteString stringData = GcpVaultSecretFactory.getInstance().request(parameterSet).getContent().getData();
     return Base64.getEncoder().encodeToString(stringData.toByteArray()).toCharArray();

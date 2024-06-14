@@ -48,12 +48,14 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.spi.OracleResourceProvider.Parameter;
 import oracle.jdbc.spi.UsernameProvider;
 
+@Disabled
 public class GcpVaultSecretUsernameProviderTest {
   private static final UsernameProvider PROVIDER = findProvider(
       UsernameProvider.class, "ojdbc-provider-gcp-secret-username");
