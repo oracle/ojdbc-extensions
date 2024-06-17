@@ -59,6 +59,7 @@
     <module>ojdbc-provider-common</module>
     <module>ojdbc-provider-azure</module>
     <module>ojdbc-provider-oci</module>
+    <module>ojdbc-provider-gcp</module>
     <module>ojdbc-provider-samples</module>
     <module>ojdbc-provider-opentelemetry</module>
   </modules>
