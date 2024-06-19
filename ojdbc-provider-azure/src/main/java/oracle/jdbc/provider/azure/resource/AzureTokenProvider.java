@@ -95,10 +95,10 @@ public final class AzureTokenProvider
     Map<Parameter, CharSequence> parameterValues) {
 
     ParameterSet parameterSet = parseParameterValues(parameterValues);
-
+    // we get the supplier than we get the token from supplier with get method
     return AccessTokenFactory.getInstance()
       .request(parameterSet)
-      .getContent();
+      .getContent().get();
   }
 
 }

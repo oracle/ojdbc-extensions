@@ -42,6 +42,7 @@ import com.azure.core.credential.TokenCredential;
 import com.azure.core.credential.TokenRequestContext;
 import oracle.jdbc.AccessToken;
 import oracle.jdbc.provider.azure.AzureResourceFactory;
+import oracle.jdbc.provider.cache.CachedResourceFactory;
 import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.parameter.Parameter;
@@ -57,13 +58,12 @@ import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
  * Azure.
  */
 public final class AccessTokenFactory
-  extends AzureResourceFactory<AccessToken> {
+  extends AzureResourceFactory<Supplier<? extends AccessToken>> {
 
   /** Scope of the provided token. This is a required parameter. */
   public static final Parameter<String> SCOPE = Parameter.create(REQUIRED);
 
-  private static final   ResourceFactory<AccessToken> INSTANCE = new AccessTokenFactory();
-  private Supplier<? extends AccessToken> tokenCache ;
+  private static final   ResourceFactory<Supplier<?extends AccessToken>> INSTANCE = CachedResourceFactory.create(new AccessTokenFactory());
 
   private AccessTokenFactory() { }
 
@@ -71,20 +71,23 @@ public final class AccessTokenFactory
    * Returns a singleton of {@code AccessTokenFactory}.
    * @return a singleton of {@code AccessTokenFactory}
    */
-  public static ResourceFactory<AccessToken> getInstance() {
+  public static ResourceFactory<Supplier<? extends AccessToken>> getInstance() {
     return INSTANCE;
   }
 
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Create Json web token Cache ,The cache will use Azure api to request access token  .
+   * The {@code parameterSet} is required to include a {@link #SCOPE} parameter.
+   * </p>
+   */
   @Override
-  public Resource<AccessToken> request(
+  public Resource<Supplier <? extends AccessToken>> request(
     TokenCredential tokenCredential, ParameterSet parameterSet) {
-
-    if (tokenCache == null){
-      tokenCache = AccessToken.createJsonWebTokenCache(()->createJdbcAccessToken(tokenCredential,parameterSet));
-    }
-    AccessToken token = tokenCache.get();
-
-    return Resource.createPermanentResource(token,true);
+    Supplier<? extends AccessToken> accessTokenSupplier = AccessToken.createJsonWebTokenCache(()-> createJdbcAccessToken(tokenCredential, parameterSet));
+    // we save the supplier as a resource
+    return Resource.createPermanentResource(accessTokenSupplier,true);
   }
 
   /**

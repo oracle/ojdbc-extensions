@@ -44,6 +44,7 @@ import com.oracle.bmc.identitydataplane.model.GenerateScopedAccessTokenDetails;
 import com.oracle.bmc.identitydataplane.model.SecurityToken;
 import com.oracle.bmc.identitydataplane.requests.GenerateScopedAccessTokenRequest;
 import oracle.jdbc.AccessToken;
+import oracle.jdbc.provider.cache.CachedResourceFactory;
 import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.oci.OciResourceFactory;
@@ -63,7 +64,7 @@ import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
  * represented as {@link AccessToken} objects. Oracle JDBC can use these objects
  * to authenticate with a database of the ADB service.
  */
-public final class AccessTokenFactory extends OciResourceFactory<AccessToken> {
+public final class AccessTokenFactory extends OciResourceFactory<Supplier<?extends AccessToken>> {
 
   /**
    * Scope that configures a compartment and/or database for which access is
@@ -78,9 +79,7 @@ public final class AccessTokenFactory extends OciResourceFactory<AccessToken> {
    */
   public static final Parameter<String> SCOPE = Parameter.create(REQUIRED);
 
-  private static ResourceFactory<AccessToken> INSTANCE = new AccessTokenFactory();
-
-  private Supplier<? extends AccessToken> tokenCache ;
+  private static ResourceFactory<Supplier<?extends AccessToken>> INSTANCE = CachedResourceFactory.create(new AccessTokenFactory());
 
   private AccessTokenFactory() { }
 
@@ -88,30 +87,24 @@ public final class AccessTokenFactory extends OciResourceFactory<AccessToken> {
    * Returns a singleton of {@code AccessTokenFactory}.
    * @return a singleton of {@code AccessTokenFactory}
    */
-  public static ResourceFactory<AccessToken> getInstance() {
-    if(INSTANCE == null)
-      INSTANCE = new AccessTokenFactory();
+  public static ResourceFactory<Supplier<? extends AccessToken>> getInstance() {
     return INSTANCE;
   }
 
   /**
    * {@inheritDoc}
    * <p>
-   * Requests an access token from the dataplane service. The
-   * {@code parameterSet} is required to include a {@link #SCOPE} parameter.
+   * Create Json web token Cache ,The cache will use DataPlane to request access token service .
+   * The {@code parameterSet} is required to include a {@link #SCOPE} parameter.
    * </p>
    */
   @Override
-  public Resource<AccessToken> request(
+  public Resource<Supplier<? extends AccessToken>> request(
       AbstractAuthenticationDetailsProvider authenticationDetails,
       ParameterSet parameterSet) {
-    if (tokenCache == null){
-      tokenCache = AccessToken.createJsonWebTokenCache(()->createAccessToken(parameterSet,authenticationDetails));
-    }
-    AccessToken token = tokenCache.get();
-
-    // driver will handle the expiring time
-    return Resource.createPermanentResource(token,  true);
+    Supplier<? extends AccessToken> accessTokenSupplier = AccessToken.createJsonWebTokenCache(()->createAccessToken(parameterSet,authenticationDetails));
+    // we save the supplier as a resource
+    return Resource.createPermanentResource(accessTokenSupplier,  true);
   }
 
   /**
@@ -144,7 +137,7 @@ public final class AccessTokenFactory extends OciResourceFactory<AccessToken> {
    * @param authenticationDetails the authentication details to authenticate in oci
    * @param scope the scope
    * @param keyPair the key pair
-   * @return the requested Azure access token
+   * @return the requested Oci access token
    */
   public  String requestOciAccessToken(AbstractAuthenticationDetailsProvider authenticationDetails, String scope, KeyPair keyPair) {
     SecurityToken securityToken = requestSecurityToken(
