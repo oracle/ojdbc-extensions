@@ -79,7 +79,7 @@ public final class AccessTokenFactory extends OciResourceFactory<Supplier<?exten
    */
   public static final Parameter<String> SCOPE = Parameter.create(REQUIRED);
 
-  private static ResourceFactory<Supplier<?extends AccessToken>> INSTANCE = CachedResourceFactory.create(new AccessTokenFactory());
+  private static final ResourceFactory<Supplier<?extends AccessToken>> INSTANCE = CachedResourceFactory.create(new AccessTokenFactory());
 
   private AccessTokenFactory() { }
 
