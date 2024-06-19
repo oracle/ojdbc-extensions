@@ -38,7 +38,9 @@
 
 package oracle.jdbc.provider.azure.authentication;
 
+import com.azure.core.credential.AccessToken;
 import com.azure.core.credential.TokenCredential;
+import com.azure.core.credential.TokenRequestContext;
 import com.azure.core.util.Configuration;
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.azure.AzureTestProperty;
@@ -48,6 +50,7 @@ import oracle.jdbc.provider.parameter.ParameterSetBuilder;
 import org.junit.jupiter.api.Test;
 
 import static oracle.jdbc.provider.TestProperties.getOrAbort;
+import static oracle.jdbc.provider.azure.AzureTestProperty.AZURE_TOKEN_SCOPE;
 import static oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod.*;
 import static oracle.jdbc.provider.azure.authentication.TokenCredentialFactory.AUTHENTICATION_METHOD;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -246,6 +249,8 @@ public class TokenCredentialFactoryTest {
 
   /** Verifies the TokenCredential created for a given set of parameters */
   private static void verifyTokenCredential(ParameterSet parameterSet) {
+    String tokenScope = getOrAbort(AZURE_TOKEN_SCOPE);
+
     Resource<TokenCredential> tokenResource =
       TokenCredentialFactory.getInstance()
         .request(parameterSet);
@@ -255,9 +260,14 @@ public class TokenCredentialFactoryTest {
     assertTrue(tokenResource.isValid());
 
     TokenCredential tokenCredential = tokenResource.getContent();
-
-    // TODO: Add additional verifications if possible
     assertNotNull(tokenCredential);
+
+    TokenRequestContext tokenRequestContext =
+      new TokenRequestContext().addScopes(tokenScope);
+    AccessToken accessToken =
+      tokenCredential.getToken(tokenRequestContext)
+        .block();
+    assertNotNull(accessToken);
   }
 
 }
