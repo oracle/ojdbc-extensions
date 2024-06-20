@@ -26,6 +26,11 @@
       <version>1.0.1</version>
     </dependency>
     <dependency>
+      <groupId>com.oracle.database.jdbc</groupId>
+      <artifactId>ojdbc-provider-gcp</artifactId>
+      <version>1.0.1</version>
+    </dependency>
+    <dependency>
       <groupId>com.oracle.database.security</groupId>
       <artifactId>oraclepki</artifactId>
       <scope>runtime</scope>
