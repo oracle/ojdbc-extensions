@@ -35,38 +35,56 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.gcp.resource;
+package oracle.jdbc.provider.gcp.configuration;
 
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
-import java.util.Base64;
-import java.util.Map;
+import oracle.jdbc.datasource.impl.OracleDataSource;
+import oracle.jdbc.provider.Configuration;
 
-import com.google.protobuf.ByteString;
-
-import oracle.jdbc.spi.PasswordProvider;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
- * <p>
- * A provider of passwords from the GCP Secret Manager service.
- * </p>
- * <p>
- * This class implements the {@link PasswordProvider} SPI defined by
- * Oracle JDBC. It is designed to be located and instantiated by
- * {@link java.util.ServiceLoader}.
- * </p>
+ * A standalone example that configures Oracle JDBC to be provided with the
+ * connection properties retrieved from OCI Object Storage.
  */
-public class GcpVaultSecretPasswordProvider extends GcpVaultSecretProvider implements PasswordProvider {
+public class ObjectStorageExample {
+  /**
+   * An GCP Object Storage properties configured as a JVM system property,
+   * environment variable, or configuration.properties file entry named
+   * "gcp_object_storage_properties".
+   */
+  private static final String OBJECT_PROPERTIES = Configuration
+      .getRequired("gcp_object_storage_properties");
 
-  public GcpVaultSecretPasswordProvider() {
-    super("secret-password");
-  }
+  /**
+   * <p>
+   * Connects to a database using connection properties retrieved from GCP
+   * Object Storage.
+   * </p>
+   * 
+   * @param args the command line arguments
+   * @throws SQLException if an error occurs during the database calls
+   */
+  public static void main(String[] args) throws SQLException {
+    String url = "jdbc:oracle:thin:@config-gcpobject://" + OBJECT_PROPERTIES;
 
-  @Override
-  public char[] getPassword(Map<Parameter, CharSequence> parameterValues) {
-    ByteString secret = getSecret(parameterValues);
-    String password = secret.toString(Charset.defaultCharset());
-    return password.toCharArray();
+    // Standard JDBC code
+    OracleDataSource ds = new OracleDataSource();
+    ds.setURL(url);
+
+    System.out.println("Connection URL: " + url);
+
+    try (Connection cn = ds.getConnection()) {
+      String connectionString = cn.getMetaData().getURL();
+      System.out.println("Connected to: " + connectionString);
+
+      Statement st = cn.createStatement();
+      ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
+      if (rs.next())
+        System.out.println(rs.getString(1));
+    }
   }
 
 }

@@ -5,7 +5,7 @@
   <name>Oracle JDBC Provider Code Samples</name>
 
   <artifactId>ojdbc-provider-samples</artifactId>
-  <version>1.0.1</version>
+  <version>${project.parent.version}</version>
   <packaging>jar</packaging>
 
   <parent>
@@ -18,12 +18,17 @@
     <dependency>
       <groupId>com.oracle.database.jdbc</groupId>
       <artifactId>ojdbc-provider-azure</artifactId>
-      <version>1.0.1</version>
+      <version>${project.parent.version}</version>
     </dependency>
     <dependency>
       <groupId>com.oracle.database.jdbc</groupId>
       <artifactId>ojdbc-provider-oci</artifactId>
-      <version>1.0.1</version>
+      <version>${project.parent.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.oracle.database.jdbc</groupId>
+      <artifactId>ojdbc-provider-gcp</artifactId>
+      <version>${project.parent.version}</version>
     </dependency>
     <dependency>
       <groupId>com.oracle.database.security</groupId>
