@@ -81,8 +81,6 @@ public final class OciVaultSecretProvider
       .request(parameters)
       .getContent();
 
-//    secretName = secret.
-
     return secretBundle.getBase64Secret()
       .toCharArray();
   }

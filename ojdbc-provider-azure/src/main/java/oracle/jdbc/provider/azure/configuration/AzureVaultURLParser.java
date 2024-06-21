@@ -44,7 +44,7 @@ import oracle.jdbc.provider.parameter.ParameterSetBuilder;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 
 /**
- * A URL parser used by {@link AzureVaultJsonSecretProvider} and {@link AzureVaultJsonProvider}.
+ * A URL parser used by {@link AzureVaultSecretProvider} and {@link AzureVaultJsonProvider}.
  */
 public class AzureVaultURLParser {
   /**
