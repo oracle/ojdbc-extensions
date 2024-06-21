@@ -38,25 +38,76 @@
 
 package oracle.jdbc.provider.oci.vault;
 
+import com.oracle.bmc.secrets.model.Base64SecretBundleContentDetails;
+import com.oracle.bmc.secrets.model.SecretBundleContentDetails;
+
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.util.Arrays;
+import java.util.Base64;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 /**
  * A secret managed by the OCI Vault service.
  */
-public final class Secret {
+public final class SecretBundle {
 
-  private final String name;
+  private final String base64Secret;
 
-  private Secret(String name) {
-    this.name = name;
+  private SecretBundle(String base64Secret) {
+    this.base64Secret = base64Secret;
   }
 
-  static Secret fromSecret(com.oracle.bmc.vault.model.Secret secret) {
-    return new Secret(secret.getSecretName());
+  static SecretBundle fromSecretBundle(com.oracle.bmc.secrets.model.SecretBundle secretBundle) {
+
+    SecretBundleContentDetails secretBundleContentDetails =
+        secretBundle.getSecretBundleContent();
+
+    if (secretBundleContentDetails instanceof
+        Base64SecretBundleContentDetails) {
+
+      String base64Secret =
+          ((Base64SecretBundleContentDetails)secretBundleContentDetails)
+              .getContent();
+
+      return new SecretBundle(base64Secret);
+    }
+    else {
+      throw new IllegalStateException(
+          "Unsupported content type: " + secretBundleContentDetails.getClass());
+    }
   }
 
   /**
-   * @return String that represents name of the Secret
+   * Returns the secret decoded as UTF-8 characters. The {@code char[]} returned
+   * by this method is not retained: It's contents may be wiped from memory
+   * after it has been consumed.
+   * @return Characters representing the UTF-8 decoding of the secret. Not null.
    */
-  public String getName() {
-    return name;
+  public char[] toCharArray() {
+    byte[] contentBytes = Base64.getDecoder().decode(base64Secret);
+    try {
+      CharBuffer contentBuffer = UTF_8.decode(ByteBuffer.wrap(contentBytes));
+      char[] contentChars = new char[contentBuffer.remaining()];
+      try {
+        contentBuffer.get(contentChars);
+        return contentChars;
+      }
+      finally {
+        contentBuffer.clear();
+        contentBuffer.put(new char[contentBuffer.capacity()]);
+      }
+    }
+    finally {
+      Arrays.fill(contentBytes, (byte)0);
+    }
+  }
+
+  /**
+   * @return String that represents the Secret in base64 format
+   */
+  public String getBase64Secret() {
+    return base64Secret;
   }
 }

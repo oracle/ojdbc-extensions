@@ -1,4 +1,3 @@
-
 /*
  ** Copyright (c) 2023 Oracle and/or its affiliates.
  **
@@ -39,41 +38,43 @@
 
 package oracle.jdbc.provider.oci.vault;
 
+import com.oracle.bmc.Region;
 import com.oracle.bmc.auth.AbstractAuthenticationDetailsProvider;
-import com.oracle.bmc.vault.VaultsClient;
-import com.oracle.bmc.vault.requests.GetSecretRequest;
+import com.oracle.bmc.secrets.SecretsClient;
+import com.oracle.bmc.secrets.requests.GetSecretBundleRequest;
 import oracle.jdbc.provider.cache.CachedResourceFactory;
-import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.oci.OciResourceFactory;
+import oracle.jdbc.provider.oci.OciResourceParameter;
 import oracle.jdbc.provider.oci.Ocid;
 import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.provider.factory.Resource;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
-
-import oracle.jdbc.provider.oci.OciResourceParameter;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * <p>
  * Factory for requesting secrets from the Vault service. Secrets are
- * represented as {@link Secret} objects. Oracle JDBC can use the content of
+ * represented as {@link SecretBundle} objects. Oracle JDBC can use the content of
  * a secret as a database password, or any other security sensitive value.
  * </p>
  */
-public final class SecretFactory extends OciResourceFactory<Secret> {
+public final class SecretBundleFactory extends OciResourceFactory<SecretBundle> {
 
-  private static final ResourceFactory<Secret> INSTANCE =
-    CachedResourceFactory.create(new SecretFactory());
+  private static final ResourceFactory<SecretBundle> INSTANCE =
+    CachedResourceFactory.create(new SecretBundleFactory());
 
-  private SecretFactory() { }
+  private SecretBundleFactory() { }
 
   /**
    * Returns a singleton of {@code SecretFactory}.
    * @return a singleton of {@code SecretFactory}
    */
-  public static ResourceFactory<Secret> getInstance() {
+  public static ResourceFactory<SecretBundle> getInstance() {
     return INSTANCE;
   }
 
@@ -85,7 +86,7 @@ public final class SecretFactory extends OciResourceFactory<Secret> {
    * </p>
    */
   @Override
-  protected Resource<Secret> request(
+  protected Resource<SecretBundle> request(
       AbstractAuthenticationDetailsProvider authenticationDetails,
       ParameterSet parameterSet) {
 
@@ -99,10 +100,10 @@ public final class SecretFactory extends OciResourceFactory<Secret> {
           + ocid.getContent());
     }
 
-    com.oracle.bmc.vault.model.Secret ociSecret = requestSecret(authenticationDetails, ocid);
+    com.oracle.bmc.secrets.model.SecretBundle secretBundle = requestSecret(authenticationDetails, ocid);
 
-    Secret secret = Secret.fromSecret(ociSecret);
-    Date expireTimeDate = ociSecret.getTimeOfCurrentVersionExpiry();
+    SecretBundle secret = SecretBundle.fromSecretBundle(secretBundle);
+    Date expireTimeDate = secretBundle.getTimeOfExpiry();
 
     if (expireTimeDate == null) {
       return Resource.createPermanentResource(secret, true);
@@ -116,23 +117,45 @@ public final class SecretFactory extends OciResourceFactory<Secret> {
   }
 
   /** Requests a secret from the OCI Vault service. */
-  private com.oracle.bmc.vault.model.Secret requestSecret(
+  private com.oracle.bmc.secrets.model.SecretBundle requestSecret(
       AbstractAuthenticationDetailsProvider authenticationDetails,
       Ocid ocid) {
 
-    try (VaultsClient client =
-           VaultsClient.builder()
+    try (SecretsClient client =
+           SecretsClient.builder()
              .region(ocid.getRegion())
              .build(authenticationDetails)) {
 
-      GetSecretRequest request =
-        GetSecretRequest.builder()
+      GetSecretBundleRequest request =
+        GetSecretBundleRequest.builder()
           .secretId(ocid.getContent())
+          .stage(GetSecretBundleRequest.Stage.Current)
           .build();
 
-      return client.getSecret(request)
-        .getSecret();
+      return client.getSecretBundle(request)
+        .getSecretBundle();
     }
+  }
+
+  /**
+   * Returns a {@link Region} which is parsed from the provided {@code ocid}.
+   * The format of Oracle Cloud ID (OCID) is documented as follows:
+   * <pre>
+   *   ocid1.<RESOURCE TYPE>.<REALM>.[REGION][.FUTURE USE].<UNIQUE ID>
+   * </pre>
+   * @see <a href="https://docs.oracle.com/en-us/iaas/Content/General/Concepts/identifiers.htm">Resource Identifiers</a>
+   * @param ocid OCID of the regional resource
+   * @return an {@code Region} which is extracted from the {@code ocid}
+   */
+  private Region parseRegion(String ocid) {
+    String regex = "ocid1\\.[^.]+\\.[^.]+\\.([^.]+)\\..+";
+    Pattern pattern = Pattern.compile(regex);
+    Matcher matcher = pattern.matcher(ocid);
+    if (matcher.matches()) {
+      return Region.fromRegionCode(matcher.group(1));
+    }
+    throw new IllegalStateException(
+      "Fail to parse region from the Secret OCID: " + ocid);
   }
 
 }

@@ -38,14 +38,13 @@
 
 package oracle.jdbc.provider.oci.resource;
 
-import oracle.jdbc.provider.oci.vault.SecretFactory;
+import oracle.jdbc.provider.oci.OciResourceParameter;
+import oracle.jdbc.provider.oci.vault.SecretBundleFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
 import oracle.jdbc.spi.PasswordProvider;
 
 import java.util.Map;
-
-import static oracle.jdbc.provider.oci.vault.SecretFactory.OCID;
 
 /**
  * <p>
@@ -61,7 +60,7 @@ public final class VaultPasswordProvider
   implements PasswordProvider {
 
   private static final ResourceParameter[] PARAMETERS = {
-    new ResourceParameter("ocid", OCID)
+    new ResourceParameter("ocid", OciResourceParameter.OCID)
   };
 
   /**
@@ -77,7 +76,7 @@ public final class VaultPasswordProvider
 
     ParameterSet parameterSet = parseParameterValues(parameterValues);
 
-    return SecretFactory.getInstance()
+    return SecretBundleFactory.getInstance()
         .request(parameterSet)
         .getContent()
         .toCharArray();
