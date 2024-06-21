@@ -51,7 +51,6 @@ import oracle.jdbc.OracleConnection;
 import oracle.jdbc.spi.OracleConfigurationCachableProvider;
 import oracle.jdbc.util.OracleConfigurationCache;
 import oracle.jdbc.util.OracleConfigurationProviderNetworkError;
-import oracle.jdbc.spi.OracleConfigurationProvider;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.azure.authentication.TokenCredentialFactory;
 import oracle.sql.json.OracleJsonFactory;
@@ -61,6 +60,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * <p>
@@ -276,6 +276,16 @@ public class AzureAppConfigurationProvider
   public Properties removeProperties(String location) {
     Properties deletedProp = cache.remove(location);
     return deletedProp;
+  }
+
+  @Override
+  public void clearCache() {
+    throw new IllegalStateException("method not implemented");
+  }
+
+  @Override
+  public Set<String> getAllKeysOfCache() {
+    throw new IllegalStateException("method not implemented");
   }
 }
 

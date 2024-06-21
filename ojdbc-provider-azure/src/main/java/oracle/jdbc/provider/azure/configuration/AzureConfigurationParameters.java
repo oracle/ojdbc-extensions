@@ -45,7 +45,7 @@ import oracle.jdbc.provider.parameter.ParameterSetParser;
 /**
  * <p>
  * This class defines the common set of named parameters recognized by
- * {@link AzureAppConfigurationProvider} and {@link AzureVaultSecretProvider}.
+ * {@link AzureAppConfigurationProvider} and {@link AzureVaultJsonSecretProvider}.
  * </p>
  */
 public final class AzureConfigurationParameters {
@@ -58,7 +58,7 @@ public final class AzureConfigurationParameters {
   /**
    * Configures a {@code builder} to build a parser that recognizes the common
    * set of parameters accepted by {@link AzureAppConfigurationProvider} and
-   * {@link AzureVaultSecretProvider}.
+   * {@link AzureVaultJsonSecretProvider}.
    * @param builder Builder to configure. Not null.
    * @return The {@code builder}, with configuration added. Not null.
    */

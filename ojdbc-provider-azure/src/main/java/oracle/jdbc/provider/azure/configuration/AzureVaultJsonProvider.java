@@ -38,9 +38,11 @@
 
 package oracle.jdbc.provider.azure.configuration;
 
-import oracle.jdbc.driver.OracleConfigurationJsonProvider;
+import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
+import oracle.jdbc.driver.configuration.AbstractConfigurationFileProvider;
 import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.util.OracleConfigurationCache;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -51,9 +53,11 @@ import static oracle.jdbc.provider.azure.configuration.AzureVaultURLParser.PARAM
 
 /**
  * A provider for JSON payload which contains configuration from Azure Vault.
- * See {@link #getJson(String)} for the spec of the JSON payload.
+ * See {@link #getInputStream(String)} for the spec of the JSON payload.
  */
-public class AzureVaultJsonProvider extends OracleConfigurationJsonProvider {
+public class AzureVaultJsonProvider extends AbstractConfigurationFileProvider {
+  private String secretName;
+  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
 
   /**
    * {@inheritDoc}
@@ -68,22 +72,29 @@ public class AzureVaultJsonProvider extends OracleConfigurationJsonProvider {
    * @return JSON payload
    **/
   @Override
-  public InputStream getJson(String secretIdentifier) {
+  public InputStream getInputStream(String secretIdentifier) {
     final String valueFieldName = "value";
     Map<String, String> optionsWithSecret = new HashMap<>(options);
     optionsWithSecret.put(valueFieldName, secretIdentifier);
 
     ParameterSet parameters = PARAMETER_SET_PARSER.parseNamedValues(optionsWithSecret);
 
-    String secretContent = KeyVaultSecretFactory.getInstance()
+    KeyVaultSecret secret = KeyVaultSecretFactory.getInstance()
       .request(parameters)
-      .getContent()
-      .getValue();
+      .getContent();
+
+    secretName = secret.getName();
+    String secretContent = secret.getValue();
 
     InputStream inputStream =
       new ByteArrayInputStream(secretContent.getBytes());
 
     return inputStream;
+  }
+
+  @Override
+  protected OracleConfigurationCache getCache() {
+    return CACHE;
   }
 
   /**
@@ -96,5 +107,13 @@ public class AzureVaultJsonProvider extends OracleConfigurationJsonProvider {
   @Override
   public String getType() {
     return "azurevault";
+  }
+
+  @Override
+  public String getReaderType(String location) {
+    if (secretName == null)
+      throw new IllegalArgumentException("Secret name is null");
+
+    return secretName.substring(location.lastIndexOf(".") + 1);
   }
 }
