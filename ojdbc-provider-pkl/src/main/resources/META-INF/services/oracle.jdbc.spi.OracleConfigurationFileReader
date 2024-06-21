@@ -1,0 +1,2 @@
+oracle.jdbc.provider.configuration.OracleConfigurationPklFileReader
+oracle.jdbc.provider.configuration.OracleConfigurationYamlFileReader

@@ -1,21 +1,27 @@
 package oracle.jdbc.provider.oci.configuration;
 
-import oracle.jdbc.driver.OracleConfigurationJsonProvider;
+import oracle.jdbc.driver.configuration.AbstractConfigurationFileProvider;
+import oracle.jdbc.provider.oci.vault.SecretBundleFactory;
 import oracle.jdbc.provider.oci.vault.SecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.util.OracleConfigurationCache;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.sql.SQLException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A provider for JSON payload which contains configuration from OCI Vault.
- * See {@link #getJson(String)} for the spec of the JSON payload.
+ * See {@link #getInputStream(String)} for the spec of the JSON payload.
  **/
-public class OciVaultJsonProvider extends OracleConfigurationJsonProvider {
+public class OciVaultJsonProvider extends AbstractConfigurationFileProvider {
+
+  private String secretName;
+  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
 
   /**
    * {@inheritDoc}
@@ -30,7 +36,7 @@ public class OciVaultJsonProvider extends OracleConfigurationJsonProvider {
    * @return JSON payload
    **/
   @Override
-  public InputStream getJson(String secretOcid) {
+  public InputStream getInputStream(String secretOcid) {
     final String valueFieldName = "value";
     Map<String, String> optionsWithOcid = new HashMap<>(options);
     optionsWithOcid.put(valueFieldName, secretOcid);
@@ -39,13 +45,32 @@ public class OciVaultJsonProvider extends OracleConfigurationJsonProvider {
       OciConfigurationParameters.getParser()
         .parseNamedValues(optionsWithOcid);
 
-    String secretContent = SecretFactory.getInstance()
+    // Get secret name
+    secretName = SecretFactory.getInstance()
+      .request(parameters)
+      .getContent()
+      .getName();
+
+    // Get secret contents
+    String secretContent = SecretBundleFactory.getInstance()
       .request(parameters)
       .getContent()
       .getBase64Secret();
 
     InputStream inputStream = new ByteArrayInputStream(Base64.getDecoder().decode(secretContent));
     return inputStream;
+  }
+
+  @Override
+  protected OracleConfigurationCache getCache() {
+    return CACHE;
+  }
+
+  @Override
+  public String getReaderType(String location) {
+    requireNonNull(secretName,"Secret name is null");
+
+    return secretName.substring(location.lastIndexOf("."));
   }
 
   /**

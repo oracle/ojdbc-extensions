@@ -38,6 +38,7 @@
 
 package oracle.jdbc.provider.oci.configuration;
 
+import oracle.jdbc.provider.oci.OciResourceParameter;
 import oracle.jdbc.provider.oci.authentication.AuthenticationDetailsFactory;
 import oracle.jdbc.provider.oci.authentication.AuthenticationMethod;
 import oracle.jdbc.provider.parameter.Parameter;
@@ -46,14 +47,12 @@ import oracle.jdbc.provider.parameter.ParameterSetParser;
 import static oracle.jdbc.provider.oci.authentication.AuthenticationDetailsFactory.*;
 import static oracle.jdbc.provider.oci.authentication.AuthenticationMethod.*;
 import static oracle.jdbc.provider.oci.objectstorage.ObjectFactory.OBJECT_URL;
-import static oracle.jdbc.provider.oci.vault.SecretFactory.OCID;
-import static oracle.jdbc.provider.oci.databasetools.DatabaseToolsConnectionFactory.CONNECTION_OCID;
 
 /**
  * <p>
  * The set of named parameters recognized by
  * {@link oracle.jdbc.spi.OracleConfigurationProvider}
- * {@link oracle.jdbc.spi.OracleConfigurationJsonSecretProvider}
+ * {@link oracle.jdbc.spi.OracleConfigurationSecretProvider}
  * implementations found in this module.
  * </p><p>
  * Each named parameter is mapped to a {@link Parameter} recognized by the
@@ -80,7 +79,7 @@ public final class OciConfigurationParameters {
   private static final ParameterSetParser PARAMETER_SET_PARSER =
     ParameterSetParser.builder()
       .addParameter("key", KEY, "")
-      .addParameter("value", OCID, "")
+      .addParameter("value", OciResourceParameter.OCID, "")
       .addParameter("object_url", OBJECT_URL, "")
       .addParameter("AUTHENTICATION", AUTHENTICATION_METHOD,
         API_KEY,

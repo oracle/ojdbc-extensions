@@ -14,9 +14,10 @@ import com.oracle.bmc.databasetools.model.DatabaseToolsConnectionOracleDatabaseP
 import com.oracle.bmc.databasetools.model.DatabaseToolsConnectionOracleDatabaseProxyClientUserName;
 import com.oracle.bmc.model.BmcException;
 import oracle.jdbc.OracleConnection;
+import oracle.jdbc.provider.oci.OciResourceParameter;
 import oracle.jdbc.provider.oci.databasetools.DatabaseToolsConnectionFactory;
-import oracle.jdbc.provider.oci.vault.Secret;
-import oracle.jdbc.provider.oci.vault.SecretFactory;
+import oracle.jdbc.provider.oci.vault.SecretBundle;
+import oracle.jdbc.provider.oci.vault.SecretBundleFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.spi.OracleConfigurationCachableProvider;
 import oracle.jdbc.spi.OracleConfigurationProvider;
@@ -28,6 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * <p>
@@ -237,7 +239,7 @@ public class OciDatabaseToolsConnectionProvider
    * @param userPassword the user password of a Database Tools Connection
    * @return a {@code Secret} managed by the OCI Vault service
    */
-  private Secret getSecret(DatabaseToolsUserPassword userPassword) {
+  private SecretBundle getSecret(DatabaseToolsUserPassword userPassword) {
     /* check the value type of Database Tools user password is SECRETID */
     if (!(userPassword instanceof DatabaseToolsUserPasswordSecretId))
       throw new IllegalStateException(
@@ -255,7 +257,7 @@ public class OciDatabaseToolsConnectionProvider
    *                        Connection
    * @return a {@code Secret} managed by the OCI Vault service
    */
-  private Secret getSecret(
+  private SecretBundle getSecret(
     DatabaseToolsKeyStoreContent keyStoreContent) {
     /* check the value type of Database Tools Key Store content is SECRETID */
     if (!(keyStoreContent instanceof DatabaseToolsKeyStoreContentSecretId))
@@ -275,7 +277,7 @@ public class OciDatabaseToolsConnectionProvider
    *                         Connection
    * @return a {@code Secret} managed by the OCI Vault service
    */
-  private Secret getSecret(
+  private SecretBundle getSecret(
     DatabaseToolsKeyStorePassword keyStorePassword) {
     /* check the value type of Database Tools Key Store password is SECRETID */
     if (!(keyStorePassword instanceof DatabaseToolsKeyStorePasswordSecretId))
@@ -295,12 +297,12 @@ public class OciDatabaseToolsConnectionProvider
    * @param secretId the Secret OCID
    * @return a {@code Secret} managed by the OCI Vault service
    */
-  private Secret requestSecretFromOCI(String secretId) {
+  private SecretBundle requestSecretFromOCI(String secretId) {
     ParameterSet walletParameters = commonParameters.copyBuilder()
-      .add("value", SecretFactory.OCID, secretId)
+      .add("value", OciResourceParameter.OCID, secretId)
       .build();
 
-    return SecretFactory.getInstance()
+    return SecretBundleFactory.getInstance()
       .request(walletParameters)
       .getContent();
   }
@@ -309,6 +311,16 @@ public class OciDatabaseToolsConnectionProvider
   public Properties removeProperties(String location) {
     Properties deletedProp = cache.remove(location);
     return deletedProp;
+  }
+
+  @Override
+  public void clearCache() {
+    throw new IllegalStateException("method not implemented");
+  }
+
+  @Override
+  public Set<String> getAllKeysOfCache() {
+    throw new IllegalStateException("method not implemented");
   }
 
   private Properties refreshProperties(String location)

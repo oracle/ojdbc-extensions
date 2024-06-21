@@ -38,17 +38,18 @@
 
 package oracle.jdbc.provider.oci.configuration;
 
-import oracle.jdbc.provider.configuration.JsonSecretUtil;
-import oracle.jdbc.provider.oci.vault.SecretFactory;
+import oracle.jdbc.provider.oci.vault.SecretBundle;
+import oracle.jdbc.provider.oci.vault.SecretBundleFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
-import oracle.sql.json.OracleJsonObject;
+import oracle.jdbc.spi.OracleConfigurationSecretProvider;
+
+import java.util.Map;
 
 /**
  * A provider of Secret values from OCI Vault.
  */
 public final class OciVaultSecretProvider
-    implements OracleConfigurationJsonSecretProvider {
+    implements OracleConfigurationSecretProvider {
 
   /**
    * {@inheritDoc}
@@ -71,15 +72,18 @@ public final class OciVaultSecretProvider
    *         Secret.
    */
   @Override
-  public char[] getSecret(OracleJsonObject secretJsonObject) {
+  public char[] getSecret(Map<String, String> secretMap) {
     ParameterSet parameters =
       OciConfigurationParameters.getParser()
-        .parseNamedValues(JsonSecretUtil.toNamedValues(secretJsonObject));
+        .parseNamedValues(secretMap);
 
-    return SecretFactory.getInstance()
+    SecretBundle secretBundle =  SecretBundleFactory.getInstance()
       .request(parameters)
-      .getContent()
-      .getBase64Secret()
+      .getContent();
+
+//    secretName = secret.
+
+    return secretBundle.getBase64Secret()
       .toCharArray();
   }
 
