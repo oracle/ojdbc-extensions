@@ -43,12 +43,21 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import oracle.jdbc.datasource.impl.OracleDataSource;
+import oracle.jdbc.provider.Configuration;
 
 /**
  * A standalone example that configures Oracle JDBC to be provided with the
  * connection properties retrieved from GCP Secret Manager.
  */
-public class SimpleVaultJsonExample {
+public class VaultJsonExample {
+
+  /**
+   * An GCP SecretManager resource name configured as a JVM system property,
+   * environment variable, or configuration.properties file entry named
+   * "gcp_secret_version_name_config".
+   */
+  private static final String RESOURCE_NAME = Configuration
+      .getRequired("gcp_secret_version_name_config");
 
   /**
    * <p>
@@ -70,7 +79,7 @@ public class SimpleVaultJsonExample {
    * @throws SQLException if an error occurs during the database calls
    **/
   public static void main(String[] args) throws SQLException {
-    String url = "jdbc:oracle:thin:@config-gcpsecret://projects/138028249883/secrets/config-secret/versions/4";
+    String url = "jdbc:oracle:thin:@config-gcpsecret://" + RESOURCE_NAME;
     // Sample default URL if non present
     if (args.length > 0) {
       url = args[0];

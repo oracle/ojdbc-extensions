@@ -56,10 +56,10 @@ public class GcpObjectStorageProviderTest {
   }
 
   static {
-    OracleConfigurationProvider.allowedProviders.add("gcpobject");
+    OracleConfigurationProvider.allowedProviders.add("gcpstorage");
   }
 
-  private static final OracleConfigurationProvider PROVIDER = OracleConfigurationProvider.find("gcpobject");
+  private static final OracleConfigurationProvider PROVIDER = OracleConfigurationProvider.find("gcpstorage");
 
   @Test
   public void testDefaultAuthentication() throws SQLException {

@@ -37,9 +37,7 @@
  */
 package oracle.jdbc.provider.gcp.resource;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
-import java.util.Base64;
 import java.util.Map;
 
 import com.google.protobuf.ByteString;

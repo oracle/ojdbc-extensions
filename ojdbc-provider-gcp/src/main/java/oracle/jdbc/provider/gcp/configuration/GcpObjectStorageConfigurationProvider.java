@@ -58,7 +58,7 @@ public class GcpObjectStorageConfigurationProvider extends OracleConfigurationJs
 
   @Override
   public String getType() {
-    return "gcpobject";
+    return "gcpstorage";
   }
 
   /**

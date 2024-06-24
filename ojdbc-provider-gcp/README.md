@@ -64,7 +64,7 @@ The rest are dependent on the driver, in our case `/jdbc`. The key-value pairs t
 For example, let's suppose an url like:
 
 <pre>
-jdbc:oracle:thin:@config-gcpobject://project=myproject;bucket=mybucket;object=payload_ojdbc_objectstorage.json
+jdbc:oracle:thin:@config-gcpstorage://project=myproject;bucket=mybucket;object=payload_ojdbc_objectstorage.json
 </pre>
 
 And the JSON Payload for the file **payload_ojdbc_objectstorage.json** in the **mybucket** which belongs to the project **myproject** is as following:
@@ -198,6 +198,19 @@ Providers use Google Cloud APIs which support
 the libraries look for credentials in a set of defined locations and use those 
 credentials to authenticate requests to the API.
 
+When your code is running in a local development environment, such as a development workstation, the best option is to use the credentials associated with your user 
+account.
 
+###Configure ADC with your Google Account
+To configure ADC with a Google Account, you use the Google Cloud CLI:
 
+1. Install and initialize the gcloud CLI.
+
+When you initialize the gcloud CLI, be sure to specify a Google Cloud project in which you have permission to access the resources your application needs.
+
+2. Configure ADC:
+```
+gcloud auth application-default login
+```
+A sign-in screen appears. After you sign in, your credentials are stored in the local credential file used by ADC.
 

@@ -37,55 +37,46 @@
  */
 package oracle.jdbc.provider.gcp.configuration;
 
+import oracle.jdbc.datasource.impl.OracleDataSource;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import oracle.jdbc.datasource.impl.OracleDataSource;
-
 /**
  * A standalone example that configures Oracle JDBC to be provided with the
- * connection properties retrieved from GCP Secret Manager.
+ * connection properties retrieved from OCI Object Storage.
  */
-public class SimpleVaultJsonExample {
+public class SimpleObjectStorageExample {
 
   /**
    * <p>
-   * Simple example to retrieve connection properties from GCP Secret Manager.
+   * Connects to a database using connection properties retrieved from GCP
+   * Object Storage.
    * </p>
-   * <p>
-   * To run this example, the payload needs to be stored in GCP Secret Manager.
-   * The payload examples can be found in
-   * {@link oracle.jdbc.spi.OracleConfigurationProvider}.
-   * </p>
-   * Users need to indicate the resource name of the Secret with the following
-   * syntax:
-   * 
-   * <pre>
-   * jdbc:oracle:thin:@config-gcpvault:{resource-name}
-   * </pre>
    * 
    * @param args the command line arguments
    * @throws SQLException if an error occurs during the database calls
-   **/
+   */
   public static void main(String[] args) throws SQLException {
-    String url = "jdbc:oracle:thin:@config-gcpsecret://projects/138028249883/secrets/config-secret/versions/4";
-    // Sample default URL if non present
-    if (args.length > 0) {
-      url = args[0];
-    }
+    String url = "jdbc:oracle:thin:@config-gcpstorage://project=onyx-eye-426013-i5;bucket=fm-test-bucket-123564;object=testObjectStorage.json";
 
-    // No changes required, configuration provider is loaded at runtime
+    // Standard JDBC code
     OracleDataSource ds = new OracleDataSource();
     ds.setURL(url);
 
-    // Standard JDBC code
+    System.out.println("Connection URL: " + url);
+
     try (Connection cn = ds.getConnection()) {
+      String connectionString = cn.getMetaData().getURL();
+      System.out.println("Connected to: " + connectionString);
+
       Statement st = cn.createStatement();
       ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
       if (rs.next())
         System.out.println(rs.getString(1));
     }
   }
+
 }
