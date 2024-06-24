@@ -11,8 +11,6 @@ Provider</a></dt>
 <dd>Provides connection properties managed by the Object Storage service</dd>
 <dt><a href="#gcp-vault-secret-config-provider">GCP Vault Secret Config Provider</a></dt>
 <dd>Provides connection properties managed by the Secret Manager service</dd>
-<dt><a href="#common-parameters-for-centralized-config-providers">Common Parameters for Centralized Config Providers</a></dt>
-<dd>Common parameters supported by the config providers</dd>
 <dt><a href="#caching-configuration">Caching configuration</a></dt>
 <dd>Caching mechanism adopted by Centralized Config Providers</dd>
 </dl>
@@ -24,8 +22,6 @@ Provider</a></dt>
 <dd>Provides passwords managed by the Vault service</dd>
 <dt><a href="#vault-username-provider">Vault Username Provider</a></dt>
 <dd>Provides usernames managed by the Vault service</dd>
-<dt><a href="#common-parameters-for-resource-providers">Common Parameters for Resource Providers</a></dt>
-<dd>Common parameters supported by the resource providers</dd>
 </dl>
 
 Visit any of the links above to find information and usage examples for a
@@ -43,6 +39,35 @@ JDK versions. The coordinates for the latest release are:
   <version>1.0.1</version>
 </dependency>
 ```
+
+## Authentication
+
+Providers use Google Cloud APIs which support 
+[Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials); 
+the libraries look for credentials in a set of defined locations and use those 
+credentials to authenticate requests to the API.
+
+ADC searches for credentials in the following locations:
+
+1. GOOGLE_APPLICATION_CREDENTIALS environment variable
+2. User credentials set up by using the Google Cloud CLI
+3. The attached service account, returned by the metadata server
+
+When your code is running in a local development environment, such as a development workstation, the best option is to use the credentials associated with your user 
+account.
+
+### Configure ADC with your Google Account
+To configure ADC with a Google Account, you use the Google Cloud CLI:
+
+1. Install and initialize the gcloud CLI.
+
+When you initialize the gcloud CLI, be sure to specify a Google Cloud project in which you have permission to access the resources your application needs.
+
+2. Configure ADC:
+```
+gcloud auth application-default login
+```
+A sign-in screen appears. After you sign in, your credentials are stored in the local credential file used by ADC.
 
 ## GCP Object Storage Config Provider
 The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-gcp-object:` to be able to identify that the configuration parameters should be loaded using GCP Object Storage. Users only need to indicate the project, bucket and object containing the JSON payload, with the following syntax:
@@ -191,32 +216,4 @@ An example of a
 that configures this provider can be found in
 [example-vault.properties](example-vault.properties).
 
-## Configuring Authentication
-
-Providers use Google Cloud APIs which support 
-[Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials); 
-the libraries look for credentials in a set of defined locations and use those 
-credentials to authenticate requests to the API.
-
-ADC searches for credentials in the following locations:
-
-1. GOOGLE_APPLICATION_CREDENTIALS environment variable
-2. User credentials set up by using the Google Cloud CLI
-3. The attached service account, returned by the metadata server
-
-When your code is running in a local development environment, such as a development workstation, the best option is to use the credentials associated with your user 
-account.
-
-### Configure ADC with your Google Account
-To configure ADC with a Google Account, you use the Google Cloud CLI:
-
-1. Install and initialize the gcloud CLI.
-
-When you initialize the gcloud CLI, be sure to specify a Google Cloud project in which you have permission to access the resources your application needs.
-
-2. Configure ADC:
-```
-gcloud auth application-default login
-```
-A sign-in screen appears. After you sign in, your credentials are stored in the local credential file used by ADC.
 
