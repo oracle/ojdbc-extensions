@@ -201,7 +201,7 @@ credentials to authenticate requests to the API.
 When your code is running in a local development environment, such as a development workstation, the best option is to use the credentials associated with your user 
 account.
 
-###Configure ADC with your Google Account
+### Configure ADC with your Google Account
 To configure ADC with a Google Account, you use the Google Cloud CLI:
 
 1. Install and initialize the gcloud CLI.
