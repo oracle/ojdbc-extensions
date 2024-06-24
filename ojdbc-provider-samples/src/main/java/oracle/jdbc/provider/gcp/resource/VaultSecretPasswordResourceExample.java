@@ -66,6 +66,15 @@ public class VaultSecretPasswordResourceExample {
    * Connects to a database using connection properties retrieved from GCP
    * Object Storage.
    * </p>
+   * <p>
+   * Providers use Google Cloud APIs which support Application Default
+   * Credentials; the libraries look for credentials in a set of defined
+   * locations and use those credentials to authenticate requests to the API.
+   * </p>
+   * 
+   * @see <a href=
+   *      "https://cloud.google.com/docs/authentication/application-default-credentials">
+   *      Application Default Credentials</a>
    * 
    * @param args the command line arguments
    * @throws SQLException if an error occurs during the database calls

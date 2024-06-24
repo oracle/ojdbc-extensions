@@ -35,46 +35,54 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.gcp.configuration;
+package oracle.jdbc.provider.gcp.resource;
 
 import oracle.jdbc.datasource.impl.OracleDataSource;
-import oracle.jdbc.provider.Configuration;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Properties;
 
 /**
  * A standalone example that configures Oracle JDBC to be provided with the
  * connection properties retrieved from OCI Object Storage.
  */
-public class ObjectStorageExample {
-  /**
-   * An GCP Object Storage properties configured as a JVM system property,
-   * environment variable, or configuration.properties file entry named
-   * "gcp_object_storage_properties".
-   */
-  private static final String OBJECT_PROPERTIES = Configuration
-      .getRequired("gcp_object_storage_properties");
+public class SimpleVaultSecretPasswordResourceExample {
+
+  private static final String DB_URL = "(description=(retry_count=2)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=adb.us-phoenix-1.oraclecloud.com))(connect_data=(service_name=gebqqvpozhjbqbs_awyonurbg0gp0smq_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))";
+  private static final String RESOURCE_NAME = "projects/138028249883/secrets/test-secret/versions/2";
 
   /**
    * <p>
    * Connects to a database using connection properties retrieved from GCP
    * Object Storage.
    * </p>
+   * <p>
+   * Providers use Google Cloud APIs which support Application Default
+   * Credentials; the libraries look for credentials in a set of defined
+   * locations and use those credentials to authenticate requests to the API.
+   * </p>
+   * 
+   * @see <a href=
+   *      "https://cloud.google.com/docs/authentication/application-default-credentials">
+   *      Application Default Credentials</a>
    * 
    * @param args the command line arguments
    * @throws SQLException if an error occurs during the database calls
    */
   public static void main(String[] args) throws SQLException {
-    String url = "jdbc:oracle:thin:@config-gcpstorage://" + OBJECT_PROPERTIES;
+    String url = "jdbc:oracle:thin:@" + DB_URL;
 
     // Standard JDBC code
     OracleDataSource ds = new OracleDataSource();
     ds.setURL(url);
-
-    System.out.println("Connection URL: " + url);
+    ds.setUser("DB_USER");
+    Properties properties = new Properties();
+    properties.put("oracle.jdbc.provider.password", "ojdbc-provider-gcp-secret-password");
+    properties.put("oracle.jdbc.provider.password.secretVersionName", RESOURCE_NAME);
+    ds.setConnectionProperties(properties);
 
     try (Connection cn = ds.getConnection()) {
       String connectionString = cn.getMetaData().getURL();

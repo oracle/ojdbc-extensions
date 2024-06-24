@@ -53,8 +53,7 @@ ADC searches for credentials in the following locations:
 2. User credentials set up by using the Google Cloud CLI
 3. The attached service account, returned by the metadata server
 
-When your code is running in a local development environment, such as a development workstation, the best option is to use the credentials associated with your user 
-account.
+When your code is running in a local development environment, such as a development workstation, the best option is to use the credentials associated with your user account.
 
 ### Configure ADC with your Google Account
 To configure ADC with a Google Account, you use the Google Cloud CLI:
