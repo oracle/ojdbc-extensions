@@ -49,7 +49,7 @@ import oracle.jdbc.provider.Configuration;
  * A standalone example that configures Oracle JDBC to be provided with the
  * connection properties retrieved from GCP Secret Manager.
  */
-public class VaultJsonExample {
+public class SecretManagerExample {
 
   /**
    * An GCP SecretManager resource name configured as a JVM system property,
