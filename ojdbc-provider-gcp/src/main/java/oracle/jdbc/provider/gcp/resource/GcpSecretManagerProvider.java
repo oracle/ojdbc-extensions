@@ -35,51 +35,53 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.gcp.configuration;
+package oracle.jdbc.provider.gcp.resource;
+
+import java.util.Map;
 
 import com.google.protobuf.ByteString;
 
-import java.util.Base64;
-
-import oracle.jdbc.provider.configuration.JsonSecretUtil;
-import oracle.jdbc.provider.gcp.secrets.GcpVaultSecretFactory;
+import oracle.jdbc.provider.gcp.secrets.GcpSecretManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
-import oracle.sql.json.OracleJsonObject;
+import oracle.jdbc.provider.resource.AbstractResourceProvider;
+import oracle.jdbc.provider.resource.ResourceParameter;
 
-public class GcpJsonVaultSecretProvider implements OracleConfigurationJsonSecretProvider {
+/**
+ * Internal class to be inherited by other resource providers using secrets.
+ */
+class GcpSecretManagerProvider extends AbstractResourceProvider {
+
+  private static final ResourceParameter[] PARAMETERS = {
+      new ResourceParameter("secretVersionName", GcpSecretManagerFactory.SECRET_VERSION_NAME)
+  };
+
+  protected GcpSecretManagerProvider(String valueType) {
+    super("gcp", valueType, PARAMETERS);
+  }
 
   /**
-   * {@inheritDoc}
    * <p>
-   * Returns the password of the Secret that is retrieved from GCP Secrets.
+   * Returns a secret identified by a parameter named "secretVersionName" which
+   * configures {@link GcpSecretManagerFactory#SECRET_VERSION_NAME}. This method
+   * parses these parameters from text values.
    * </p>
    * <p>
-   * The {@code jsonObject} has the following form:
+   * This method is designed to be called from subclasses which implement an
+   * {@link oracle.jdbc.spi.OracleResourceProvider} SPI.
    * </p>
-   * 
-   * <pre>{@code
-   *   "password": {
-  *       "type": "gcpsecret",
-  *       "value": "projects/<project_name>/secrets/<secret_name>/versions/<version>",
-   *   }
-   * }</pre>
    *
-   * @param jsonObject json object to be parsed
-   * @return encoded char array in base64 format that represents the retrieved
-   *         Secret.
+   * @param parameterValues Text values of parameters. Not null.
+   * @return The identified secret. Not null.
    */
-  @Override
-  public char[] getSecret(OracleJsonObject jsonObject) {
-    ParameterSet parameterSet = GcpConfigurationParameters.getParser().parseNamedValues(
-        JsonSecretUtil.toNamedValues(jsonObject));
+  protected final ByteString getSecret(
+      Map<Parameter, CharSequence> parameterValues) {
 
-    ByteString stringData = GcpVaultSecretFactory.getInstance().request(parameterSet).getContent().getData();
-    return Base64.getEncoder().encodeToString(stringData.toByteArray()).toCharArray();
+    ParameterSet parameterSet = parseParameterValues(parameterValues);
+
+    return GcpSecretManagerFactory.getInstance()
+        .request(parameterSet)
+        .getContent()
+        .getData();
   }
 
-  @Override
-  public String getSecretType() {
-    return "gcpsecret";
-  }
 }

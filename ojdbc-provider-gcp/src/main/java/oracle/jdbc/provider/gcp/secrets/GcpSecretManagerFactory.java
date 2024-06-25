@@ -64,15 +64,15 @@ import oracle.jdbc.provider.parameter.ParameterSet;
  * of a secret as a database password, or any other security sensitive value.
  * </p>
  */
-public class GcpVaultSecretFactory implements ResourceFactory<SecretPayload> {
+public class GcpSecretManagerFactory implements ResourceFactory<SecretPayload> {
 
   /** The secret version name for the secret */
   public static final Parameter<String> SECRET_VERSION_NAME = Parameter.create(REQUIRED);
 
   private static final ResourceFactory<SecretPayload> INSTANCE = CachedResourceFactory
-      .create(new GcpVaultSecretFactory());
+      .create(new GcpSecretManagerFactory());
 
-  private GcpVaultSecretFactory() {
+  private GcpSecretManagerFactory() {
   }
 
   /**

@@ -37,55 +37,59 @@
  */
 package oracle.jdbc.provider.gcp.configuration;
 
-import oracle.jdbc.datasource.impl.OracleDataSource;
-
-import java.sql.Connection;
-import java.sql.ResultSet;
+import java.io.InputStream;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Map;
+
+import oracle.jdbc.driver.OracleConfigurationJsonProvider;
+import oracle.jdbc.provider.gcp.objectstorage.GcpCloudStorageFactory;
+import oracle.jdbc.provider.parameter.ParameterSet;
 
 /**
- * A standalone example that configures Oracle JDBC to be provided with the
- * connection properties retrieved from OCI Object Storage.
+ * A provider for JSON payload which contains configuration from GCP Cloud
+ * Storage. See {@link #getJson(String)} for the spec of the JSON payload.
  */
-public class SimpleObjectStorageExample {
+public class GcpCloudStorageConfigurationProvider extends OracleConfigurationJsonProvider {
+
+  public static final String PROJECT_PARAMETER = "project";
+  public static final String BUCKET_PARAMETER = "bucket";
+  public static final String OBJECT_PARAMETER = "object";
+
+  @Override
+  public String getType() {
+    return "gcpstorage";
+  }
 
   /**
+   * {@inheritDoc}
    * <p>
-   * Connects to a database using connection properties retrieved from GCP
-   * Object Storage.
-   * </p>
-   * <p>
-   * Providers use Google Cloud APIs which support Application Default
-   * Credentials; the libraries look for credentials in a set of defined
-   * locations and use those credentials to authenticate requests to the API.
+   * Returns the JSON payload stored in GCP Cloud Storage.
    * </p>
    * 
-   * @see <a href=
-   *      "https://cloud.google.com/docs/authentication/application-default-credentials">
-   *      Application Default Credentials</a>
-   * 
-   * @param args the command line arguments
-   * @throws SQLException if an error occurs during the database calls
+   * @param location semi-colon separated list of key value pairs
+   *                 containing the following keys:
+   *                 <ul>
+   *                 <li>project: the project id</li>
+   *                 <li>bucket: the bucket containing the json configuration
+   *                 file</li>
+   *                 <li>object: the name of the json configuration file</li>
+   *                 </ul>
+   *                 Unknown keys will be ignored.
+   *                 Ex: project=myProject;bucket=myBucket;object=myfile.json
+   * @return JSON payload
    */
-  public static void main(String[] args) throws SQLException {
-    String url = "jdbc:oracle:thin:@config-gcpstorage://project=onyx-eye-426013-i5;bucket=fm-test-bucket-123564;object=testObjectStorage.json";
-
-    // Standard JDBC code
-    OracleDataSource ds = new OracleDataSource();
-    ds.setURL(url);
-
-    System.out.println("Connection URL: " + url);
-
-    try (Connection cn = ds.getConnection()) {
-      String connectionString = cn.getMetaData().getURL();
-      System.out.println("Connected to: " + connectionString);
-
-      Statement st = cn.createStatement();
-      ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
-      if (rs.next())
-        System.out.println(rs.getString(1));
+  @Override
+  public InputStream getJson(String location) throws SQLException {
+    Map<String, String> namedValues = new HashMap<>();
+    String[] keyValuePairs = location.split(";");
+    for (String keyValuePair : keyValuePairs) {
+      String[] keyValue = keyValuePair.split("=", 2);
+      namedValues.putIfAbsent(keyValue[0], keyValue[1]);
     }
+    ParameterSet parameterSet = GcpConfigurationParameters.getParser().parseNamedValues(namedValues);
+
+    return GcpCloudStorageFactory.getInstance().request(parameterSet).getContent();
   }
 
 }

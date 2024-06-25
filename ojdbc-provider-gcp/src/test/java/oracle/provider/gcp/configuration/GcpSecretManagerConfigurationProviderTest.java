@@ -35,32 +35,38 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.gcp.resource;
+package oracle.provider.gcp.configuration;
 
-import java.nio.charset.Charset;
-import java.util.Map;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import oracle.jdbc.spi.UsernameProvider;
+import java.sql.SQLException;
+import java.util.Properties;
 
-/**
- * <p>
- * A provider of usernames from the GCP Secret Manager service.
- * </p>
- * <p>
- * This class implements the {@link UsernameProvider} SPI defined by
- * Oracle JDBC. It is designed to be located and instantiated by
- * {@link java.util.ServiceLoader}.
- * </p>
- */
-public class GcpVaultSecretUsernameProvider extends GcpVaultSecretProvider implements UsernameProvider {
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-  public GcpVaultSecretUsernameProvider() {
-    super("secret-username");
+import oracle.jdbc.provider.TestProperties;
+import oracle.jdbc.spi.OracleConfigurationProvider;
+
+@Disabled
+public class GcpSecretManagerConfigurationProviderTest {
+  private enum GcpTestProperties {
+    SECRET_VERSION_NAME_CONFIG
   }
 
-  @Override
-  public String getUsername(Map<Parameter, CharSequence> parameterValues) {
-    return getSecret(parameterValues).toString(Charset.defaultCharset());
+  static {
+    OracleConfigurationProvider.allowedProviders.add("gcpsecret");
   }
 
+  private static final OracleConfigurationProvider PROVIDER = OracleConfigurationProvider.find("gcpsecret");
+
+  @Test
+  public void testGetProperties() throws SQLException {
+    String secretVersionName = TestProperties.getOrAbort(GcpTestProperties.SECRET_VERSION_NAME_CONFIG);
+    Properties properties = PROVIDER
+        .getConnectionProperties(secretVersionName);
+    assertTrue(properties.containsKey("URL"), "Contains property URL");
+    assertTrue(properties.containsKey("user"), "Contains property user");
+    assertTrue(properties.containsKey("password"), "Contains property password");
+  }
 }

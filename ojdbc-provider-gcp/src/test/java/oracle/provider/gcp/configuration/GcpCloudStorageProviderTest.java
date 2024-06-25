@@ -35,36 +35,40 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.gcp.resource;
+package oracle.provider.gcp.configuration;
 
-import java.nio.charset.Charset;
-import java.util.Map;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.google.protobuf.ByteString;
+import java.sql.SQLException;
+import java.util.Properties;
 
-import oracle.jdbc.spi.PasswordProvider;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-/**
- * <p>
- * A provider of passwords from the GCP Secret Manager service.
- * </p>
- * <p>
- * This class implements the {@link PasswordProvider} SPI defined by
- * Oracle JDBC. It is designed to be located and instantiated by
- * {@link java.util.ServiceLoader}.
- * </p>
- */
-public class GcpVaultSecretPasswordProvider extends GcpVaultSecretProvider implements PasswordProvider {
+import oracle.jdbc.provider.TestProperties;
+import oracle.jdbc.spi.OracleConfigurationProvider;
 
-  public GcpVaultSecretPasswordProvider() {
-    super("secret-password");
+@Disabled
+public class GcpCloudStorageProviderTest {
+
+  private enum GcpTestProperties {
+    GCP_OBJECT_STORAGE_URL
   }
 
-  @Override
-  public char[] getPassword(Map<Parameter, CharSequence> parameterValues) {
-    ByteString secret = getSecret(parameterValues);
-    String password = secret.toString(Charset.defaultCharset());
-    return password.toCharArray();
+  static {
+    OracleConfigurationProvider.allowedProviders.add("gcpstorage");
+  }
+
+  private static final OracleConfigurationProvider PROVIDER = OracleConfigurationProvider.find("gcpstorage");
+
+  @Test
+  public void testDefaultAuthentication() throws SQLException {
+    String location = TestProperties.getOrAbort(GcpTestProperties.GCP_OBJECT_STORAGE_URL);
+    Properties properties = PROVIDER
+        .getConnectionProperties(location);
+    assertTrue(properties.containsKey("URL"), "Contains property URL");
+    assertTrue(properties.containsKey("user"), "Contains property user");
+    assertTrue(properties.containsKey("password"), "Contains property password");
   }
 
 }

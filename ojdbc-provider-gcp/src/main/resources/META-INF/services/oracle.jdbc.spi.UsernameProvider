@@ -1,1 +1,1 @@
-oracle.jdbc.provider.gcp.resource.GcpVaultSecretUsernameProvider
+oracle.jdbc.provider.gcp.resource.GcpSecretManagerUsernameProvider

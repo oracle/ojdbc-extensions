@@ -35,39 +35,32 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.gcp.configuration;
+package oracle.jdbc.provider.gcp.resource;
 
-import static oracle.jdbc.provider.gcp.secrets.GcpSecretManagerFactory.SECRET_VERSION_NAME;
+import java.nio.charset.Charset;
+import java.util.Map;
 
-import oracle.jdbc.provider.gcp.objectstorage.GcpCloudStorageFactory;
-import oracle.jdbc.provider.parameter.ParameterSetParser;;
+import oracle.jdbc.spi.UsernameProvider;
 
-public class GcpConfigurationParameters {
-  /**
-   * <p>
-   * A parser that recognizes parameters of key/value pairs received by
-   * {@link GcpCloudStorageConfigurationProvider}, and resource names received
-   * by {@link GcpSecretManagerConfigurationProvider}.
-   * </p>
-   */
-  private static final ParameterSetParser PARAMETER_SET_PARSER = ParameterSetParser.builder()
-      .addParameter("value", SECRET_VERSION_NAME)
-      .addParameter("secretVersionName", SECRET_VERSION_NAME)
-      .addParameter(
-          GcpCloudStorageConfigurationProvider.PROJECT_PARAMETER, GcpCloudStorageFactory.PROJECT)
-      .addParameter(
-          GcpCloudStorageConfigurationProvider.BUCKET_PARAMETER, GcpCloudStorageFactory.BUCKET)
-      .addParameter(
-          GcpCloudStorageConfigurationProvider.OBJECT_PARAMETER, GcpCloudStorageFactory.OBJECT)
-      .build();
+/**
+ * <p>
+ * A provider of usernames from the GCP Secret Manager service.
+ * </p>
+ * <p>
+ * This class implements the {@link UsernameProvider} SPI defined by
+ * Oracle JDBC. It is designed to be located and instantiated by
+ * {@link java.util.ServiceLoader}.
+ * </p>
+ */
+public class GcpSecretManagerUsernameProvider extends GcpSecretManagerProvider implements UsernameProvider {
 
-  /**
-   * @return A parser that recognizes parameters of URIs received by
-   *         {@link GcpCloudStorageConfigurationProvider}, and JSON objects
-   *         received by
-   *         {@link GcpSecretManagerConfigurationProvider}.
-   */
-  public static ParameterSetParser getParser() {
-    return PARAMETER_SET_PARSER;
+  public GcpSecretManagerUsernameProvider() {
+    super("secret-username");
   }
+
+  @Override
+  public String getUsername(Map<Parameter, CharSequence> parameterValues) {
+    return getSecret(parameterValues).toString(Charset.defaultCharset());
+  }
+
 }

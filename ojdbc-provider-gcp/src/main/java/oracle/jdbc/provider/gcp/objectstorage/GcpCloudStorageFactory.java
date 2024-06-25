@@ -35,47 +35,52 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.gcp.configuration;
+package oracle.jdbc.provider.gcp.objectstorage;
+
+import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 
-import oracle.jdbc.driver.OracleConfigurationJsonProvider;
-import oracle.jdbc.provider.gcp.secrets.GcpVaultSecretFactory;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
+
+import oracle.jdbc.provider.cache.CachedResourceFactory;
+import oracle.jdbc.provider.factory.Resource;
+import oracle.jdbc.provider.factory.ResourceFactory;
+import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 
-/**
- * A provider for JSON payload which contains configuration from GCP Secret
- * Manager.
- * See {@link #getJson(String)} for the spec of the JSON payload.
- **/
-public class GcpVaultSecretConfigurationProvider extends OracleConfigurationJsonProvider {
+public class GcpCloudStorageFactory implements ResourceFactory<InputStream> {
+  /** The secret version name for the secret */
+  public static final Parameter<String> PROJECT = Parameter.create(REQUIRED);
+  public static final Parameter<String> BUCKET = Parameter.create(REQUIRED);
+  public static final Parameter<String> OBJECT = Parameter.create(REQUIRED);
 
-  @Override
-  public String getType() {
-    return "gcpsecret";
+  private static final ResourceFactory<InputStream> INSTANCE = CachedResourceFactory
+      .create(new GcpCloudStorageFactory());
+
+  private GcpCloudStorageFactory() {
   }
 
   /**
-   * {@inheritDoc}
-   * <p>
-   * Returns the JSON payload stored in GCP Secret Manager secret.
-   * </p>
+   * Returns a singleton of {@code GcpVaultSecretFactory}.
    * 
-   * @param location resource name of the secret version (to obtain the resource
-   *                 name, click on "Actions" and "Copy resource name")
-   * @return JSON payload
+   * @return a singleton of {@code GcpVaultSecretFactory}
    */
-  @Override
-  public InputStream getJson(String location) throws SQLException {
-    Map<String, String> namedValues = new HashMap<>();
-    namedValues.put("secretVersionName", location);
-    ParameterSet parameterSet = GcpConfigurationParameters.getParser().parseNamedValues(namedValues);
-    return new ByteArrayInputStream(
-        GcpVaultSecretFactory.getInstance().request(parameterSet).getContent().getData().toByteArray());
+  public static ResourceFactory<InputStream> getInstance() {
+    return INSTANCE;
   }
 
+  public Resource<InputStream> request(ParameterSet parameterSet)
+      throws IllegalStateException, IllegalArgumentException {
+    String projectName = parameterSet.getRequired(PROJECT);
+    String bucketName = parameterSet.getRequired(BUCKET);
+    String objectName = parameterSet.getRequired(OBJECT);
+
+    Storage storage = (Storage) StorageOptions.newBuilder().setProjectId(projectName).build().getService();
+    byte[] data = storage.readAllBytes(bucketName, objectName);
+    InputStream stream = new ByteArrayInputStream(data);
+    return Resource.createPermanentResource(stream, false);
+  }
 }

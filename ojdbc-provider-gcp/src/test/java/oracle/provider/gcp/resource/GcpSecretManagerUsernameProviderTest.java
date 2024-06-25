@@ -56,7 +56,7 @@ import oracle.jdbc.spi.OracleResourceProvider.Parameter;
 import oracle.jdbc.spi.UsernameProvider;
 
 @Disabled
-public class GcpVaultSecretUsernameProviderTest {
+public class GcpSecretManagerUsernameProviderTest {
   private static final UsernameProvider PROVIDER = findProvider(
       UsernameProvider.class, "ojdbc-provider-gcp-secret-username");
 

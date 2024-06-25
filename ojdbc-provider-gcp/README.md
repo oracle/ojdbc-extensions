@@ -6,10 +6,11 @@ Google Cloud Platform (GCP).
 ## Centralized Config Providers
 
 <dl>
-<dt><a href="#gcp-object-storage-config-provider">GCP Object Storage Config 
+<dt><a href="#gcp-cloud-storage-config-provider">GCP Cloud Storage Config 
 Provider</a></dt>
-<dd>Provides connection properties managed by the Object Storage service</dd>
-<dt><a href="#gcp-vault-secret-config-provider">GCP Vault Secret Config Provider</a></dt>
+<dd>Provides connection properties managed by the Cloud Storage service</dd>
+<dt><a href="#gcp-secret_manager-config-provider">GCP Secret Manager Config 
+Provider</a></dt>
 <dd>Provides connection properties managed by the Secret Manager service</dd>
 <dt><a href="#caching-configuration">Caching configuration</a></dt>
 <dd>Caching mechanism adopted by Centralized Config Providers</dd>
@@ -18,10 +19,10 @@ Provider</a></dt>
 ## Resource Providers
 
 <dl>
-<dt><a href="#vault-password-provider">Vault Password Provider</a></dt>
-<dd>Provides passwords managed by the Vault service</dd>
-<dt><a href="#vault-username-provider">Vault Username Provider</a></dt>
-<dd>Provides usernames managed by the Vault service</dd>
+<dt><a href="#vault-password-provider">Secret Manager Password Provider</a></dt>
+<dd>Provides passwords managed by the Secret Manager service</dd>
+<dt><a href="#vault-username-provider">Secret Manager Username Provider</a></dt>
+<dd>Provides usernames managed by the Secret Manager service</dd>
 </dl>
 
 Visit any of the links above to find information and usage examples for a
@@ -68,11 +69,11 @@ gcloud auth application-default login
 ```
 A sign-in screen appears. After you sign in, your credentials are stored in the local credential file used by ADC.
 
-## GCP Object Storage Config Provider
-The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-gcp-object:` to be able to identify that the configuration parameters should be loaded using GCP Object Storage. Users only need to indicate the project, bucket and object containing the JSON payload, with the following syntax:
+## GCP Cloud Storage Config Provider
+The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-gcpstorage:` to be able to identify that the configuration parameters should be loaded using GCP Object Storage. Users only need to indicate the project, bucket and object containing the JSON payload, with the following syntax:
 
 <pre>
-jdbc:oracle:thin:@config-gcp-object://project={project};bucket={bucket};object={object}]
+jdbc:oracle:thin:@config-gcpstorage://project={project};bucket={bucket};object={object}]
 </pre>
 
 ### JSON Payload format
@@ -146,8 +147,8 @@ For the JSON type of provider (GCP Object Storage, HTTP/HTTPS, File) the passwor
     - method
     - optional parameters (depends on the cloud provider).
 
-## GCP Vault Secret Config Provider
-Apart from GCP Object Storage, users can also store JSON Payload in the content of GCP Secret Manager secret. Users need to indicate the resource name:
+## GCP Secret Manager Config Provider
+Apart from GCP Cloud Storage, users can also store JSON Payload in the content of GCP Secret Manager secret. Users need to indicate the resource name:
 
 <pre>
 jdbc:oracle:thin:@config-gcpvault:{resource-name}

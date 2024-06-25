@@ -35,40 +35,68 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.provider.gcp.configuration;
+package oracle.provider.gcp.resource;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.sql.SQLException;
-import java.util.Properties;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import oracle.jdbc.provider.TestProperties;
-import oracle.jdbc.spi.OracleConfigurationProvider;
+import oracle.jdbc.spi.OracleResourceProvider.Parameter;
+import oracle.jdbc.spi.PasswordProvider;
+import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.createParameterValues;
+import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.findProvider;
 
 @Disabled
-public class GcpObjectStorageProviderTest {
+public class GcpSecretManagerPasswordProviderTest {
+  private static final PasswordProvider PROVIDER = findProvider(
+      PasswordProvider.class, "ojdbc-provider-gcp-secret-password");
 
   private enum GcpTestProperties {
-    GCP_OBJECT_STORAGE_URL
+    SECRET_VERSION_NAME
   }
 
-  static {
-    OracleConfigurationProvider.allowedProviders.add("gcpstorage");
-  }
-
-  private static final OracleConfigurationProvider PROVIDER = OracleConfigurationProvider.find("gcpstorage");
-
+  /**
+   * Verifies that {@link PasswordProvider#getParameters()} includes parameters
+   * to configure a vault URL and secret name.
+   */
   @Test
-  public void testDefaultAuthentication() throws SQLException {
-    String location = TestProperties.getOrAbort(GcpTestProperties.GCP_OBJECT_STORAGE_URL);
-    Properties properties = PROVIDER
-        .getConnectionProperties(location);
-    assertTrue(properties.containsKey("URL"), "Contains property URL");
-    assertTrue(properties.containsKey("user"), "Contains property user");
-    assertTrue(properties.containsKey("password"), "Contains property password");
+  public void testGetParameters() {
+    Collection<? extends Parameter> parameters = PROVIDER.getParameters();
+    assertNotNull(parameters);
+
+    Parameter secretVersionNameParameter = parameters.stream()
+        .filter(parameter -> "secretVersionName".equals(parameter.name()))
+        .findFirst()
+        .orElseThrow(AssertionError::new);
+    assertFalse(secretVersionNameParameter.isSensitive());
+    assertTrue(secretVersionNameParameter.isRequired());
+    assertNull(secretVersionNameParameter.defaultValue());
+
   }
 
+  /**
+   * Verifies that {@link oracle.jdbc.spi.PasswordProvider#getPassword(Map)}
+   * returns the username identified by a vault URL and secret name.
+   */
+  @Test
+  public void testGetPassword() {
+
+    Map<String, String> testParameters = new HashMap<>();
+    testParameters.put(
+        "secretVersionName", TestProperties.getOrAbort(GcpTestProperties.SECRET_VERSION_NAME));
+
+    Map<Parameter, CharSequence> parameterValues = createParameterValues(PROVIDER,
+        testParameters);
+
+    assertNotNull(PROVIDER.getPassword(parameterValues));
+  }
 }

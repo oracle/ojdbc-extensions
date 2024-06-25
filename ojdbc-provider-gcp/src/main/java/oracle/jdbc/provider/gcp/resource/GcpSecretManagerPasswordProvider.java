@@ -37,51 +37,34 @@
  */
 package oracle.jdbc.provider.gcp.resource;
 
+import java.nio.charset.Charset;
 import java.util.Map;
 
 import com.google.protobuf.ByteString;
 
-import oracle.jdbc.provider.gcp.secrets.GcpVaultSecretFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.provider.resource.AbstractResourceProvider;
-import oracle.jdbc.provider.resource.ResourceParameter;
+import oracle.jdbc.spi.PasswordProvider;
 
 /**
- * Internal class to be inherited by other resource providers using secrets.
+ * <p>
+ * A provider of passwords from the GCP Secret Manager service.
+ * </p>
+ * <p>
+ * This class implements the {@link PasswordProvider} SPI defined by
+ * Oracle JDBC. It is designed to be located and instantiated by
+ * {@link java.util.ServiceLoader}.
+ * </p>
  */
-class GcpVaultSecretProvider extends AbstractResourceProvider {
+public class GcpSecretManagerPasswordProvider extends GcpSecretManagerProvider implements PasswordProvider {
 
-  private static final ResourceParameter[] PARAMETERS = {
-      new ResourceParameter("secretVersionName", GcpVaultSecretFactory.SECRET_VERSION_NAME)
-  };
-
-  protected GcpVaultSecretProvider(String valueType) {
-    super("gcp", valueType, PARAMETERS);
+  public GcpSecretManagerPasswordProvider() {
+    super("secret-password");
   }
 
-  /**
-   * <p>
-   * Returns a secret identified by a parameter named "secretVersionName" which
-   * configures {@link GcpVaultSecretFactory#SECRET_VERSION_NAME}. This method
-   * parses these parameters from text values.
-   * </p>
-   * <p>
-   * This method is designed to be called from subclasses which implement an
-   * {@link oracle.jdbc.spi.OracleResourceProvider} SPI.
-   * </p>
-   *
-   * @param parameterValues Text values of parameters. Not null.
-   * @return The identified secret. Not null.
-   */
-  protected final ByteString getSecret(
-      Map<Parameter, CharSequence> parameterValues) {
-
-    ParameterSet parameterSet = parseParameterValues(parameterValues);
-
-    return GcpVaultSecretFactory.getInstance()
-        .request(parameterSet)
-        .getContent()
-        .getData();
+  @Override
+  public char[] getPassword(Map<Parameter, CharSequence> parameterValues) {
+    ByteString secret = getSecret(parameterValues);
+    String password = secret.toString(Charset.defaultCharset());
+    return password.toCharArray();
   }
 
 }

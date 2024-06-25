@@ -35,38 +35,51 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.provider.gcp.configuration;
+package oracle.jdbc.provider.gcp.configuration;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.google.protobuf.ByteString;
 
-import java.sql.SQLException;
-import java.util.Properties;
+import java.util.Base64;
 
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import oracle.jdbc.provider.configuration.JsonSecretUtil;
+import oracle.jdbc.provider.gcp.secrets.GcpSecretManagerFactory;
+import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
+import oracle.sql.json.OracleJsonObject;
 
-import oracle.jdbc.provider.TestProperties;
-import oracle.jdbc.spi.OracleConfigurationProvider;
+public class GcpJsonSecretManagerProvider implements OracleConfigurationJsonSecretProvider {
 
-@Disabled
-public class GcpVaultSecretConfigurationProviderTest {
-  private enum GcpTestProperties {
-    SECRET_VERSION_NAME_CONFIG
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Returns the password of the Secret that is retrieved from GCP Secrets.
+   * </p>
+   * <p>
+   * The {@code jsonObject} has the following form:
+   * </p>
+   * 
+   * <pre>{@code
+   *   "password": {
+  *       "type": "gcpsecret",
+  *       "value": "projects/<project_name>/secrets/<secret_name>/versions/<version>",
+   *   }
+   * }</pre>
+   *
+   * @param jsonObject json object to be parsed
+   * @return encoded char array in base64 format that represents the retrieved
+   *         Secret.
+   */
+  @Override
+  public char[] getSecret(OracleJsonObject jsonObject) {
+    ParameterSet parameterSet = GcpConfigurationParameters.getParser().parseNamedValues(
+        JsonSecretUtil.toNamedValues(jsonObject));
+
+    ByteString stringData = GcpSecretManagerFactory.getInstance().request(parameterSet).getContent().getData();
+    return Base64.getEncoder().encodeToString(stringData.toByteArray()).toCharArray();
   }
 
-  static {
-    OracleConfigurationProvider.allowedProviders.add("gcpsecret");
-  }
-
-  private static final OracleConfigurationProvider PROVIDER = OracleConfigurationProvider.find("gcpsecret");
-
-  @Test
-  public void testGetProperties() throws SQLException {
-    String secretVersionName = TestProperties.getOrAbort(GcpTestProperties.SECRET_VERSION_NAME_CONFIG);
-    Properties properties = PROVIDER
-        .getConnectionProperties(secretVersionName);
-    assertTrue(properties.containsKey("URL"), "Contains property URL");
-    assertTrue(properties.containsKey("user"), "Contains property user");
-    assertTrue(properties.containsKey("password"), "Contains property password");
+  @Override
+  public String getSecretType() {
+    return "gcpsecret";
   }
 }
