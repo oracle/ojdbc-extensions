@@ -11,10 +11,12 @@ import org.pkl.core.Duration;
 import org.pkl.core.ModuleSource;
 import org.pkl.core.PNull;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Base64;
 import java.util.HashMap;
@@ -24,17 +26,35 @@ import java.util.Properties;
 import static oracle.jdbc.OracleConnection.CONNECTION_PROPERTY_PASSWORD;
 import static oracle.jdbc.OracleConnection.CONNECTION_PROPERTY_WALLET_LOCATION;
 
-public class OracleConfigurationPklFileReader implements OracleConfigurationFileReader {
+public class OracleConfigurationYamlFileReader implements OracleConfigurationFileReader {
   @Override
   public Properties readProperties(
     InputStream inputStream, Map<String, String> options) throws SQLException {
+
     Properties properties = new Properties();
     Config pklConfig;
 
     // Parse Pkl config as text
     try (ConfigEvaluator evaluator = ConfigEvaluator.preconfigured()) {
-      String fileString = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-      pklConfig = evaluator.evaluate(ModuleSource.text(fileString));
+      File tempFile = File.createTempFile("temp", ".pkl");
+      tempFile.deleteOnExit();
+
+      byte[] buffer = inputStream.readAllBytes();
+      try (OutputStream outputStream = new FileOutputStream(tempFile)) {
+        outputStream.write(buffer);
+      }
+
+      final String pklScript = "import \"package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.deepToTyped@1.0.0#/deepToTyped.pkl\" as t " +
+        "import \"pkl:yaml\" " +
+        "import \"https://raw.githubusercontent.com/oracle/ojdbc-extensions/support-pkl/ojdbc-provider-pkl/src/main/resources/ojdbcConfig.pkl\" " +
+        "file = read(\"file://" + tempFile.getAbsolutePath() + "\") " +
+        "parsed = new yaml.Parser {}.parse(file) " +
+        "config = t.apply(ojdbcConfig.getClass(), parsed)";
+
+      pklConfig = evaluator.evaluate(ModuleSource.text(pklScript));
+
+      pklConfig = pklConfig.get("config");
+
     } catch (IOException e) {
       throw new SQLException(e);
     }
@@ -113,7 +133,7 @@ public class OracleConfigurationPklFileReader implements OracleConfigurationFile
 
   @Override
   public String getType() {
-    return "pkl";
+    return "yaml";
   }
 
   /**
@@ -151,19 +171,21 @@ public class OracleConfigurationPklFileReader implements OracleConfigurationFile
 
     Properties properties = new Properties();
 
-    Field[] fields = ojdbcConfig.getClass().getDeclaredFields();
-    for (Field field : fields) {
-      Object value = field.get(ojdbcConfig);
-      if (value == null) continue;
+    if (ojdbcConfig != null) {
+      Field[] fields = ojdbcConfig.getClass().getDeclaredFields();
+      for (Field field : fields) {
+        Object value = field.get(ojdbcConfig);
+        if (value == null) continue;
 
-      Class<?> type = field.getType();
-      if (type == Duration.class) {
-        value = durationToInt((Duration)value);
+        Class<?> type = field.getType();
+        if (type == Duration.class) {
+          value = durationToInt((Duration) value);
+        }
+
+        // Replace $$ with .
+        String name = field.getName().replace("$$", ".");
+        properties.setProperty(name, value.toString());
       }
-
-      // Replace $$ with .
-      String name = field.getName().replace("$$", ".");
-      properties.setProperty(name, value.toString());
     }
 
     return properties;
