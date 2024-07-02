@@ -37,7 +37,6 @@
  */
 package oracle.jdbc.provider.gcp.resource;
 
-import java.nio.charset.Charset;
 import java.util.Map;
 
 import com.google.protobuf.ByteString;
@@ -63,7 +62,7 @@ public class GcpSecretManagerPasswordProvider extends GcpSecretManagerProvider i
   @Override
   public char[] getPassword(Map<Parameter, CharSequence> parameterValues) {
     ByteString secret = getSecret(parameterValues);
-    String password = secret.toString(Charset.defaultCharset());
+    String password = secret.toStringUtf8();
     return password.toCharArray();
   }
 

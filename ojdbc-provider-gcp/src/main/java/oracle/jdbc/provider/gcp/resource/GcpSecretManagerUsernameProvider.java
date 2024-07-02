@@ -60,7 +60,7 @@ public class GcpSecretManagerUsernameProvider extends GcpSecretManagerProvider i
 
   @Override
   public String getUsername(Map<Parameter, CharSequence> parameterValues) {
-    return getSecret(parameterValues).toString(Charset.defaultCharset());
+    return getSecret(parameterValues).toStringUtf8();
   }
 
 }
