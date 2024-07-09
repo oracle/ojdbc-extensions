@@ -48,11 +48,13 @@ import oracle.jdbc.provider.parameter.ParameterSetBuilder;
 import org.junit.jupiter.api.Test;
 
 import static oracle.jdbc.provider.TestProperties.getOrAbort;
-import static oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod.*;
+import static oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod.AUTO_DETECT;
+import static oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod.MANAGED_IDENTITY;
+import static oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod.PASSWORD;
+import static oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod.SERVICE_PRINCIPLE;
 import static oracle.jdbc.provider.azure.authentication.TokenCredentialFactory.AUTHENTICATION_METHOD;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class TokenCredentialFactoryTest {
 
@@ -229,7 +231,7 @@ public class TokenCredentialFactoryTest {
    * client id from {@link oracle.jdbc.provider.TestProperties}, along with a
    * given authentication method.
    */
-  private static ParameterSetBuilder buildParameterSet(
+  public static ParameterSetBuilder buildParameterSet(
     AzureAuthenticationMethod authenticationMethod) {
     return ParameterSet.builder()
       .add(
