@@ -72,7 +72,7 @@ public final class TestProperties {
   /** Path of the file to read properties from */
   private static final Path FILE_PATH = Paths.get(System.getProperty(
     "oracle.jdbc.provider.TestProperties",
-    "example-test.properties"))
+    "test.properties"))
     .toAbsolutePath();
 
   /**
