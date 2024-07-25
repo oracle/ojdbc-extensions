@@ -1,22 +1,19 @@
-package oracle.jdbc.provider.configuration;
+package oracle.jdbc.provider.pkl.configuration.parser;
 
-import oracle.jdbc.provider.configuration.generated.OjdbcConfig;
-import oracle.jdbc.spi.OracleConfigurationFileReader;
+import oracle.jdbc.provider.pkl.configuration.parser.generated.OjdbcConfig;
+import oracle.jdbc.spi.OracleConfigurationParser;
 import oracle.jdbc.spi.OracleConfigurationSecretProvider;
 import org.pkl.config.java.Config;
 import org.pkl.config.java.ConfigEvaluator;
-import org.pkl.config.java.JavaType;
 import org.pkl.config.java.NoSuchChildException;
 import org.pkl.core.Duration;
 import org.pkl.core.ModuleSource;
 import org.pkl.core.PNull;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Base64;
 import java.util.HashMap;
@@ -26,35 +23,17 @@ import java.util.Properties;
 import static oracle.jdbc.OracleConnection.CONNECTION_PROPERTY_PASSWORD;
 import static oracle.jdbc.OracleConnection.CONNECTION_PROPERTY_WALLET_LOCATION;
 
-public class OracleConfigurationYamlFileReader implements OracleConfigurationFileReader {
+public class PklParser implements OracleConfigurationParser {
   @Override
   public Properties readProperties(
     InputStream inputStream, Map<String, String> options) throws SQLException {
-
     Properties properties = new Properties();
     Config pklConfig;
 
-    // Parse Pkl config as text
+    // Parse Pkl config from String
     try (ConfigEvaluator evaluator = ConfigEvaluator.preconfigured()) {
-      File tempFile = File.createTempFile("temp", ".pkl");
-      tempFile.deleteOnExit();
-
-      byte[] buffer = inputStream.readAllBytes();
-      try (OutputStream outputStream = new FileOutputStream(tempFile)) {
-        outputStream.write(buffer);
-      }
-
-      final String pklScript = "import \"package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.deepToTyped@1.0.0#/deepToTyped.pkl\" as t " +
-        "import \"pkl:yaml\" " +
-        "import \"https://raw.githubusercontent.com/oracle/ojdbc-extensions/support-pkl/ojdbc-provider-pkl/src/main/resources/ojdbcConfig.pkl\" " +
-        "file = read(\"file://" + tempFile.getAbsolutePath() + "\") " +
-        "parsed = new yaml.Parser {}.parse(file) " +
-        "config = t.apply(ojdbcConfig.getClass(), parsed)";
-
-      pklConfig = evaluator.evaluate(ModuleSource.text(pklScript));
-
-      pklConfig = pklConfig.get("config");
-
+      String fileString = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+      pklConfig = evaluator.evaluate(ModuleSource.text(fileString));
     } catch (IOException e) {
       throw new SQLException(e);
     }
@@ -133,7 +112,7 @@ public class OracleConfigurationYamlFileReader implements OracleConfigurationFil
 
   @Override
   public String getType() {
-    return "yaml";
+    return "pkl";
   }
 
   /**
@@ -171,21 +150,19 @@ public class OracleConfigurationYamlFileReader implements OracleConfigurationFil
 
     Properties properties = new Properties();
 
-    if (ojdbcConfig != null) {
-      Field[] fields = ojdbcConfig.getClass().getDeclaredFields();
-      for (Field field : fields) {
-        Object value = field.get(ojdbcConfig);
-        if (value == null) continue;
+    Field[] fields = ojdbcConfig.getClass().getDeclaredFields();
+    for (Field field : fields) {
+      Object value = field.get(ojdbcConfig);
+      if (value == null) continue;
 
-        Class<?> type = field.getType();
-        if (type == Duration.class) {
-          value = durationToInt((Duration) value);
-        }
-
-        // Replace $$ with .
-        String name = field.getName().replace("$$", ".");
-        properties.setProperty(name, value.toString());
+      Class<?> type = field.getType();
+      if (type == Duration.class) {
+        value = durationToInt((Duration)value);
       }
+
+      // Replace $$ with .
+      String name = field.getName().replace("$$", ".");
+      properties.setProperty(name, value.toString());
     }
 
     return properties;

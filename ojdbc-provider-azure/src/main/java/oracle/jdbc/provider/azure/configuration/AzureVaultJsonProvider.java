@@ -39,7 +39,7 @@
 package oracle.jdbc.provider.azure.configuration;
 
 import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
-import oracle.jdbc.driver.configuration.AbstractConfigurationFileProvider;
+import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.util.OracleConfigurationCache;
@@ -55,7 +55,7 @@ import static oracle.jdbc.provider.azure.configuration.AzureVaultURLParser.PARAM
  * A provider for JSON payload which contains configuration from Azure Vault.
  * See {@link #getInputStream(String)} for the spec of the JSON payload.
  */
-public class AzureVaultJsonProvider extends AbstractConfigurationFileProvider {
+public class AzureVaultJsonProvider extends OracleConfigurationParsableProvider {
   private String secretName;
   private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
 
@@ -93,7 +93,7 @@ public class AzureVaultJsonProvider extends AbstractConfigurationFileProvider {
   }
 
   @Override
-  protected OracleConfigurationCache getCache() {
+  public OracleConfigurationCache getCache() {
     return CACHE;
   }
 
@@ -110,7 +110,7 @@ public class AzureVaultJsonProvider extends AbstractConfigurationFileProvider {
   }
 
   @Override
-  public String getReaderType(String location) {
+  public String getParserType(String location) {
     if (secretName == null)
       throw new IllegalArgumentException("Secret name is null");
 

@@ -1,14 +1,10 @@
-module oracle.jdbc.provider.configuration.generated.OjdbcConfig
+module oracle.jdbc.provider.pkl.configuration.parser.generated.OjdbcConfig
 
 connect_descriptor: String
-
 user: String?
-
 password: Secret?
 wallet_location: Secret?
-
 jdbc: Jdbc?
-
 config_time_to_live: Duration?
 
 class Secret {

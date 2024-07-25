@@ -1,6 +1,6 @@
 package oracle.jdbc.provider.oci.configuration;
 
-import oracle.jdbc.driver.configuration.AbstractConfigurationFileProvider;
+import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.oci.vault.SecretBundleFactory;
 import oracle.jdbc.provider.oci.vault.SecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
@@ -18,7 +18,7 @@ import static java.util.Objects.requireNonNull;
  * A provider for JSON payload which contains configuration from OCI Vault.
  * See {@link #getInputStream(String)} for the spec of the JSON payload.
  **/
-public class OciVaultJsonProvider extends AbstractConfigurationFileProvider {
+public class OciVaultJsonProvider extends OracleConfigurationParsableProvider {
 
   private String secretName;
   private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
@@ -62,15 +62,8 @@ public class OciVaultJsonProvider extends AbstractConfigurationFileProvider {
   }
 
   @Override
-  protected OracleConfigurationCache getCache() {
+  public OracleConfigurationCache getCache() {
     return CACHE;
-  }
-
-  @Override
-  public String getReaderType(String location) {
-    requireNonNull(secretName,"Secret name is null");
-
-    return secretName.substring(location.lastIndexOf("."));
   }
 
   /**

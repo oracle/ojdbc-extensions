@@ -38,7 +38,7 @@
 
 package oracle.jdbc.provider.oci.configuration;
 
-import oracle.jdbc.driver.configuration.AbstractConfigurationFileProvider;
+import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.oci.objectstorage.ObjectFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.util.OracleConfigurationCache;
@@ -52,7 +52,7 @@ import java.util.Map;
  * Storage. See {@link #getInputStream(String)} for the spec of the JSON payload.
  */
 public class OciObjectStorageProvider
-  extends AbstractConfigurationFileProvider {
+  extends OracleConfigurationParsableProvider {
   private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
 
   /**
@@ -91,13 +91,8 @@ public class OciObjectStorageProvider
   }
 
   @Override
-  protected OracleConfigurationCache getCache() {
+  public OracleConfigurationCache getCache() {
     return CACHE;
-  }
-
-  @Override
-  public String getReaderType(String location) {
-    return location.substring(location.lastIndexOf(".") + 1);
   }
 
   /**

@@ -1,0 +1,32 @@
+amends "https://raw.githubusercontent.com/oracle/ojdbc-extensions/support-pkl/ojdbc-provider-pkl/src/main/resources/ojdbcConfig.pkl"
+
+connect_descriptor = "ojdbc-provider-oci-database-connection-string" //TODO
+
+user = "admin"
+
+// Use the password stored in OCI Vault
+password {
+  type = "ocivault"
+  value = "ocid1.vaultsecret.oc1.phx.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" //TODO
+  authentication {
+    ["method"] = "OCI_DEFAULT"
+  }
+}
+
+// Use the Wallet stored in OCI Vault
+// Uncomment the following block to connect with a Wallet
+//
+// wallet_location {
+//   type = "ocivault"
+//   value = "ocid1.vaultsecret.oc1.phx.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" //TODO
+//   authentication {
+//     ["method"] = "OCI_DEFAULT"
+//   }
+// }
+
+config_time_to_live = 600.s
+
+jdbc {
+  autoCommit = false
+  `oracle.jdbc.loginTimeout` = 3.s
+}
