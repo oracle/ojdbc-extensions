@@ -391,6 +391,11 @@ an IAM user that has been mapped to a database user. The IAM user must also be i
 can be found in the <a href="https://docs.oracle.com/en/cloud/paas/autonomous-database/adbsa/manage-users-iam.html#GUID-4E206209-4E3B-4387-9364-BDCFB4E16E2E">
 ADB product documentation.
 </a>
+#### Caching Mechanism
+The `AccessTokenFactory` employs a caching mechanism to efficiently manage and reuse access tokens. By utilizing Oracle JDBC's cache for JWTs, access tokens are
+cached and updated one minute before they expire, ensuring no blocking of threads. This cache reduces latency when creating JDBC connections, as a thread opening
+a connection does not have to wait for a new token to be requested.You can check this in more detail
+at [Oracle's documentation](https://docs.oracle.com/en/database/oracle/oracle-database/19/jajdb/oracle/jdbc/AccessToken.html#createJsonWebTokenCache_java_util_function_Supplier_).
 
 In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider
 also supports the parameters listed below.
