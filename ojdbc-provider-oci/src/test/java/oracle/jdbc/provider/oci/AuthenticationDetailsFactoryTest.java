@@ -116,7 +116,7 @@ public class AuthenticationDetailsFactoryTest {
    * Returns a parameter set builder pre-configured with a given
    * {@code authenticationMethod}
    */
-  public static ParameterSetBuilder buildParameterSet(
+  private static ParameterSetBuilder buildParameterSet(
     AuthenticationMethod authenticationMethod) {
     return ParameterSet.builder()
       .add(

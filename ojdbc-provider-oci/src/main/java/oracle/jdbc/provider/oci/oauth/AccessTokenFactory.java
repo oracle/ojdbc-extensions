@@ -50,12 +50,13 @@ import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.oci.OciResourceFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.provider.util.JsonWebTokenParser;
 
 import javax.security.auth.DestroyFailedException;
 import java.security.*;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.function.Supplier;
 
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
 
@@ -64,7 +65,7 @@ import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
  * represented as {@link AccessToken} objects. Oracle JDBC can use these objects
  * to authenticate with a database of the ADB service.
  */
-public final class AccessTokenFactory extends OciResourceFactory<Supplier<? extends AccessToken>> {
+public final class AccessTokenFactory extends OciResourceFactory<AccessToken> {
 
   /**
    * Scope that configures a compartment and/or database for which access is
@@ -79,77 +80,43 @@ public final class AccessTokenFactory extends OciResourceFactory<Supplier<? exte
    */
   public static final Parameter<String> SCOPE = Parameter.create(REQUIRED);
 
-  private static final ResourceFactory<Supplier<? extends AccessToken>> INSTANCE =
-          CachedResourceFactory.create(new AccessTokenFactory());
+  private static final ResourceFactory<AccessToken> INSTANCE =
+    CachedResourceFactory.create(new AccessTokenFactory());
 
   private AccessTokenFactory() { }
 
   /**
    * Returns a singleton of {@code AccessTokenFactory}.
-   *
    * @return a singleton of {@code AccessTokenFactory}
    */
-  public static ResourceFactory<Supplier<? extends AccessToken>> getInstance() {
+  public static ResourceFactory<AccessToken> getInstance() {
     return INSTANCE;
   }
 
   /**
    * {@inheritDoc}
    * <p>
-   * Create Json web token Cache. The cache will use DataPlane to request access token service.
-   * The {@code parameterSet} is required to include a {@link #SCOPE} parameter.
+   * Requests an access token from the dataplane service. The
+   * {@code parameterSet} is required to include a {@link #SCOPE} parameter.
    * </p>
    */
   @Override
-  public Resource<Supplier<? extends AccessToken>> request(
-          AbstractAuthenticationDetailsProvider authenticationDetails,
-          ParameterSet parameterSet) {
-    Supplier<? extends AccessToken> accessTokenSupplier =
-            AccessToken.createJsonWebTokenCache(() -> createAccessToken(parameterSet, authenticationDetails));
-    // we save the supplier as a resource
-    return Resource.createPermanentResource(accessTokenSupplier, true);
-  }
-
-  /**
-   * Creates a JDBC access token using the provided authentication details and parameter set.
-   * This method serves as the supplier function used by the driver's cache to update the token.
-   *
-   * @param parameterSet the parameter set
-   * @param authenticationDetails authentication information used to authenticate in OCI
-   * @return the created JDBC access token
-   */
-  public  AccessToken createAccessToken(ParameterSet parameterSet,
-                                        AbstractAuthenticationDetailsProvider authenticationDetails) {
+  public Resource<AccessToken> request(
+      AbstractAuthenticationDetailsProvider authenticationDetails,
+      ParameterSet parameterSet) {
 
     KeyPair keyPair = generateKeyPair();
     String scope = parameterSet.getRequired(SCOPE);
-    String token = requestOciAccessToken(authenticationDetails, scope, keyPair);
-    PrivateKey privateKey = keyPair.getPrivate();
+    SecurityToken securityToken = requestSecurityToken(
+        authenticationDetails, scope, keyPair.getPublic());
 
-    final AccessToken accessToken;
-    char[] tokenChars = token.toCharArray();
+    PrivateKey privateKey = keyPair.getPrivate();
     try {
-      accessToken = AccessToken.createJsonWebToken(tokenChars, privateKey);
+      return createResource(securityToken, privateKey);
     }
     finally {
-      Arrays.fill(tokenChars, (char)0);
-      tryDestroy(privateKey);
+      tryDestroy(keyPair.getPrivate());
     }
-    return accessToken;
-  }
-
-  /**
-   * Requests an Oci access token using the provided authentication details and scope and keyPair.
-   *
-   * @param authenticationDetails the authentication details to authenticate in OCI
-   * @param scope the scope
-   * @param keyPair the key pair
-   * @return the requested Oci access token
-   */
-  public  String requestOciAccessToken(AbstractAuthenticationDetailsProvider authenticationDetails, String scope, KeyPair keyPair) {
-    SecurityToken securityToken = requestSecurityToken(
-            authenticationDetails, scope, keyPair.getPublic());
-    return securityToken.getToken();
   }
 
   /**
@@ -192,6 +159,31 @@ public final class AccessTokenFactory extends OciResourceFactory<Supplier<? exte
       return client.generateScopedAccessToken(request)
           .getSecurityToken();
     }
+  }
+
+  /**
+   * Creates a resource that expires at the time specified by the exp claim of a
+   * {@code securityToken}. The resource wraps an instance of Oracle JDBC's
+   * {@link AccessToken}. The {@code AccessToken} object retains obfuscated
+   * copies of the {@code securityToken} and {@code privateKey}.
+   */
+  private static Resource<AccessToken> createResource(
+      SecurityToken securityToken, PrivateKey privateKey) {
+
+    String token = securityToken.getToken();
+
+    OffsetDateTime expireTime = JsonWebTokenParser.parseExp(token);
+
+    final AccessToken accessToken;
+    char[] tokenChars = token.toCharArray();
+    try {
+      accessToken = AccessToken.createJsonWebToken(tokenChars, privateKey);
+    }
+    finally {
+      Arrays.fill(tokenChars, (char)0);
+    }
+
+    return Resource.createExpiringResource(accessToken, expireTime, true);
   }
 
   /**
