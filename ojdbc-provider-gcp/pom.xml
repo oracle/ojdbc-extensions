@@ -16,16 +16,12 @@
     <version>1.0.1</version>
   </parent>
 
-  <properties>
-    <gcp-api-version>26.40.0</gcp-api-version>
-  </properties>
-
   <dependencyManagement>
     <dependencies>
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>libraries-bom</artifactId>
-        <version>${gcp-api-version}</version>
+        <version>26.42.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
