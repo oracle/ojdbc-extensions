@@ -12,13 +12,21 @@ import java.util.function.Supplier;
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
 
 /**
- * A factory for caches of access tokens requested from the Dataplane service.
- * The cache is exposed as a Supplier function, where get() returns a cached
- * token. While {@link CachedResourceFactory} provides a generalized caching
+ * <p>
+ * A factory for caches of access tokens requested from a
+ * {@code ResourceFactory<AccessToken>}. The delegate ResourceFactory must be
+ * configured as the {@link #FACTORY} parameter.
+ * </p><p>
+ * This factory returns a cache in the form of a Supplier function. A call to
+ * Supplier.get() returns a cached token.
+ * </p><p>
+ * While {@link CachedResourceFactory} provides a generalized caching
  * mechanism for all resources, Oracle JDBC provides a cache implementation
- * for access tokens. This specialized cache schedule a background thread to
- * request a new token shortly before a cached token expires. This avoids
- * threads becoming blocked while waiting for a new token to be requested.
+ * that is specialized for access tokens. The specialized cache will schedule a
+ * background thread to request a new token shortly before a cached token will
+ * expire. This avoids threads becoming blocked while waiting for a new token to
+ * be requested.
+ * </p>
  */
 public final class AccessTokenCacheFactory
   implements ResourceFactory<Supplier<? extends AccessToken>> {
@@ -52,9 +60,10 @@ public final class AccessTokenCacheFactory
       AccessToken.createJsonWebTokenCache(() ->
         factory.request(parameterSet).getContent());
 
-    // Access tokens are sensitive, but the Supplier object is not. The Supplier
-    // returned by createJsonWebTokenCache does not implement toString() to
-    // expose the cached token.
+    // Access tokens are security sensitive, but the Supplier object is not. The
+    // Supplier returned by createJsonWebTokenCache does not implement
+    // toString() to expose the cached token, or any other security sensitive
+    // information such as proof-of-possession key.
     return Resource.createPermanentResource(accessTokenCache, false);
   }
 }
