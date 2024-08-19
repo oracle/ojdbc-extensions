@@ -83,7 +83,7 @@ public class ObjectStorageExample {
    * @throws SQLException if an error occurs during the database calls
    */
   public static void main(String[] args) throws SQLException {
-    String url = "jdbc:oracle:thin:@config-ociobject:" + OBJECT_URI;
+    String url = "jdbc:oracle:thin:@config-ociobject://" + OBJECT_URI;
 
     if (OCI_AUTHENTICATION == null)
       System.out.println("oci_authentication  property is empty. Default " +
