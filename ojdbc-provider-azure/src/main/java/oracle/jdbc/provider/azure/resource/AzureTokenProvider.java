@@ -40,6 +40,7 @@ package oracle.jdbc.provider.azure.resource;
 
 import oracle.jdbc.AccessToken;
 import oracle.jdbc.provider.azure.oauth.AccessTokenFactory;
+import oracle.jdbc.provider.oauth.AccessTokenCacheFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
 import oracle.jdbc.spi.AccessTokenProvider;
@@ -63,7 +64,10 @@ public final class AzureTokenProvider
 
   private static final ResourceParameter[] PARAMETERS =
     new ResourceParameter[] {
-      new ResourceParameter("scope", AccessTokenFactory.SCOPE)
+      new ResourceParameter("scope", AccessTokenFactory.SCOPE),
+      new ResourceParameter(
+        "factory", AccessTokenCacheFactory.FACTORY,
+        "default", ignored -> AccessTokenFactory.getInstance())
     };
 
   /**
@@ -93,12 +97,11 @@ public final class AzureTokenProvider
   @Override
   public AccessToken getAccessToken(
     Map<Parameter, CharSequence> parameterValues) {
-
     ParameterSet parameterSet = parseParameterValues(parameterValues);
-
-    return AccessTokenFactory.getInstance()
+    return AccessTokenCacheFactory.getInstance()
       .request(parameterSet)
-      .getContent();
+      .getContent()
+      .get();
   }
 
 }

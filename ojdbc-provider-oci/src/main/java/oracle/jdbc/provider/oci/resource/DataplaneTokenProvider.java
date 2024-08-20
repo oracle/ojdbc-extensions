@@ -39,6 +39,7 @@
 package oracle.jdbc.provider.oci.resource;
 
 import oracle.jdbc.AccessToken;
+import oracle.jdbc.provider.oauth.AccessTokenCacheFactory;
 import oracle.jdbc.provider.oci.oauth.AccessTokenFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
@@ -87,7 +88,10 @@ public final class DataplaneTokenProvider
   implements AccessTokenProvider {
 
   private static final ResourceParameter[] PARAMETERS = {
-    new ResourceParameter("scope", SCOPE, "urn:oracle:db::id::*")
+    new ResourceParameter("scope", SCOPE, "urn:oracle:db::id::*"),
+    new ResourceParameter(
+      "factory", AccessTokenCacheFactory.FACTORY,
+      "default", ignored -> AccessTokenFactory.getInstance())
   };
 
   /**
@@ -101,11 +105,10 @@ public final class DataplaneTokenProvider
   @Override
   public AccessToken getAccessToken(
     Map<Parameter, CharSequence> parameterValues) {
-
     ParameterSet parameterSet = parseParameterValues(parameterValues);
-
-    return AccessTokenFactory.getInstance()
-        .request(parameterSet)
-        .getContent();
+    return AccessTokenCacheFactory.getInstance()
+      .request(parameterSet)
+      .getContent()
+      .get();
   }
 }
