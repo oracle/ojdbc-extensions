@@ -109,8 +109,6 @@ public class OpenTelemetryTraceEventListener
 
   private static Logger logger = Logger.getLogger(OpenTelemetryTraceEventListener.class.getName());
 
-  private Tracer tracer;
-
   /**
    * <p>
    * Singleton enumeration containing the TraceEventListener's configuration. Two
@@ -126,12 +124,13 @@ public class OpenTelemetryTraceEventListener
    * </p>
    */
   private enum Configuration {
-    INSTANCE(true, false);
+    INSTANCE(true, false, null);
 
     private AtomicBoolean enabled;
     private AtomicBoolean sensitiveDataEnabled;
+    private Tracer tracer;
 
-    private Configuration(boolean enabled, boolean sensitiveDataEnabled) {
+    private Configuration(boolean enabled, boolean sensitiveDataEnabled, Tracer tracer) {
       String enabledStr = System.getProperty(OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_ENABLED);
       String sensitiveStr = System.getProperty(OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED);
       this.enabled = new AtomicBoolean(enabledStr == null ? enabled : Boolean.parseBoolean(enabledStr));
@@ -154,14 +153,23 @@ public class OpenTelemetryTraceEventListener
     private void setSensitiveDataEnabled(boolean enabled) {
       this.sensitiveDataEnabled.set(enabled);
     }
+
+    private void setTracer(Tracer tracer) {
+      this.tracer = tracer;
+    }
+
+    private Tracer getTracer() {
+      return this.tracer;
+    }
   }
 
   public OpenTelemetryTraceEventListener() {
-    this(GlobalOpenTelemetry.get().getTracer(OpenTelemetryTraceEventListener.class.getName()));
+    this(Configuration.INSTANCE.getTracer() != null ? Configuration.INSTANCE.getTracer()
+        : GlobalOpenTelemetry.get().getTracer(OpenTelemetryTraceEventListener.class.getName()));
   }
 
   public OpenTelemetryTraceEventListener(Tracer tracer) {
-    this.tracer = tracer;
+    Configuration.INSTANCE.setTracer(tracer);
   }
 
   @Override
@@ -182,6 +190,14 @@ public class OpenTelemetryTraceEventListener
 
   @Override
   /**
+   * Sets the Open Telemetry tracer to use
+   */
+  public void setTracer(Tracer tracer) {
+    Configuration.INSTANCE.setTracer(tracer);
+  }
+
+  @Override
+  /**
    * Indicates whether the traces should contain sensitive data.
    */
   public boolean isSensitiveDataEnabled() {
@@ -194,6 +210,11 @@ public class OpenTelemetryTraceEventListener
    */
   public void setSensitiveDataEnabled(boolean enabled) {
     Configuration.INSTANCE.setSensitiveDataEnabled(enabled);
+  }
+
+  @Override
+  public Tracer getTracer() {
+    return Configuration.INSTANCE.getTracer();
   }
 
   @Override
@@ -238,7 +259,7 @@ public class OpenTelemetryTraceEventListener
       return null;
     if (EXECUTION_EVENTS_PARAMETERS.get(event) == params.length) {
       if (event == TraceEventListener.JdbcExecutionEvent.VIP_RETRY) {
-        SpanBuilder spanBuilder = tracer
+        SpanBuilder spanBuilder = Configuration.INSTANCE.getTracer()
             .spanBuilder(event.getDescription())
             .setAttribute("Error message", params[0].toString())
             .setAttribute("VIP Address", params[7].toString());
@@ -255,7 +276,7 @@ public class OpenTelemetryTraceEventListener
         return spanBuilder.startSpan();
       } else if (event == TraceEventListener.JdbcExecutionEvent.AC_REPLAY_STARTED
           || event == TraceEventListener.JdbcExecutionEvent.AC_REPLAY_SUCCESSFUL) {
-        SpanBuilder spanBuilder = tracer
+        SpanBuilder spanBuilder = Configuration.INSTANCE.getTracer()
             .spanBuilder(event.getDescription())
             .setAttribute("Error Message", params[0].toString())
             .setAttribute("Error code", ((SQLException) params[1]).getErrorCode())
@@ -284,7 +305,7 @@ public class OpenTelemetryTraceEventListener
      * child span to the current span. I.e. the current span in context becomes
      * parent to this child span.
      */
-    SpanBuilder spanBuilder = tracer
+    SpanBuilder spanBuilder = Configuration.INSTANCE.getTracer()
         .spanBuilder(spanName)
         .setAttribute("thread.id", Thread.currentThread().getId())
         .setAttribute("thread.name", Thread.currentThread().getName())
