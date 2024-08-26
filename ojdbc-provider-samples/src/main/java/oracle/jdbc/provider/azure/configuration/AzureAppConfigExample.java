@@ -100,7 +100,7 @@ public class AzureAppConfigExample {
    */
   public static void main(String[] args) throws SQLException {
     // Construct a jdbc: URL
-    String url = "jdbc:oracle:thin:@config-azure:" + APPCONFIG_NAME;
+    String url = "jdbc:oracle:thin:@config-azure://" + APPCONFIG_NAME;
 
     String optionalString = constructOptionalString();
     if (optionalString.length() != 0)

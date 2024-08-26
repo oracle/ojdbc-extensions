@@ -58,14 +58,14 @@ import oracle.jdbc.datasource.impl.OracleDataSource;
  * <li>AZURE_CLIENT_SECRET A client secret that was generated for the App
  * Registration.</li>
  * </ul>
- * <p>The Oracle DataSource uses a new prefix jdbc:oracle:thin:@config-azure:
+ * <p>The Oracle DataSource uses a new prefix jdbc:oracle:thin:@config-azure://
  * to be able to identify that the configuration parameters should be loaded
  * using Azure App Configuration. Users only need to indicate the App Config's
  * name, a prefix for the key-names and the Label (both optionally) with the
  * following syntax:
  * </p>
  * <pre>
- * jdbc:oracle:thin:@config-azure:{appconfig-name}[?key=prefix&amp;label=value
+ * jdbc:oracle:thin:@config-azure://{appconfig-name}[?key=prefix&amp;label=value
  * &amp;option1=value1&amp;option2=value2...]
  * </pre>
  */

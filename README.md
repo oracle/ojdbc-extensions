@@ -76,7 +76,7 @@ types of providers.
 A Centralized Config Provider is identified and configured by a JDBC URL of the
 following form:
 <pre>
-jdbc:oracle:thin:@config-{provider-name}:[path][?parameters]
+jdbc:oracle:thin:@config-{provider-name}://[path][?parameters]
 </pre>
 For example, the URL below identifies and configures the Centralized Config Provider for Azure:
 <pre>

@@ -65,14 +65,14 @@ import oracle.jdbc.datasource.impl.OracleDataSource;
  * {@link oracle.jdbc.spi.OracleConfigurationProvider}.
  * </p>
  * <p>The Oracle DataSource uses a new prefix
- * jdbc:oracle:thin:@config-azurevault:
+ * jdbc:oracle:thin:@config-azurevault://
  * to be able to identify that the configuration parameters should be loaded
  * using Azure Vault Secret. Users only need to indicate the Vault Secret's
  * secret identifier, with the
  * following syntax:
  * </p>
  * <pre>
- * jdbc:oracle:thin:@config-azurevault:{secret-identifier}
+ * jdbc:oracle:thin:@config-azurevault://{secret-identifier}
  * </pre>
  */
 
