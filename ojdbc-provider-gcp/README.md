@@ -48,7 +48,7 @@ Providers use Google Cloud APIs which support
 the libraries look for credentials in a set of defined locations and use those 
 credentials to authenticate requests to the API.
 
-ADC searches for credentials in the following locations:
+ADC searches for credentials in one of the following locations:
 
 1. GOOGLE_APPLICATION_CREDENTIALS environment variable
 2. User credentials set up by using the Google Cloud CLI
