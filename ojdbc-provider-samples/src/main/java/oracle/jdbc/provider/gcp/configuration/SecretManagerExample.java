@@ -72,7 +72,7 @@ public class SecretManagerExample {
    * syntax:
    * 
    * <pre>
-   * jdbc:oracle:thin:@config-gcpvault:{resource-name}
+   * jdbc:oracle:thin:@config-gcpsecretmanager:{resource-name}
    * </pre>
    * 
    * <p>

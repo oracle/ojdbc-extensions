@@ -151,7 +151,7 @@ For the JSON type of provider (GCP Object Storage, HTTP/HTTPS, File) the passwor
 Apart from GCP Cloud Storage, users can also store JSON Payload in the content of GCP Secret Manager secret. Users need to indicate the resource name:
 
 <pre>
-jdbc:oracle:thin:@config-gcpvault:{resource-name}
+jdbc:oracle:thin:@config-gcpsecretmanager:{resource-name}
 </pre>
 
 The JSON Payload retrieved by GCP Vault Config Provider follows the same format in [GCP Object Storage Config Provider](#json-payload-format).

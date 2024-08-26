@@ -63,7 +63,7 @@ public class SimpleSecretManagerExample {
    * syntax:
    * 
    * <pre>
-   * jdbc:oracle:thin:@config-gcpvault:{resource-name}
+   * jdbc:oracle:thin:@config-gcpsecretmanager:{resource-name}
    * </pre>
    * <p>
    * Providers use Google Cloud APIs which support Application Default
