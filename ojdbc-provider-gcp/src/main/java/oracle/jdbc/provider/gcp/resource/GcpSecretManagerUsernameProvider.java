@@ -55,7 +55,7 @@ import oracle.jdbc.spi.UsernameProvider;
 public class GcpSecretManagerUsernameProvider extends GcpSecretManagerProvider implements UsernameProvider {
 
   public GcpSecretManagerUsernameProvider() {
-    super("secret-username");
+    super("secretmanager-username");
   }
 
   @Override

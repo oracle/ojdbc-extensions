@@ -58,7 +58,7 @@ import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.findProvide
 @Disabled
 public class GcpSecretManagerPasswordProviderTest {
   private static final PasswordProvider PROVIDER = findProvider(
-      PasswordProvider.class, "ojdbc-provider-gcp-secret-password");
+      PasswordProvider.class, "ojdbc-provider-gcp-secretmanager-password");
 
   private enum GcpTestProperties {
     SECRET_VERSION_NAME

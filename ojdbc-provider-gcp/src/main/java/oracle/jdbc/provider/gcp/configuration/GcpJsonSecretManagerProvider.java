@@ -60,7 +60,7 @@ public class GcpJsonSecretManagerProvider implements OracleConfigurationJsonSecr
    * 
    * <pre>{@code
    *   "password": {
-  *       "type": "gcpsecret",
+  *       "type": "gcpsecretmanager",
   *       "value": "projects/<project_name>/secrets/<secret_name>/versions/<version>",
    *   }
    * }</pre>
@@ -80,6 +80,6 @@ public class GcpJsonSecretManagerProvider implements OracleConfigurationJsonSecr
 
   @Override
   public String getSecretType() {
-    return "gcpsecret";
+    return "gcpsecretmanager";
   }
 }

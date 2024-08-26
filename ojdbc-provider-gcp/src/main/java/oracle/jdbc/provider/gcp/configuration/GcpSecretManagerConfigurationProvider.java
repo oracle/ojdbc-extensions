@@ -56,7 +56,7 @@ public class GcpSecretManagerConfigurationProvider extends OracleConfigurationJs
 
   @Override
   public String getType() {
-    return "gcpsecret";
+    return "gcpsecretmanager";
   }
 
   /**

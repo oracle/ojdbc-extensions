@@ -55,10 +55,10 @@ public class GcpSecretManagerConfigurationProviderTest {
   }
 
   static {
-    OracleConfigurationProvider.allowedProviders.add("gcpsecret");
+    OracleConfigurationProvider.allowedProviders.add("gcpsecretmanager");
   }
 
-  private static final OracleConfigurationProvider PROVIDER = OracleConfigurationProvider.find("gcpsecret");
+  private static final OracleConfigurationProvider PROVIDER = OracleConfigurationProvider.find("gcpsecretmanager");
 
   @Test
   public void testGetProperties() throws SQLException {

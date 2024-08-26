@@ -99,7 +99,7 @@ And the JSON Payload for the file **payload_ojdbc_objectstorage.json** in the **
   "connect_descriptor": "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=adb.us-phoenix-1.oraclecloud.com))(connect_data=(service_name=xsxsxs_dbtest_medium.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))",
   "user": "scott",
   "password": { 
-    "type": "gcpsecret",
+    "type": "gcpsecretmanager",
     "value": "projects/138028249883/secrets/test-secret/versions/1"
   },
   "jdbc": {
@@ -114,7 +114,7 @@ The sample code below executes as expected with the previous configuration.
 
 ```java
     OracleDataSource ds = new OracleDataSource();
-    ds.setURL("jdbc:oracle:thin:@config-gcpobject://project=myproject;bucket=mybucket;object=payload_ojdbc_objectstorage.json");
+    ds.setURL("jdbc:oracle:thin:@config-gcpstorage://project=myproject;bucket=mybucket;object=payload_ojdbc_objectstorage.json");
     Connection cn = ds.getConnection();
     Statement st = cn.createStatement();
     ResultSet rs = st.executeQuery("select sysdate from dual");
@@ -132,14 +132,14 @@ For the JSON type of provider (GCP Object Storage, HTTP/HTTPS, File) the passwor
     - ocivault
     - azurevault
     - base64
-    - gcpsecret
+    - gcpsecretmanager
 - value
   - Mandatory
   - Possible values
     - OCID of the secret (if ocivault)
     - Azure Key Vault URI (if azurevault)
     - Base64 Encoded password (if base64)
-    - GCP resource name (if gcpsecret)
+    - GCP resource name (if gcpsecretmanager)
     - Text
 - authentication
   - Optional

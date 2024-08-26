@@ -56,7 +56,7 @@ import oracle.jdbc.spi.PasswordProvider;
 public class GcpSecretManagerPasswordProvider extends GcpSecretManagerProvider implements PasswordProvider {
 
   public GcpSecretManagerPasswordProvider() {
-    super("secret-password");
+    super("secretmanager-password");
   }
 
   @Override

@@ -58,7 +58,7 @@ import oracle.jdbc.spi.UsernameProvider;
 @Disabled
 public class GcpSecretManagerUsernameProviderTest {
   private static final UsernameProvider PROVIDER = findProvider(
-      UsernameProvider.class, "ojdbc-provider-gcp-secret-username");
+      UsernameProvider.class, "ojdbc-provider-gcp-secretmanager-username");
 
   private enum GcpTestProperties {
     SECRET_VERSION_NAME

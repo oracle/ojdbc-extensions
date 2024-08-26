@@ -79,7 +79,7 @@ public class SimpleSecretManagerExample {
    * @throws SQLException if an error occurs during the database calls
    **/
   public static void main(String[] args) throws SQLException {
-    String url = "jdbc:oracle:thin:@config-gcpsecret://projects/138028249883/secrets/config-secret/versions/4";
+    String url = "jdbc:oracle:thin:@config-gcpsecretmanager://projects/138028249883/secrets/config-secret/versions/5";
     // Sample default URL if non present
     if (args.length > 0) {
       url = args[0];
