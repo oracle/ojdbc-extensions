@@ -48,7 +48,7 @@ import org.junit.jupiter.api.Test;
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.spi.OracleConfigurationProvider;
 
-@Disabled
+//@Disabled
 public class GcpCloudStorageProviderTest {
 
   private enum GcpTestProperties {
