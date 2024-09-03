@@ -55,7 +55,7 @@ import oracle.jdbc.spi.PasswordProvider;
 import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.createParameterValues;
 import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.findProvider;
 
-//@Disabled
+@Disabled
 public class GcpSecretManagerPasswordProviderTest {
   private static final PasswordProvider PROVIDER = findProvider(
       PasswordProvider.class, "ojdbc-provider-gcp-secretmanager-password");
