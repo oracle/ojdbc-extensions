@@ -78,14 +78,6 @@ jobs:
           OCI_PASSWORD_PAYLOAD_OCID=${{ secrets.TEST_OCI_PASSWORD_PAYLOAD_OCID }}\n
           " >> ojdbc-provider-oci/test.properties
 
-      - id: 'auth'
-        name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v0.4.0'
-        with:
-          token_format: 'access_token'
-          workload_identity_provider: 'projects/138028249883/locations/global/workloadIdentityPools/github-action-pool/providers/ojdbc-extensions-provider'
-          service_account: 'ojdbc-extensions@onyx-eye-426013-i5.iam.gserviceaccount.com'
-
       - name: Run tests with Maven
         run: mvn -B test --file pom.xml
 
