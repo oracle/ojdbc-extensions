@@ -11,7 +11,7 @@ contain providers for a particular cloud platform:
 <dd>Providers for integration with Oracle Cloud Infrastructure (OCI)</dd>
 <dt><a href="ojdbc-provider-azure/README.md">Oracle JDBC Azure Providers</a></dt>
 <dd>Providers for integration with Microsoft Azure</dd>
-<dt><a href="ojdbc-provider-gdp/README.md">Oracle JDBC GCP Providers</a></dt>
+<dt><a href="ojdbc-provider-gcp/README.md">Oracle JDBC GCP Providers</a></dt>
 <dd>Providers for integration with Google Cloud Platform</dd>
 </dl>
 And the last one contains a provider for Open Telemetry:
