@@ -1,1 +1,2 @@
 oracle.jdbc.provider.oci.resource.VaultUsernameProvider
+oracle.jdbc.provider.oci.resource.VaultSEPSProvider

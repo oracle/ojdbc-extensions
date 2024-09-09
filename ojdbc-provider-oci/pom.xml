@@ -68,7 +68,6 @@
     <dependency>
       <groupId>com.oracle.database.security</groupId>
       <artifactId>oraclepki</artifactId>
-      <scope>test</scope>
     </dependency>
 
     <!--
