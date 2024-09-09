@@ -84,10 +84,7 @@ jobs:
           " >> ojdbc-provider-oci/test.properties
 
           # Generate GCP config
-          echo  ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
-          echo "${{ secrets.TEST_GCP_CONFIG }}"
           echo "${{ secrets.TEST_GCP_CONFIG }}" > $HOME/.gcp/config.json
-          cat $HOME/.gcp/config.json
           echo "${{ secrets.GCP_TEST_PROPERTIES }}" > ojdbc-provider-gcp/test.properties
       - name: Run tests with Maven
         run: mvn -B test --file pom.xml
