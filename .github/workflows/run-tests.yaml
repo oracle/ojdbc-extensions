@@ -10,6 +10,7 @@ jobs:
       AZURE_USERNAME: ${{ secrets.TEST_AZURE_USERNAME }}
       AZURE_PASSWORD: ${{ secrets.TEST_AZURE_PASSWORD }}
       AZURE_CLIENT_CERTIFICATE_PATH: ${{ secrets.TEST_AZURE_CLIENT_CERTIFICATE_PATH }}
+      GOOGLE_APPLICATION_CREDENTIALS: $HOME/.gcp/config.json
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
@@ -78,6 +79,8 @@ jobs:
           OCI_PASSWORD_PAYLOAD_OCID=${{ secrets.TEST_OCI_PASSWORD_PAYLOAD_OCID }}\n
           " >> ojdbc-provider-oci/test.properties
 
+          # Generate GCP config
+          echo "${{ secrets.TEST_GCP_CONFIG }}" > $HOME/.gcp/config.json
       - name: Run tests with Maven
         run: mvn -B test --file pom.xml
 
@@ -90,3 +93,5 @@ jobs:
           rm $HOME/.azure/ojdbc-plugin-test-app.pem
           rm ojdbc-provider-azure/ojdbc-provider-test-app.pfx
           rm ojdbc-provider-azure/test.properties
+          
+          rm $HOME/.gcp/config.json
