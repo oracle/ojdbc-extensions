@@ -86,6 +86,7 @@ jobs:
           # Generate GCP config
           echo "${{ secrets.TEST_GCP_CONFIG }}" > $HOME/.gcp/config.json
           echo "${{ secrets.GCP_TEST_PROPERTIES }}" > ojdbc-provider-gcp/test.properties
+
       - name: Run tests with Maven
         run: mvn -B test --file pom.xml
 
