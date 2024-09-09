@@ -29,7 +29,7 @@ jobs:
       
       - name: Set GCP environment variables
         run : |
-          echo "GOOGLE_APPLICATION_CREDENTIAL=$HOME/.gcp/config.json" >> $GITHUB_ENV
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/.gcp/config.json" >> $GITHUB_ENV
 
       - name: Prepare certificate and properties files
         run: |
@@ -84,7 +84,7 @@ jobs:
           " >> ojdbc-provider-oci/test.properties
 
           # Generate GCP config
-          echo  ${{ env.GOOGLE_APPLICATION_CREDENTIAL }}
+          echo  ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
           echo "${{ secrets.TEST_GCP_CONFIG }}" > $HOME/.gcp/config.json
           echo "${{ secrets.GCP_TEST_PROPERTIES }}" > ojdbc-provider-gcp/test.properties
       - name: Run tests with Maven
