@@ -10,7 +10,6 @@ jobs:
       AZURE_USERNAME: ${{ secrets.TEST_AZURE_USERNAME }}
       AZURE_PASSWORD: ${{ secrets.TEST_AZURE_PASSWORD }}
       AZURE_CLIENT_CERTIFICATE_PATH: ${{ secrets.TEST_AZURE_CLIENT_CERTIFICATE_PATH }}
-      GOOGLE_APPLICATION_CREDENTIALS: ${{ env.HOME }}/.gcp/config.json
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
@@ -27,6 +26,10 @@ jobs:
 
       - name: Install dependencies
         run: mvn install -DskipTests
+      
+      - name: Set GCP environment variables
+        run : |
+          echo "GOOGLE_APPLICATION_CREDENTIAL=$HOME/.gcp/config.json" >> $GITHUB_ENV
 
       - name: Prepare certificate and properties files
         run: |
