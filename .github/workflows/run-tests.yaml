@@ -32,6 +32,7 @@ jobs:
         run: |
           mkdir -p $HOME/.azure
           mkdir -p $HOME/.oci
+          mkdir -p $HOME/.gcp
           
           # Prepare certificate
           echo "${{ secrets.TEST_AZURE_CERTIFICATE }}" > $HOME/.azure/ojdbc-plugin-test-app.pem
