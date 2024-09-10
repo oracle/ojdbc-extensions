@@ -3,12 +3,9 @@
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
- ** Subject to the condition set forth below, permission is hereby granted to
- *  any
- ** person obtaining a copy of this software, associated documentation and/or
- *  data
- ** (collectively the "Software"), free of charge and under any and all
- * copyright
+ ** Subject to the condition set forth below, permission is hereby granted to any
+ ** person obtaining a copy of this software, associated documentation and/or data
+ ** (collectively the "Software"), free of charge and under any and all copyright
  ** rights in the Software, and any and all patent rights owned or freely
  ** licensable by each licensor hereunder covering either (i) the unmodified
  ** Software as contributed to or provided by such licensor, or (ii) the Larger
@@ -16,8 +13,7 @@
  **
  ** (a) the Software, and
  ** (b) any piece of software and/or hardware listed in the lrgrwrks.txt file if
- ** one is included with the Software (each a "Larger Work" to which the
- * Software
+ ** one is included with the Software (each a "Larger Work" to which the Software
  ** is contributed by such licensors),
  **
  ** without restriction, including without limitation the rights to copy, create
@@ -35,10 +31,8 @@
  ** IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  ** FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  ** AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- ** LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM,
- ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- *  THE
+ ** LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
 
@@ -65,18 +59,18 @@ import static oracle.jdbc.provider.oci.vault.SecretFactory.OCID;
 
 /**
  * <p>
- * A provider for TCPS/TLS wallets used to establish secure (mTLS) communication
+ * A provider for TCPS/TLS wallets used to establish secure TLS communication
  * with an Autonomous Database. The wallet is retrieved from OCI Vault, where
- * it is stored
- * as a base64-encoded string. If a password is provided, the wallet is
- * assumed to be in
- * PKCS12 format, otherwise it defaults to SSO format.
- * </p><p>
+ * it is stored as a base64-encoded string. If a password is provided, the
+ * wallet is assumed to be in PKCS12 format, otherwise it defaults to SSO
+ * format.
+ * </p>
+ * <p>
  * This class implements the {@link TlsConfigurationProvider} SPI defined by
- * Oracle JDBC.
- * It is designed to be located and instantiated by
+ * Oracle JDBC. It is designed to be located and instantiated by
  * {@link java.util.ServiceLoader}.
- * </p><p>
+ * </p>
+ * <p>
  * The wallet can be in either SSO or PKCS12 format:
  * <ul>
  *     <li>If a password is provided via the {@code walletPassword} parameter,
@@ -115,7 +109,7 @@ public class VaultTCPSProvider
    * {@inheritDoc}
    * <p>
    * Retrieves an SSLContext by loading a wallet from the OCI Vault,
-   * configuring it for mTLS (mutual TLS) communication with Autonomous
+   * configuring it for secure TLS communication with Autonomous
    * Database. The wallet is stored in
    * the OCI Vault as a base64-encoded string, and this method decodes it
    * before loading it into a keystore.
@@ -153,17 +147,16 @@ public class VaultTCPSProvider
    * Creates an SSLContext using the provided wallet bytes and optional
    * password.
    * The wallet can be in either SSO or PKCS12 format, and this method will
-   * configure
-   * the SSLContext accordingly.
+   * configure the SSLContext accordingly.
    *
-   * @param walletBytes    The bytes representing the wallet (after decoding
-   *                       from base64).
+   * @param walletBytes The bytes representing the wallet (after decoding
+   * from base64).
    * @param walletPassword The password for the wallet, or {@code null} if
-   *                       the wallet is in SSO format.
+   * the wallet is in SSO format.
    * @return An initialized SSLContext ready for secure communication.
    * @throws GeneralSecurityException If a security issue occurs during
    * keystore loading or SSLContext initialization.
-   * @throws IOException              If an error occurs while loading the
+   * @throws IOException If an error occurs while loading the
    * wallet.
    */
   static SSLContext createSSLContext(byte[] walletBytes, char[] walletPassword)
@@ -188,11 +181,10 @@ public class VaultTCPSProvider
 
   /**
    * Loads a keystore (either SSO or PKCS12) from the given wallet bytes.
-   *
-   * @param walletBytes    The byte array representing the wallet file
-   *                       (decoded from base64).
+   * @param walletBytes The byte array representing the wallet file
+   * (decoded from base64).
    * @param walletPassword The password for the wallet, or {@code null} for
-   *                       SSO wallets.
+   * SSO wallets.
    * @return An initialized KeyStore containing the keys and certificates
    * from the wallet.
    */
