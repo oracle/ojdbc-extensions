@@ -3,9 +3,12 @@
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
- ** Subject to the condition set forth below, permission is hereby granted to any
- ** person obtaining a copy of this software, associated documentation and/or data
- ** (collectively the "Software"), free of charge and under any and all copyright
+ ** Subject to the condition set forth below, permission is hereby granted to
+ *  any
+ ** person obtaining a copy of this software, associated documentation and/or
+ *  data
+ ** (collectively the "Software"), free of charge and under any and all
+ * copyright
  ** rights in the Software, and any and all patent rights owned or freely
  ** licensable by each licensor hereunder covering either (i) the unmodified
  ** Software as contributed to or provided by such licensor, or (ii) the Larger
@@ -13,7 +16,8 @@
  **
  ** (a) the Software, and
  ** (b) any piece of software and/or hardware listed in the lrgrwrks.txt file if
- ** one is included with the Software (each a "Larger Work" to which the Software
+ ** one is included with the Software (each a "Larger Work" to which the
+ * Software
  ** is contributed by such licensors),
  **
  ** without restriction, including without limitation the rights to copy, create
@@ -31,8 +35,10 @@
  ** IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  ** FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  ** AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- ** LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ ** LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM,
+ ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE
  ** SOFTWARE.
  */
 
@@ -52,7 +58,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Map;
 
@@ -61,18 +66,23 @@ import static oracle.jdbc.provider.oci.vault.SecretFactory.OCID;
 /**
  * <p>
  * A provider for TCPS/TLS wallets used to establish secure (mTLS) communication
- * with an Autonomous Database. The wallet is retrieved from OCI Vault, where it is stored
- * as a base64-encoded string. If a password is provided, the wallet is assumed to be in
+ * with an Autonomous Database. The wallet is retrieved from OCI Vault, where
+ * it is stored
+ * as a base64-encoded string. If a password is provided, the wallet is
+ * assumed to be in
  * PKCS12 format, otherwise it defaults to SSO format.
  * </p><p>
- * This class implements the {@link TlsConfigurationProvider} SPI defined by Oracle JDBC.
- * It is designed to be located and instantiated by {@link java.util.ServiceLoader}.
+ * This class implements the {@link TlsConfigurationProvider} SPI defined by
+ * Oracle JDBC.
+ * It is designed to be located and instantiated by
+ * {@link java.util.ServiceLoader}.
  * </p><p>
  * The wallet can be in either SSO or PKCS12 format:
  * <ul>
  *     <li>If a password is provided via the {@code walletPassword} parameter,
  *     the wallet is treated as a PKCS12 keystore.</li>
- *     <li>If no password is provided, the wallet is treated as an SSO keystore.</li>
+ *     <li>If no password is provided, the wallet is treated as an SSO
+ *     keystore.</li>
  * </ul>
  * </p>
  */
@@ -81,105 +91,122 @@ public class VaultTCPSProvider
         implements TlsConfigurationProvider {
 
 
-    private static final oracle.jdbc.provider.parameter.Parameter<String> PASSWORD = oracle.jdbc.provider.parameter.Parameter.create();
-    private static final String SSO_KEYSTORE_TYPE = "SSO";
-    private static final String PKCS12_KEYSTORE_TYPE = "PKCS12";
+  private static final oracle.jdbc.provider.parameter.Parameter<String> PASSWORD =
+          oracle.jdbc.provider.parameter.Parameter.create();
+  private static final String SSO_KEYSTORE_TYPE = "SSO";
+  private static final String PKCS12_KEYSTORE_TYPE = "PKCS12";
 
 
-    private static final ResourceParameter[] PARAMETERS = {
-            new ResourceParameter("ocid", OCID),
-            new ResourceParameter("walletPassword",PASSWORD)
-    };
+  private static final ResourceParameter[] PARAMETERS = {
+          new ResourceParameter("ocid", OCID),
+          new ResourceParameter("walletPassword", PASSWORD)
+  };
 
 
-    /**
-     * A public no-arg constructor used by {@link java.util.ServiceLoader} to
-     * construct an instance of this provider.
-     */
-    public VaultTCPSProvider() {
-        super("vault-tls", PARAMETERS);
+  /**
+   * A public no-arg constructor used by {@link java.util.ServiceLoader} to
+   * construct an instance of this provider.
+   */
+  public VaultTCPSProvider() {
+    super("vault-tls", PARAMETERS);
+  }
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Retrieves an SSLContext by loading a wallet from the OCI Vault,
+   * configuring it for mTLS (mutual TLS) communication with Autonomous
+   * Database. The wallet is stored in
+   * the OCI Vault as a base64-encoded string, and this method decodes it
+   * before loading it into a keystore.
+   * </p>
+   *
+   * @return An initialized SSLContext for establishing secure communications.
+   * @throws IllegalStateException If the SSLContext cannot be created due to
+   * errors in the wallet loading process.
+   */
+  @Override
+  public SSLContext getSSLContext(Map<Parameter, CharSequence> parameterValues) {
+    try {
+      ParameterSet parameterSet = parseParameterValues(parameterValues);
+      Secret secret = SecretFactory
+              .getInstance()
+              .request(parameterSet)
+              .getContent();
+
+      byte[] walletBytes = Base64
+              .getDecoder()
+              .decode(secret.getBase64Secret());
+
+      char[] walletPassword = parameterSet.getOptional(PASSWORD) != null
+              ? parameterSet.getOptional(PASSWORD).toCharArray()
+              : null;
+
+      return createSSLContext(walletBytes, walletPassword);
+    } catch (GeneralSecurityException | IOException e) {
+      throw new IllegalStateException("Failed to create SSLContext from " +
+              "wallet", e);
     }
+  }
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Retrieves an SSLContext by loading a wallet from the OCI Vault,
-     * configuring it for mTLS (mutual TLS) communication with Autonomous Database. The wallet is stored in
-     * the OCI Vault as a base64-encoded string, and this method decodes it before loading it into a keystore.
-     * </p>
-     *
-     * @return An initialized SSLContext for establishing secure communications.
-     * @throws IllegalStateException If the SSLContext cannot be created due to errors in the wallet loading process.
-     */
-    @Override
-    public SSLContext getSSLContext(Map<Parameter, CharSequence> parameterValues) {
-        try {
-            ParameterSet parameterSet = parseParameterValues(parameterValues);
-            Secret secret = SecretFactory
-                    .getInstance()
-                    .request(parameterSet)
-                    .getContent();
+  /**
+   * Creates an SSLContext using the provided wallet bytes and optional
+   * password.
+   * The wallet can be in either SSO or PKCS12 format, and this method will
+   * configure
+   * the SSLContext accordingly.
+   *
+   * @param walletBytes    The bytes representing the wallet (after decoding
+   *                       from base64).
+   * @param walletPassword The password for the wallet, or {@code null} if
+   *                       the wallet is in SSO format.
+   * @return An initialized SSLContext ready for secure communication.
+   * @throws GeneralSecurityException If a security issue occurs during
+   * keystore loading or SSLContext initialization.
+   * @throws IOException              If an error occurs while loading the
+   * wallet.
+   */
+  static SSLContext createSSLContext(byte[] walletBytes, char[] walletPassword)
+          throws GeneralSecurityException, IOException {
+    KeyStore keyStore = loadKeyStore(walletBytes, walletPassword);
 
-            byte[] walletBytes = Base64
-                    .getDecoder()
-                    .decode(secret.getBase64Secret());
+    TrustManagerFactory trustManagerFactory =
+            TrustManagerFactory.getInstance("PKIX");
+    KeyManagerFactory keyManagerFactory =
+            KeyManagerFactory.getInstance("PKIX");
 
-            char[] walletPassword = parameterSet.getOptional(PASSWORD) != null
-                    ? parameterSet.getOptional(PASSWORD).toCharArray()
-                    : null;
+    trustManagerFactory.init(keyStore);
+    keyManagerFactory.init(keyStore, null);
 
-            return createSSLContext(walletBytes, walletPassword);
-        } catch (GeneralSecurityException | IOException e) {
-            throw new IllegalStateException("Failed to create SSLContext from wallet", e);
-        }
+    SSLContext sslContext = SSLContext.getInstance("TLS");
+    sslContext.init(
+            keyManagerFactory.getKeyManagers(),
+            trustManagerFactory.getTrustManagers(),
+            null);
+    return sslContext;
+  }
+
+  /**
+   * Loads a keystore (either SSO or PKCS12) from the given wallet bytes.
+   *
+   * @param walletBytes    The byte array representing the wallet file
+   *                       (decoded from base64).
+   * @param walletPassword The password for the wallet, or {@code null} for
+   *                       SSO wallets.
+   * @return An initialized KeyStore containing the keys and certificates
+   * from the wallet.
+   */
+  static KeyStore loadKeyStore(byte[] walletBytes, char[] walletPassword)
+          throws IOException, GeneralSecurityException {
+    String keystoreType = walletPassword == null ? SSO_KEYSTORE_TYPE :
+            PKCS12_KEYSTORE_TYPE;
+    try (ByteArrayInputStream walletStream =
+                 new ByteArrayInputStream(walletBytes)) {
+      KeyStore keyStore = KeyStore.getInstance(keystoreType,
+              new OraclePKIProvider());
+      keyStore.load(walletStream, walletPassword);
+      return keyStore;
     }
-
-    /**
-     * Creates an SSLContext using the provided wallet bytes and optional password.
-     * The wallet can be in either SSO or PKCS12 format, and this method will configure
-     * the SSLContext accordingly.
-     *
-     * @param walletBytes The bytes representing the wallet (after decoding from base64).
-     * @param walletPassword The password for the wallet, or {@code null} if the wallet is in SSO format.
-     * @return An initialized SSLContext ready for secure communication.
-     * @throws GeneralSecurityException If a security issue occurs during keystore loading or SSLContext initialization.
-     * @throws IOException If an error occurs while loading the wallet.
-     */
-    static SSLContext createSSLContext(byte[] walletBytes, char[] walletPassword)
-            throws GeneralSecurityException, IOException {
-        KeyStore keyStore = loadKeyStore(walletBytes,walletPassword);
-
-        TrustManagerFactory trustManagerFactory =
-                TrustManagerFactory.getInstance("PKIX");
-        KeyManagerFactory keyManagerFactory =
-                KeyManagerFactory.getInstance("PKIX");
-
-        trustManagerFactory.init(keyStore);
-        keyManagerFactory.init(keyStore, null);
-
-        SSLContext sslContext = SSLContext.getInstance("TLS");
-        sslContext.init(
-                keyManagerFactory.getKeyManagers(),
-                trustManagerFactory.getTrustManagers(),
-                null);
-        return sslContext;
-    }
-
-    /**
-     * Loads a keystore (either SSO or PKCS12) from the given wallet bytes.
-     *
-     * @param walletBytes    The byte array representing the wallet file (decoded from base64).
-     * @param walletPassword The password for the wallet, or {@code null} for SSO wallets.
-     * @return An initialized KeyStore containing the keys and certificates from the wallet.
-     */
-    static KeyStore loadKeyStore(byte[] walletBytes,char[] walletPassword)
-            throws IOException, GeneralSecurityException {
-        String keystoreType = walletPassword==null ? SSO_KEYSTORE_TYPE : PKCS12_KEYSTORE_TYPE;
-        try (ByteArrayInputStream walletStream = new ByteArrayInputStream(walletBytes)) {
-            KeyStore keyStore = KeyStore.getInstance(keystoreType, new OraclePKIProvider());
-            keyStore.load(walletStream, walletPassword);
-            return keyStore;
-        }
-    }
+  }
 
 }

@@ -15,29 +15,38 @@ import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.createParam
 import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.findProvider;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-/** Verifies {@link VaultTCPSProvider} */
+/**
+ * Verifies {@link VaultTCPSProvider}
+ */
 public class VaultTCPSProviderTest {
 
 
-    private static final TlsConfigurationProvider PROVIDER =
-            findProvider(TlsConfigurationProvider.class, "ojdbc-provider-oci-vault-tls");
+  private static final TlsConfigurationProvider PROVIDER =
+          findProvider(TlsConfigurationProvider.class,
+                  "ojdbc-provider-oci-vault-tls");
 
-    @Test
-    public void test() {
-        Map<String, CharSequence> testParameters = new HashMap<>();
-        testParameters.put("authenticationMethod", "config-file");
-        testParameters.put("configFile", TestProperties.getOrAbort(OciTestProperty.OCI_CONFIG_FILE));
-        testParameters.put("profile", TestProperties.getOrAbort(OciTestProperty.OCI_CONFIG_PROFILE));
-        testParameters.put("ocid", TestProperties.getOrAbort(OciTestProperty.OCI_TLS_WALLET_OCID));
-        Optional.ofNullable(TestProperties.getOptional(OciTestProperty.OCI_TLS_WALLET_PASSWORD))
-                .ifPresent(password -> testParameters.put("walletPassword", password));
+  @Test
+  public void test() {
+    Map<String, CharSequence> testParameters = new HashMap<>();
+    testParameters.put("authenticationMethod", "config-file");
+    testParameters.put("configFile",
+            TestProperties.getOrAbort(OciTestProperty.OCI_CONFIG_FILE));
+    testParameters.put("profile",
+            TestProperties.getOrAbort(OciTestProperty.OCI_CONFIG_PROFILE));
+    testParameters.put("ocid",
+            TestProperties.getOrAbort(OciTestProperty.OCI_TLS_WALLET_OCID));
+    Optional.ofNullable(TestProperties.getOptional(
+            OciTestProperty.OCI_TLS_WALLET_PASSWORD))
+            .ifPresent(password -> testParameters.put("walletPassword",
+                    password));
 
-        Map<Parameter, CharSequence> parameterValues = createParameterValues(PROVIDER, testParameters);
+    Map<Parameter, CharSequence> parameterValues =
+            createParameterValues(PROVIDER, testParameters);
 
 
-        SSLContext sslContext = PROVIDER.getSSLContext(parameterValues);
-        assertNotNull(sslContext);
+    SSLContext sslContext = PROVIDER.getSSLContext(parameterValues);
+    assertNotNull(sslContext);
 
-    }
+  }
 
 }

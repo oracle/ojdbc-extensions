@@ -55,105 +55,119 @@ import static oracle.jdbc.provider.oci.vault.SecretFactory.OCID;
 
 /**
  * <p>
- * A provider for retrieving both the username and password from a Secure External Password Store (SEPS)
- * wallet stored in Oracle Cloud Infrastructure (OCI) Vault. The wallet can be in either SSO or PKCS12 format.
- * If a password is provided, the wallet is treated as PKCS12, otherwise, it is assumed to be in SSO format.
- * </p><p>
- * This class implements the {@link UsernameProvider} and {@link PasswordProvider} SPIs defined by Oracle JDBC.
- * It is designed to be located and instantiated by {@link java.util.ServiceLoader}.
+ * A provider for retrieving both the username and password from a Secure
+ * External Password Store (SEPS) wallet stored in Oracle Cloud
+ * Infrastructure (OCI) Vault. The wallet can be in either SSO or PKCS12 format.
+ * If a password is provided, the wallet is treated as PKCS12, otherwise, it
+ * is assumed to be in SSO format.
+ * </p>
+ * <p>
+ * This class implements the {@link UsernameProvider} and
+ * {@link PasswordProvider} SPIs defined by Oracle JDBC.
+ * It is designed to be located and instantiated by
+ * {@link java.util.ServiceLoader}.
  * </p>
  *
  * <p>
- * The SEPS wallet is stored in the OCI Vault as a base64-encoded string and is decoded when retrieved by this provider.
+ * The SEPS wallet is stored in the OCI Vault as a base64-encoded string and
+ * is decoded when retrieved by this provider.
  * </p>
  */
 public class VaultSEPSProvider
         extends OciResourceProvider
         implements UsernameProvider, PasswordProvider {
 
-    private static final oracle.jdbc.provider.parameter.Parameter<String> PASSWORD =
-            oracle.jdbc.provider.parameter.Parameter.create();
-    private static final String SECRET_STORE_USERNAME = "oracle.security.client.username1";
-    private static final String SECRET_STORE_PASSWORD = "oracle.security.client.password1";
+  private static final oracle.jdbc.provider.parameter.Parameter<String> PASSWORD =
+          oracle.jdbc.provider.parameter.Parameter.create();
+  private static final String SECRET_STORE_USERNAME =
+          "oracle.security.client.username1";
+  private static final String SECRET_STORE_PASSWORD =
+          "oracle.security.client.password1";
 
-    private static final ResourceParameter[] PARAMETERS = {
-            new ResourceParameter("ocid", OCID),
-            new ResourceParameter("walletPassword", PASSWORD)
-    };
+  private static final ResourceParameter[] PARAMETERS = {
+          new ResourceParameter("ocid", OCID),
+          new ResourceParameter("walletPassword", PASSWORD)
+  };
 
-    /**
-     * A public no-arg constructor used by {@link java.util.ServiceLoader} to
-     * construct an instance of this provider.
-     */
-    public VaultSEPSProvider() {
-        super("vault-seps", PARAMETERS);
+  /**
+   * A public no-arg constructor used by {@link java.util.ServiceLoader} to
+   * construct an instance of this provider.
+   */
+  public VaultSEPSProvider() {
+    super("vault-seps", PARAMETERS);
+  }
+
+  @Override
+  public String getUsername(Map<Parameter, CharSequence> parameterValues) {
+    return extractCredentials(getWallet(parameterValues))[0];
+  }
+
+  @Override
+  public char[] getPassword(Map<Parameter, CharSequence> parameterValues) {
+    return extractCredentials(getWallet(parameterValues))[1].toCharArray();
+  }
+
+  /**
+   * Retrieves the OracleWallet by decoding the base64-encoded wallet stored
+   * in OCI Vault and opening it as either SSO or PKCS12, based on whether a
+   * password is provided.
+   */
+  private OracleWallet getWallet(Map<Parameter, CharSequence> parameterValues) {
+    ParameterSet parameterSet = parseParameterValues(parameterValues);
+    Secret secret = SecretFactory.getInstance()
+            .request(parameterSet)
+            .getContent();
+
+    char[] walletPassword = parameterSet.getOptional(PASSWORD) != null
+            ? parameterSet.getOptional(PASSWORD).toCharArray()
+            : null;
+    try {
+      return openWallet(secret,walletPassword);
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to open wallet from secret", e);
     }
+  }
 
-    @Override
-    public String getUsername(Map<Parameter, CharSequence> parameterValues) {
-        return extractCredentials(getWallet(parameterValues))[0];
+  /**
+   * Opens the SEPS wallet, using the provided secret and password. The
+   * wallet is decoded from its base64 form.
+   *
+   * @param secret The secret retrieved from OCI Vault containing the wallet
+   * data.
+   * @param walletPassword The password for the wallet, or {@code null} for
+   * SSO wallets.
+   * @return An OracleWallet object initialized with the wallet data.
+   * @throws IOException If an I/O error occurs while opening the wallet.
+   */
+  private OracleWallet openWallet(Secret secret, char[] walletPassword)
+          throws IOException {
+    byte[] walletBytes = Base64.getDecoder().decode(secret.getBase64Secret());
+    OracleWallet wallet = new OracleWallet();
+    wallet.setWalletArray(walletBytes, walletPassword);
+    return wallet;
+  }
+
+  /**
+   * Extracts the username and password from the OracleSecretStore in the
+   * OracleWallet.
+   * The wallet contains two aliases: {@code oracle.security.client.username1}
+   * and {@code oracle.security.client.password1}.
+   */
+  private String[] extractCredentials(OracleWallet wallet) {
+    String[] userPwd = new String[2];
+    try {
+      OracleSecretStore secretStore = wallet.getSecretStore();
+      if (secretStore.containsAlias(SECRET_STORE_USERNAME)) {
+        userPwd[0] = new String(secretStore.getSecret(SECRET_STORE_USERNAME));
+      }
+      if (secretStore.containsAlias(SECRET_STORE_PASSWORD)) {
+        userPwd[1] = new String(secretStore.getSecret(SECRET_STORE_PASSWORD));
+      }
+      return userPwd;
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to extract credentials from wallet",
+              e);
     }
-
-    @Override
-    public char[] getPassword(Map<Parameter, CharSequence> parameterValues) {
-        return extractCredentials(getWallet(parameterValues))[1].toCharArray();
-    }
-
-    /**
-     * Retrieves the OracleWallet by decoding the base64-encoded wallet stored in OCI Vault and opening it as
-     * either SSO or PKCS12, based on whether a password is provided.
-     */
-    private OracleWallet getWallet(Map<Parameter, CharSequence> parameterValues) {
-        ParameterSet parameterSet = parseParameterValues(parameterValues);
-        Secret secret = SecretFactory.getInstance()
-                .request(parameterSet)
-                .getContent();
-
-        char[] walletPassword = parameterSet.getOptional(PASSWORD) != null
-                ? parameterSet.getOptional(PASSWORD).toCharArray()
-                : null;
-        try {
-            return openWallet(secret,walletPassword);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to open wallet from secret", e);
-        }
-    }
-
-    /**
-     * Opens the SEPS wallet, using the provided secret and password. The wallet is decoded from its base64 form.
-     *
-     * @param secret The secret retrieved from OCI Vault containing the wallet data.
-     * @param walletPassword The password for the wallet, or {@code null} for SSO wallets.
-     * @return An OracleWallet object initialized with the wallet data.
-     * @throws IOException If an I/O error occurs while opening the wallet.
-     */
-    private OracleWallet openWallet(Secret secret,char[] walletPassword) throws IOException {
-        byte[] walletBytes = Base64.getDecoder().decode(secret.getBase64Secret());
-        OracleWallet wallet = new OracleWallet();
-        wallet.setWalletArray(walletBytes, walletPassword);
-        return wallet;
-    }
-
-    /**
-     * Extracts the username and password from the OracleSecretStore in the OracleWallet.
-     * The wallet contains two aliases: {@code oracle.security.client.username1} and
-     * {@code oracle.security.client.password1}.
-     *
-     */
-    private String[] extractCredentials(OracleWallet wallet) {
-        String[] userPwd = new String[2];
-        try {
-            OracleSecretStore secretStore = wallet.getSecretStore();
-            if (secretStore.containsAlias(SECRET_STORE_USERNAME)) {
-                userPwd[0] = new String(secretStore.getSecret(SECRET_STORE_USERNAME));
-            }
-            if (secretStore.containsAlias(SECRET_STORE_PASSWORD)) {
-                userPwd[1] = new String(secretStore.getSecret(SECRET_STORE_PASSWORD));
-            }
-            return userPwd;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to extract credentials from wallet", e);
-        }
-    }
+  }
 
 }

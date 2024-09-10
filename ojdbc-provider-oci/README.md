@@ -389,7 +389,7 @@ that configures this provider can be found in
 ## TCPS Wallet Provider
 
 The TCPS Wallet Provider provides Oracle JDBC with keys and certificates managed by the OCI Vault service
-to establish mutual TLS (mTLS) connections with an Autonomous Database. This is a Resource Provider identified by the name
+to establish secure TLS connections with an Autonomous Database. This is a Resource Provider identified by the name
 `ojdbc-provider-oci-vault-tls`.
 
 - If the wallet is protected with a password, it is treated as a PKCS12 keystore.
