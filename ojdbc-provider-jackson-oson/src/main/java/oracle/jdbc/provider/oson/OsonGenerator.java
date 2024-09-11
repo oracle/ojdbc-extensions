@@ -1,4 +1,4 @@
-package oson;
+package oracle.jdbc.provider.oson;
 
 import com.fasterxml.jackson.core.Base64Variant;
 import com.fasterxml.jackson.core.ObjectCodec;

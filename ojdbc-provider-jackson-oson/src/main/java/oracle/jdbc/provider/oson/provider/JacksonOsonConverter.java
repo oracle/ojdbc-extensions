@@ -1,4 +1,4 @@
-package oson.provider;
+package oracle.jdbc.provider.oson.provider;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;

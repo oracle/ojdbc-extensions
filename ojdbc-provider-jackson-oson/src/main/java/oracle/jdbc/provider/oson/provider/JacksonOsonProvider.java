@@ -1,4 +1,4 @@
-package oson.provider;
+package oracle.jdbc.provider.oson.provider;
 
 import oracle.jdbc.spi.JsonProvider;
 import oracle.jdbc.spi.OsonConverter;

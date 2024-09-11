@@ -1,4 +1,4 @@
-package oson.ser;
+package oracle.jdbc.provider.oson.ser;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
