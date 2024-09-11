@@ -83,7 +83,8 @@ public class AzureVaultJsonProviderTest {
             "AZURE_TENANT_ID=" + TestProperties.getOrAbort(
                     AzureTestProperty.AZURE_TENANT_ID)};
 
-    verifyProperties(composeUrl(baseUrl, options));
+    String url = composeUrl(baseUrl, options);
+    verifyProperties(url);
   }
 
   /**
@@ -111,10 +112,11 @@ public class AzureVaultJsonProviderTest {
                     AzureTestProperty.AZURE_APP_CONFIG_KEY)
                     .replaceAll("^/|/$", "")};
 
-    verifyProperties(composeUrl(baseUrl, options));
+    String url = composeUrl(baseUrl, options);
+    verifyProperties(url);
   }
 
-  /** verifies a properties object returned with a URL with the given options **/
+  /** verifies a properties object returned with a given URL **/
   private static void verifyProperties(String url) throws SQLException {
     Properties properties = PROVIDER.getConnectionProperties(url);
 

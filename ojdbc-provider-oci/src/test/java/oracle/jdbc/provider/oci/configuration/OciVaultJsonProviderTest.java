@@ -31,11 +31,11 @@ public class OciVaultJsonProviderTest {
    **/
   @Test
   public void testDefaultAuthentication() throws SQLException {
+    String baseUrl =
+      TestProperties.getOrAbort(OciTestProperty.OCI_PASSWORD_PAYLOAD_OCID);
     String[] options = new String[] {"AUTHENTICATION=OCI_DEFAULT"};
-
-    verifyProperties(composeUrl(
-      TestProperties.getOrAbort(OciTestProperty.OCI_PASSWORD_PAYLOAD_OCID),
-      options));
+    String url = composeUrl(baseUrl, options);
+    verifyProperties(url);
   }
 
   /**
@@ -43,16 +43,16 @@ public class OciVaultJsonProviderTest {
    **/
   @Test
   public void testDefaultAuthenticationWithKeyOption() throws SQLException {
+    String baseUrl =
+      TestProperties.getOrAbort(OciTestProperty.OCI_PASSWORD_PAYLOAD_OCID_MULTIPLE_KEYS);
     String[] options = new String[] {
       "AUTHENTICATION=OCI_DEFAULT",
       "key=" + TestProperties.getOrAbort(OciTestProperty.OCI_PASSWORD_PAYLOAD_OCID_KEY)};
-
-    verifyProperties(composeUrl(
-      TestProperties.getOrAbort(OciTestProperty.OCI_PASSWORD_PAYLOAD_OCID_MULTIPLE_KEYS),
-      options));
+    String url = composeUrl(baseUrl, options);
+    verifyProperties(url);
   }
 
-  /** verifies a properties object returned with a URL with the given options **/
+  /** verifies a properties object returned with a given URL **/
   private static void verifyProperties(String url) throws SQLException {
     Properties properties = PROVIDER.getConnectionProperties(url);
 
