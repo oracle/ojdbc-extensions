@@ -1,6 +1,8 @@
 package oracle.jdbc.provider.oson;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,120 +13,68 @@ import oracle.jdbc.provider.oson.OsonModule;
 import oracle.jdbc.provider.oson.OsonGenerator;
 import oracle.jdbc.provider.oson.model.*;
 import oracle.sql.json.OracleJsonDatum;
-import oracle.sql.json.OracleJsonObject;
-import oracle.sql.json.OracleJsonValue;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.math.BigDecimal;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 
+/**
+ * <p>
+ * A standalone example that inserts and retieves JSON data to the Oracle database
+ * using the {@link OsonFactory}, {@link OsonGenerator} and an {@link ObjectMapper}.
+ * </p><p>
+ * The {@link OsonFactory} and {@link OsonGenerator} are used to write the OSON representation
+ * of the POJO to an OutputStream. The data is inserted by passing the bytes of the OutputStream
+ * to {@link PreparedStatement#setBytes(int, byte[])} method, and retrieved by getting the data
+ * as a {@link OracleJsonDatum} using the {@link ResultSet#getObject(int, Class)} method and
+ * passing the bytes to an {@link ObjectMapper} to get the POJO object.
+ * </p>
+ */
 public class AccessJsonColumnUsingPOJO {
+  public static void insertIntoDatabase(Connection conn, JsonFactory osonFactory, ObjectMapper objectMapper) throws IOException, SQLException {
+    Emp emp = JacksonOsonSampleUtil.createEmp();
 
-  private static final String URL = Configuration.getRequired("jackson_oson_url");
-  private static final String USER = Configuration.getRequired("jackson_oson_username");
-  private static final String PASSWORD = Configuration.getRequired("jackson_oson_password");
-  Connection conn = null;
-  OsonFactory osonFactory;
-  ObjectMapper om;
-  OsonGenerator osonGen;
-  byte[] objectBytes =null;
+    // An extension of ByteArrayOutputStream that synchronises the read and reset methods
+    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+      try (JsonGenerator jsonGen = osonFactory.createGenerator(out)) {
+        objectMapper.writeValue(jsonGen, emp);
+      }
+      try (PreparedStatement pstmt = conn.prepareStatement("insert into jackson_oson_sample (id, json_value) values(?,?)")) {
+        pstmt.setInt(1, 1);
+        pstmt.setBytes(2, out.toByteArray());
+        pstmt.execute();
+      }
 
-  public AccessJsonColumnUsingPOJO() {
-    osonFactory = new OsonFactory();
-    om = new ObjectMapper(osonFactory);
-    osonGen = null;
-  }
-
-  public static void main(String[] args) {
-    try {
-      AccessJsonColumnUsingPOJO accessJsonColumnUsingPOJO = new AccessJsonColumnUsingPOJO();
-      accessJsonColumnUsingPOJO.setup();
-      accessJsonColumnUsingPOJO.insertIntoDatabase();
-      accessJsonColumnUsingPOJO.retrieveFromDatabase();
-    } catch (Exception ex) {
-      System.out.println(ex.getMessage());
     }
   }
 
-  public void insertIntoDatabase() throws IOException, SQLException {
-    List<Phone> phones = new ArrayList<>();
-    phones.add(new Phone("333-222-1111", Phone.Type.WORK));
-    phones.add(new Phone("666-555-4444", Phone.Type.MOBILE));
-    phones.add(new Phone("999-888-7777", Phone.Type.HOME));
-    Emp e = new Emp("Bob", "software engineer", new BigDecimal(4000), "bob@bob.org", phones);
+  public static void retrieveFromDatabase(Connection conn, ObjectMapper objectMapper) throws SQLException, IOException {
 
-    // An extension of ByteArrayOutputStream that synchronises the read and reset methods
-    ReadableByteArrayOutputStream out = new ReadableByteArrayOutputStream();
-    osonGen = (OsonGenerator) osonFactory.createGenerator(out);
-    om.writeValue(osonGen, e);
-    osonGen.close();
-
-    InputStream in = out.read();
-
-    // insert into db
-    PreparedStatement pstmt = conn.prepareStatement("insert into emp_json (c1,c2) values(?,?)");
-    pstmt.setInt(1, 1);
-    pstmt.setBinaryStream(2, in);
-    pstmt.execute();
-    pstmt.close();
-  }
-
-  public void retrieveFromDatabase() throws Exception {
-
-    //retrieve from db
-    Statement stmt = conn.createStatement();
-    ResultSet rs = stmt.executeQuery("select c1, c2 from emp_json order by c1");
-    while(rs.next()) {
-
-      OracleJsonValue oson_value = rs.getObject(2, OracleJsonValue.class);
-      byte[] osonBytes = rs.getObject(2, OracleJsonDatum.class).shareBytes();
-
-      if (oson_value != null && oson_value instanceof OracleJsonObject) {
-        OracleJsonObject oson_obj = (OracleJsonObject) oson_value;
-
-        //OracleJsonObject value
-        System.out.println("c2 = " + oson_obj);
-      }
-      if(osonBytes!=null && osonBytes.length>0) {
-        System.out.println("Oson bytes length: " + osonBytes.length);
-
-        // JsonNode mapping
-        JsonNode node = om.readValue(osonBytes, JsonNode.class);
-        System.out.println(node.toPrettyString());
-      }
-      if(osonBytes!=null && osonBytes.length>0) {
-        System.out.println("Oson bytes length: " + osonBytes.length);
-
+    try (Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery("select id, json_value from jackson_oson_sample order by id")) {
+      while (rs.next()) {
+        byte[] osonBytes = rs.getObject(2, OracleJsonDatum.class).shareBytes();
         // POJO mapping
-        Emp emp = om.readValue(osonBytes, Emp.class);
+        Emp emp = objectMapper.readValue(osonBytes, Emp.class);
         System.out.println(emp.toString());
       }
     }
-    rs.close();
-    stmt.close();
   }
 
-  public void setup() {
+
+  public static void main(String[] args) {
     try {
-      OracleDataSource ods = new OracleDataSource();
-      ods.setURL(URL);
-      ods.setUser(USER);
-      ods.setPassword(PASSWORD);
-      conn = ods.getConnection();
-
-      //setup db tables
-      Statement stmt = conn.createStatement();
-      stmt.execute("drop table if exists emp_json");
-      stmt.execute("create table emp_json(c1 number, c2 JSON) tablespace tbs1");
-      stmt.close();
-
-    } catch (Exception e) {
-      e.printStackTrace();
+      JsonFactory osonFactory = new OsonFactory();
+      ObjectMapper objectMapper = new ObjectMapper(osonFactory);
+      Connection conn = JacksonOsonSampleUtil.createConnection();
+      JacksonOsonSampleUtil.createTable(conn);
+      insertIntoDatabase(conn, osonFactory, objectMapper);
+      retrieveFromDatabase(conn, objectMapper);
+    } catch (SQLException sqlException) {
+      sqlException.printStackTrace();
+    } catch (IOException ioException) {
+      ioException.printStackTrace();
     }
-
   }
 
 }

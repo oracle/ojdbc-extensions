@@ -1,5 +1,7 @@
 package oracle.jdbc.provider.oson;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -11,99 +13,71 @@ import oracle.jdbc.provider.oson.OsonModule;
 import oracle.jdbc.provider.oson.OsonGenerator;
 import oracle.sql.json.OracleJsonDatum;
 
-import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.sql.*;
 
+/**
+ * <p>
+ * A standalone example that inserts and retieves JSON data to the Oracle database
+ * using an {@link OsonFactory} and {@link ObjectNode}.
+ * </p><p>
+ * The JSON object is created using Jackson API's {@link ObjectNode}. The {@link OsonFactory}
+ * and {@link OsonGenerator} are used to write the JSON Object to an OutputStream. The data
+ * is inserted by passing the bytes of the OutputStream to
+ * {@link PreparedStatement#setBytes(int, byte[])} method, and retrieved getting the data
+ * as a {@link OracleJsonDatum} using the {@link ResultSet#getObject(int, Class)} method and
+ * passing the bytes to an {@link ObjectMapper} to get the {@link ObjectNode} representation
+ * of the JSON object.
+ * </p>
+ */
 public class AccessJsonColumnUsingJacksonObjectNode {
+  public static void insertIntoDatabase(Connection conn, JsonFactory osonFactory, ObjectMapper objectMapper) throws SQLException, IOException {
 
-  private static final String URL = Configuration.getRequired("jackson_oson_url");
-  private static final String USER = Configuration.getRequired("jackson_oson_username");
-  private static final String PASSWORD = Configuration.getRequired("jackson_oson_password");
+    objectMapper.registerModule(new OsonModule());
+    ObjectNode node = objectMapper.createObjectNode();
+    node.put("name", "Alexis Bull");
+    node.put("age", 45);
 
-  private Connection conn = null;
-  private OsonFactory osonFactory = new OsonFactory();
-  private ObjectMapper om = new ObjectMapper(osonFactory);
-  private ReadableByteArrayOutputStream out = new ReadableByteArrayOutputStream();
-  
-  public static void main(String[] args) {
-    AccessJsonColumnUsingJacksonObjectNode accessJsonColumnUsingJacksonObjectNode = new AccessJsonColumnUsingJacksonObjectNode();
-    accessJsonColumnUsingJacksonObjectNode.setup();
-    accessJsonColumnUsingJacksonObjectNode.insertIntoDatabase();
-    accessJsonColumnUsingJacksonObjectNode.retrieveFromDatabase();
-  }
+    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+      try (JsonGenerator osonGen = osonFactory.createGenerator(out)) {
+        objectMapper.writeValue(osonGen, node);
+      }
 
-  public void insertIntoDatabase() {
-    try{
-      om.registerModule(new OsonModule());
-        
-      ObjectNode node = om.createObjectNode();
-      node.put("name", "Alexis Bull");
-      node.put("age", 45);
-        
-      OsonGenerator osonGen = (OsonGenerator)osonFactory.createGenerator(out);
-      om.writeValue(osonGen, node);
-      osonGen.close();
-                
-      InputStream in = out.read();
-      PreparedStatement pstmt = conn.prepareStatement("insert into JsonTest (id,jsontext) values(?,?)");
-      pstmt.setInt(1, 1);
-      pstmt.setBinaryStream(2, in);
-      pstmt.execute();
-      pstmt.close();
-    }
-    catch(Exception e) {
-      e.printStackTrace();
+      try (PreparedStatement pstmt = conn.prepareStatement("insert into jackson_oson_sample (id, json_value) values(?,?)")) {
+        pstmt.setInt(1, 1);
+        pstmt.setBytes(2, out.toByteArray());
+        pstmt.execute();
+      }
     }
   }
 
-  public void retrieveFromDatabase() {
+  public static void retrieveFromDatabase(Connection conn, ObjectMapper objectMapper) throws SQLException, IOException{
      
-    try{
-      Statement stmt = conn.createStatement();
-      ResultSet rs = stmt.executeQuery("select * from JsonTest");
-        
+    try (Statement stmt = conn.createStatement();
+         ResultSet rs = stmt.executeQuery("select * from jackson_oson_sample")){
       while(rs.next()) {
-        JsonNode node = om.readValue(rs.getObject(2, OracleJsonDatum.class).shareBytes(), JsonNode.class);
+        JsonNode node = objectMapper.readValue(rs.getObject(2, OracleJsonDatum.class).shareBytes(), JsonNode.class);
         System.out.println(node.toPrettyString());
       }
-      rs.close();
-      stmt.close();
-      conn.close();
-    }
-    catch(Exception e) {
-      e.printStackTrace();
     }
   }
 
-  public void setup() {
-    try{
-        OracleDataSource ods = new OracleDataSource();
-        ods.setURL(URL);
-        ods.setUser(USER);
-        ods.setPassword(PASSWORD);
-        ods.setConnectionProperty(OracleConnection.CONNECTION_PROPERTY_JSON_DEFAULT_GET_OBJECT_TYPE, "oracle.sql.json.OracleJsonValue");
-         
-        conn = ods.getConnection();
-        createTable(conn);
-    }
-    catch(Exception e) {
-        e.printStackTrace();
-    }
-  }
-
-  private void createTable(Connection conn) throws SQLException {
-    Statement stmt = null;
+  public static void main(String[] args) {
     try {
-      stmt = conn.createStatement();
-      stmt.execute("drop table if exists JsonTest");
-      stmt.execute("create table JsonTest ("
-              + "id number,"
-              + "jsontext json"
-              + ")");
+      System.setProperty(OracleConnection.CONNECTION_PROPERTY_JSON_DEFAULT_GET_OBJECT_TYPE, "oracle.sql.json.OracleJsonValue");
+      JsonFactory osonFactory = new OsonFactory();
+      ObjectMapper objectMapper = new ObjectMapper(osonFactory);
+      Connection conn = JacksonOsonSampleUtil.createConnection();
+      JacksonOsonSampleUtil.createTable(conn);
+      insertIntoDatabase(conn, osonFactory, objectMapper);
+      retrieveFromDatabase(conn, objectMapper);
+      conn.close();
+    } catch (SQLException exception) {
+      exception.printStackTrace();
+    } catch (IOException ioException) {
+      ioException.printStackTrace();
     }
-    finally {
-      if(stmt != null)
-        stmt.close();
-    }
-}
+  }
+
 }
