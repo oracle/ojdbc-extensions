@@ -75,13 +75,13 @@ public class AzureVaultJsonProviderTest {
       TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME));
 
     String[] options = new String[] {
-            "AUTHENTICATION=AZURE_SERVICE_PRINCIPAL",
-            "AZURE_CLIENT_ID=" + TestProperties.getOrAbort(
-                    AzureTestProperty.AZURE_CLIENT_ID),
-            "AZURE_CLIENT_SECRET=" + TestProperties.getOrAbort(
-                    AzureTestProperty.AZURE_CLIENT_SECRET),
-            "AZURE_TENANT_ID=" + TestProperties.getOrAbort(
-                    AzureTestProperty.AZURE_TENANT_ID)};
+      "AUTHENTICATION=AZURE_SERVICE_PRINCIPAL",
+      "AZURE_CLIENT_ID=" + TestProperties.getOrAbort(
+        AzureTestProperty.AZURE_CLIENT_ID),
+      "AZURE_CLIENT_SECRET=" + TestProperties.getOrAbort(
+        AzureTestProperty.AZURE_CLIENT_SECRET),
+      "AZURE_TENANT_ID=" + TestProperties.getOrAbort(
+        AzureTestProperty.AZURE_TENANT_ID)};
 
     String url = composeUrl(baseUrl, options);
     verifyProperties(url);
@@ -97,8 +97,7 @@ public class AzureVaultJsonProviderTest {
       throws SQLException {
     String baseUrl = String.format("%s/secrets/%s",
       TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL),
-      TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME)
-        + "-with-multiple-keys");
+      TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME_MULTIPLE_KEYS));
 
     String[] options = new String[] {
             "AUTHENTICATION=AZURE_SERVICE_PRINCIPAL",
@@ -109,8 +108,7 @@ public class AzureVaultJsonProviderTest {
             "AZURE_TENANT_ID=" + TestProperties.getOrAbort(
                     AzureTestProperty.AZURE_TENANT_ID),
             "key=" + TestProperties.getOrAbort(
-                    AzureTestProperty.AZURE_APP_CONFIG_KEY)
-                    .replaceAll("^/|/$", "")};
+                    AzureTestProperty.AZURE_KEY_VAULT_SECRET_PAYLOAD_KEY)};
 
     String url = composeUrl(baseUrl, options);
     verifyProperties(url);

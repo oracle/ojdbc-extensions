@@ -79,7 +79,11 @@ public enum AzureTestProperty {
 
   AZURE_KEY_VAULT_SECRET_NAME,
 
-  AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME;
+  AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME,
+
+  AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME_MULTIPLE_KEYS,
+
+  AZURE_KEY_VAULT_SECRET_PAYLOAD_KEY;
 
   /**
    * Aborts the calling test if the given {@code names} are not configured in
