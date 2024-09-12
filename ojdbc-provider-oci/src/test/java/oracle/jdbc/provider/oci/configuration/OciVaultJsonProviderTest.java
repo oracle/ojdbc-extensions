@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Verifies the {@link OciVaultJsonProvider} as implementing behavior
  * specified by its JavaDoc.
- **/
+ */
 
 public class OciVaultJsonProviderTest {
 
@@ -28,7 +28,7 @@ public class OciVaultJsonProviderTest {
    * Verifies the AUTHENTICATION=OCI_DEFAULT parameter setting.
    * This test will fail if (~/.oci/config) or (~/.oraclebmc/config) or the
    * environmental variable OCI_CONFIG_FILE is not set.
-   **/
+   */
   @Test
   public void testDefaultAuthentication() throws SQLException {
     String baseUrl =
@@ -40,7 +40,7 @@ public class OciVaultJsonProviderTest {
 
   /**
    * Verifies the AUTHENTICATION=OCI_DEFAULT parameter setting with key option.
-   **/
+   */
   @Test
   public void testDefaultAuthenticationWithKeyOption() throws SQLException {
     String baseUrl =
@@ -52,7 +52,7 @@ public class OciVaultJsonProviderTest {
     verifyProperties(url);
   }
 
-  /** verifies a properties object returned with a given URL **/
+  /** Verifies a properties object returned with a given URL. */
   private static void verifyProperties(String url) throws SQLException {
     Properties properties = PROVIDER.getConnectionProperties(url);
 

@@ -67,7 +67,7 @@ public class AzureVaultJsonProviderTest {
    * Verifies AUTHENTICATION=AZURE_SERVICE_PRINCIPAL parameter setting.
    * This test uses {@link AzureAuthenticationMethod#SERVICE_PRINCIPLE} as its
    * authentication method.
-   **/
+   */
   @Test
   public void testServicePrincipleAuthentication() throws SQLException {
     String baseUrl = String.format("%s/secrets/%s",
@@ -91,7 +91,7 @@ public class AzureVaultJsonProviderTest {
    * <p>
    * Verifies AUTHENTICATION=AZURE_SERVICE_PRINCIPAL parameter setting with
    * key option.
-   **/
+   */
   @Test
   public void testServicePrincipleAuthenticationWithKeyOption()
       throws SQLException {
@@ -114,7 +114,7 @@ public class AzureVaultJsonProviderTest {
     verifyProperties(url);
   }
 
-  /** verifies a properties object returned with a given URL **/
+  /** Verifies a properties object returned with a given URL. */
   private static void verifyProperties(String url) throws SQLException {
     Properties properties = PROVIDER.getConnectionProperties(url);
 
