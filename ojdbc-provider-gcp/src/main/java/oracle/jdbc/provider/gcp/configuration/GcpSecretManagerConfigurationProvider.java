@@ -46,6 +46,7 @@ import java.util.Map;
 import oracle.jdbc.driver.OracleConfigurationJsonProvider;
 import oracle.jdbc.provider.gcp.secrets.GcpSecretManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.util.OracleConfigurationCache;
 
 /**
  * A provider for JSON payload which contains configuration from GCP Secret
@@ -78,4 +79,8 @@ public class GcpSecretManagerConfigurationProvider extends OracleConfigurationJs
         GcpSecretManagerFactory.getInstance().request(parameterSet).getContent().getData().toByteArray());
   }
 
+  @Override
+  public OracleConfigurationCache getCache() {
+    return null;
+  }
 }

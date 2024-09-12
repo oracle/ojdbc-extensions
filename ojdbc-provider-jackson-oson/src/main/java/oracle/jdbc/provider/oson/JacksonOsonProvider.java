@@ -1,4 +1,4 @@
-package oracle.jdbc.provider.oson.provider;
+package oracle.jdbc.provider.oson;
 
 import oracle.jdbc.spi.JsonProvider;
 import oracle.jdbc.spi.OsonConverter;
@@ -8,7 +8,7 @@ import java.util.Map;
 
 public class JacksonOsonProvider implements JsonProvider{
 
-	private static final String PROVIDER_NAME = "jackson-json-provider";
+	public static final String PROVIDER_NAME = "jackson-json-provider";
 	
 	public JacksonOsonProvider () throws IOException {
 	}

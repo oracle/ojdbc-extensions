@@ -5,7 +5,8 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
-import oracle.jdbc.jackson.oson.OsonParser;
+
+import oracle.jdbc.provider.oson.OsonParser;
 
 import java.io.IOException;
 import java.math.BigInteger;

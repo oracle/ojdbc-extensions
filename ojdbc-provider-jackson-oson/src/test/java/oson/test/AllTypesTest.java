@@ -6,10 +6,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import oracle.jdbc.OracleType;
 import oracle.jdbc.datasource.impl.OracleDataSource;
-import oracle.jdbc.jackson.oson.OsonFactory;
-import oracle.jdbc.jackson.oson.OsonGenerator;
-import oracle.jdbc.jackson.oson.OsonParser;
-import oracle.jdbc.jackson.oson.model.AllOracleTypes;
+import oracle.jdbc.provider.oson.OsonFactory;
+import oracle.jdbc.provider.oson.OsonGenerator;
+import oracle.jdbc.provider.oson.OsonParser;
+import oson.model.AllOracleTypes;
 import oracle.sql.json.OracleJsonDatum;
 import oracle.sql.json.OracleJsonObject;
 import oracle.sql.json.OracleJsonValue;
@@ -57,7 +57,7 @@ public class AllTypesTest {
 	public void setup() {
 		try {
 			om.findAndRegisterModules();
-			osonGen = osonFactory.createGenerator(out);
+			osonGen = (OsonGenerator) osonFactory.createGenerator(out);
 			
 			OracleDataSource ods = new OracleDataSource();
 			ods.setURL("jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=phoenix93464.dev3sub2phx.databasede3phx.oraclevcn.com)(PORT=5521))(CONNECT_DATA=(SERVICE_NAME=cdb1_pdb1.regress.rdbms.dev.us.oracle.com)))");
@@ -92,7 +92,7 @@ public class AllTypesTest {
 	@Test
 	@Order(2)
 	public void convertFromOson() throws Exception {
-		try (OsonParser parser = osonFactory.createParser(osonTocheck) ) {
+		try (OsonParser parser = (OsonParser) osonFactory.createParser(osonTocheck) ) {
 			
 			AllOracleTypes ne = om.readValue(parser, AllOracleTypes.class);
 			System.out.println("POJO after conversion from OSON: " + ne.toString());
@@ -103,7 +103,7 @@ public class AllTypesTest {
 	@Test
 	@Order(3)
 	public void insertIntoDB() throws Exception {
-		try (OsonParser parser = osonFactory.createParser(osonTocheck) ) {
+		try (OsonParser parser = (OsonParser) osonFactory.createParser(osonTocheck) ) {
 			
 			// insert into db
 			PreparedStatement pstmt = conn.prepareStatement("insert into all_types_json (c1,c2) values(?,?)");

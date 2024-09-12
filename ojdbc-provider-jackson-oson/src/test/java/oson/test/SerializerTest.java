@@ -1,6 +1,6 @@
 package oson.test;
 
-import oracle.jdbc.jackson.oson.provider.JacksonOsonConverter;
+import oracle.jdbc.provider.oson.JacksonOsonConverter;
 import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonGenerator;
 import oracle.sql.json.OracleJsonParser;
