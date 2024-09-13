@@ -72,10 +72,7 @@ public class AccessJsonColumnUsingJacksonObjectNode {
   public static void insertIntoDatabase(Connection conn, JsonFactory osonFactory, ObjectMapper objectMapper) throws SQLException, IOException {
 
     objectMapper.registerModule(new OsonModule());
-    ObjectNode node = objectMapper.createObjectNode();
-    node.put("name", "Alexis Bull");
-    node.put("age", 45);
-
+    ObjectNode node = JacksonOsonSampleUtil.createEmpUsingObjectNode(objectMapper);
     try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
       try (JsonGenerator osonGen = osonFactory.createGenerator(out)) {
         objectMapper.writeValue(osonGen, node);

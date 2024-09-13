@@ -37,6 +37,9 @@
  */
 package oracle.jdbc.provider.oson;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import oracle.jdbc.datasource.impl.OracleDataSource;
 
 import java.math.BigDecimal;
@@ -78,6 +81,29 @@ public class JacksonOsonSampleUtil {
     phones.add(new Phone("666-555-4444", Phone.Type.MOBILE));
     phones.add(new Phone("999-888-7777", Phone.Type.HOME));
     return new Emp("Bob", "software engineer", new BigDecimal(4000), "bob@bob.org", phones);
+  }
+
+  public static ObjectNode createEmpUsingObjectNode(ObjectMapper objectMapper) {
+    ObjectNode node = objectMapper.createObjectNode();
+    node.put("name", "Bob");
+    node.put("job", "software engineer");
+    node.put("salary", new BigDecimal(4000));
+    node.put("email", "bob@bob.org");
+    ArrayNode phones = objectMapper.createArrayNode();
+    ObjectNode phone = objectMapper.createObjectNode();
+    phone.put("number", "333-222-1111");
+    phone.put("type", "WORK");
+    phones.add(phone);
+    phone = objectMapper.createObjectNode();
+    phone.put("number", "666-555-4444");
+    phone.put("type", "MOBILE");
+    phones.add(phone);
+    phone = objectMapper.createObjectNode();
+    phone.put("number", "999-888-7777");
+    phone.put("type", "HOME");
+    phones.add(phone);
+    node.put("phoneNumbers", phones);
+    return node;
   }
 
 }
