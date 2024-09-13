@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import oracle.jdbc.OracleType;
-import oracle.jdbc.jackson.oson.provider.JacksonOsonConverter;
+import oracle.jdbc.provider.oson.JacksonOsonConverter;
 import oracle.jdbc.pool.OracleDataSource;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;

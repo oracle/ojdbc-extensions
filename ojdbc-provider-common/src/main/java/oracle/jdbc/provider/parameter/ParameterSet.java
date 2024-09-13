@@ -38,8 +38,6 @@
 
 package  oracle.jdbc.provider.parameter;
 
-import oracle.jdbc.provider.factory.ResourceFactory;
-
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
 

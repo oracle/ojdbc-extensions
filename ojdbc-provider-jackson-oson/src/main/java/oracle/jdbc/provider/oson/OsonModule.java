@@ -3,15 +3,15 @@ package oracle.jdbc.provider.oson;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.core.util.VersionUtil;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import oracle.jdbc.jackson.oson.deser.*;
-import oracle.jdbc.jackson.oson.ser.*;
+import oracle.jdbc.provider.oson.deser.*;
+import oracle.jdbc.provider.oson.ser.*;
 
 import java.math.BigInteger;
 import java.time.*;
 
 public class OsonModule extends SimpleModule {
 	public final static Version VERSION = VersionUtil.parseVersion(
-			"1.0.0-b", "com.oracle.database.jdbc", "jackson-oson"
+			"1.0.1", "com.oracle.database.jdbc", "ojdbc-provider-jackson-oson"
 	);
 
 	public OsonModule() {

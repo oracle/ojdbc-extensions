@@ -1,9 +1,9 @@
-package oracle.jdbc.provider.oson.provider;
+package oracle.jdbc.provider.oson;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import oracle.jdbc.jackson.oson.OsonFactory;
-import oracle.jdbc.jackson.oson.OsonModule;
+import oracle.jdbc.provider.oson.OsonFactory;
+import oracle.jdbc.provider.oson.OsonModule;
 import oracle.jdbc.spi.OsonConverter;
 import oracle.sql.json.OracleJsonGenerator;
 import oracle.sql.json.OracleJsonParser;
