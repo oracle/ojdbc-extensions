@@ -15,7 +15,10 @@ import static java.nio.charset.StandardCharsets.US_ASCII;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class PEMDataTest {
+/**
+ * Verifies that the {@link PemData} class behaves as specified by its JavaDocs
+ */
+public class PemDataTest {
 
   @Test
   public void testEncodePrivateKey() throws Exception {
