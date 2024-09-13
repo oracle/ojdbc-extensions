@@ -407,7 +407,7 @@ In addition to the set of [common parameters](#common-parameters-for-resource-pr
 <tbody>
 <tr>
 <td>ocid</td>
-<td>Identifies the secret containing the TCPS wallet.</td>
+<td>Identifies the secret containing the TCPS file.</td>
 <td>
 The <a href="https://docs.oracle.com/en-us/iaas/Content/General/Concepts/identifiers.htm">OCID</a> of an OCI Vault secret
 </td>
@@ -416,13 +416,23 @@ The <a href="https://docs.oracle.com/en-us/iaas/Content/General/Concepts/identif
 </td>
 </tr>
 <tr>
-<td>walletPassword</td>
+<td>password</td>
 <td>
-Optional password for wallets stored as PKCS12 keystores. If omitted, the wallet is assumed to be an SSO wallet.
+Optional password for PKCS12 or protected PEM files. If omitted, the file is assumed to be SSO or an non-protected PEM file.
 </td>
 <td>Any valid password for the wallet</td>
 <td>
 <i>No default value. PKCS12 wallets require a password.</i>
+</td>
+</tr>
+<tr>
+<td>type</td>
+<td>
+Specifies the type of the file being used.
+</td>
+<td>SSO, PKCS12, PEM</td>
+<td>
+<i>No default value. The file type must be specified..</i>
 </td>
 </tr>
 </tbody>
