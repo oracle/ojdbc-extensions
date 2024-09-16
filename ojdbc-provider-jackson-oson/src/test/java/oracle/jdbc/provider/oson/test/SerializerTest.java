@@ -35,40 +35,82 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.oson.deser;
 
-import com.fasterxml.jackson.core.JacksonException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
-import oracle.jdbc.provider.oson.OsonParser;
+package oracle.jdbc.provider.oson.test;
 
+import oracle.jdbc.provider.oson.JacksonOsonConverter;
+import oracle.sql.json.OracleJsonFactory;
+import oracle.sql.json.OracleJsonGenerator;
+import oracle.sql.json.OracleJsonParser;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.time.OffsetDateTime;
 
-public class OsonOffsetDateTimeDeserializer extends StdScalarDeserializer<OffsetDateTime> {
-	public static final OsonOffsetDateTimeDeserializer INSTANCE = new OsonOffsetDateTimeDeserializer();
+public class SerializerTest {
+  public static void main(String[] args) throws  IOException {
+   JacksonOsonConverter conv = new JacksonOsonConverter();
 
-	protected OsonOffsetDateTimeDeserializer() {
-		super(OffsetDateTime.class);
-	}
-	protected OsonOffsetDateTimeDeserializer(Class<?> vc) {
-		super(vc);
-	}
+   OracleJsonFactory factory = new OracleJsonFactory();
+   ByteArrayOutputStream out = new ByteArrayOutputStream();
+   
+   byte[] bytes = new byte[] { 1 };
+   Employee emp = new Employee( "salah", "eng" ,bytes);
+   
+   OracleJsonGenerator oGen = factory.createJsonBinaryGenerator(out);
+   conv.serialize(oGen, emp );
+   oGen.close();
+   
+   OracleJsonParser oParser = factory.createJsonBinaryParser(new ByteArrayInputStream(out.toByteArray()));
+   Employee j = (Employee) conv.deserialize(oParser, Employee.class);
 
-	protected OsonOffsetDateTimeDeserializer(JavaType valueType) {
-		super(valueType);
-	}
+   System.out.println(j.name);
 
-	protected OsonOffsetDateTimeDeserializer(StdScalarDeserializer<?> src) {
-		super(src);
-	}
+  }
+}
 
-	@Override
-	public OffsetDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
-		final OsonParser _parser = (OsonParser)p;
 
-		return _parser.readOffsetDateTime();
-	}
+class Employee {
+
+  String name;
+
+  String job;
+
+  byte[] bytes;
+
+  public Employee() {
+  }
+
+  public Employee(String name, String job,byte[] b) {
+   this.name = name;
+   this.job = job;
+
+   this.bytes= b;
+
+  }
+
+  public void setName(String name) {
+   this.name = name;
+  }
+
+  public String getName() {
+   return name;
+  }
+
+
+  public String getJob() {
+   return job;
+  }
+
+  public void setJob(String job) {
+   this.job = job;
+  }
+  public byte[] getBytes() {
+   return bytes;
+  }
+
+  public void setBytes(byte[] b) {
+   this.bytes = b;
+  }
+
 }

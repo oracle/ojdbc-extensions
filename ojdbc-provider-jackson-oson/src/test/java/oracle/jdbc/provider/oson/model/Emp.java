@@ -35,40 +35,101 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.oson.deser;
 
-import com.fasterxml.jackson.core.JacksonException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
-import oracle.jdbc.provider.oson.OsonParser;
+package oracle.jdbc.provider.oson.model;
 
-import java.io.IOException;
-import java.time.OffsetDateTime;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class OsonOffsetDateTimeDeserializer extends StdScalarDeserializer<OffsetDateTime> {
-	public static final OsonOffsetDateTimeDeserializer INSTANCE = new OsonOffsetDateTimeDeserializer();
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
-	protected OsonOffsetDateTimeDeserializer() {
-		super(OffsetDateTime.class);
+public class Emp {
+
+	String name;
+
+	String job;
+
+	BigDecimal salary;
+
+	@JsonProperty("e-mail")
+	String email;
+
+	List<Phone> phoneNumbers = new ArrayList<>();
+
+	public Emp() {
 	}
-	protected OsonOffsetDateTimeDeserializer(Class<?> vc) {
-		super(vc);
+
+	public Emp(String name, String job, BigDecimal salary, String email, List<Phone> phones) {
+		this.name = name;
+		this.job = job;
+		this.salary = salary;
+		this.email = email;
+		phoneNumbers.addAll(phones);
 	}
 
-	protected OsonOffsetDateTimeDeserializer(JavaType valueType) {
-		super(valueType);
+	public String getName() {
+		return name;
 	}
 
-	protected OsonOffsetDateTimeDeserializer(StdScalarDeserializer<?> src) {
-		super(src);
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getJob() {
+		return job;
+	}
+
+	public void setJob(String job) {
+		this.job = job;
+	}
+
+	public BigDecimal getSalary() {
+		return salary;
+	}
+
+	public void setSalary(BigDecimal salary) {
+		this.salary = salary;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public List<Phone> getPhoneNumbers() {
+		return this.phoneNumbers;
+	}
+
+	public void setPhoneNumbers(List<Phone> phones) {
+		this.phoneNumbers = phones;
 	}
 
 	@Override
-	public OffsetDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
-		final OsonParser _parser = (OsonParser)p;
+	public String toString() {
+		return "Emp \n{\n" +
+				"  name=" + name + ",\n" +
+				"  job=" + job + ",\n" +
+				"  salary=" + salary + ",\n" +
+				"  email=" + email +  ",\n" +
+				"  phoneNumbers=" + phoneNumbers + "\n" +
+				'}';
+	}
 
-		return _parser.readOffsetDateTime();
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Emp emp = (Emp) o;
+		return Objects.equals(name, emp.name) && Objects.equals(job, emp.job) && Objects.equals(salary, emp.salary) && Objects.equals(email, emp.email) && Objects.equals(phoneNumbers, emp.phoneNumbers);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(name, job, salary, email, phoneNumbers);
 	}
 }

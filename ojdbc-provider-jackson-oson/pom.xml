@@ -46,6 +46,13 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
             <version>2.15.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.oracle.database.jdbc</groupId>
+            <artifactId>ojdbc-provider-common</artifactId>
+            <classifier>tests</classifier>
+            <type>test-jar</type>
+        </dependency>
     </dependencies>
 
 </project>

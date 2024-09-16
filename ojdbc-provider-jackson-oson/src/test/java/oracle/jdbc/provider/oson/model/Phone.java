@@ -35,40 +35,61 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.oson.deser;
 
-import com.fasterxml.jackson.core.JacksonException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
-import oracle.jdbc.provider.oson.OsonParser;
+package oracle.jdbc.provider.oson.model;
 
-import java.io.IOException;
-import java.time.OffsetDateTime;
+import java.util.Objects;
 
-public class OsonOffsetDateTimeDeserializer extends StdScalarDeserializer<OffsetDateTime> {
-	public static final OsonOffsetDateTimeDeserializer INSTANCE = new OsonOffsetDateTimeDeserializer();
+public class Phone {
 
-	protected OsonOffsetDateTimeDeserializer() {
-		super(OffsetDateTime.class);
-	}
-	protected OsonOffsetDateTimeDeserializer(Class<?> vc) {
-		super(vc);
+	public enum Type {MOBILE, HOME, WORK}
+
+	String number;
+
+	Type type;
+
+	public Phone() {
 	}
 
-	protected OsonOffsetDateTimeDeserializer(JavaType valueType) {
-		super(valueType);
+	public Phone(String number, Type type) {
+		this.number = number;
+		this.type = type;
 	}
 
-	protected OsonOffsetDateTimeDeserializer(StdScalarDeserializer<?> src) {
-		super(src);
+	public String getNumber() {
+		return number;
+	}
+
+	public void setNumber(String number) {
+		this.number = number;
+	}
+
+	public Type getType() {
+		return type;
+	}
+
+	public void setType(Type type) {
+		this.type = type;
 	}
 
 	@Override
-	public OffsetDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
-		final OsonParser _parser = (OsonParser)p;
+	public String toString() {
+		return "Phone {" +
+				"number='" + number + '\'' +
+				", type=" + type +
+				'}';
+	}
 
-		return _parser.readOffsetDateTime();
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Phone phone = (Phone) o;
+		return Objects.equals(number, phone.number) && type == phone.type;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(number, type);
 	}
 }
