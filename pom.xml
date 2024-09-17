@@ -32,7 +32,7 @@
   <properties>
     <maven.compiler.target>1.8</maven.compiler.target>
     <maven.compiler.source>1.8</maven.compiler.source>
-    <jdbc.version>23.4.0.24.05</jdbc.version>
+    <jdbc.version>23.6.0.24.09.240830</jdbc.version>
     <junit.version>5.9.0</junit.version>
     <mockito.version>4.11.0</mockito.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -81,12 +81,12 @@
       <dependency>
         <groupId>com.oracle.database.jdbc</groupId>
         <artifactId>ojdbc8</artifactId>
-        <version>23.6.0.24.09.240830</version>
+        <version>${jdbc.version}</version>
       </dependency>
       <dependency>
         <groupId>com.oracle.database.security</groupId>
         <artifactId>oraclepki</artifactId>
-        <version>${jdbc.version}</version>
+        <version>23.4.0.24.05</version>
       </dependency>
       <dependency>
         <groupId>org.junit.jupiter</groupId>

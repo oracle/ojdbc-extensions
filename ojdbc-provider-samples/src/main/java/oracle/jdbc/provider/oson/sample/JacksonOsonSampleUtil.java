@@ -35,7 +35,7 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.oson;
+package oracle.jdbc.provider.oson.sample;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -50,8 +50,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import oracle.jdbc.provider.Configuration;
-import oracle.jdbc.provider.oson.model.Emp;
-import oracle.jdbc.provider.oson.model.Phone;
+import oracle.jdbc.provider.oson.sample.model.Emp;
+import oracle.jdbc.provider.oson.sample.model.Phone;
 
 public class JacksonOsonSampleUtil {
 

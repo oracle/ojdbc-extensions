@@ -35,9 +35,10 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.oson;
+package oracle.jdbc.provider.oson.sample;
 
 import oracle.jdbc.OracleConnection;
+import oracle.jdbc.provider.oson.JacksonOsonProvider;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -45,15 +46,15 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.query.Query;
 
-import oracle.jdbc.provider.oson.model.Emp;
-import oracle.jdbc.provider.oson.model.JsonOsonSample;
+import oracle.jdbc.provider.oson.sample.model.Emp;
+import oracle.jdbc.provider.oson.sample.model.JsonOsonSample;
 
 import java.util.List;
 
 /**
- *
+ * Access JSON column using Hibernate, uses HQL to retrieve the POJO from the
+ * JSON column.
  */
-
 public class AccessJsonColumnUsingHibernate {
 
 

@@ -1,4 +1,4 @@
-package oracle.jdbc.provider.oson.model;
+package oracle.jdbc.provider.oson.sample.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -33,4 +33,5 @@ public class JsonOsonSample {
   public void setEmp(Emp emp) {
     this.emp = emp;
   }
+
 }
