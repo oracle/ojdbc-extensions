@@ -42,12 +42,11 @@ import oracle.jdbc.provider.oci.vault.Secret;
 import oracle.jdbc.provider.oci.vault.SecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
+import oracle.jdbc.provider.util.WalletUtils;
+import oracle.jdbc.spi.OracleResourceProvider;
 import oracle.jdbc.spi.PasswordProvider;
 import oracle.jdbc.spi.UsernameProvider;
-import oracle.security.pki.OracleSecretStore;
-import oracle.security.pki.OracleWallet;
 
-import java.io.IOException;
 import java.util.Base64;
 import java.util.Map;
 
@@ -80,54 +79,6 @@ public class VaultSEPSProvider
   private static final oracle.jdbc.provider.parameter.Parameter<String> PASSWORD =
           oracle.jdbc.provider.parameter.Parameter.create();
 
-  /**
-   * The default username secret created by the Oracle `mkstore` command.
-   * <p>
-   * This constant represents the default name for the username secret that is
-   * generated when using Oracle's `mkstore` command to manage secure
-   * credentials in Oracle Wallet. By default, Oracle uses the name
-   * `oracle.security.client.default_username` for storing the username in
-   * the wallet.
-   * </p>
-   * <p>
-   * The `mkstore` command is used to create and manage secure credentials,
-   * such as usernames, passwords, and connection strings, in an Oracle Wallet.
-   * This provider retrieves the username from the wallet using this default
-   * secret name.
-   * </p>
-   * <p>
-   * For more details on the `mkstore` command and how it generates secrets,
-   * refer to the Oracle documentation:
-   * <a href="https://docs.oracle.com/en/database/oracle/oracle-database/23/dbseg/using-the-orapki-utility-to-manage-pki-elements.html#GUID-25509071-ABC0-4A0E-A3DB-4D4F61024F25">
-   * Oracle mkstore Documentation</a>.
-   * </p>
-   */
-  private static final String SECRET_STORE_DEFAULT_USERNAME =
-          "oracle.security.client.default_username";
-
-  /**
-   * The default password secret created by the Oracle `mkstore` command.
-   * <p>
-   * This constant represents the default name for the password secret that is
-   * generated when using Oracle's `mkstore` command to manage secure
-   * credentials in Oracle Wallet. By default, Oracle uses the name
-   * `oracle.security.client.default_password` for storing the password in
-   * the wallet.
-   * </p>
-   * <p>
-   * Similar to the username, this provider retrieves the password from the
-   * wallet using this default secret name. The `mkstore` command is a
-   * standard tool for managing credentials securely in Oracle Wallet.
-   * </p>
-   * <p>
-   * For further details on using `mkstore` to manage credentials in an Oracle
-   * Wallet, refer to the official Oracle documentation:
-   * <a href="https://docs.oracle.com/en/database/oracle/oracle-database/23/dbseg/using-the-orapki-utility-to-manage-pki-elements.html#GUID-25509071-ABC0-4A0E-A3DB-4D4F61024F25">
-   * Oracle mkstore Documentation</a>.
-   * </p>
-   */
-  private static final String SECRET_STORE_DEFAULT_PASSWORD =
-          "oracle.security.client.default_password";
 
   private static final ResourceParameter[] PARAMETERS = {
           new ResourceParameter("ocid", OCID),
@@ -144,12 +95,12 @@ public class VaultSEPSProvider
 
   @Override
   public String getUsername(Map<Parameter, CharSequence> parameterValues) {
-    return extractCredentials(getWallet(parameterValues)).username;
+    return getWalletCredentials(parameterValues).username();
   }
 
   @Override
   public char[] getPassword(Map<Parameter, CharSequence> parameterValues) {
-    return extractCredentials(getWallet(parameterValues)).password;
+    return getWalletCredentials(parameterValues).password();
   }
 
   /**
@@ -157,86 +108,19 @@ public class VaultSEPSProvider
    * in OCI Vault and opening it as either SSO or PKCS12, based on whether a
    * password is provided.
    */
-  private OracleWallet getWallet(Map<Parameter, CharSequence> parameterValues) {
+  private WalletUtils.Credentials getWalletCredentials(
+    Map<OracleResourceProvider.Parameter, CharSequence> parameterValues) {
+
     ParameterSet parameterSet = parseParameterValues(parameterValues);
     Secret secret = SecretFactory.getInstance()
-            .request(parameterSet)
-            .getContent();
+      .request(parameterSet)
+      .getContent();
 
     char[] walletPassword = parameterSet.getOptional(PASSWORD) != null
-            ? parameterSet.getOptional(PASSWORD).toCharArray()
-            : null;
-    try {
-      return openWallet(secret,walletPassword);
-    } catch (IOException e) {
-      throw new RuntimeException("Failed to open wallet from secret", e);
-    }
-  }
-
-  /**
-   * Opens the SEPS wallet, using the provided secret and password. The
-   * wallet is decoded from its base64 form.
-   *
-   * @param secret The secret retrieved from OCI Vault containing the wallet
-   * data.
-   * @param walletPassword The password for the wallet, or {@code null} for
-   * SSO wallets.
-   * @return An OracleWallet object initialized with the wallet data.
-   * @throws IOException If an I/O error occurs while opening the wallet.
-   */
-  private OracleWallet openWallet(Secret secret, char[] walletPassword)
-          throws IOException {
+      ? parameterSet.getOptional(PASSWORD).toCharArray()
+      : null;
     byte[] walletBytes = Base64.getDecoder().decode(secret.getBase64Secret());
-    OracleWallet wallet = new OracleWallet();
-    wallet.setWalletArray(walletBytes, walletPassword);
-    return wallet;
-  }
-
-  /**
-   * Extracts the username and password from the OracleSecretStore in the
-   * OracleWallet.
-   * <p>
-   * This method retrieves credentials from the wallet using the default
-   * aliases generated by Oracle's `mkstore` command:
-   * <ul>
-   *   <li>{@code oracle.security.client.default_username} for the username</li>
-   *   <li>{@code oracle.security.client.default_password} for the password</li>
-   * </ul>
-   * These default aliases are used to securely fetch credentials stored
-   * in Oracle Wallet.
-   * </p>
-   * <p>
-   */
-  private Credentials extractCredentials(OracleWallet wallet) {
-    try {
-      OracleSecretStore secretStore = wallet.getSecretStore();
-      String username = null;
-      char[] password = null;
-
-      if (secretStore.containsAlias(SECRET_STORE_DEFAULT_USERNAME)) {
-        username = new String(secretStore.getSecret(SECRET_STORE_DEFAULT_USERNAME));
-      }
-      if (secretStore.containsAlias(SECRET_STORE_DEFAULT_PASSWORD)) {
-        password = secretStore.getSecret(SECRET_STORE_DEFAULT_PASSWORD);
-      }
-
-      return new Credentials(username, password);
-    } catch (Exception e) {
-      throw new RuntimeException("Failed to extract credentials from wallet", e);
-    }
-  }
-
-  /**
-   * Inner class to hold both the username and password.
-   */
-  private static final class Credentials {
-    final String username;
-    final char[] password;
-
-    Credentials(String username, char[] password) {
-      this.username = username;
-      this.password = password;
-    }
+    return WalletUtils.getCredentials(walletBytes, walletPassword);
   }
 
 }

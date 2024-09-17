@@ -35,9 +35,11 @@ public class VaultTCPSProviderTest {
             TestProperties.getOrAbort(OciTestProperty.OCI_CONFIG_PROFILE));
     testParameters.put("ocid",
             TestProperties.getOrAbort(OciTestProperty.OCI_TLS_WALLET_OCID));
+    testParameters.put("type",
+            TestProperties.getOrAbort(OciTestProperty.OCI_TLS_FILE_TYPE));
     Optional.ofNullable(TestProperties.getOptional(
             OciTestProperty.OCI_TLS_WALLET_PASSWORD))
-            .ifPresent(password -> testParameters.put("walletPassword",
+            .ifPresent(password -> testParameters.put("password",
                     password));
 
     Map<Parameter, CharSequence> parameterValues =

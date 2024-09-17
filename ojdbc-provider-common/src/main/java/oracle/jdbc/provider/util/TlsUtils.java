@@ -1,19 +1,31 @@
 package oracle.jdbc.provider.util;
 
+import javax.crypto.EncryptedPrivateKeyInfo;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.GeneralSecurityException;
+import java.security.KeyFactory;
 import java.security.KeyStore;
+import java.security.PrivateKey;
 import java.security.Provider;
 import java.security.Security;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Common operations related to Transport Layer Security (TLS) in Java.
  */
-public class TlsUtils {
+public final class TlsUtils {
   private TlsUtils() {}
 
   /**
@@ -43,6 +55,75 @@ public class TlsUtils {
     catch (IOException | GeneralSecurityException exception) {
       throw new IllegalStateException("Failed to load KeyStore", exception);
     }
+  }
+
+  /**
+   * Creates a KeyStore from PEM-encoded data.
+   * <p>
+   * This method processes a PEM file that contains one or more PEM-encoded
+   * sections, such as a private key, certificates, or an encrypted private
+   * key. It parses these sections, decodes the data, and adds the parsed
+   * private key and certificates to a newly created KeyStore.
+   * </p>
+   *
+   * @param fileBytes The byte array containing the PEM-encoded data (e.g.,
+   * private key, certificates).
+   * @param password  The password to decrypt the private key, if it is
+   * encrypted. Can be {@code null} for unencrypted keys.
+   * @return An initialized KeyStore containing the private key and
+   * associated certificates from the PEM data.
+   */
+  public static KeyStore createPEMKeyStore(
+    byte[] fileBytes, char[] password) throws Exception {
+    List<PemData> pemDataList =
+      PemData.decode(new ByteArrayInputStream(fileBytes));
+
+    KeyStore keyStore = KeyStore.getInstance("JKS");
+    keyStore.load(null, null);
+
+    PrivateKey privateKey = null;
+    List<Certificate> certificates = new ArrayList<>();
+    CertificateFactory certificateFactory =
+      CertificateFactory.getInstance("X.509");
+
+    for (PemData pemData : pemDataList) {
+      switch (pemData.label()) {
+        case PRIVATE_KEY:
+          PKCS8EncodedKeySpec pkcs8 = new PKCS8EncodedKeySpec(pemData.data());
+          privateKey = KeyFactory
+            .getInstance("RSA")
+            .generatePrivate(pkcs8);
+          break;
+        case ENCRYPTED_PRIVATE_KEY:
+          EncryptedPrivateKeyInfo encryptedPrivateKeyInfo =
+            new EncryptedPrivateKeyInfo(pemData.data());
+          PBEKeySpec pbeKeySpec = new PBEKeySpec(password);
+          SecretKey secretKey = SecretKeyFactory
+            .getInstance(encryptedPrivateKeyInfo.getAlgName())
+            .generateSecret(pbeKeySpec);
+          privateKey = KeyFactory
+            .getInstance("RSA")
+            .generatePrivate(encryptedPrivateKeyInfo.getKeySpec(secretKey));
+          break;
+        case CERTIFICATE:
+          Certificate certificate = certificateFactory
+            .generateCertificate(new ByteArrayInputStream(pemData.data()));
+
+          certificates.add(certificate);
+          break;
+        default:
+          throw new IllegalArgumentException("Unsupported PEM data label: " + pemData.label());
+      }
+    }
+
+    if (privateKey != null && !certificates.isEmpty()) {
+      keyStore.setKeyEntry("key", privateKey, password,
+        certificates.toArray(new Certificate[0]));
+    } else {
+      throw new
+        IllegalStateException("Missing private key or certificates in PEM data");
+    }
+    return keyStore;
   }
 
   /**
