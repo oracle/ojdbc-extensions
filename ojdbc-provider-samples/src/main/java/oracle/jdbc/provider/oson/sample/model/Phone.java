@@ -1,4 +1,4 @@
-package oracle.jdbc.provider.oson.model;
+package oracle.jdbc.provider.oson.sample.model;
 
 import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
 
