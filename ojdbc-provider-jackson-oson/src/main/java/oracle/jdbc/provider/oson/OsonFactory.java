@@ -92,7 +92,6 @@ public class OsonFactory extends JsonFactory {
   
   @Override
   public JsonGenerator createGenerator(Writer out) throws IOException {
-    IOContext ctxt = _createContext(out, true);
     OsonGenerator g = new OsonGenerator(_generatorFeatures, null, 
         factory.createJsonTextGenerator(out));
     ObjectCodec codec = getCodec();
