@@ -75,6 +75,12 @@ public class JacksonOsonSampleUtil {
     }
   }
 
+  public static void dropTable(Connection conn) throws SQLException {
+    try (Statement stmt = conn.createStatement()) {
+      stmt.execute("drop table if exists jackson_oson_sample");
+    }
+  }
+
   public static Emp createEmp() {
     List<Phone> phones = new ArrayList<Phone>();
     phones.add(new Phone("333-222-1111", Phone.Type.WORK));

@@ -107,6 +107,8 @@ public class AccessJsonColumnUsingPOJO {
       JacksonOsonSampleUtil.createTable(conn);
       insertIntoDatabase(conn, osonFactory, objectMapper);
       retrieveFromDatabase(conn, objectMapper);
+      JacksonOsonSampleUtil.dropTable(conn);
+      conn.close();
     } catch (SQLException sqlException) {
       sqlException.printStackTrace();
     } catch (IOException ioException) {

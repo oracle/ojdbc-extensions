@@ -96,6 +96,8 @@ public class AccessJsonColumnUsingPOJOAndJsonProvider {
       JacksonOsonSampleUtil.createTable(conn);
       insertIntoDatabase(conn);
       retieveFromDatabase(conn);
+      JacksonOsonSampleUtil.dropTable(conn);
+      conn.close();
     } catch (SQLException sqlException) {
       sqlException.printStackTrace();
     }

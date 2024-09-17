@@ -106,6 +106,7 @@ public class AccessJsonColumnUsingJacksonObjectNode {
       JacksonOsonSampleUtil.createTable(conn);
       insertIntoDatabase(conn, osonFactory, objectMapper);
       retrieveFromDatabase(conn, objectMapper);
+      JacksonOsonSampleUtil.dropTable(conn);
       conn.close();
     } catch (SQLException exception) {
       exception.printStackTrace();

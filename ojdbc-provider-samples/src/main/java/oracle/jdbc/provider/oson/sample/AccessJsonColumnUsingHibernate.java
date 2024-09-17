@@ -93,6 +93,7 @@ public class AccessJsonColumnUsingHibernate {
     System.setProperty(OracleConnection.CONNECTION_PROPERTY_PROVIDER_JSON, JacksonOsonProvider.PROVIDER_NAME);
 
     Configuration configuration = new Configuration();
+    configuration.setProperty("hibernate.hbm2ddl.auto", "create-drop");
     configuration.setProperty(Environment.JAKARTA_JDBC_DRIVER, "oracle.jdbc.OracleDriver");
     configuration.setProperty(Environment.JAKARTA_JDBC_URL, JacksonOsonSampleUtil.URL);
     configuration.setProperty(Environment.JAKARTA_JDBC_USER, JacksonOsonSampleUtil.USER);
