@@ -1,0 +1,83 @@
+package oracle.jdbc.provider.util;
+
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.Provider;
+import java.security.Security;
+
+/**
+ * Common operations related to Transport Layer Security (TLS) in Java.
+ */
+public class TlsUtils {
+  private TlsUtils() {}
+
+  /**
+   * Creates a {@code KeyStore} loaded with the contents of a given stream.
+   *
+   * @param inputStream Contents of the key store. Not null.
+   *
+   * @param password Password for the key store. May be null if the store is not
+   * password protected.
+   *
+   * @param type The type of the key store, such as: "JKS", "SSO", or "PKCS12".
+   * Not null.
+   *
+   * @param provider The provider of the KeyStore. May be null to use the most
+   * preferred {@linkplain Security#getProviders() provider} for the given
+   * key store type.
+   */
+  public static KeyStore loadKeyStore(
+    InputStream inputStream, char[] password, String type, Provider provider) {
+    try {
+      KeyStore keyStore = provider == null
+        ? KeyStore.getInstance(type)
+        : KeyStore.getInstance(type, provider);
+      keyStore.load(inputStream, password);
+      return keyStore;
+    }
+    catch (IOException | GeneralSecurityException exception) {
+      throw new IllegalStateException("Failed to load KeyStore", exception);
+    }
+  }
+
+  /**
+   * Creates an {@code SSLContext} initialized with key and trust material
+   *
+   * @param keyStore Key material. May be null.
+   * @param trustStore Trust material. May be null.
+   * @param password Password for the key material. May be null.
+   * @return An SSLContext initialized with the key and trust material. Not
+   * null.
+   * @throws IllegalStateException If the SSLContext cannot be initialized.
+   */
+  public static SSLContext createSSLContext(
+    KeyStore keyStore, KeyStore trustStore, char[] password) {
+    try {
+      KeyManagerFactory keyManagerFactory =
+        KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+      keyManagerFactory.init(keyStore, password);
+
+      TrustManagerFactory trustManagerFactory =
+        TrustManagerFactory.getInstance(
+          TrustManagerFactory.getDefaultAlgorithm());
+      trustManagerFactory.init(trustStore);
+
+      // Use TLS 1.2 or newer. Older versions are less secure.
+      SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+      sslContext.init(
+        keyManagerFactory.getKeyManagers(),
+        trustManagerFactory.getTrustManagers(),
+        null/*Use default SecureRandom*/);
+      return sslContext;
+    }
+    catch (GeneralSecurityException generalSecurityException) {
+      throw new IllegalStateException(
+        "Failed initialize SSLContext", generalSecurityException);
+    }
+  }
+}

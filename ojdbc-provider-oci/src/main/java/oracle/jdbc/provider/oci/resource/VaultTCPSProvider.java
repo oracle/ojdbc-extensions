@@ -42,6 +42,7 @@ import oracle.jdbc.provider.oci.vault.Secret;
 import oracle.jdbc.provider.oci.vault.SecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
+import oracle.jdbc.provider.util.TlsUtils;
 import oracle.jdbc.spi.TlsConfigurationProvider;
 import oracle.security.pki.OraclePKIProvider;
 
@@ -162,21 +163,7 @@ public class VaultTCPSProvider
   static SSLContext createSSLContext(byte[] walletBytes, char[] walletPassword)
           throws GeneralSecurityException, IOException {
     KeyStore keyStore = loadKeyStore(walletBytes, walletPassword);
-
-    TrustManagerFactory trustManagerFactory =
-            TrustManagerFactory.getInstance("PKIX");
-    KeyManagerFactory keyManagerFactory =
-            KeyManagerFactory.getInstance("PKIX");
-
-    trustManagerFactory.init(keyStore);
-    keyManagerFactory.init(keyStore, null);
-
-    SSLContext sslContext = SSLContext.getInstance("TLS");
-    sslContext.init(
-            keyManagerFactory.getKeyManagers(),
-            trustManagerFactory.getTrustManagers(),
-            null);
-    return sslContext;
+    return TlsUtils.createSSLContext(keyStore, keyStore, walletPassword);
   }
 
   /**
@@ -194,10 +181,8 @@ public class VaultTCPSProvider
             PKCS12_KEYSTORE_TYPE;
     try (ByteArrayInputStream walletStream =
                  new ByteArrayInputStream(walletBytes)) {
-      KeyStore keyStore = KeyStore.getInstance(keystoreType,
-              new OraclePKIProvider());
-      keyStore.load(walletStream, walletPassword);
-      return keyStore;
+      return TlsUtils.loadKeyStore(
+        walletStream, walletPassword, keystoreType, new OraclePKIProvider());
     }
   }
 
