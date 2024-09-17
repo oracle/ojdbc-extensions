@@ -59,13 +59,7 @@ public class JacksonOsonProvider implements JsonProvider{
 
   @Override
   public OsonConverter getOsonConverter(Map<Parameter, CharSequence> parameterValues) {
-    try {
-      return new JacksonOsonConverter();
-    } 
-    catch (IOException e) {
-      e.printStackTrace();
-      return null;
-    }
+    return new JacksonOsonConverter();
   }
 
 }

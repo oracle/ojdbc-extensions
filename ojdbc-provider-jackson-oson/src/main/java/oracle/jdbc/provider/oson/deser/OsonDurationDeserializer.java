@@ -66,7 +66,7 @@ public class OsonDurationDeserializer extends StdScalarDeserializer<Duration> {
   }
 
   @Override
-  public Duration deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
+  public Duration deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
     final OsonParser _parser = (OsonParser)p;
 
     return _parser.readDuration();

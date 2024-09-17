@@ -61,12 +61,10 @@ public class JacksonOsonConverter implements OsonConverter{
     om.registerModule(new OsonModule());
   }
   
-  public JacksonOsonConverter() throws IOException {
-  }
+  public JacksonOsonConverter(){}
 
   @Override
   public void serialize(OracleJsonGenerator oGen, Object object) throws IllegalStateException {
-    System.out.println("Printing from OsonConverter in extension");
     try {
       lock.lock();
       om.writeValue(osonFactory.createGenerator(oGen), object);
@@ -83,10 +81,13 @@ public class JacksonOsonConverter implements OsonConverter{
   public Object deserialize(OracleJsonParser oParser, Class<?> type) throws IllegalStateException {
     if(!oParser.hasNext()) return null;
     try {
+      lock.lock();
       return om.readValue(osonFactory.createParser(oParser), type);
     } 
     catch (IOException e) {
       throw new IllegalArgumentException("Object parsing from oson failed", e);
+    } finally {
+      lock.unlock();
     }
   }
   

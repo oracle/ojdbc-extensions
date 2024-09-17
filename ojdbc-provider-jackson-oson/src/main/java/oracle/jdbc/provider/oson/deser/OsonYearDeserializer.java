@@ -66,7 +66,7 @@ public class OsonYearDeserializer extends StdScalarDeserializer<Year> {
   }
 
   @Override
-  public Year deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
+  public Year deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
     final OsonParser _parser = (OsonParser)p;
 
     return Year.of(_parser.getIntValue());

@@ -66,7 +66,7 @@ public class OsonOffsetDateTimeDeserializer extends StdScalarDeserializer<Offset
   }
 
   @Override
-  public OffsetDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
+  public OffsetDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
     final OsonParser _parser = (OsonParser)p;
 
     return _parser.readOffsetDateTime();

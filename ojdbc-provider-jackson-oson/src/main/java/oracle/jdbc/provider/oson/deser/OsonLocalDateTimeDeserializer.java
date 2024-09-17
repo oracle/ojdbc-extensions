@@ -66,7 +66,7 @@ public class OsonLocalDateTimeDeserializer extends StdScalarDeserializer<LocalDa
   }
 
   @Override
-  public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
+  public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
     final OsonParser _parser = (OsonParser)p;
 
     return _parser.readLocalDateTime();

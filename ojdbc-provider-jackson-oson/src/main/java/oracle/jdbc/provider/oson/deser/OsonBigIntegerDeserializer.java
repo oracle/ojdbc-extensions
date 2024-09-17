@@ -55,6 +55,7 @@ public class OsonBigIntegerDeserializer extends StdScalarDeserializer<BigInteger
   protected OsonBigIntegerDeserializer() {
     super(BigInteger.class);
   }
+
   protected OsonBigIntegerDeserializer(Class<?> vc) {
     super(vc);
   }
@@ -68,7 +69,7 @@ public class OsonBigIntegerDeserializer extends StdScalarDeserializer<BigInteger
   }
 
   @Override
-  public BigInteger deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
+  public BigInteger deserialize(JsonParser p, DeserializationContext ctxt) throws IOException{
     final OsonParser _parser = (OsonParser)p;
 
     return _parser.getBigIntegerValue();

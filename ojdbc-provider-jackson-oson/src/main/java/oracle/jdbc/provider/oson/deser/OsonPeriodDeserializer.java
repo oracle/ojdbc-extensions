@@ -67,7 +67,7 @@ public class OsonPeriodDeserializer extends StdScalarDeserializer<Period> {
   }
 
   @Override
-  public Period deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
+  public Period deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
     final OsonParser _parser = (OsonParser)p;
 
     return _parser.readPeriod();

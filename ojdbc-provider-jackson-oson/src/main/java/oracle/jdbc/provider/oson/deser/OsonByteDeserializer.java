@@ -67,7 +67,7 @@ public class OsonByteDeserializer extends StdScalarDeserializer<byte[]> {
    }
 
    @Override
-   public byte[] deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
+   public byte[] deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
       final OsonParser _parser = (OsonParser)p;
 
       return _parser.getBinaryValue();
