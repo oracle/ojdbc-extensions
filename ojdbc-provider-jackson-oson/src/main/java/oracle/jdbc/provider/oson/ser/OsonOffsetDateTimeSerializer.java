@@ -47,15 +47,15 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 
 public class OsonOffsetDateTimeSerializer extends StdSerializer<OffsetDateTime> {
-	public static final OsonOffsetDateTimeSerializer INSTANCE = new OsonOffsetDateTimeSerializer();
-	public OsonOffsetDateTimeSerializer() {
-		super(OffsetDateTime.class);
-	}
+  public static final OsonOffsetDateTimeSerializer INSTANCE = new OsonOffsetDateTimeSerializer();
+  public OsonOffsetDateTimeSerializer() {
+    super(OffsetDateTime.class);
+  }
 
-	@Override
-	public void serialize(OffsetDateTime value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-		final OsonGenerator _gen = (OsonGenerator)gen;
+  @Override
+  public void serialize(OffsetDateTime value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+    final OsonGenerator _gen = (OsonGenerator)gen;
 
-		_gen.writeOffsetDateTime(value);
-	}
+    _gen.writeOffsetDateTime(value);
+  }
 }

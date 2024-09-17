@@ -48,15 +48,15 @@ import java.io.IOException;
 import java.time.Period;
 
 public class OsonPeriodSerializer extends StdSerializer<Period> {
-	public static final OsonPeriodSerializer INSTANCE = new OsonPeriodSerializer();
-	public OsonPeriodSerializer() {
-		super(Period.class);
-	}
+  public static final OsonPeriodSerializer INSTANCE = new OsonPeriodSerializer();
+  public OsonPeriodSerializer() {
+    super(Period.class);
+  }
 
-	@Override
-	public void serialize(Period value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-		final OsonGenerator _gen = (OsonGenerator)gen;
+  @Override
+  public void serialize(Period value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+    final OsonGenerator _gen = (OsonGenerator)gen;
 
-		_gen.writePeriod(value);
-	}
+    _gen.writePeriod(value);
+  }
 }

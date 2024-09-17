@@ -39,7 +39,7 @@
 package oracle.jdbc.provider.oson;
 
 public enum OsonTestProperty {
-    JACKSON_OSON_URL,
-    JACKSON_OSON_USERNAME,
-    JACKSON_OSON_PASSWORD
+  JACKSON_OSON_URL,
+  JACKSON_OSON_USERNAME,
+  JACKSON_OSON_PASSWORD
 }

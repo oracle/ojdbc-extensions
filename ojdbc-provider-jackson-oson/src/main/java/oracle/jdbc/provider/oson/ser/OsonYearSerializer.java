@@ -47,15 +47,15 @@ import java.time.Year;
 
 public class OsonYearSerializer extends StdSerializer<Year> {
 
-	public static final OsonYearSerializer INSTANCE = new OsonYearSerializer();
-	public OsonYearSerializer() {
-		super(Year.class);
-	}
+  public static final OsonYearSerializer INSTANCE = new OsonYearSerializer();
+  public OsonYearSerializer() {
+    super(Year.class);
+  }
 
-	@Override
-	public void serialize(Year value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-		final OsonGenerator _gen = (OsonGenerator)gen;
+  @Override
+  public void serialize(Year value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+    final OsonGenerator _gen = (OsonGenerator)gen;
 
-		_gen.writeNumber(value.getValue());
-	}
+    _gen.writeNumber(value.getValue());
+  }
 }

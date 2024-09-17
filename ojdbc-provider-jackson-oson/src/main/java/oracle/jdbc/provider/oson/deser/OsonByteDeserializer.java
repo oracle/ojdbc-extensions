@@ -49,27 +49,27 @@ import java.io.IOException;
 import java.time.Year;
 
 public class OsonByteDeserializer extends StdScalarDeserializer<byte[]> {
-	public static final OsonByteDeserializer INSTANCE = new OsonByteDeserializer();
+   public static final OsonByteDeserializer INSTANCE = new OsonByteDeserializer();
 
-	protected OsonByteDeserializer() {
-		super(Year.class);
-	}
-	protected OsonByteDeserializer(Class<?> vc) {
-		super(vc);
-	}
+   protected OsonByteDeserializer() {
+      super(Year.class);
+   }
+   protected OsonByteDeserializer(Class<?> vc) {
+      super(vc);
+   }
 
-	protected OsonByteDeserializer(JavaType valueType) {
-		super(valueType);
-	}
+   protected OsonByteDeserializer(JavaType valueType) {
+      super(valueType);
+   }
 
-	protected OsonByteDeserializer(StdScalarDeserializer<?> src) {
-		super(src);
-	}
+   protected OsonByteDeserializer(StdScalarDeserializer<?> src) {
+      super(src);
+   }
 
-	@Override
-	public byte[] deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
-		final OsonParser _parser = (OsonParser)p;
+   @Override
+   public byte[] deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
+      final OsonParser _parser = (OsonParser)p;
 
-		return _parser.getBinaryValue();
-	}
+      return _parser.getBinaryValue();
+   }
 }

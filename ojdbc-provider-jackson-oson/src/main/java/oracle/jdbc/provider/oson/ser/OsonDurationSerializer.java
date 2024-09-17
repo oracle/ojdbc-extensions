@@ -46,15 +46,15 @@ import java.io.IOException;
 import java.time.Duration;
 
 public class OsonDurationSerializer extends StdSerializer<Duration> {
-	public static final OsonDurationSerializer INSTANCE = new OsonDurationSerializer();
-	public OsonDurationSerializer() {
-		super(Duration.class);
-	}
+  public static final OsonDurationSerializer INSTANCE = new OsonDurationSerializer();
+  public OsonDurationSerializer() {
+    super(Duration.class);
+  }
 
-	@Override
-	public void serialize(Duration value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-		final OsonGenerator _gen = (OsonGenerator)gen;
+  @Override
+  public void serialize(Duration value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+    final OsonGenerator _gen = (OsonGenerator)gen;
 
-		_gen.writeDuration(value);
-	}
+    _gen.writeDuration(value);
+  }
 }

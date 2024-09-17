@@ -84,7 +84,7 @@ public class ListTypeTest {
   }
   
   @Test
-	@Order(1)
+  @Order(1)
   public void insertIntoDatabase() throws IOException, SQLException {
       Assumptions.assumeTrue(conn != null);
       List<Phone> phones = new ArrayList<>();
@@ -102,27 +102,25 @@ public class ListTypeTest {
   }
   
   @Test
-	@Order(2)
+  @Order(2)
   public void retieveFromDatabase() throws SQLException, IOException {
       Assumptions.assumeTrue(conn != null);
     Statement stmt = conn.createStatement();
     ResultSet rs = stmt.executeQuery("select c1, c2 from emp_json order by c1");
     while(rs.next()) {
-    	
-    	JavaType type = TypeFactory.defaultInstance().constructParametricType(List.class, Phone.class); 
-    	List<Phone> phones = (List<Phone>) JacksonOsonConverter.convertValue(
-    			rs.getObject(2, JsonNode.class), type);
-    	
-    	for(int i=0; i<phones.size(); i++) {
-    		System.out.println(phones.get(i).toString());
-    	}
+      
+      JavaType type = TypeFactory.defaultInstance().constructParametricType(List.class, Phone.class); 
+      List<Phone> phones = (List<Phone>) JacksonOsonConverter.convertValue(
+          rs.getObject(2, JsonNode.class), type);
+      
+      for(int i=0; i<phones.size(); i++) {
+        System.out.println(phones.get(i).toString());
+      }
     }
     rs.close();
     stmt.close();
 
   }
-
-
 
 }
 
@@ -143,22 +141,22 @@ class Phone {
   }
 
   public String getNumber() {
-		return number;
-	}
+    return number;
+  }
 
-	public void setNumber(String number) {
-		this.number = number;
-	}
+  public void setNumber(String number) {
+    this.number = number;
+  }
 
-	public Type getType() {
-		return type;
-	}
+  public Type getType() {
+    return type;
+  }
 
-	public void setType(Type type) {
-		this.type = type;
-	}
+  public void setType(Type type) {
+    this.type = type;
+  }
 
-	@Override
+  @Override
   public String toString() {
     return "Phone {" +
       "number='" + number + '\'' +

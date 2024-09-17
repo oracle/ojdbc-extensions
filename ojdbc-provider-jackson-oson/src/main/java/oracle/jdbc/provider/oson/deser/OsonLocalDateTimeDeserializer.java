@@ -48,27 +48,27 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 
 public class OsonLocalDateTimeDeserializer extends StdScalarDeserializer<LocalDateTime> {
-	public static final OsonLocalDateTimeDeserializer INSTANCE = new OsonLocalDateTimeDeserializer();
+  public static final OsonLocalDateTimeDeserializer INSTANCE = new OsonLocalDateTimeDeserializer();
 
-	protected OsonLocalDateTimeDeserializer() {
-		super(LocalDateTime.class);
-	}
-	protected OsonLocalDateTimeDeserializer(Class<?> vc) {
-		super(vc);
-	}
+  protected OsonLocalDateTimeDeserializer() {
+    super(LocalDateTime.class);
+  }
+  protected OsonLocalDateTimeDeserializer(Class<?> vc) {
+    super(vc);
+  }
 
-	protected OsonLocalDateTimeDeserializer(JavaType valueType) {
-		super(valueType);
-	}
+  protected OsonLocalDateTimeDeserializer(JavaType valueType) {
+    super(valueType);
+  }
 
-	protected OsonLocalDateTimeDeserializer(StdScalarDeserializer<?> src) {
-		super(src);
-	}
+  protected OsonLocalDateTimeDeserializer(StdScalarDeserializer<?> src) {
+    super(src);
+  }
 
-	@Override
-	public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
-		final OsonParser _parser = (OsonParser)p;
+  @Override
+  public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
+    final OsonParser _parser = (OsonParser)p;
 
-		return _parser.readLocalDateTime();
-	}
+    return _parser.readLocalDateTime();
+  }
 }

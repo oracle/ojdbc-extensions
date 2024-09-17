@@ -48,27 +48,27 @@ import java.io.IOException;
 import java.time.Duration;
 
 public class OsonDurationDeserializer extends StdScalarDeserializer<Duration> {
-	public static final OsonDurationDeserializer INSTANCE = new OsonDurationDeserializer();
+  public static final OsonDurationDeserializer INSTANCE = new OsonDurationDeserializer();
 
-	protected OsonDurationDeserializer() {
-		super(Duration.class);
-	}
-	protected OsonDurationDeserializer(Class<?> vc) {
-		super(vc);
-	}
+  protected OsonDurationDeserializer() {
+    super(Duration.class);
+  }
+  protected OsonDurationDeserializer(Class<?> vc) {
+    super(vc);
+  }
 
-	protected OsonDurationDeserializer(JavaType valueType) {
-		super(valueType);
-	}
+  protected OsonDurationDeserializer(JavaType valueType) {
+    super(valueType);
+  }
 
-	protected OsonDurationDeserializer(StdScalarDeserializer<?> src) {
-		super(src);
-	}
+  protected OsonDurationDeserializer(StdScalarDeserializer<?> src) {
+    super(src);
+  }
 
-	@Override
-	public Duration deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
-		final OsonParser _parser = (OsonParser)p;
+  @Override
+  public Duration deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
+    final OsonParser _parser = (OsonParser)p;
 
-		return _parser.readDuration();
-	}
+    return _parser.readDuration();
+  }
 }

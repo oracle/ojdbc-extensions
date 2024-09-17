@@ -50,27 +50,27 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 public class OsonBigIntegerDeserializer extends StdScalarDeserializer<BigInteger> {
-	public static final OsonBigIntegerDeserializer INSTANCE = new OsonBigIntegerDeserializer();
+  public static final OsonBigIntegerDeserializer INSTANCE = new OsonBigIntegerDeserializer();
 
-	protected OsonBigIntegerDeserializer() {
-		super(BigInteger.class);
-	}
-	protected OsonBigIntegerDeserializer(Class<?> vc) {
-		super(vc);
-	}
+  protected OsonBigIntegerDeserializer() {
+    super(BigInteger.class);
+  }
+  protected OsonBigIntegerDeserializer(Class<?> vc) {
+    super(vc);
+  }
 
-	protected OsonBigIntegerDeserializer(JavaType valueType) {
-		super(valueType);
-	}
+  protected OsonBigIntegerDeserializer(JavaType valueType) {
+    super(valueType);
+  }
 
-	protected OsonBigIntegerDeserializer(StdScalarDeserializer<?> src) {
-		super(src);
-	}
+  protected OsonBigIntegerDeserializer(StdScalarDeserializer<?> src) {
+    super(src);
+  }
 
-	@Override
-	public BigInteger deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
-		final OsonParser _parser = (OsonParser)p;
+  @Override
+  public BigInteger deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
+    final OsonParser _parser = (OsonParser)p;
 
-		return _parser.getBigIntegerValue();
-	}
+    return _parser.getBigIntegerValue();
+  }
 }
