@@ -49,7 +49,6 @@ import oracle.security.pki.OraclePKIProvider;
 import javax.net.ssl.SSLContext;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.util.Base64;
 import java.util.Map;
@@ -96,7 +95,7 @@ public class VaultTCPSProvider
   /**
    * A parameter for specifying the type of the file being used.
    * <p>
-   * This parameter defines the format of the wallet and dictates how it
+   * This parameter defines the format of the file and dictates how it
    * should be processed.
    * The acceptable values are:
    * <ul>
@@ -119,7 +118,7 @@ public class VaultTCPSProvider
 
   private static final ResourceParameter[] PARAMETERS = {
           new ResourceParameter("ocid", OCID),
-          new ResourceParameter("walletPassword", PASSWORD),
+          new ResourceParameter("password", PASSWORD),
           new ResourceParameter("type", TYPE)
   };
 
@@ -172,7 +171,7 @@ public class VaultTCPSProvider
       return createSSLContext(fileBytes, password, type);
     } catch (Exception e) {
       throw new IllegalStateException
-              ("Failed to create SSLContext from wallet", e);
+              ("Failed to create SSLContext from the file", e);
     }
   }
 
@@ -187,8 +186,8 @@ public class VaultTCPSProvider
    * encrypted PEM files.
    * </p>
    *
-   * @param fileBytes The bytes representing the wallet, decoded from base64.
-   * @param password  The password for the wallet, or {@code null} if the
+   * @param fileBytes The bytes representing the file, decoded from base64.
+   * @param password  The password for the file, or {@code null} if the
    * file does not require a password.
    * @param type The type of the file (PEM, PKCS12, or SSO).
    * @return An initialized SSLContext ready for secure communication.
@@ -212,17 +211,17 @@ public class VaultTCPSProvider
    * {@code type} parameter.
    * </p>
    *
-   * @param fileBytes The byte array representing the wallet file, decoded
+   * @param fileBytes The byte array representing the file, decoded
    * from base64.
-   * @param password The password for the wallet, or {@code null} for SSO
-   * wallets.
+   * @param password The password for the file, or {@code null} for SSO
+   * files.
    * @param type The type of the KeyStore (SSO or PKCS12).
    * @return An initialized KeyStore containing the keys and certificates
-   * from the wallet.
+   * from the file.
    */
   static KeyStore loadKeyStore(
           byte[] fileBytes, char[] password, String type)
-          throws IOException, GeneralSecurityException {
+          throws IOException {
     try (ByteArrayInputStream fileStream =
                  new ByteArrayInputStream(fileBytes)) {
       return TlsUtils.loadKeyStore(
