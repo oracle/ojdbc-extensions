@@ -47,24 +47,68 @@ import oracle.jdbc.provider.oson.OsonParser;
 import java.io.IOException;
 import java.time.Period;
 
+/**
+ * Deserializer class for handling {@link Period} objects using Oson's parsing system.
+ * This class extends {@link StdScalarDeserializer} to enable the deserialization of {@link Period} values from JSON data.
+ * <p>
+ * It overrides the {@link #deserialize(JsonParser, DeserializationContext)} method to provide
+ * a custom implementation that uses the Oson library's {@link OsonParser#readPeriod()} method
+ * for extracting {@link Period} values from the JSON content.
+ * </p>
+ *
+ * @see StdScalarDeserializer
+ * @see OsonParser
+ * @see Period
+ */
 public class OsonPeriodDeserializer extends StdScalarDeserializer<Period> {
+
+  /**
+   * A singleton instance of the deserializer.
+   */
   public static final OsonPeriodDeserializer INSTANCE = new OsonPeriodDeserializer();
 
+  /**
+   * Default constructor that initializes the deserializer for the {@link Period} class.
+   */
   protected OsonPeriodDeserializer() {
     super(Period.class);
   }
+
+  /**
+   * Constructor that allows specifying a class type for deserialization.
+   *
+   * @param vc the class type to use for deserialization
+   */
   protected OsonPeriodDeserializer(Class<?> vc) {
     super(vc);
   }
 
+  /**
+   * Constructor that allows specifying a {@link JavaType} for deserialization.
+   *
+   * @param valueType the Java type to use for deserialization
+   */
   protected OsonPeriodDeserializer(JavaType valueType) {
     super(valueType);
   }
 
+  /**
+   * Copy constructor to create a new deserializer based on an existing {@link StdScalarDeserializer}.
+   *
+   * @param src the source deserializer to copy from
+   */
   protected OsonPeriodDeserializer(StdScalarDeserializer<?> src) {
     super(src);
   }
 
+  /**
+   * Deserializes a {@link Period} object from the JSON input using the {@link OsonParser}.
+   *
+   * @param p the {@link JsonParser} for reading the JSON content
+   * @param ctxt the deserialization context
+   * @return the deserialized {@link Period} object
+   * @throws IOException if there is a problem with reading the input
+   */
   @Override
   public Period deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
     final OsonParser _parser = (OsonParser)p;

@@ -45,12 +45,41 @@ import oracle.jdbc.provider.oson.OsonGenerator;
 import java.io.IOException;
 import java.time.Duration;
 
+/**
+ * Serializer class for handling {@link Duration} objects using Oson's generation system.
+ * This class extends {@link StdSerializer} to enable the serialization of {@link Duration} values into JSON format.
+ * <p>
+ * It overrides the {@link #serialize(Duration, JsonGenerator, SerializerProvider)} method to provide
+ * a custom implementation that uses the Oson library's {@link OsonGenerator#writeDuration(Duration)} method
+ * for writing {@link Duration} values to the JSON output.
+ * </p>
+ *
+ * @see StdSerializer
+ * @see OsonGenerator
+ * @see Duration
+ */
 public class OsonDurationSerializer extends StdSerializer<Duration> {
+
+  /**
+   * A singleton instance of the serializer.
+   */
   public static final OsonDurationSerializer INSTANCE = new OsonDurationSerializer();
+
+  /**
+   * Default constructor that initializes the serializer for the {@link Duration} class.
+   */
   public OsonDurationSerializer() {
     super(Duration.class);
   }
 
+  /**
+   * Serializes a {@link Duration} object into JSON format using the {@link OsonGenerator}.
+   *
+   * @param value the {@link Duration} value to serialize
+   * @param gen the {@link JsonGenerator} for writing JSON output
+   * @param provider the serializer provider
+   * @throws IOException if there is a problem with writing the output
+   */
   @Override
   public void serialize(Duration value, JsonGenerator gen, SerializerProvider provider) throws IOException {
     final OsonGenerator _gen = (OsonGenerator)gen;

@@ -45,12 +45,41 @@ import oracle.jdbc.provider.oson.OsonGenerator;
 import java.io.IOException;
 import java.math.BigInteger;
 
+/**
+ * Serializer class for handling {@link BigInteger} objects using {@link OsonGenerator}.
+ * This class extends {@link StdSerializer} to enable the serialization of {@link BigInteger} values into JSON format.
+ * <p>
+ * It overrides the {@link #serialize(BigInteger, JsonGenerator, SerializerProvider)} method to provide
+ * a custom implementation that uses the Oson library's {@link OsonGenerator#writeNumber(BigInteger)} method
+ * for writing {@link BigInteger} values to the JSON output.
+ * </p>
+ *
+ * @see StdSerializer
+ * @see OsonGenerator
+ * @see BigInteger
+ */
 public class OsonBigIntegerSerializer extends StdSerializer<BigInteger> {
+
+  /**
+   * A singleton instance of the serializer.
+   */
   public static final OsonBigIntegerSerializer INSTANCE = new OsonBigIntegerSerializer();
+
+  /**
+   * Default constructor that initializes the serializer for the {@link BigInteger} class.
+   */
   public OsonBigIntegerSerializer() {
     super(BigInteger.class);
   }
 
+  /**
+   * Serializes a {@link BigInteger} object into JSON format using the {@link OsonGenerator}.
+   *
+   * @param value the {@link BigInteger} value to serialize
+   * @param gen the {@link JsonGenerator} for writing JSON output
+   * @param provider the serializer provider
+   * @throws IOException if there is a problem with writing the output
+   */
   @Override
   public void serialize(BigInteger value, JsonGenerator gen, SerializerProvider provider) throws IOException {
     final OsonGenerator _gen = (OsonGenerator)gen;

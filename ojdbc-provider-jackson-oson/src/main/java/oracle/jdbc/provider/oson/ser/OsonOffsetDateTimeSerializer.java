@@ -46,12 +46,41 @@ import oracle.jdbc.provider.oson.OsonGenerator;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 
+/**
+ * Serializer class for handling {@link OffsetDateTime} objects using {@link OsonGenerator}.
+ * This class extends {@link StdSerializer} to enable the serialization of {@link OffsetDateTime} values into JSON format.
+ * <p>
+ * It overrides the {@link #serialize(OffsetDateTime, JsonGenerator, SerializerProvider)} method to provide
+ * a custom implementation that uses the Oson library's {@link OsonGenerator#writeOffsetDateTime(OffsetDateTime)} method
+ * for writing {@link OffsetDateTime} values to the JSON output.
+ * </p>
+ *
+ * @see StdSerializer
+ * @see OsonGenerator
+ * @see OffsetDateTime
+ */
 public class OsonOffsetDateTimeSerializer extends StdSerializer<OffsetDateTime> {
+
+  /**
+   * A singleton instance of the serializer.
+   */
   public static final OsonOffsetDateTimeSerializer INSTANCE = new OsonOffsetDateTimeSerializer();
+
+  /**
+   * Default constructor that initializes the serializer for the {@link OffsetDateTime} class.
+   */
   public OsonOffsetDateTimeSerializer() {
     super(OffsetDateTime.class);
   }
 
+  /**
+   * Serializes an {@link OffsetDateTime} object into JSON format using the {@link OsonGenerator}.
+   *
+   * @param value the {@link OffsetDateTime} value to serialize
+   * @param gen the {@link JsonGenerator} for writing JSON output
+   * @param provider the serializer provider
+   * @throws IOException if there is a problem with writing the output
+   */
   @Override
   public void serialize(OffsetDateTime value, JsonGenerator gen, SerializerProvider provider) throws IOException {
     final OsonGenerator _gen = (OsonGenerator)gen;

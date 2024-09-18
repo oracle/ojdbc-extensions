@@ -41,22 +41,50 @@ package oracle.jdbc.provider.oson;
 import oracle.jdbc.spi.JsonProvider;
 import oracle.jdbc.spi.OsonConverter;
 
-import java.io.IOException;
 import java.util.Map;
 
+/**
+ * Provider class for integrating Jackson with the Oson library.
+ * This class implements the {@link JsonProvider} interface to supply Jackson-based JSON conversion
+ * capabilities for Oson's serialization and deserialization processes.
+ * <p>
+ * It provides the implementation of {@link OsonConverter} that uses Jackson
+ * for handling JSON data. The provider ensures that the Jackson-based converter can be accessed
+ * and used within the Oson library.
+ * </p>
+ *
+ * @see JsonProvider
+ * @see OsonConverter
+ * @see JacksonOsonConverter
+ */
 public class JacksonOsonProvider implements JsonProvider{
 
+  /**
+   * The name of the Jackson JSON provider.
+   */
   public static final String PROVIDER_NAME = "jackson-json-provider";
-  
-  public JacksonOsonProvider () throws IOException {
-  }
 
+  /**
+   * Default constructor.
+   */
+  public JacksonOsonProvider () {}
+
+  /**
+   * Returns the name of this JSON provider.
+   *
+   * @return the name of the provider
+   */
   @Override
   public String getName() {
     return PROVIDER_NAME;
   }
 
-
+  /**
+   * Provides an instance of {@link OsonConverter} that uses Jackson for JSON processing.
+   *
+   * @param parameterValues a map of parameters and their values for the converter (can be null)
+   * @return an instance of {@link JacksonOsonConverter}
+   */
   @Override
   public OsonConverter getOsonConverter(Map<Parameter, CharSequence> parameterValues) {
     return new JacksonOsonConverter();

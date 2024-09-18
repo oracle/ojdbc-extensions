@@ -47,6 +47,24 @@ import oracle.jdbc.provider.oson.ser.*;
 import java.math.BigInteger;
 import java.time.*;
 
+
+/**
+ * Jackson module that registers serializers and deserializers for specific data types
+ * of the OponProvider library. This module extends {@link SimpleModule} and is used
+ * to integrate Oson's JSON processing capabilities with Jackson's serialization and deserialization.
+ * <p>
+ * The module registers the following Oson custom serializers and deserializers:
+ * <ul>
+ *   <li>{@link LocalDateTime} - {@link OsonLocalDateTimeDeserializer} and {@link OsonLocalDateTimeSerializer}</li>
+ *   <li>{@link OffsetDateTime} - {@link OsonOffsetDateTimeDeserializer} and {@link OsonOffsetDateTimeSerializer}</li>
+ *   <li>{@link Period} - {@link OsonPeriodDeserializer} and {@link OsonPeriodSerializer}</li>
+ *   <li>{@link Duration} - {@link OsonDurationDeserializer} and {@link OsonDurationSerializer}</li>
+ *   <li>{@link BigInteger} - {@link OsonBigIntegerDeserializer} and {@link OsonBigIntegerSerializer}</li>
+ *   <li>{@link Year} - {@link OsonYearDeserializer} and {@link OsonYearSerializer}</li>
+ *   <li>{@code byte[]} - {@link OsonByteDeserializer} and {@link OsonByteSerializer}</li>
+ * </ul>
+ * </p>
+ */
 public class OsonModule extends SimpleModule {
   public final static Version VERSION = VersionUtil.parseVersion(
       "1.0.1", "com.oracle.database.jdbc", "ojdbc-provider-jackson-oson"

@@ -48,25 +48,69 @@ import oracle.jdbc.provider.oson.OsonParser;
 import java.io.IOException;
 import java.math.BigInteger;
 
+/**
+ * Deserializer class for handling BigInteger objects using {@link OsonParser}.
+ * This class extends {@link StdScalarDeserializer} to enable the deserialization of BigInteger
+ * values from JSON data.
+ * <p>
+ * It overrides the {@link #deserialize(JsonParser, DeserializationContext)} method to provide
+ * a custom implementation that uses the Oson library's {@link OsonParser#getBigIntegerValue()} method
+ * for extracting BigInteger values from the JSON content.
+ * </p>
+ *
+ * @see StdScalarDeserializer
+ * @see OsonParser
+ * @see BigInteger
+ */
 public class OsonBigIntegerDeserializer extends StdScalarDeserializer<BigInteger> {
+
+  /**
+   * A singleton instance of the deserializer.
+   */
   public static final OsonBigIntegerDeserializer INSTANCE = new OsonBigIntegerDeserializer();
 
+  /**
+   * Default constructor that initializes the deserializer for the {@link BigInteger} class.
+   */
   protected OsonBigIntegerDeserializer() {
     super(BigInteger.class);
   }
 
+  /**
+   * Constructor that allows specifying a class type for deserialization.
+   *
+   * @param vc the class type to use for deserialization
+   */
   protected OsonBigIntegerDeserializer(Class<?> vc) {
     super(vc);
   }
 
+  /**
+   * Constructor that allows specifying a {@link JavaType} for deserialization.
+   *
+   * @param valueType the Java type to use for deserialization
+   */
   protected OsonBigIntegerDeserializer(JavaType valueType) {
     super(valueType);
   }
 
+  /**
+   * Copy constructor to create a new deserializer based on an existing {@link StdScalarDeserializer}.
+   *
+   * @param src the source deserializer to copy from
+   */
   protected OsonBigIntegerDeserializer(StdScalarDeserializer<?> src) {
     super(src);
   }
 
+  /**
+   * Deserializes a BigInteger from the JSON input using the {@link OsonParser}.
+   *
+   * @param p the {@link JsonParser} for reading the JSON content
+   * @param ctxt the deserialization context
+   * @return the deserialized {@link BigInteger} value
+   * @throws IOException if there is a problem with reading the input
+   */
   @Override
   public BigInteger deserialize(JsonParser p, DeserializationContext ctxt) throws IOException{
     final OsonParser _parser = (OsonParser)p;

@@ -46,24 +46,69 @@ import oracle.jdbc.provider.oson.OsonParser;
 import java.io.IOException;
 import java.time.Year;
 
+/**
+ * Deserializer class for handling {@link Year} objects using {@link OsonParser}.
+ * This class extends {@link StdScalarDeserializer} to enable the deserialization of {@link Year} values from JSON data.
+ * <p>
+ * It overrides the {@link #deserialize(JsonParser, DeserializationContext)} method to provide
+ * a custom implementation that uses the Oson library's {@link OsonParser#getIntValue()} method
+ * to extract the year as an integer and convert it to a {@link Year} object.
+ * </p>
+ *
+ * @see StdScalarDeserializer
+ * @see OsonParser
+ * @see Year
+ */
 public class OsonYearDeserializer extends StdScalarDeserializer<Year> {
+
+  /**
+   * A singleton instance of the deserializer.
+   */
   public static final OsonYearDeserializer INSTANCE = new OsonYearDeserializer();
 
+  /**
+   * Default constructor that initializes the deserializer for the {@link Year} class.
+   */
   protected OsonYearDeserializer() {
     super(Year.class);
   }
+
+  /**
+   * Constructor that allows specifying a class type for deserialization.
+   *
+   * @param vc the class type to use for deserialization
+   */
   protected OsonYearDeserializer(Class<?> vc) {
     super(vc);
   }
 
+  /**
+   * Constructor that allows specifying a {@link JavaType} for deserialization.
+   *
+   * @param valueType the Java type to use for deserialization
+   */
   protected OsonYearDeserializer(JavaType valueType) {
     super(valueType);
   }
 
+  /**
+   * Copy constructor to create a new deserializer based on an existing {@link StdScalarDeserializer}.
+   *
+   * @param src the source deserializer to copy from
+   */
   protected OsonYearDeserializer(StdScalarDeserializer<?> src) {
     super(src);
   }
 
+  /**
+   * Deserializes a {@link Year} object from the JSON input using the {@link OsonParser}.
+   * The year is extracted as an integer and converted into a {@link Year} object.
+   *
+   * @param p the {@link JsonParser} for reading the JSON content
+   * @param ctxt the deserialization context
+   * @return the deserialized {@link Year} object
+   * @throws IOException if there is a problem with reading the input
+   */
   @Override
   public Year deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
     final OsonParser _parser = (OsonParser)p;

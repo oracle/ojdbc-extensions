@@ -45,13 +45,42 @@ import oracle.jdbc.provider.oson.OsonGenerator;
 import java.io.IOException;
 import java.time.Year;
 
+/**
+ * Serializer class for handling {@link Year} objects using {@link OsonGenerator}.
+ * This class extends {@link StdSerializer} to enable the serialization of {@link Year} values into JSON format.
+ * <p>
+ * It overrides the {@link #serialize(Year, JsonGenerator, SerializerProvider)} method to provide
+ * a custom implementation that uses the Oson library's {@link OsonGenerator#writeNumber(int)} method
+ * for writing the year value as an integer in the JSON output.
+ * </p>
+ *
+ * @see StdSerializer
+ * @see OsonGenerator
+ * @see Year
+ */
 public class OsonYearSerializer extends StdSerializer<Year> {
 
+  /**
+   * A singleton instance of the serializer.
+   */
   public static final OsonYearSerializer INSTANCE = new OsonYearSerializer();
+
+  /**
+   * Default constructor that initializes the serializer for the {@link Year} class.
+   */
   public OsonYearSerializer() {
     super(Year.class);
   }
 
+  /**
+   * Serializes a {@link Year} object into JSON format using the {@link OsonGenerator}.
+   * The year is written as an integer value.
+   *
+   * @param value the {@link Year} value to serialize
+   * @param gen the {@link JsonGenerator} for writing JSON output
+   * @param provider the serializer provider
+   * @throws IOException if there is a problem with writing the output
+   */
   @Override
   public void serialize(Year value, JsonGenerator gen, SerializerProvider provider) throws IOException {
     final OsonGenerator _gen = (OsonGenerator)gen;

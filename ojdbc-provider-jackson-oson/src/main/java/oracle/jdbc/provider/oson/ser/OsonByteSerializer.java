@@ -44,13 +44,41 @@ import oracle.jdbc.provider.oson.OsonGenerator;
 
 import java.io.IOException;
 
+/**
+ * Serializer class for handling byte array ({@code byte[]}) objects using {@link OsonGenerator}.
+ * This class extends {@link StdSerializer} to enable the serialization of byte arrays into JSON format.
+ * <p>
+ * It overrides the {@link #serialize(byte[], JsonGenerator, SerializerProvider)} method to provide
+ * a custom implementation that uses the Oson library's {@link OsonGenerator#writeBinary(byte[])} method
+ * for writing byte arrays as binary data in the JSON output.
+ * </p>
+ *
+ * @see StdSerializer
+ * @see OsonGenerator
+ * @see byte[]
+ */
 public class OsonByteSerializer extends StdSerializer<byte[]> {
 
+  /**
+   * A singleton instance of the serializer.
+   */
   public static final OsonByteSerializer INSTANCE = new OsonByteSerializer();
+
+  /**
+   * Default constructor that initializes the serializer for the byte array ({@code byte[]}) class.
+   */
   public OsonByteSerializer() {
     super(byte[].class);
   }
 
+  /**
+   * Serializes a byte array ({@code byte[]}) into JSON format using the {@link OsonGenerator}.
+   *
+   * @param value the byte array to serialize
+   * @param gen the {@link JsonGenerator} for writing JSON output
+   * @param provider the serializer provider
+   * @throws IOException if there is a problem with writing the output
+   */
   @Override
   public void serialize(byte[] value, JsonGenerator gen, SerializerProvider provider) throws IOException {
     final OsonGenerator _gen = (OsonGenerator)gen;

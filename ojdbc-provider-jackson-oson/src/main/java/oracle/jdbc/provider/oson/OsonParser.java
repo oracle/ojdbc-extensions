@@ -56,14 +56,26 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * OsonParser is a custom implementation of Jackson's ParserBase class that
+ * translates events from Oracle's OracleJsonParser into JsonToken objects
+ * compatible with the Jackson library. It used for integration
+ * of Oracle's JSON parsing with Jackson's object mapping system.
+ */
 public class OsonParser extends ParserBase {
-  
+
+  /** Logger for debugging purposes */
   private static final boolean DEBUG = false;
+
+  /** Logger for debugging purposes */
   private Logger logger = Logger.getLogger("OsonLogger");
 
+  /** The OracleJsonParser instance to parse Oracle JSON data */
   private OracleJsonParser parser = null;
 
+  /** Flag to check if the parser has been closed */
   boolean closed;
+
   private String fieldName;
 
   private OracleJsonParser.Event currentEvent;
@@ -73,6 +85,9 @@ public class OsonParser extends ParserBase {
 
   private static final Map<OracleJsonParser.Event, JsonToken> OSON_EVENT_TO_JSON_TOKEN = new HashMap<>();
 
+  /**
+   * A static map to map OracleJsonParser events to Jackson's JsonToken values.
+   */
   static {
     OSON_EVENT_TO_JSON_TOKEN.put(OracleJsonParser.Event.START_ARRAY, JsonToken.START_ARRAY);
     OSON_EVENT_TO_JSON_TOKEN.put(OracleJsonParser.Event.END_ARRAY, JsonToken.END_ARRAY);
@@ -93,18 +108,35 @@ public class OsonParser extends ParserBase {
     OSON_EVENT_TO_JSON_TOKEN.put(OracleJsonParser.Event.VALUE_TIMESTAMP, JsonToken.VALUE_STRING);
     OSON_EVENT_TO_JSON_TOKEN.put(OracleJsonParser.Event.VALUE_TIMESTAMPTZ, JsonToken.VALUE_STRING);
   }
-  
+
+  /**
+   * Constructor for OsonParser.
+   *
+   * @param ctxt The IOContext object.
+   * @param features The parser features.
+   * @param parser The OracleJsonParser instance.
+   */
   protected OsonParser(IOContext ctxt, int features, OracleJsonParser parser) {
     super(ctxt, features);
     this.parser = parser;
   }
 
+  /**
+   * Closes the underlying OracleJsonParser.
+   *
+   * @throws IOException if an I/O error occurs.
+   */
   @Override
   protected void _closeInput() throws IOException {
     parser.close();
   }
 
-  
+  /**
+   * Returns the next token from the OracleJsonParser.
+   *
+   * @return The next JsonToken.
+   * @throws IOException if an I/O error occurs.
+   */
   @Override
   public JsonToken nextToken() throws IOException {
     if(DEBUG) logger.log(Level.FINEST, "nextToken");
@@ -185,16 +217,31 @@ public class OsonParser extends ParserBase {
     return null;
   }
 
+  /**
+   * Returns the current object codec.
+   *
+   * @return The ObjectCodec instance.
+   */
   @Override
   public ObjectCodec getCodec() {
     return _codec;
   }
 
+  /**
+   * Sets the object codec.
+   *
+   * @param oc The ObjectCodec instance to be set.
+   */
   @Override
   public void setCodec(ObjectCodec oc) {
     _codec = oc;
   }
 
+  /**
+   * Closes the parser.
+   *
+   * @throws IOException if an I/O error occurs.
+   */
   @Override
   public void close() throws IOException {
     parser.close();
@@ -207,6 +254,12 @@ public class OsonParser extends ParserBase {
     return null;
   }
 
+  /**
+   * Skips the children nodes in the current JSON structure.
+   *
+   * @return The current JsonParser instance.
+   * @throws IOException if an I/O error occurs.
+   */
   @Override
   public JsonParser skipChildren() throws IOException {
     if(DEBUG) logger.log(Level.FINEST, "skipChildren");
@@ -222,15 +275,29 @@ public class OsonParser extends ParserBase {
     return this;
   }
 
+  /**
+   * Checks if the current token is the expected start of an object.
+   *
+   * @return true if the current token is a start object token, false otherwise.
+   */
   public boolean isExpectedStartObjectToken() {
     return currentEvent == OracleJsonParser.Event.START_OBJECT;
   }
 
+  /**
+   * Checks if the current token is the expected start of an array.
+   *
+   * @return true if the current token is a start array token, false otherwise.
+   */
   public boolean isExpectedStartArrayToken() {
     return currentEvent == OracleJsonParser.Event.START_ARRAY;
   }
 
-
+  /**
+   * Returns the current JsonToken.
+   *
+   * @return The current JsonToken.
+   */
   @Override
   public JsonToken getCurrentToken() {
     if(DEBUG) logger.log(Level.FINEST, "getCurrentToken");
@@ -307,6 +374,9 @@ public class OsonParser extends ParserBase {
 
   }
 
+  /**
+   * Get the current Token ID.
+   */
   @Override
   public int getCurrentTokenId() {
     if(DEBUG) logger.log(Level.FINEST, "getCurrentTokenId");
@@ -319,7 +389,10 @@ public class OsonParser extends ParserBase {
 
     return -1;
   }
-  
+
+  /**
+   * Get the current Token ID.
+   */
   @Override
   public int currentTokenId() {
     if(DEBUG) logger.log(Level.FINEST, "getCurrentTokenId");
@@ -333,12 +406,18 @@ public class OsonParser extends ParserBase {
     return JsonTokenId.ID_NO_TOKEN;
   }
 
+  /**
+   * Get the current Token ID.
+   */
   @Override
   public boolean hasCurrentToken() {
     if(DEBUG) logger.log(Level.FINEST, "hasCurrentToken");
     return currentEvent != null;
   }
 
+  /**
+   * Checks if the provided id matches the ID FIELD.
+   */
   @Override
   public boolean hasTokenId(final int id) {
     if(DEBUG) logger.log(Level.FINEST, "hasTokenId( " + id + " )");
@@ -349,6 +428,12 @@ public class OsonParser extends ParserBase {
     return false;
   }
 
+  /**
+   * Checks if the current token matches the provided JsonToken.
+   *
+   * @param jsonToken The JsonToken to check against.
+   * @return true if the current token matches the provided JsonToken, false otherwise.
+   */
   @Override
   public boolean hasToken(JsonToken jsonToken) {
     if(DEBUG) logger.log(Level.FINEST, "hasToken( " + jsonToken + " )");
@@ -363,12 +448,18 @@ public class OsonParser extends ParserBase {
     return false;
   }
 
+  /**
+   * Clears the current token.
+   */
   @Override
   public void clearCurrentToken() {
     lastClearedEvent = currentEvent;
     currentEvent = null;
   }
 
+  /**
+   * Get the last cleared token.
+   */
   @Override
   public JsonToken getLastClearedToken() {
     if(DEBUG) logger.log(Level.FINEST, "getLastClearedToken");
@@ -379,22 +470,37 @@ public class OsonParser extends ParserBase {
     return OSON_EVENT_TO_JSON_TOKEN.get(lastClearedEvent);
   }
 
+
+  /**
+   * Overrides the current field name with the provided string.
+   *
+   * @param s The new field name to override the current one.
+   */
   @Override
   public void overrideCurrentName(String s) {
     this.fieldName = s;
   }
 
+  /**
+   * Get the current filed name.
+   */
   @Override
   public String getCurrentName() throws IOException {
     return fieldName;
   }
 
+  /**
+   * Get the text from the parser.
+   */
   @Override
   public String getText() throws IOException {
     if(DEBUG) logger.log(Level.FINEST, "getText");
     return parser.getString();
   }
 
+  /**
+   * Get the text as character array.
+   */
   //discuss
   @Override
   public char[] getTextCharacters() throws IOException {
@@ -402,6 +508,9 @@ public class OsonParser extends ParserBase {
     return parser.getString().toCharArray();
   }
 
+  /**
+   * Get the text length.
+   */
   //discuss
   @Override
   public int getTextLength() throws IOException {
@@ -409,6 +518,9 @@ public class OsonParser extends ParserBase {
     return parser.getString().length();
   }
 
+  /**
+   * Get the text offset.
+   */
   // discuss
   @Override
   public int getTextOffset() throws IOException {
@@ -416,12 +528,18 @@ public class OsonParser extends ParserBase {
     return 0;
   }
 
+  /**
+   * Get the Bigdecimal  value.
+   */
   @Override
   public Number getNumberValue() throws IOException {
     if(DEBUG) logger.log(Level.FINEST, "getNumberValue");
     return parser.getBigDecimal();
   }
 
+  /**
+   * Get the type of Number.
+   */
   @Override
   public NumberType getNumberType() throws IOException {
     if(DEBUG) logger.log(Level.FINEST, "getNumberType "+parser.isIntegralNumber());
@@ -435,38 +553,59 @@ public class OsonParser extends ParserBase {
     return null;
   }
 
+  /**
+   * Get the Int Value.
+   */
   @Override
   public int getIntValue() throws IOException {
     if(DEBUG) logger.log(Level.FINEST, "getIntValue");
     return parser.getInt();
   }
 
+  /**
+   * Get the Long Value.
+   */
   @Override
   public long getLongValue() throws IOException {
     if(DEBUG) logger.log(Level.FINEST, "getLongValue");
     return parser.getLong();
   }
 
+  /**
+   * Get the BigInteger Value.
+   */
   @Override
   public BigInteger getBigIntegerValue() throws IOException {
     return parser.getBigInteger();
   }
 
+  /**
+   * Get the Float Value.
+   */
   @Override
   public float getFloatValue() throws IOException {
     return parser.getFloat();
   }
 
+  /**
+   * Get the Double Value.
+   */
   @Override
   public double getDoubleValue() throws IOException {
     return parser.getDouble();
   }
 
+  /**
+   * Get the Decimal Value.
+   */
   @Override
   public BigDecimal getDecimalValue() throws IOException {
     return parser.getBigDecimal();
   }
 
+  /**
+   * Get the Binary bytes.
+   */
   //discuss
   @Override
   public byte[] getBinaryValue(Base64Variant base64Variant) throws IOException {
@@ -474,6 +613,9 @@ public class OsonParser extends ParserBase {
     return parser.getBytes();
   }
 
+  /**
+   * Get the String Value.
+   */
   @Override
   public String getValueAsString(String s) throws IOException {
     if(DEBUG) logger.log(Level.FINEST, "getValueAsString");
@@ -485,6 +627,11 @@ public class OsonParser extends ParserBase {
     }
   }
 
+  /**
+   * Reads a LocalDateTime value from the OracleJsonParser.
+   *
+   * @return The LocalDateTime value parsed.
+   */
   public LocalDateTime readLocalDateTime() {
     if(DEBUG) logger.log(Level.FINEST, "readLocalDateTime " + currentEvent);
     if(currentEvent == OracleJsonParser.Event.VALUE_STRING) {
@@ -493,6 +640,11 @@ public class OsonParser extends ParserBase {
       return parser.getLocalDateTime();
     }
   }
+  /**
+   * Reads an OffsetDateTime value from the OracleJsonParser.
+   *
+   * @return The OffsetDateTime value parsed.
+   */
 
   public OffsetDateTime readOffsetDateTime() {
     if(DEBUG) logger.log(Level.FINEST, "readOffsetDateTime " + currentEvent);
@@ -502,7 +654,12 @@ public class OsonParser extends ParserBase {
       return parser.getOffsetDateTime();
     }
   }
-  
+
+  /**
+   * Reads a Duration value from the OracleJsonParser.
+   *
+   * @return The Duration value parsed.
+   */
   public Duration readDuration() {
     if(DEBUG) logger.log(Level.FINEST, "readDuration " + currentEvent);
     if(currentEvent == OracleJsonParser.Event.VALUE_STRING) {
@@ -512,6 +669,11 @@ public class OsonParser extends ParserBase {
     }
   }
 
+  /**
+   * Reads a Period value from the OracleJsonParser.
+   *
+   * @return The Period value parsed.
+   */
   public Period readPeriod() {
     if(DEBUG) logger.log(Level.FINEST,"readPeriod " + currentEvent);
     if(currentEvent == OracleJsonParser.Event.VALUE_STRING) {

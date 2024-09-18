@@ -47,24 +47,67 @@ import oracle.jdbc.provider.oson.OsonParser;
 import java.io.IOException;
 import java.time.Year;
 
+/**
+ * Deserializer class for handling byte arrays using {@link OsonParser}.
+ * This class extends {@link StdScalarDeserializer} to enable the deserialization of byte arrays from JSON data.
+ * <p>
+ * It overrides the {@link #deserialize(JsonParser, DeserializationContext)} method to provide
+ * a custom implementation that uses the Oson library's {@link OsonParser#getBinaryValue()} method
+ * for extracting binary (byte array) values from the JSON content.
+ * </p>
+ *
+ * @see StdScalarDeserializer
+ * @see OsonParser
+ * @see byte[]
+ */
 public class OsonByteDeserializer extends StdScalarDeserializer<byte[]> {
+   /**
+    * A singleton instance of the deserializer.
+    */
    public static final OsonByteDeserializer INSTANCE = new OsonByteDeserializer();
 
+   /**
+    * Default constructor that initializes the deserializer for the {@link byte[]} class.
+    */
    protected OsonByteDeserializer() {
       super(Year.class);
    }
+
+   /**
+    * Constructor that allows specifying a class type for deserialization.
+    *
+    * @param vc the class type to use for deserialization
+    */
    protected OsonByteDeserializer(Class<?> vc) {
       super(vc);
    }
 
+   /**
+    * Constructor that allows specifying a {@link JavaType} for deserialization.
+    *
+    * @param valueType the Java type to use for deserialization
+    */
    protected OsonByteDeserializer(JavaType valueType) {
       super(valueType);
    }
 
+   /**
+    * Copy constructor to create a new deserializer based on an existing {@link StdScalarDeserializer}.
+    *
+    * @param src the source deserializer to copy from
+    */
    protected OsonByteDeserializer(StdScalarDeserializer<?> src) {
       super(src);
    }
 
+   /**
+    * Deserializes a byte array from the JSON input using the{@link OsonParser}.
+    *
+    * @param p the {@link JsonParser} for reading the JSON content
+    * @param ctxt the deserialization context
+    * @return the deserialized byte array
+    * @throws IOException if there is a problem with reading the input
+    */
    @Override
    public byte[] deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
       final OsonParser _parser = (OsonParser)p;

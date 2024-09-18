@@ -46,24 +46,70 @@ import oracle.jdbc.provider.oson.OsonParser;
 import java.io.IOException;
 import java.time.Duration;
 
+
+/**
+ * Deserializer class for handling {@link Duration} objects using {@link OsonParser}.
+ * This class extends {@link StdScalarDeserializer} to enable the deserialization of {@link Duration} values from JSON data.
+ * <p>
+ * It overrides the {@link #deserialize(JsonParser, DeserializationContext)} method to provide
+ * a custom implementation that uses the Oson library's {@link OsonParser#readDuration()} method
+ * for extracting {@link Duration} values from the JSON content.
+ * </p>
+ *
+ * @see StdScalarDeserializer
+ * @see OsonParser
+ * @see Duration
+ */
 public class OsonDurationDeserializer extends StdScalarDeserializer<Duration> {
+
+  /**
+   * A singleton instance of the deserializer.
+   */
+
   public static final OsonDurationDeserializer INSTANCE = new OsonDurationDeserializer();
 
+  /**
+   * Default constructor that initializes the deserializer for the {@link Duration} class.
+   */
   protected OsonDurationDeserializer() {
     super(Duration.class);
   }
+
+  /**
+   * Constructor that allows specifying a class type for deserialization.
+   *
+   * @param vc the class type to use for deserialization
+   */
   protected OsonDurationDeserializer(Class<?> vc) {
     super(vc);
   }
 
+  /**
+   * Constructor that allows specifying a {@link JavaType} for deserialization.
+   *
+   * @param valueType the Java type to use for deserialization
+   */
   protected OsonDurationDeserializer(JavaType valueType) {
     super(valueType);
   }
 
+  /**
+   * Copy constructor to create a new deserializer based on an existing {@link StdScalarDeserializer}.
+   *
+   * @param src the source deserializer to copy from
+   */
   protected OsonDurationDeserializer(StdScalarDeserializer<?> src) {
     super(src);
   }
 
+  /**
+   * Deserializes a {@link Duration} object from the JSON input using the {@link OsonParser}.
+   *
+   * @param p the {@link JsonParser} for reading the JSON content
+   * @param ctxt the deserialization context
+   * @return the deserialized {@link Duration} object
+   * @throws IOException if there is a problem with reading the input
+   */
   @Override
   public Duration deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
     final OsonParser _parser = (OsonParser)p;

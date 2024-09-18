@@ -47,12 +47,41 @@ import oracle.jdbc.provider.oson.OsonGenerator;
 import java.io.IOException;
 import java.time.Period;
 
+/**
+ * Serializer class for handling {@link Period} objects using {@link OsonGenerator}.
+ * This class extends {@link StdSerializer} to enable the serialization of {@link Period} values into JSON format.
+ * <p>
+ * It overrides the {@link #serialize(Period, JsonGenerator, SerializerProvider)} method to provide
+ * a custom implementation that uses the Oson library's {@link OsonGenerator#writePeriod(Period)} method
+ * for writing {@link Period} values to the JSON output.
+ * </p>
+ *
+ * @see StdSerializer
+ * @see OsonGenerator
+ * @see Period
+ */
 public class OsonPeriodSerializer extends StdSerializer<Period> {
+
+  /**
+   * A singleton instance of the serializer.
+   */
   public static final OsonPeriodSerializer INSTANCE = new OsonPeriodSerializer();
+
+  /**
+   * Default constructor that initializes the serializer for the {@link Period} class.
+   */
   public OsonPeriodSerializer() {
     super(Period.class);
   }
 
+  /**
+   * Serializes a {@link Period} object into JSON format using the {@link OsonGenerator}.
+   *
+   * @param value the {@link Period} value to serialize
+   * @param gen the {@link JsonGenerator} for writing JSON output
+   * @param provider the serializer provider
+   * @throws IOException if there is a problem with writing the output
+   */
   @Override
   public void serialize(Period value, JsonGenerator gen, SerializerProvider provider) throws IOException {
     final OsonGenerator _gen = (OsonGenerator)gen;

@@ -48,6 +48,26 @@ import java.io.IOException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * Converter class that facilitates the integration of Jackson and Oson library
+ * This class implements the {@link OsonConverter} interface and uses Jackson's {@link ObjectMapper}
+ * for serializing and deserializing objects in the Oson format.
+ * <p>
+ * The class provides methods to serialize objects into Oson format and deserialize Oson format
+ * data into Java objects. It uses {@link OsonFactory} to create Oson-compatible generators and parsers.
+ * </p>
+ * <p>
+ * This class is thread-safe for concurrent serialization and deserialization operations due to
+ * the use of a {@link Lock} for synchronizing access to the {@link ObjectMapper} instance.
+ * </p>
+ *
+ * @see OsonConverter
+ * @see ObjectMapper
+ * @see OsonFactory
+ * @see OracleJsonGenerator
+ * @see OracleJsonParser
+ * @see JavaType
+ */
 public class JacksonOsonConverter implements OsonConverter{
 
   private static final OsonFactory osonFactory = new OsonFactory();
@@ -58,9 +78,19 @@ public class JacksonOsonConverter implements OsonConverter{
     om.findAndRegisterModules();
     om.registerModule(new OsonModule());
   }
-  
+
+  /**
+   * Default constructor.
+   */
   public JacksonOsonConverter(){}
 
+  /**
+   * Serializes an object into Oson format using the provided {@link OracleJsonGenerator}.
+   *
+   * @param oGen the {@link OracleJsonGenerator} for writing Oson output
+   * @param object the object to serialize
+   * @throws IllegalStateException if serialization fails
+   */
   @Override
   public void serialize(OracleJsonGenerator oGen, Object object) throws IllegalStateException {
     try {
@@ -75,6 +105,14 @@ public class JacksonOsonConverter implements OsonConverter{
     }
   }
 
+  /**
+   * Deserializes an object from Oson format using the provided {@link OracleJsonParser}.
+   *
+   * @param oParser the {@link OracleJsonParser} for reading Oson input
+   * @param type the type of the object to deserialize
+   * @return the deserialized object
+   * @throws IllegalStateException if deserialization fails
+   */
   @Override
   public Object deserialize(OracleJsonParser oParser, Class<?> type) throws IllegalStateException {
     if(!oParser.hasNext()) return null;
@@ -88,7 +126,14 @@ public class JacksonOsonConverter implements OsonConverter{
       lock.unlock();
     }
   }
-  
+
+  /**
+   * Converts a value from one type to another using Jackson's {@link ObjectMapper}.
+   *
+   * @param fromValue the value to convert
+   * @param javaType the target type
+   * @return the converted value
+   */
   public static Object convertValue(Object fromValue, JavaType javaType) {
     return om.convertValue(fromValue, javaType);
   }

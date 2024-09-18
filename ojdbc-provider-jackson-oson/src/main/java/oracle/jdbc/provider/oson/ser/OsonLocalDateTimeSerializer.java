@@ -46,12 +46,41 @@ import oracle.jdbc.provider.oson.OsonGenerator;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
+/**
+ * Serializer class for handling {@link LocalDateTime} objects using {@link OsonGenerator}.
+ * This class extends {@link StdSerializer} to enable the serialization of {@link LocalDateTime} values into JSON format.
+ * <p>
+ * It overrides the {@link #serialize(LocalDateTime, JsonGenerator, SerializerProvider)} method to provide
+ * a custom implementation that uses the Oson library's {@link OsonGenerator#writeLocalDateTime(LocalDateTime)} method
+ * for writing {@link LocalDateTime} values to the JSON output.
+ * </p>
+ *
+ * @see StdSerializer
+ * @see OsonGenerator
+ * @see LocalDateTime
+ */
 public class OsonLocalDateTimeSerializer extends StdSerializer<LocalDateTime> {
+
+  /**
+   * A singleton instance of the serializer.
+   */
   public static final OsonLocalDateTimeSerializer INSTANCE = new OsonLocalDateTimeSerializer();
+
+  /**
+   * Default constructor that initializes the serializer for the {@link LocalDateTime} class.
+   */
   public OsonLocalDateTimeSerializer() {
     super(LocalDateTime.class);
   }
 
+  /**
+   * Serializes a {@link LocalDateTime} object into JSON format using the {@link OsonGenerator}.
+   *
+   * @param value the {@link LocalDateTime} value to serialize
+   * @param gen the {@link JsonGenerator} for writing JSON output
+   * @param provider the serializer provider
+   * @throws IOException if there is a problem with writing the output
+   */
   @Override
   public void serialize(LocalDateTime value, JsonGenerator gen, SerializerProvider provider) throws IOException {
     final OsonGenerator _gen = (OsonGenerator)gen;
