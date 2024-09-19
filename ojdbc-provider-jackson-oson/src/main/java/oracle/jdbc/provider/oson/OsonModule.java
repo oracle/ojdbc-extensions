@@ -50,7 +50,7 @@ import java.time.*;
 
 /**
  * Jackson module that registers serializers and deserializers for specific data types
- * of the OponProvider library. This module extends {@link SimpleModule} and is used
+ * of the OsonProvider library. This module extends {@link SimpleModule} and is used
  * to integrate Oson's JSON processing capabilities with Jackson's serialization and deserialization.
  * <p>
  * The module registers the following Oson custom serializers and deserializers:

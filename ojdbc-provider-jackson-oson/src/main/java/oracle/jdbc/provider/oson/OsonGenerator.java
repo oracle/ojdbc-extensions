@@ -71,9 +71,7 @@ public class OsonGenerator extends GeneratorBase {
   private OutputStream out = null;
   private OracleJsonGenerator gen = null;
 
-  int hierarchyLevel;
-
-  boolean closed;
+  private boolean closed;
 
   /**
    * Constructs an OsonGenerator with the specified features, codec, OracleJsonGenerator,
