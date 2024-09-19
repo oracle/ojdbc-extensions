@@ -74,33 +74,6 @@ public class OsonYearDeserializer extends StdScalarDeserializer<Year> {
   }
 
   /**
-   * Constructor that allows specifying a class type for deserialization.
-   *
-   * @param vc the class type to use for deserialization
-   */
-  protected OsonYearDeserializer(Class<?> vc) {
-    super(vc);
-  }
-
-  /**
-   * Constructor that allows specifying a {@link JavaType} for deserialization.
-   *
-   * @param valueType the Java type to use for deserialization
-   */
-  protected OsonYearDeserializer(JavaType valueType) {
-    super(valueType);
-  }
-
-  /**
-   * Copy constructor to create a new deserializer based on an existing {@link StdScalarDeserializer}.
-   *
-   * @param src the source deserializer to copy from
-   */
-  protected OsonYearDeserializer(StdScalarDeserializer<?> src) {
-    super(src);
-  }
-
-  /**
    * Deserializes a {@link Year} object from the JSON input using the {@link OsonParser}.
    * The year is extracted as an integer and converted into a {@link Year} object.
    *

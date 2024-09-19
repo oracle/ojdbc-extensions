@@ -77,33 +77,6 @@ public class OsonBigIntegerDeserializer extends StdScalarDeserializer<BigInteger
   }
 
   /**
-   * Constructor that allows specifying a class type for deserialization.
-   *
-   * @param vc the class type to use for deserialization
-   */
-  protected OsonBigIntegerDeserializer(Class<?> vc) {
-    super(vc);
-  }
-
-  /**
-   * Constructor that allows specifying a {@link JavaType} for deserialization.
-   *
-   * @param valueType the Java type to use for deserialization
-   */
-  protected OsonBigIntegerDeserializer(JavaType valueType) {
-    super(valueType);
-  }
-
-  /**
-   * Copy constructor to create a new deserializer based on an existing {@link StdScalarDeserializer}.
-   *
-   * @param src the source deserializer to copy from
-   */
-  protected OsonBigIntegerDeserializer(StdScalarDeserializer<?> src) {
-    super(src);
-  }
-
-  /**
    * Deserializes a BigInteger from the JSON input using the {@link OsonParser}.
    *
    * @param p the {@link JsonParser} for reading the JSON content

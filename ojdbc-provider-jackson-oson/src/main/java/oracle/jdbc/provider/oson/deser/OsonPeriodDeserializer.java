@@ -75,33 +75,6 @@ public class OsonPeriodDeserializer extends StdScalarDeserializer<Period> {
   }
 
   /**
-   * Constructor that allows specifying a class type for deserialization.
-   *
-   * @param vc the class type to use for deserialization
-   */
-  protected OsonPeriodDeserializer(Class<?> vc) {
-    super(vc);
-  }
-
-  /**
-   * Constructor that allows specifying a {@link JavaType} for deserialization.
-   *
-   * @param valueType the Java type to use for deserialization
-   */
-  protected OsonPeriodDeserializer(JavaType valueType) {
-    super(valueType);
-  }
-
-  /**
-   * Copy constructor to create a new deserializer based on an existing {@link StdScalarDeserializer}.
-   *
-   * @param src the source deserializer to copy from
-   */
-  protected OsonPeriodDeserializer(StdScalarDeserializer<?> src) {
-    super(src);
-  }
-
-  /**
    * Deserializes a {@link Period} object from the JSON input using the {@link OsonParser}.
    *
    * @param p the {@link JsonParser} for reading the JSON content

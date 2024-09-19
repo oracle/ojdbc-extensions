@@ -70,7 +70,7 @@ public class ListTypeTest {
         ods.setURL(url);
         ods.setUser(userName);
         ods.setPassword(password);
-
+       conn = ods.getConnection();
       //setup db tables
       Statement stmt = conn.createStatement();
       stmt.execute("drop table if exists emp_json");
@@ -112,10 +112,10 @@ public class ListTypeTest {
       JavaType type = TypeFactory.defaultInstance().constructParametricType(List.class, Phone.class); 
       List<Phone> phones = (List<Phone>) JacksonOsonConverter.convertValue(
           rs.getObject(2, JsonNode.class), type);
-      
-      for(int i=0; i<phones.size(); i++) {
-        System.out.println(phones.get(i).toString());
-      }
+
+        for (Phone phone : phones) {
+            System.out.println(phone.toString());
+        }
     }
     rs.close();
     stmt.close();

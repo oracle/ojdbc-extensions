@@ -45,10 +45,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import oracle.jdbc.OracleType;
 import oracle.jdbc.datasource.impl.OracleDataSource;
 import oracle.jdbc.provider.TestProperties;
-import oracle.jdbc.provider.oson.OsonFactory;
-import oracle.jdbc.provider.oson.OsonGenerator;
-import oracle.jdbc.provider.oson.OsonParser;
-import oracle.jdbc.provider.oson.OsonTestProperty;
+import oracle.jdbc.provider.oson.*;
 import oracle.jdbc.provider.oson.model.AllOracleTypes;
 import oracle.sql.json.OracleJsonDatum;
 import oracle.sql.json.OracleJsonObject;
@@ -101,6 +98,7 @@ public class AllTypesTest {
       String password = TestProperties.getOrAbort(OsonTestProperty.JACKSON_OSON_PASSWORD);
 
       om.findAndRegisterModules();
+      om.registerModule(new OsonModule());
       osonGen = (OsonGenerator) osonFactory.createGenerator(out);
       
       OracleDataSource ods = new OracleDataSource();

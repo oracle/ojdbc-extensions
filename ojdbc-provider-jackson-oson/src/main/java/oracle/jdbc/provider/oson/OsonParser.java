@@ -68,20 +68,18 @@ public class OsonParser extends ParserBase {
   private static final boolean DEBUG = false;
 
   /** Logger for debugging purposes */
-  private Logger logger = Logger.getLogger("OsonLogger");
+  private final Logger logger = Logger.getLogger("OsonLogger");
 
   /** The OracleJsonParser instance to parse Oracle JSON data */
-  private OracleJsonParser parser = null;
+  private final OracleJsonParser parser;
 
-  /** Flag to check if the parser has been closed */
-  boolean closed;
 
   private String fieldName;
 
   private OracleJsonParser.Event currentEvent;
   private OracleJsonParser.Event lastClearedEvent;
   
-  protected ObjectCodec _codec;
+  private ObjectCodec _codec;
 
   private static final Map<OracleJsonParser.Event, JsonToken> OSON_EVENT_TO_JSON_TOKEN = new HashMap<>();
 
@@ -245,7 +243,6 @@ public class OsonParser extends ParserBase {
   @Override
   public void close() throws IOException {
     parser.close();
-    closed = true;
   }
 
   @Override

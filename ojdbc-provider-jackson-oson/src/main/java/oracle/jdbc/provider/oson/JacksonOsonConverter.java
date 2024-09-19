@@ -49,16 +49,12 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Converter class that facilitates the integration of Jackson and Oson library
+ * Converter class that facilitates the integration of Jackson and Oson libraries.
  * This class implements the {@link OsonConverter} interface and uses Jackson's {@link ObjectMapper}
  * for serializing and deserializing objects in the Oson format.
  * <p>
  * The class provides methods to serialize objects into Oson format and deserialize Oson format
  * data into Java objects. It uses {@link OsonFactory} to create Oson-compatible generators and parsers.
- * </p>
- * <p>
- * This class is thread-safe for concurrent serialization and deserialization operations due to
- * the use of a {@link Lock} for synchronizing access to the {@link ObjectMapper} instance.
  * </p>
  *
  * @see OsonConverter
@@ -72,7 +68,6 @@ public class JacksonOsonConverter implements OsonConverter{
 
   private static final OsonFactory osonFactory = new OsonFactory();
   private static final ObjectMapper om = new ObjectMapper(osonFactory);
-  private final Lock lock = new ReentrantLock();
   
   static {
     om.findAndRegisterModules();
@@ -94,14 +89,10 @@ public class JacksonOsonConverter implements OsonConverter{
   @Override
   public void serialize(OracleJsonGenerator oGen, Object object) throws IllegalStateException {
     try {
-      lock.lock();
       om.writeValue(osonFactory.createGenerator(oGen), object);
     } 
     catch (IOException e) {
       throw new IllegalStateException("Oson conversion failed", e);
-    }
-    finally {
-      lock.unlock();
     }
   }
 
@@ -117,13 +108,10 @@ public class JacksonOsonConverter implements OsonConverter{
   public Object deserialize(OracleJsonParser oParser, Class<?> type) throws IllegalStateException {
     if(!oParser.hasNext()) return null;
     try {
-      lock.lock();
       return om.readValue(osonFactory.createParser(oParser), type);
     } 
     catch (IOException e) {
       throw new IllegalArgumentException("Object parsing from oson failed", e);
-    } finally {
-      lock.unlock();
     }
   }
 
@@ -135,7 +123,7 @@ public class JacksonOsonConverter implements OsonConverter{
    * @return the converted value
    */
   public static Object convertValue(Object fromValue, JavaType javaType) {
-    return om.convertValue(fromValue, javaType);
+      return om.convertValue(fromValue, javaType);
   }
 
 
