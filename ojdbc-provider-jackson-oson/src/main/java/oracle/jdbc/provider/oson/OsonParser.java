@@ -372,6 +372,15 @@ public class OsonParser extends ParserBase {
   }
 
   /**
+   * Get the current token.
+   * @return
+   */
+  @Override
+  public JsonToken currentToken() {
+    return getCurrentToken();
+  }
+
+  /**
    * Get the current Token ID.
    */
   @Override

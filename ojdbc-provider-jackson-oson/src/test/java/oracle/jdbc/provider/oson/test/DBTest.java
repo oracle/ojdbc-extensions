@@ -45,8 +45,9 @@ import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.oson.OsonFactory;
 import oracle.jdbc.provider.oson.OsonGenerator;
 import oracle.jdbc.provider.oson.OsonTestProperty;
+import oracle.jdbc.provider.oson.model.EmployeeInstances;
 import oracle.jdbc.provider.oson.model.Phone;
-import oracle.jdbc.provider.oson.model.Emp;
+import oracle.jdbc.provider.oson.model.Employee;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
@@ -57,18 +58,37 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-
-// Test direct insertion and retrieval of json data into a table and map to POJO
+/**
+ * The {@code DBTest} class is a JUnit test class that tests insertion and retrieval
+ * of JSON data into and from an Oracle database using OSON (Oracle Simple Object Notation).
+ */
 @TestInstance(Lifecycle.PER_CLASS)
 @TestMethodOrder(OrderAnnotation.class)
 public class DBTest {
 
+  /**
+   * The connection to the Oracle database.
+   */
   Connection conn = null;
+
+  /**
+   * The OSON factory for creating OSON parsers and generators.
+   */
   OsonFactory osonFactory = new OsonFactory();
+
+  /**
+   * The {@code ObjectMapper} used for OSON processing.
+   */
   ObjectMapper om = new ObjectMapper(osonFactory);
-  OsonGenerator osonGen = null;
-  byte[] objectBytes =null;
-  
+
+  /**
+   * The byte array that holds the serialized object data.
+   */
+  byte[] objectBytes = null;
+
+  /**
+   * Sets up the database connection and the required tables before all tests are run.
+   */
   @BeforeAll
   public void setup() {
     try {
@@ -93,16 +113,19 @@ public class DBTest {
     }
     
   }
-  
+
+  /**
+   * Inserts an {@code Employee} object into the database in JSON format.
+   *
+   * @throws IOException   if there is an error during object serialization.
+   * @throws SQLException  if there is a database access error.
+   */
   @Test
   @Order(1)
   public void insertIntoDatabase() throws IOException, SQLException {
     Assumptions.assumeTrue(conn != null);
-    List<oracle.jdbc.provider.oson.model.Phone> phones = new ArrayList<>();
-    phones.add(new oracle.jdbc.provider.oson.model.Phone("333-222-1111", Phone.Type.WORK));
-    phones.add(new oracle.jdbc.provider.oson.model.Phone("666-555-4444", Phone.Type.MOBILE));
-    phones.add(new oracle.jdbc.provider.oson.model.Phone("999-888-7777", Phone.Type.HOME));
-    Emp e = new Emp("Bob", "software engineer", new BigDecimal(4000), "bob@bob.org", phones);
+
+    Employee e = EmployeeInstances.getEmployee();
     
     // insert into db
     PreparedStatement pstmt = conn.prepareStatement("insert into emp_json (c1,c2) values(?,?)");
@@ -111,7 +134,12 @@ public class DBTest {
     pstmt.execute();
     pstmt.close();
   }
-  
+
+  /**
+   * Retrieves the {@code Employee} object from the database and prints its details.
+   *
+   * @throws Exception if there is an error during retrieval or object conversion.
+   */
   @Test
   @Order(2)
   public void retieveFromDatabase() throws Exception {
@@ -120,7 +148,7 @@ public class DBTest {
     Statement stmt = conn.createStatement();
     ResultSet rs = stmt.executeQuery("select c1, c2 from emp_json order by c1");
     while(rs.next()) {
-      Emp e = rs.getObject(2, Emp.class);
+      Employee e = rs.getObject(2, Employee.class);
       System.out.println(e.toString());
     }
     rs.close();

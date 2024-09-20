@@ -61,18 +61,48 @@ import java.math.BigInteger;
 import java.sql.*;
 import java.time.*;
 
-
+/**
+ * The {@code AllTypesTest} class is a JUnit test class for testing the conversion of
+ * various types to and from Oracle OSON (Oracle Simple Object Notation) format,
+ * along with database interactions.
+ */
 @TestInstance(Lifecycle.PER_CLASS)
 @TestMethodOrder(OrderAnnotation.class)
 public class AllTypesTest {
 
+  /**
+   * The connection to the Oracle database.
+   */
   Connection conn = null;
+
+  /**
+   * The {@code OsonFactory} object to create OSON parsers and generators.
+   */
   OsonFactory osonFactory = new OsonFactory();
+
+  /**
+   * The {@code ObjectMapper} used for OSON processing.
+   */
   ObjectMapper om = new ObjectMapper(osonFactory);
+
+  /**
+   * The {@code OsonGenerator} for generating OSON-encoded data.
+   */
   OsonGenerator osonGen = null;
+
+  /**
+   * The byte array containing the OSON-encoded data to be checked.
+   */
   byte[] osonTocheck = null;
+
+  /**
+   * A {@code ByteArrayOutputStream} to hold the OSON-encoded data.
+   */
   ByteArrayOutputStream out = new ByteArrayOutputStream();
-  
+
+  /**
+   * A test object of {@code AllOracleTypes} containing various types of data.
+   */
   AllOracleTypes allTypes = new AllOracleTypes(
       1,
       1L,
@@ -89,7 +119,11 @@ public class AllTypesTest {
       LocalDateTime.of(2024, 3, 12, 1, 30),
       OffsetDateTime.of(2024, 3, 12, 1, 30, 21, 11, ZoneOffset.ofHours(5))
     );
-  
+
+  /**
+   * Sets up the test environment by initializing the database connection and creating
+   * the necessary tables for testing.
+   */
   @BeforeAll
   public void setup() {
     try {
@@ -118,7 +152,14 @@ public class AllTypesTest {
     }
     
   }
-    
+
+  /**
+   * Converts the {@code AllOracleTypes} object to OSON format.
+   *
+   * @throws StreamWriteException in case of a write failure.
+   * @throws DatabindException    in case of a databind failure.
+   * @throws IOException          in case of an I/O failure.
+   */
   @Test
   @Order(1)
   public void convertToOson() throws StreamWriteException, DatabindException, IOException {
@@ -130,7 +171,12 @@ public class AllTypesTest {
     System.out.println("Binary encoded OSON: " + osonTocheck.length + " bytes");
 
   }
-  
+
+  /**
+   * Converts the OSON-encoded binary data back to a {@code AllOracleTypes} object.
+   *
+   * @throws Exception in case of a failure during parsing or conversion.
+   */
   @Test
   @Order(2)
   public void convertFromOson() throws Exception {
@@ -142,7 +188,12 @@ public class AllTypesTest {
     }
     
   }
-  
+
+  /**
+   * Inserts the {@code AllOracleTypes} object into the database in OSON format.
+   *
+   * @throws Exception in case of a failure during database insertion.
+   */
   @Test
   @Order(3)
   public void insertIntoDB() throws Exception {
@@ -158,7 +209,13 @@ public class AllTypesTest {
     }
     
   }
-  
+
+  /**
+   * Retrieves the OSON-encoded data from the database, converts it to a {@code JsonNode},
+   * and then back to a {@code AllOracleTypes} object.
+   *
+   * @throws Exception in case of a failure during retrieval or conversion.
+   */
   @Test
   @Order(4)
   public void retieveFromDatabase() throws Exception {
@@ -167,11 +224,10 @@ public class AllTypesTest {
     Statement stmt = conn.createStatement();
     ResultSet rs = stmt.executeQuery("select c1, c2 from all_types_json order by c1");
     while(rs.next()) {
+      OracleJsonValue oson_value = rs.getObject(2, OracleJsonValue.class);
+      byte[] osonBytes = rs.getObject(2, OracleJsonDatum.class).shareBytes();
 
-            OracleJsonValue oson_value = rs.getObject(2, OracleJsonValue.class);
-            byte[] osonBytes = rs.getObject(2, OracleJsonDatum.class).shareBytes();
-
-            if (oson_value != null && oson_value instanceof OracleJsonObject) {
+      if (oson_value != null && oson_value instanceof OracleJsonObject) {
               OracleJsonObject oson_obj = (OracleJsonObject) oson_value;
         
               //OracleJsonObject value

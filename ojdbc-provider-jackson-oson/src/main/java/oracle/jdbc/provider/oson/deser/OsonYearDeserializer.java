@@ -39,7 +39,6 @@ package oracle.jdbc.provider.oson.deser;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 import oracle.jdbc.provider.oson.OsonParser;
 

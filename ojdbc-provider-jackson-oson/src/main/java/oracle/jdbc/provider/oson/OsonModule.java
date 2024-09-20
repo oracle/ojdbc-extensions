@@ -43,9 +43,16 @@ import com.fasterxml.jackson.core.util.VersionUtil;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import oracle.jdbc.provider.oson.deser.*;
 import oracle.jdbc.provider.oson.ser.*;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.time.*;
+import java.util.Properties;
 
 
 /**
@@ -66,9 +73,37 @@ import java.time.*;
  * </p>
  */
 public class OsonModule extends SimpleModule {
-  public final static Version VERSION = VersionUtil.parseVersion(
-      "1.0.1", "com.oracle.database.jdbc", "ojdbc-provider-jackson-oson"
-  );
+  public static String providerVersion ;
+  public static String groupId;
+  public static String artifactId;
+  public static Version VERSION;
+
+  static  {
+    instantiateProviderVersionInfo();
+    VERSION = VersionUtil.parseVersion(providerVersion, groupId, artifactId);
+  }
+
+  private static void instantiateProviderVersionInfo() {
+    String propertiesFilePath = "/META-INF/maven/com.oracle.database.jdbc/ojdbc-provider-jackson-oson/pom.properties";
+    Properties properties = new Properties();
+    try (InputStream inputStream = OsonModule.class.getResourceAsStream(propertiesFilePath)) {
+      if (inputStream != null) {
+        properties.load(inputStream);
+
+        providerVersion  = properties.getProperty("version");
+        groupId = properties.getProperty("artifactId");
+        artifactId = properties.getProperty("groupId");
+
+      } else {
+        MavenXpp3Reader reader = new MavenXpp3Reader();
+        Model model = reader.read(new FileReader("pom.xml"));
+        providerVersion = model.getParent().getVersion();
+        groupId = model.getParent().getGroupId();
+        artifactId = model.getParent().getArtifactId();
+      }
+    } catch (Exception e) {
+    }
+  }
 
   public OsonModule() {
     super(VERSION);

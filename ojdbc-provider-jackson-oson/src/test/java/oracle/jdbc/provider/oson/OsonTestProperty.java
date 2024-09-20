@@ -38,6 +38,10 @@
 
 package oracle.jdbc.provider.oson;
 
+/**
+ * Properties that are read from the test.properties file in order to run the
+ * tests of the oson provider.
+ */
 public enum OsonTestProperty {
   JACKSON_OSON_URL,
   JACKSON_OSON_USERNAME,

@@ -46,6 +46,7 @@ import oracle.jdbc.datasource.impl.OracleDataSource;
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.oson.JacksonOsonConverter;
 import oracle.jdbc.provider.oson.OsonTestProperty;
+import oracle.jdbc.provider.oson.model.Phone;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
@@ -55,11 +56,23 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The {@code ListTypeTest} class is a JUnit test class that tests insertion and retrieval
+ * of a list of {@link Phone} objects into and from an Oracle database using JSON data types.
+ * <p>
+ * The class is annotated with {@link TestInstance} with {@code PER_CLASS} lifecycle,
+ * meaning the test class will be instantiated only once. Tests are executed in a specific order
+ * using {@link OrderAnnotation}.
+ * </p>
+ */
 @TestInstance(Lifecycle.PER_CLASS)
 @TestMethodOrder(OrderAnnotation.class)
 public class ListTypeTest {
   static Connection conn = null;
-  
+
+  /**
+   * Sets up the database connection and the required tables before all tests are run.
+   */
   @BeforeAll
   public void setup() {
     try {
@@ -82,12 +95,18 @@ public class ListTypeTest {
       e.printStackTrace();
     }
   }
-  
+
+  /**
+   * Inserts a list of {@link Phone} objects into the database in JSON format.
+   *
+   * @throws IOException   if there is an error during object serialization.
+   * @throws SQLException  if there is a database access error.
+   */
   @Test
   @Order(1)
   public void insertIntoDatabase() throws IOException, SQLException {
-      Assumptions.assumeTrue(conn != null);
-      List<Phone> phones = new ArrayList<>();
+    Assumptions.assumeTrue(conn != null);
+    List<Phone> phones = new ArrayList<>();
     phones.add(new Phone("333-222-1111", Phone.Type.WORK));
     phones.add(new Phone("666-555-4444", Phone.Type.MOBILE));
     phones.add(new Phone("999-888-7777", Phone.Type.HOME));
@@ -100,11 +119,17 @@ public class ListTypeTest {
     pstmt.execute();
     pstmt.close();
   }
-  
+
+  /**
+   * Retrieves the list of {@link Phone} objects from the database and prints their details.
+   *
+   * @throws SQLException  if there is a database access error.
+   * @throws IOException   if there is an error during object conversion.
+   */
   @Test
   @Order(2)
   public void retieveFromDatabase() throws SQLException, IOException {
-      Assumptions.assumeTrue(conn != null);
+    Assumptions.assumeTrue(conn != null);
     Statement stmt = conn.createStatement();
     ResultSet rs = stmt.executeQuery("select c1, c2 from emp_json order by c1");
     while(rs.next()) {
@@ -120,48 +145,6 @@ public class ListTypeTest {
     rs.close();
     stmt.close();
 
-  }
-
-}
-
-class Phone {
-
-  public enum Type {MOBILE, HOME, WORK}
-
-  String number;
-
-  Type type;
-
-  public Phone() {
-  }
-
-  public Phone(String number, Type type) {
-    this.number = number;
-    this.type = type;
-  }
-
-  public String getNumber() {
-    return number;
-  }
-
-  public void setNumber(String number) {
-    this.number = number;
-  }
-
-  public Type getType() {
-    return type;
-  }
-
-  public void setType(Type type) {
-    this.type = type;
-  }
-
-  @Override
-  public String toString() {
-    return "Phone {" +
-      "number='" + number + '\'' +
-      ", type=" + type +
-      '}';
   }
 
 }

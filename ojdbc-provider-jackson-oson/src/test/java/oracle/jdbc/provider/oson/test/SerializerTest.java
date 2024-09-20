@@ -39,23 +39,44 @@
 package oracle.jdbc.provider.oson.test;
 
 import oracle.jdbc.provider.oson.JacksonOsonConverter;
+import oracle.jdbc.provider.oson.model.Employee;
+import oracle.jdbc.provider.oson.model.EmployeeInstances;
 import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonGenerator;
 import oracle.sql.json.OracleJsonParser;
+import org.junit.jupiter.api.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+/**
+ * The {@code SerializerTest} class tests the serialization and deserialization of
+ * {@link Employee} objects using the {@link JacksonOsonConverter} and Oracle JSON .
+ * 
+ */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class SerializerTest {
-  public static void main(String[] args) throws  IOException {
+
+  /**
+   * Tests the serialization and deserialization of an {@link Employee} object.
+   * <p>
+   * This test uses the {@link JacksonOsonConverter} to serialize an {@code Employee} object
+   * into binary JSON format using an {@link OracleJsonGenerator}, and then deserializes it
+   * back into an {@code Employee} object using an {@link OracleJsonParser}.
+   * The test verifies that the deserialized object is equal to the original.
+   * </p>
+   * */  
+  @Test
+  @Order(1)
+  public void serialiZerTest() {
    JacksonOsonConverter conv = new JacksonOsonConverter();
 
    OracleJsonFactory factory = new OracleJsonFactory();
    ByteArrayOutputStream out = new ByteArrayOutputStream();
-   
-   byte[] bytes = new byte[] { 1 };
-   Employee emp = new Employee( "salah", "eng" ,bytes);
+
+   Employee emp = EmployeeInstances.getEmployee();
    
    OracleJsonGenerator oGen = factory.createJsonBinaryGenerator(out);
    conv.serialize(oGen, emp );
@@ -64,53 +85,7 @@ public class SerializerTest {
    OracleJsonParser oParser = factory.createJsonBinaryParser(new ByteArrayInputStream(out.toByteArray()));
    Employee j = (Employee) conv.deserialize(oParser, Employee.class);
 
-   System.out.println(j.name);
+   Assertions.assertEquals(emp, j);
 
   }
-}
-
-
-class Employee {
-
-  String name;
-
-  String job;
-
-  byte[] bytes;
-
-  public Employee() {
-  }
-
-  public Employee(String name, String job,byte[] b) {
-   this.name = name;
-   this.job = job;
-
-   this.bytes= b;
-
-  }
-
-  public void setName(String name) {
-   this.name = name;
-  }
-
-  public String getName() {
-   return name;
-  }
-
-
-  public String getJob() {
-   return job;
-  }
-
-  public void setJob(String job) {
-   this.job = job;
-  }
-  public byte[] getBytes() {
-   return bytes;
-  }
-
-  public void setBytes(byte[] b) {
-   this.bytes = b;
-  }
-
 }
