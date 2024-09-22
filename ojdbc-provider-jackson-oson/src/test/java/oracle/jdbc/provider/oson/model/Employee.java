@@ -60,6 +60,46 @@ public class Employee {
   private int employeeId;
 
   /**
+   * Logout Time.
+   */
+  private long logoutTime;
+
+  /**
+   * Flag indicating whether the employee is currently active.
+   */
+  private boolean active;
+
+  /**
+   * Represents the department ID.
+   */
+  private short deptId;
+
+  /**
+   * Represents the employee code.
+   */
+  private long employeeCode;
+
+  /**
+   * Represents the grade.
+   */
+  private byte grade;
+
+  /**
+   * Represents the bonus.
+   */
+  private float bonus;
+
+  /**
+   * Represents the previous salary.
+   */
+  private double prevSalary;
+
+  /**
+   * Represents the gender (M/F)
+   */
+  private char gender;
+
+  /**
    * Employee's salary as a BigDecimal.
    */
   private BigDecimal salary;
@@ -115,11 +155,6 @@ public class Employee {
   private YearMonth incrementYearmonth;
 
   /**
-   * Logout Time.
-   */
-  private long logoutTime;
-
-  /**
    * The time the employee starts work.
    */
   private Time startTime;
@@ -158,11 +193,6 @@ public class Employee {
    * Employee's resume as a String.
    */
   private String resume;
-
-  /**
-   * Flag indicating whether the employee is currently active.
-   */
-  private boolean active;
 
   /**
    * Raw data associated with the employee (e.g., binary data).
@@ -212,7 +242,8 @@ public class Employee {
                   OffsetDateTime offsetDateTime, Year yearJoined, Duration durationOfEmployment, byte[] picture,
                   String resume, boolean active, byte[] rawData, List<Phone> phones, LocalDate localHireDate,
                   Instant loginInstant, LocalTime loginLocalTime, MonthDay salaryMonthDay, YearMonth incrementYearmonth,
-                  long logoutTime, ZonedDateTime vacationZonedDateTime) {
+                  long logoutTime, ZonedDateTime vacationZonedDateTime, short deptId, long employeeCode, byte grade,
+                  float bonus, double prevSalary, char gender) {
     this.employeeId = employeeId;
     this.salary = salary;
     this.largeNumber = largeNumber;
@@ -238,6 +269,12 @@ public class Employee {
     this.incrementYearmonth = incrementYearmonth;
     this.logoutTime = logoutTime;
     this.vacationZonedDateTime = vacationZonedDateTime;
+    this.deptId = deptId;
+    this.employeeCode = employeeCode;
+    this.grade = grade;
+    this.bonus = bonus;
+    this.prevSalary = prevSalary;
+    this.gender = gender;
   }
 
 // Getters and Setters
@@ -697,6 +734,114 @@ public class Employee {
   }
 
   /**
+   * Returns the department ID.
+   *
+   * @return the department ID.
+   */
+  public short getDeptId() {
+    return deptId;
+  }
+
+  /**
+   * Sets the department ID.
+   *
+   * @param deptId the department ID to set.
+   */
+  public void setDeptId(short deptId) {
+    this.deptId = deptId;
+  }
+
+  /**
+   * Returns the employee code.
+   *
+   * @return the employee code.
+   */
+  public long getEmployeeCode() {
+    return employeeCode;
+  }
+
+  /**
+   * Sets the employee code.
+   *
+   * @param employeeCode the employee code to set.
+   */
+  public void setEmployeeCode(long employeeCode) {
+    this.employeeCode = employeeCode;
+  }
+
+  /**
+   * Returns the grade.
+   *
+   * @return the grade.
+   */
+  public byte getGrade() {
+    return grade;
+  }
+
+  /**
+   * Sets the grade.
+   *
+   * @param grade the grade to set.
+   */
+  public void setGrade(byte grade) {
+    this.grade = grade;
+  }
+
+
+  /**
+   * Returns the bonus.
+   *
+   * @return the bonus.
+   */
+  public float getBonus() {
+    return bonus;
+  }
+
+  /**
+   * Sets the bonus.
+   *
+   * @param bonus the bonus to set.
+   */
+  public void setBonus(float bonus) {
+    this.bonus = bonus;
+  }
+  /**
+   * Returns the gender.
+   *
+   * @return the gender.
+   */
+  public char getGender() {
+    return gender;
+  }
+
+  /**
+   * Sets the gender.
+   *
+   * @param gender the gender to set.
+   */
+  public void setGender(char gender) {
+    this.gender = gender;
+  }
+
+  /**
+   * Returns the previous salary.
+   *
+   * @return the previous salary.
+   */
+  public double getPrevSalary() {
+    return prevSalary;
+  }
+
+  /**
+   * Sets the previous salary.
+   *
+   * @param prevSalary the previous salary to set.
+   */
+  public void setPrevSalary(double prevSalary) {
+    this.prevSalary = prevSalary;
+  }
+
+  /**
    * Provides a string representation of the Employee object.
    *
    * @return a string representation of the Employee object
@@ -738,25 +883,28 @@ public class Employee {
     if (o == null || getClass() != o.getClass()) return false;
     Employee employee = (Employee) o;
     return employeeId == employee.employeeId && logoutTime == employee.logoutTime && active == employee.active
-            && Objects.equals(salary, employee.salary) && Objects.equals(largeNumber, employee.largeNumber)
-            && Objects.equals(firstName, employee.firstName) && Objects.equals(middleInitial, employee.middleInitial)
-            && Objects.equals(lastName, employee.lastName) && Objects.equals(hireDate, employee.hireDate)
-            && Objects.equals(localHireDate, employee.localHireDate) && Objects.equals(loginInstant, employee.loginInstant)
-            && Objects.equals(loginLocalTime, employee.loginLocalTime) && Objects.equals(salaryMonthDay, employee.salaryMonthDay)
-            && Objects.equals(incrementYearmonth, employee.incrementYearmonth) && Objects.equals(startTime, employee.startTime)
-            && Objects.equals(lastUpdated, employee.lastUpdated) && Objects.equals(localDateTime, employee.localDateTime)
-            && Objects.equals(offsetDateTime, employee.offsetDateTime) && Objects.equals(yearJoined, employee.yearJoined)
-            && Objects.equals(durationOfEmployment, employee.durationOfEmployment) && Objects.deepEquals(picture, employee.picture)
-            && Objects.equals(resume, employee.resume) && Objects.deepEquals(rawData, employee.rawData)
-            && Objects.equals(phones, employee.phones) && Objects.equals(vacationZonedDateTime, employee.vacationZonedDateTime);
+            && deptId == employee.deptId && employeeCode == employee.employeeCode && grade == employee.grade
+            && Float.compare(bonus, employee.bonus) == 0 && Double.compare(prevSalary, employee.prevSalary) == 0
+            && gender == employee.gender && Objects.equals(salary, employee.salary)
+            && Objects.equals(largeNumber, employee.largeNumber) && Objects.equals(firstName, employee.firstName)
+            && Objects.equals(middleInitial, employee.middleInitial) && Objects.equals(lastName, employee.lastName)
+            && Objects.equals(hireDate, employee.hireDate) && Objects.equals(localHireDate, employee.localHireDate)
+            && Objects.equals(loginInstant, employee.loginInstant) && Objects.equals(loginLocalTime, employee.loginLocalTime)
+            && Objects.equals(salaryMonthDay, employee.salaryMonthDay) && Objects.equals(incrementYearmonth, employee.incrementYearmonth)
+            && Objects.equals(startTime, employee.startTime) && Objects.equals(lastUpdated, employee.lastUpdated)
+            && Objects.equals(localDateTime, employee.localDateTime) && Objects.equals(offsetDateTime, employee.offsetDateTime)
+            && Objects.equals(yearJoined, employee.yearJoined) && Objects.equals(durationOfEmployment, employee.durationOfEmployment)
+            && Objects.deepEquals(picture, employee.picture) && Objects.equals(resume, employee.resume)
+            && Objects.deepEquals(rawData, employee.rawData) && Objects.equals(phones, employee.phones)
+            && Objects.equals(vacationZonedDateTime, employee.vacationZonedDateTime);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(employeeId, salary, largeNumber, firstName, middleInitial, lastName, hireDate, localHireDate,
-            loginInstant, loginLocalTime, salaryMonthDay,
-            incrementYearmonth, logoutTime, startTime, lastUpdated, localDateTime, offsetDateTime, yearJoined,
-            durationOfEmployment, Arrays.hashCode(picture), resume, active, Arrays.hashCode(rawData), phones,
-            vacationZonedDateTime);
+    return Objects.hash(employeeId, logoutTime, active, deptId, employeeCode, grade, bonus, prevSalary, gender,
+            salary, largeNumber, firstName, middleInitial, lastName, hireDate, localHireDate, loginInstant,
+            loginLocalTime, salaryMonthDay, incrementYearmonth, startTime, lastUpdated, localDateTime,
+            offsetDateTime, yearJoined, durationOfEmployment, Arrays.hashCode(picture), resume,
+            Arrays.hashCode(rawData), phones, vacationZonedDateTime);
   }
 }
