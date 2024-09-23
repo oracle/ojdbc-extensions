@@ -448,4 +448,36 @@ public class AllOracleTypes {
             +"  ldt_sample=" + ldt_sample + ", \n"
             +"  odt_sample=" + odt_sample + "\n}";
   }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == this)
+      return true;
+    if (!(obj instanceof AllOracleTypes))
+      return false;
+    AllOracleTypes other = (AllOracleTypes)obj;
+    if (this.int_sample != other.int_sample) return false;
+    if (this.long_sample != other.long_sample) return false;
+    if (this.big_integer_sample == null && other.big_integer_sample != null) return false;
+    if (!this.big_integer_sample.equals(other.big_integer_sample)) return false;
+    if (this.string_sample == null && other.string_sample != null) return false;
+    if (!this.string_sample.equals(other.string_sample)) return false;
+    if (this.char_sample != other.char_sample) return false;
+    if (this.boolean_sample != other.boolean_sample) return false;
+    if (this.double_sample != other.double_sample) return false;
+    if (this.float_sample != other.float_sample) return false;
+    if (this.big_decimal_sample == null && other.big_decimal_sample != null) return false;
+    if (!this.big_decimal_sample.equals(other.big_decimal_sample)) return false;
+    if (this.date_sample == null && other.date_sample != null) return false;
+    if (!this.date_sample.equals(other.date_sample)) return false;
+    if (this.period_sample == null && other.period_sample != null) return false;
+    if (!this.period_sample.equals(other.period_sample)) return false;
+    if (this.duration_sample == null && other.duration_sample != null) return false;
+    if (!this.duration_sample.equals(other.duration_sample)) return false;
+    if (this.ldt_sample == null && other.ldt_sample != null) return false;
+    if (!this.ldt_sample.equals(other.ldt_sample)) return false;
+    if (this.odt_sample == null && other.odt_sample != null) return false;
+    if (!this.odt_sample.isEqual(other.odt_sample)) return false;
+    return true;
+  }
 }

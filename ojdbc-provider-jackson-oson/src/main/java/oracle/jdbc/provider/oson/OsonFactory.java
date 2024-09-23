@@ -86,7 +86,7 @@ public class OsonFactory extends JsonFactory {
   public JsonGenerator createGenerator(OutputStream out, JsonEncoding enc) throws IOException {
     IOContext ctxt = _createContext(out, true);
     ctxt.setEncoding(enc);
-    if (enc == JsonEncoding.UTF8 && _outputDecorator != null) {
+    if (_outputDecorator != null) {
       out = _outputDecorator.decorate(ctxt, out);
     }
 

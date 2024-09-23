@@ -38,10 +38,12 @@
 
 package oracle.jdbc.provider.oson.test;
 
+import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.exc.StreamWriteException;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import oracle.jdbc.OracleType;
 import oracle.jdbc.datasource.impl.OracleDataSource;
 import oracle.jdbc.provider.TestProperties;
@@ -53,11 +55,18 @@ import oracle.sql.json.OracleJsonValue;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.io.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.*;
 import java.time.*;
 
@@ -70,39 +79,26 @@ import java.time.*;
 @TestMethodOrder(OrderAnnotation.class)
 public class AllTypesTest {
 
+  private static final String URL = TestProperties.getOrAbort(OsonTestProperty.JACKSON_OSON_URL);
+  private static final String USER_NAME = TestProperties.getOrAbort(OsonTestProperty.JACKSON_OSON_USERNAME);
+  private static final String PASSWORD = TestProperties.getOrAbort(OsonTestProperty.JACKSON_OSON_PASSWORD);
+   /**
+   * The {@code OsonFactory} object to create OSON parsers and generators.
+   */
+  private static final OsonFactory osonFactory = new OsonFactory();
+  /**
+   * The {@code ObjectMapper} used for OSON processing.
+   */
+  private static final ObjectMapper om = new ObjectMapper(osonFactory);
+
   /**
    * The connection to the Oracle database.
    */
   Connection conn = null;
+  PreparedStatement insertStatement = null;
 
-  /**
-   * The {@code OsonFactory} object to create OSON parsers and generators.
-   */
-  OsonFactory osonFactory = new OsonFactory();
-
-  /**
-   * The {@code ObjectMapper} used for OSON processing.
-   */
-  ObjectMapper om = new ObjectMapper(osonFactory);
-
-  /**
-   * The {@code OsonGenerator} for generating OSON-encoded data.
-   */
-  OsonGenerator osonGen = null;
-
-  /**
-   * The byte array containing the OSON-encoded data to be checked.
-   */
-  byte[] osonTocheck = null;
-
-  /**
-   * A {@code ByteArrayOutputStream} to hold the OSON-encoded data.
-   */
-  ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-  /**
-   * A test object of {@code AllOracleTypes} containing various types of data.
-   */
+  ObjectNode objectNode;
+  
   AllOracleTypes allTypes = new AllOracleTypes(
       1,
       1L,
@@ -125,32 +121,26 @@ public class AllTypesTest {
    * the necessary tables for testing.
    */
   @BeforeAll
-  public void setup() {
-    try {
-      String url = TestProperties.getOrAbort(OsonTestProperty.JACKSON_OSON_URL);
-      String userName = TestProperties.getOrAbort(OsonTestProperty.JACKSON_OSON_USERNAME);
-      String password = TestProperties.getOrAbort(OsonTestProperty.JACKSON_OSON_PASSWORD);
+  public static void beforeAll() {
+    om.findAndRegisterModules();
+    om.registerModule(new OsonModule());
+  }
 
-      om.findAndRegisterModules();
-      om.registerModule(new OsonModule());
-      osonGen = (OsonGenerator) osonFactory.createGenerator(out);
-      
+  @BeforeEach
+  public void setup() throws Exception {
       OracleDataSource ods = new OracleDataSource();
-      ods.setURL(url);
-      ods.setUser(userName);
-      ods.setPassword(password);
+      ods.setURL(URL);
+      ods.setUser(USER_NAME);
+      ods.setPassword(PASSWORD);
       conn = ods.getConnection();
-      
       //setup db tables
-      Statement stmt = conn.createStatement();
-      stmt.execute("drop table if exists all_types_json");
-      stmt.execute("create table all_types_json(c1 number, c2 JSON) tablespace tbs1");
-      stmt.close();
-      
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    
+      try (Statement stmt = conn.createStatement()) {
+        stmt.addBatch("drop table if exists all_types_json");
+        stmt.addBatch("create table all_types_json(c1 number, c2 JSON) tablespace tbs1");
+        stmt.executeBatch();
+      }
+      objectNode = om.valueToTree(allTypes);
+
   }
 
   /**
@@ -160,96 +150,129 @@ public class AllTypesTest {
    * @throws DatabindException    in case of a databind failure.
    * @throws IOException          in case of an I/O failure.
    */
-  @Test
   @Order(1)
-  public void convertToOson() throws StreamWriteException, DatabindException, IOException {
+  @ParameterizedTest()
+  @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
+  public void convertToOsonUsingStream(String encoding) throws Exception {
     Assumptions.assumeTrue(conn != null);
-    om.writeValue(osonGen, allTypes);
-    osonGen.close();
-    osonTocheck = out.toByteArray();
 
-    System.out.println("Binary encoded OSON: " + osonTocheck.length + " bytes");
-
+    JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
+    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+      try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
+        om.writeValue(osonGen, allTypes);
+      }
+      // Insert the converted bytes
+      InsertBytes(out.toByteArray());
+      // Retrieve the converted bytes
+      AllOracleTypes allTypeAfterConvert =  ReadObject();
+      verifyEquals(allTypes, allTypeAfterConvert);
+    }
   }
 
+
   /**
-   * Converts the OSON-encoded binary data back to a {@code AllOracleTypes} object.
+   * Converts the {@code AllOracleTypes} object to OSON format.
    *
-   * @throws Exception in case of a failure during parsing or conversion.
    */
-  @Test
+  @Order(1)
+  @ParameterizedTest()
+  @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
+  public void convertToOsonUsingStreamAndObjectNode(String encoding) throws Exception {
+    Assumptions.assumeTrue(conn != null);
+
+    JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
+    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+      try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
+        om.writeValue(osonGen, objectNode);
+      }
+      // Insert the converted bytes
+      InsertBytes(out.toByteArray());
+      // Retrieve the converted bytes
+      ObjectNode objectNodeAfterConvert =  ReadObjectNode();
+      verifyEquals(objectNode, objectNodeAfterConvert);
+    }
+  }
   @Order(2)
-  public void convertFromOson() throws Exception {
+  @ParameterizedTest()
+  @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
+  public void convertToOsonUsingFile(String encoding) throws Exception {
     Assumptions.assumeTrue(conn != null);
-    try (OsonParser parser = (OsonParser) osonFactory.createParser(osonTocheck) ) {
-      
-      AllOracleTypes ne = om.readValue(parser, AllOracleTypes.class);
-      System.out.println("POJO after conversion from OSON: " + ne.toString());
+
+    JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
+    File out = new File("file.json");
+    try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
+      om.writeValue(osonGen, allTypes);
     }
-    
+    // Insert the converted bytes
+    InsertBytes(Files.readAllBytes(Paths.get(out.getPath())));
+    // Retrieve the converted bytes
+    AllOracleTypes allTypeAfterConvert =  ReadObject();
+    verifyEquals(allTypes, allTypeAfterConvert);
+
   }
 
-  /**
-   * Inserts the {@code AllOracleTypes} object into the database in OSON format.
-   *
-   * @throws Exception in case of a failure during database insertion.
-   */
-  @Test
   @Order(3)
-  public void insertIntoDB() throws Exception {
+  @ParameterizedTest()
+  @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
+  public void convertToOsonUsingDataOutput(String encoding) throws Exception {
     Assumptions.assumeTrue(conn != null);
-    try (OsonParser parser = (OsonParser) osonFactory.createParser(osonTocheck) ) {
-      
-      // insert into db
-      PreparedStatement pstmt = conn.prepareStatement("insert into all_types_json (c1,c2) values(?,?)");
+
+    JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
+    try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        DataOutputStream out = new DataOutputStream(byteArrayOutputStream)) {
+      try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator((DataOutput) out, jsonEncoding)) {
+        om.writeValue(osonGen, allTypes);
+      }
+      // Insert the converted bytes
+      InsertBytes(byteArrayOutputStream.toByteArray());
+
+    }
+    // Retrieve the converted bytes
+    AllOracleTypes allTypeAfterConvert =  ReadObject();
+    verifyEquals(allTypes, allTypeAfterConvert);
+
+  }
+
+
+  private void InsertBytes(byte[] bytes) throws SQLException {
+    try (PreparedStatement pstmt = conn.prepareStatement("insert into all_types_json (c1,c2) values(?,?)")) {
       pstmt.setInt(1, 1);
-      pstmt.setObject(2,  allTypes, OracleType.JSON);
-      pstmt.execute();
-      pstmt.close();
+      pstmt.setBytes(2, bytes);
+      pstmt.executeUpdate();
     }
-    
   }
 
-  /**
-   * Retrieves the OSON-encoded data from the database, converts it to a {@code JsonNode},
-   * and then back to a {@code AllOracleTypes} object.
-   *
-   * @throws Exception in case of a failure during retrieval or conversion.
-   */
-  @Test
-  @Order(4)
-  public void retieveFromDatabase() throws Exception {
-    Assumptions.assumeTrue(conn != null);
-        //retrieve from db
-    Statement stmt = conn.createStatement();
-    ResultSet rs = stmt.executeQuery("select c1, c2 from all_types_json order by c1");
-    while(rs.next()) {
-      OracleJsonValue oson_value = rs.getObject(2, OracleJsonValue.class);
-      byte[] osonBytes = rs.getObject(2, OracleJsonDatum.class).shareBytes();
-
-      if (oson_value != null && oson_value instanceof OracleJsonObject) {
-              OracleJsonObject oson_obj = (OracleJsonObject) oson_value;
-        
-              //OracleJsonObject value
-              System.out.println("OracleJsonObject: " + oson_obj);
-            }
-            if(osonBytes!=null && osonBytes.length>0) {
-              System.out.println("Oson bytes length: " + osonBytes.length);
-        
-              // JsonNode mapping
-              JsonNode node = om.readValue(osonBytes, JsonNode.class);
-              System.out.println("JsonNode: " + node.toPrettyString());
-            }
-            if(osonBytes!=null && osonBytes.length>0) {
-              System.out.println("Oson bytes length: " + osonBytes.length);
-        
-              // POJO mapping
-              AllOracleTypes types = om.readValue(osonBytes, AllOracleTypes.class);
-              System.out.println("POJO after retrieval from DB and conversion: " + types.toString());
-            }
+  private AllOracleTypes ReadObject() throws SQLException, IOException {
+    try (Statement stmt = conn.createStatement();
+         ResultSet rs = stmt.executeQuery("select c1, c2 from all_types_json order by c1")) {
+      assertTrue(rs.next());
+      return om.readValue(rs.getObject(2, OracleJsonDatum.class).shareBytes(), AllOracleTypes.class);
     }
-    rs.close();
-    stmt.close();
-    
   }
+
+  private ObjectNode ReadObjectNode() throws SQLException, IOException {
+    try (Statement stmt = conn.createStatement();
+         ResultSet rs = stmt.executeQuery("select c1, c2 from all_types_json order by c1")) {
+      assertTrue(rs.next());
+      return om.readValue(rs.getObject(2, OracleJsonDatum.class).shareBytes(), ObjectNode.class);
+    }
+  }
+
+
+  private void verifyEquals(AllOracleTypes allTypes, AllOracleTypes allTypeAfterConvert) {
+    assertEquals(allTypes, allTypeAfterConvert);
+  }
+
+  private void verifyEquals(ObjectNode original, ObjectNode converted) {
+    original.fieldNames().forEachRemaining(name -> {
+      System.out.println("Name:" + name);
+      JsonNode originalNode = original.get(name);
+      JsonNode convertedNode = converted.get(name);
+      System.out.println(originalNode);
+      System.out.println(originalNode.getNodeType());
+      System.out.println(convertedNode);
+      System.out.println(convertedNode.getNodeType());
+    });
+  }
+
 }
