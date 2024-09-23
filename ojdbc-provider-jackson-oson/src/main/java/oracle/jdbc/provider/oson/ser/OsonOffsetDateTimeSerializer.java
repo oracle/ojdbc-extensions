@@ -41,10 +41,15 @@ package oracle.jdbc.provider.oson.ser;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.fasterxml.jackson.databind.util.TokenBuffer;
+import com.fasterxml.jackson.datatype.jsr310.DecimalUtils;
 import oracle.jdbc.provider.oson.OsonGenerator;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.function.Function;
+import java.util.function.ToLongFunction;
 
 /**
  * Serializer class for handling {@link OffsetDateTime} objects using {@link OsonGenerator}.
@@ -66,11 +71,13 @@ public class OsonOffsetDateTimeSerializer extends StdSerializer<OffsetDateTime> 
    */
   public static final OsonOffsetDateTimeSerializer INSTANCE = new OsonOffsetDateTimeSerializer();
 
+
   /**
    * Default constructor that initializes the serializer for the {@link OffsetDateTime} class.
    */
   public OsonOffsetDateTimeSerializer() {
     super(OffsetDateTime.class);
+
   }
 
   /**
@@ -83,8 +90,15 @@ public class OsonOffsetDateTimeSerializer extends StdSerializer<OffsetDateTime> 
    */
   @Override
   public void serialize(OffsetDateTime value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-    final OsonGenerator _gen = (OsonGenerator)gen;
+    if(gen instanceof TokenBuffer) {
 
-    _gen.writeOffsetDateTime(value);
+      gen.writeNumber(DecimalUtils.toBigDecimal(value.toInstant().toEpochMilli(), (int) value.toInstant().getEpochSecond()));
+    } else {
+      final OsonGenerator _gen = (OsonGenerator)gen;
+
+      _gen.writeOffsetDateTime(value);
+    }
+
+
   }
 }

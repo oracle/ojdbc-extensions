@@ -40,6 +40,7 @@ package oracle.jdbc.provider.oson.ser;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.fasterxml.jackson.databind.util.TokenBuffer;
 import oracle.jdbc.provider.oson.OsonGenerator;
 
 import java.io.IOException;
@@ -82,8 +83,12 @@ public class OsonBigIntegerSerializer extends StdSerializer<BigInteger> {
    */
   @Override
   public void serialize(BigInteger value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-    final OsonGenerator _gen = (OsonGenerator)gen;
+    if( gen instanceof TokenBuffer) {
+      gen.writeNumber((BigInteger) value);
+    } else {
+      final OsonGenerator _gen = (OsonGenerator)gen;
 
-    _gen.writeNumber(value);
+      _gen.writeNumber(value);
+    }
   }
 }
