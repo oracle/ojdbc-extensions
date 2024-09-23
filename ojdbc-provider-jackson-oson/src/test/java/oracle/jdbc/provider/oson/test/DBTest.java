@@ -87,6 +87,11 @@ public class DBTest {
   byte[] objectBytes = null;
 
   /**
+   * The implyee instance inserted into DB.
+   */
+  Employee insertedEmployee = null;
+
+  /**
    * Sets up the database connection and the required tables before all tests are run.
    */
   @BeforeAll
@@ -124,15 +129,13 @@ public class DBTest {
   @Order(1)
   public void insertIntoDatabase() throws IOException, SQLException {
     Assumptions.assumeTrue(conn != null);
+    insertedEmployee = EmployeeInstances.getEmployee();
+    try(PreparedStatement pstmt = conn.prepareStatement("insert into emp_json (c1,c2) values(?,?)")) {
+      pstmt.setInt(1, 1);
+      pstmt.setObject(2, insertedEmployee, OracleType.JSON);
+      pstmt.execute();
+    }
 
-    Employee e = EmployeeInstances.getEmployee();
-    
-    // insert into db
-    PreparedStatement pstmt = conn.prepareStatement("insert into emp_json (c1,c2) values(?,?)");
-    pstmt.setInt(1, 1);
-    pstmt.setObject(2, e, OracleType.JSON);
-    pstmt.execute();
-    pstmt.close();
   }
 
   /**
@@ -144,15 +147,13 @@ public class DBTest {
   @Order(2)
   public void retieveFromDatabase() throws Exception {
     Assumptions.assumeTrue(conn != null);
-        //retrieve from db
-    Statement stmt = conn.createStatement();
-    ResultSet rs = stmt.executeQuery("select c1, c2 from emp_json order by c1");
-    while(rs.next()) {
-      Employee e = rs.getObject(2, Employee.class);
-      System.out.println(e.toString());
+    try(Statement stmt = conn.createStatement()) {
+      try(ResultSet rs = stmt.executeQuery("select c1, c2 from emp_json order by c1")) {
+        while(rs.next()) {
+          Employee retrievedEmployee = rs.getObject(2, Employee.class);
+          Assertions.assertEquals(insertedEmployee, retrievedEmployee);
+        }
+      }
     }
-    rs.close();
-    stmt.close();
-    
   }
 }

@@ -1,6 +1,10 @@
-# Oracle Provider Jackson OSON
+# OSON Provider for Jackson
 ## Overview
-The **Oracle Provider Jackson OSON** is a module that provides support for serializing and deserializing Oracle JSON (OSON) data using Jackson. It includes custom generators, parsers, serializers, and deserializers for POJO mapping and Java types, ensuring efficient JSON data handling in Oracle environments.
+The **OSON Provider for Jackson** is a module that provides support for serializing and deserializing Oracle JSON (OSON) data using Jackson. 
+It includes custom generators, parsers, serializers, and deserializers for POJO mapping and Java types, ensuring efficient 
+JSON data handling in Oracle environments. 
+The module implements [**oracle.jdbc.spi.JsonProvider**](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OsonProvider.html) 
+in order to use the Oracle JDBC driver's JSON processing capabilities.
 ## Features
 - **OSON Generators**: Custom logic for generating JSON representations of Java objects.
 - **OSON Parsers**: Parsing Oracle-specific JSON data into Java objects.
@@ -17,7 +21,7 @@ The **Oracle Provider Jackson OSON** is a module that provides support for seria
    cd oracle-provider-jackson-oson
 3. Build the module and it's dependencies:
    ```bash
-     mvn clean -pl ojdbc-provider-jackson-oson -amd install
+   mvn clean -pl ojdbc-provider-jackson-oson -amd install
 
 ## Usage
-Usage Eamples for Oracle Jackson OSON Provider Extensions can be found at [ojdbc-provider-samples/src/main/java/](../ojdbc-provider-samples/src/main/java)
+Usage Examples for Oracle Jackson OSON Provider Extensions can be found at [ojdbc-provider-samples/src/main/java/](../ojdbc-provider-samples/src/main/java)

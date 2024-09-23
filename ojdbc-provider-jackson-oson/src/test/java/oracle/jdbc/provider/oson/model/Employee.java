@@ -209,6 +209,9 @@ public class Employee {
    */
   private ZonedDateTime vacationZonedDateTime;
 
+  //todo: boxed primitive types
+  //todo: add annotations
+
 
   /**
    * Default constructor for the Employee class.

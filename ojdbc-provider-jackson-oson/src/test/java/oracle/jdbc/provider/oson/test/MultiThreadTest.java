@@ -70,6 +70,3 @@ public class MultiThreadTest {
     System.out.println("Total time: "+(System.currentTimeMillis() - start));
   }
 }
-// 100,000,000 times
-// Threadlocal: Total time: 164.157 sec, 159.999 sec, 157.403 sec
-// without threadlocal: Total time: 157.722 sec, Total time: 157.486 sec,  Total time: 156.609 sec
