@@ -44,14 +44,12 @@ import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import oracle.jdbc.OracleType;
 import oracle.jdbc.datasource.impl.OracleDataSource;
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.oson.*;
-import oracle.jdbc.provider.oson.model.AllOracleTypes;
+import oracle.jdbc.provider.oson.model.Employee;
+import oracle.jdbc.provider.oson.model.EmployeeInstances;
 import oracle.sql.json.OracleJsonDatum;
-import oracle.sql.json.OracleJsonObject;
-import oracle.sql.json.OracleJsonValue;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
@@ -65,7 +63,6 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.*;
 import java.time.*;
@@ -77,7 +74,7 @@ import java.time.*;
  */
 @TestInstance(Lifecycle.PER_CLASS)
 @TestMethodOrder(OrderAnnotation.class)
-public class AllTypesTest {
+public class EncondingTest {
 
   private static final String URL = TestProperties.getOrAbort(OsonTestProperty.JACKSON_OSON_URL);
   private static final String USER_NAME = TestProperties.getOrAbort(OsonTestProperty.JACKSON_OSON_USERNAME);
@@ -98,23 +95,8 @@ public class AllTypesTest {
   PreparedStatement insertStatement = null;
 
   ObjectNode objectNode;
-  
-  AllOracleTypes allTypes = new AllOracleTypes(
-      1,
-      1L,
-      BigInteger.valueOf(5L),
-      "string sample",
-      'c',
-      true,
-      1.2,
-      1.34f,
-      BigDecimal.valueOf(1.345),
-      Date.valueOf("2024-03-12"),
-      Period.of(12, 5, 0),
-      Duration.ofDays(30),
-      LocalDateTime.of(2024, 3, 12, 1, 30),
-      OffsetDateTime.of(2024, 3, 12, 1, 30, 21, 11, ZoneOffset.ofHours(5))
-    );
+
+  Employee employee = EmployeeInstances.getEmployee();
 
   /**
    * Sets up the test environment by initializing the database connection and creating
@@ -139,8 +121,6 @@ public class AllTypesTest {
         stmt.addBatch("create table all_types_json(c1 number, c2 JSON) tablespace tbs1");
         stmt.executeBatch();
       }
-      objectNode = om.valueToTree(allTypes);
-
   }
 
   /**
@@ -159,13 +139,13 @@ public class AllTypesTest {
     JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
     try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
       try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
-        om.writeValue(osonGen, allTypes);
+        om.writeValue(osonGen, employee);
       }
       // Insert the converted bytes
       InsertBytes(out.toByteArray());
       // Retrieve the converted bytes
-      AllOracleTypes allTypeAfterConvert =  ReadObject();
-      verifyEquals(allTypes, allTypeAfterConvert);
+      Employee employeeAfterConvert =  ReadObject();
+      verifyEquals(employee, employeeAfterConvert);
     }
   }
 
@@ -174,11 +154,12 @@ public class AllTypesTest {
    * Converts the {@code AllOracleTypes} object to OSON format.
    *
    */
-  @Order(1)
+  @Order(5)
   @ParameterizedTest()
   @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
   public void convertToOsonUsingStreamAndObjectNode(String encoding) throws Exception {
     Assumptions.assumeTrue(conn != null);
+    objectNode = om.valueToTree(employee);
 
     JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
     try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -192,6 +173,7 @@ public class AllTypesTest {
       verifyEquals(objectNode, objectNodeAfterConvert);
     }
   }
+
   @Order(2)
   @ParameterizedTest()
   @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
@@ -201,13 +183,13 @@ public class AllTypesTest {
     JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
     File out = new File("file.json");
     try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
-      om.writeValue(osonGen, allTypes);
+      om.writeValue(osonGen, employee);
     }
     // Insert the converted bytes
     InsertBytes(Files.readAllBytes(Paths.get(out.getPath())));
     // Retrieve the converted bytes
-    AllOracleTypes allTypeAfterConvert =  ReadObject();
-    verifyEquals(allTypes, allTypeAfterConvert);
+    Employee employeeAfterConvert =  ReadObject();
+    verifyEquals(employee, employeeAfterConvert);
 
   }
 
@@ -221,15 +203,15 @@ public class AllTypesTest {
     try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         DataOutputStream out = new DataOutputStream(byteArrayOutputStream)) {
       try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator((DataOutput) out, jsonEncoding)) {
-        om.writeValue(osonGen, allTypes);
+        om.writeValue(osonGen, employee);
       }
       // Insert the converted bytes
       InsertBytes(byteArrayOutputStream.toByteArray());
 
     }
     // Retrieve the converted bytes
-    AllOracleTypes allTypeAfterConvert =  ReadObject();
-    verifyEquals(allTypes, allTypeAfterConvert);
+    Employee employeeAfterConvert =  ReadObject();
+    verifyEquals(employee, employeeAfterConvert);
 
   }
 
@@ -242,11 +224,11 @@ public class AllTypesTest {
     }
   }
 
-  private AllOracleTypes ReadObject() throws SQLException, IOException {
+  private Employee ReadObject() throws SQLException, IOException {
     try (Statement stmt = conn.createStatement();
          ResultSet rs = stmt.executeQuery("select c1, c2 from all_types_json order by c1")) {
       assertTrue(rs.next());
-      return om.readValue(rs.getObject(2, OracleJsonDatum.class).shareBytes(), AllOracleTypes.class);
+      return om.readValue(rs.getObject(2, OracleJsonDatum.class).shareBytes(), Employee.class);
     }
   }
 
@@ -259,8 +241,8 @@ public class AllTypesTest {
   }
 
 
-  private void verifyEquals(AllOracleTypes allTypes, AllOracleTypes allTypeAfterConvert) {
-    assertEquals(allTypes, allTypeAfterConvert);
+  private void verifyEquals(Employee employee, Employee employeeAfterConvert) {
+    assertEquals(employee, employeeAfterConvert);
   }
 
   private void verifyEquals(ObjectNode original, ObjectNode converted) {
