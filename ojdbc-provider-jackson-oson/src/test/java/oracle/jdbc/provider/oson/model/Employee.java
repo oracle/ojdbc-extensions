@@ -223,7 +223,6 @@ public class Employee {
   private Float performanceScoreBoxed;
   private Double bonusBoxed;
 
-  //todo: boxed primitive types
   //todo: add annotations
 
 
@@ -998,11 +997,36 @@ public class Employee {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     Employee employee = (Employee) o;
-    return employeeId == employee.employeeId && logoutTime == employee.logoutTime && active == employee.active && deptId == employee.deptId && employeeCode == employee.employeeCode && grade == employee.grade && Float.compare(bonus, employee.bonus) == 0 && Double.compare(prevSalary, employee.prevSalary) == 0 && gender == employee.gender && Objects.equals(salary, employee.salary) && Objects.equals(largeNumber, employee.largeNumber) && Objects.equals(firstName, employee.firstName) && Objects.equals(middleInitial, employee.middleInitial) && Objects.equals(lastName, employee.lastName) && Objects.equals(hireDate, employee.hireDate) && Objects.equals(localHireDate, employee.localHireDate) && Objects.equals(loginInstant, employee.loginInstant) && Objects.equals(loginLocalTime, employee.loginLocalTime) && Objects.equals(salaryMonthDay, employee.salaryMonthDay) && Objects.equals(incrementYearmonth, employee.incrementYearmonth) && Objects.equals(startTime, employee.startTime) && Objects.equals(lastUpdated, employee.lastUpdated) && Objects.equals(localDateTime, employee.localDateTime) && Objects.equals(offsetDateTime, employee.offsetDateTime) && Objects.equals(yearJoined, employee.yearJoined) && Objects.equals(durationOfEmployment, employee.durationOfEmployment) && Objects.deepEquals(picture, employee.picture) && Objects.equals(resume, employee.resume) && Objects.deepEquals(rawData, employee.rawData) && Objects.equals(phones, employee.phones) && Objects.equals(vacationZonedDateTime, employee.vacationZonedDateTime) && Objects.equals(totalPeriod, employee.totalPeriod) && Objects.equals(idBoxed, employee.idBoxed) && Objects.equals(isActiveBoxed, employee.isActiveBoxed) && Objects.equals(rankBoxed, employee.rankBoxed) && Objects.equals(genderBoxed, employee.genderBoxed) && Objects.equals(ageBoxed, employee.ageBoxed) && Objects.equals(salaryBoxed, employee.salaryBoxed) && Objects.equals(performanceScoreBoxed, employee.performanceScoreBoxed) && Objects.equals(bonusBoxed, employee.bonusBoxed);
+    return employeeId == employee.employeeId && logoutTime == employee.logoutTime && active == employee.active
+            && deptId == employee.deptId && employeeCode == employee.employeeCode && grade == employee.grade
+            && Float.compare(bonus, employee.bonus) == 0 && Double.compare(prevSalary, employee.prevSalary) == 0
+            && gender == employee.gender && Objects.equals(salary, employee.salary)
+            && Objects.equals(largeNumber, employee.largeNumber) && Objects.equals(firstName, employee.firstName)
+            && Objects.equals(middleInitial, employee.middleInitial) && Objects.equals(lastName, employee.lastName)
+            && Objects.equals(hireDate, employee.hireDate) && Objects.equals(localHireDate, employee.localHireDate)
+            && Objects.equals(loginInstant, employee.loginInstant) && Objects.equals(loginLocalTime, employee.loginLocalTime)
+            && Objects.equals(salaryMonthDay, employee.salaryMonthDay)
+            && Objects.equals(incrementYearmonth, employee.incrementYearmonth)
+            && Objects.equals(startTime, employee.startTime) && Objects.equals(lastUpdated, employee.lastUpdated)
+            && Objects.equals(localDateTime, employee.localDateTime) && Objects.equals(offsetDateTime, employee.offsetDateTime)
+            && Objects.equals(yearJoined, employee.yearJoined) && Objects.equals(durationOfEmployment, employee.durationOfEmployment)
+            && Objects.deepEquals(picture, employee.picture) && Objects.equals(resume, employee.resume)
+            && Objects.deepEquals(rawData, employee.rawData) && Objects.equals(phones, employee.phones)
+            && Objects.equals(vacationZonedDateTime, employee.vacationZonedDateTime)
+            && Objects.equals(totalPeriod, employee.totalPeriod) && Objects.equals(idBoxed, employee.idBoxed)
+            && Objects.equals(isActiveBoxed, employee.isActiveBoxed) && Objects.equals(rankBoxed, employee.rankBoxed)
+            && Objects.equals(genderBoxed, employee.genderBoxed) && Objects.equals(ageBoxed, employee.ageBoxed)
+            && Objects.equals(salaryBoxed, employee.salaryBoxed) && Objects.equals(performanceScoreBoxed, employee.performanceScoreBoxed)
+            && Objects.equals(bonusBoxed, employee.bonusBoxed);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(employeeId, logoutTime, active, deptId, employeeCode, grade, bonus, prevSalary, gender, salary, largeNumber, firstName, middleInitial, lastName, hireDate, localHireDate, loginInstant, loginLocalTime, salaryMonthDay, incrementYearmonth, startTime, lastUpdated, localDateTime, offsetDateTime, yearJoined, durationOfEmployment, Arrays.hashCode(picture), resume, Arrays.hashCode(rawData), phones, vacationZonedDateTime, totalPeriod, idBoxed, isActiveBoxed, rankBoxed, genderBoxed, ageBoxed, salaryBoxed, performanceScoreBoxed, bonusBoxed);
+    return Objects.hash(employeeId, logoutTime, active, deptId, employeeCode, grade, bonus, prevSalary, gender,
+            salary, largeNumber, firstName, middleInitial, lastName, hireDate, localHireDate, loginInstant,
+            loginLocalTime, salaryMonthDay, incrementYearmonth, startTime, lastUpdated, localDateTime, offsetDateTime,
+            yearJoined, durationOfEmployment, Arrays.hashCode(picture), resume, Arrays.hashCode(rawData), phones,
+            vacationZonedDateTime, totalPeriod, idBoxed, isActiveBoxed, rankBoxed, genderBoxed, ageBoxed, salaryBoxed,
+            performanceScoreBoxed, bonusBoxed);
   }
 }

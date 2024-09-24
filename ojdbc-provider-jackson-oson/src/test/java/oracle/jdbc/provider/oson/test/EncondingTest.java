@@ -215,6 +215,12 @@ public class EncondingTest {
 
   }
 
+  @AfterAll
+  public void tearDown() throws SQLException {
+    Assumptions.assumeTrue(conn != null);
+    conn.close();
+  }
+
 
   private void InsertBytes(byte[] bytes) throws SQLException {
     try (PreparedStatement pstmt = conn.prepareStatement("insert into all_types_json (c1,c2) values(?,?)")) {

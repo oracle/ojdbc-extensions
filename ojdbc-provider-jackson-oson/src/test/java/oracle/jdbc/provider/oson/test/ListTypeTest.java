@@ -69,6 +69,7 @@ import java.util.List;
 @TestMethodOrder(OrderAnnotation.class)
 public class ListTypeTest {
   static Connection conn = null;
+  final List<Phone>  insertedPhones = new ArrayList<>();
 
   /**
    * Sets up the database connection and the required tables before all tests are run.
@@ -85,10 +86,11 @@ public class ListTypeTest {
         ods.setPassword(password);
        conn = ods.getConnection();
       //setup db tables
-      Statement stmt = conn.createStatement();
-      stmt.execute("drop table if exists emp_json");
-      stmt.execute("create table emp_json(c1 number, c2 JSON) tablespace tbs1");
-      stmt.close();
+      try (Statement stmt = conn.createStatement()) {
+        stmt.execute("drop table if exists emp_json");
+        stmt.execute("create table emp_json(c1 number, c2 JSON) tablespace tbs1");
+      }
+
 
     }
     catch (Exception e) {
@@ -110,14 +112,16 @@ public class ListTypeTest {
     phones.add(new Phone("333-222-1111", Phone.Type.WORK));
     phones.add(new Phone("666-555-4444", Phone.Type.MOBILE));
     phones.add(new Phone("999-888-7777", Phone.Type.HOME));
+    insertedPhones.addAll(phones);
 
-    PreparedStatement
-      pstmt = conn.prepareStatement("insert into emp_json (c1,c2) values(?,?)");
-    pstmt.setInt(1, 1);
+    try(PreparedStatement
+                pstmt = conn.prepareStatement("insert into emp_json (c1,c2) values(?,?)");){
+      pstmt.setInt(1, 1);
 
-    pstmt.setObject(2, phones, OracleType.JSON);
-    pstmt.execute();
-    pstmt.close();
+      pstmt.setObject(2, phones, OracleType.JSON);
+      pstmt.execute();
+    }
+
   }
 
   /**
@@ -130,21 +134,25 @@ public class ListTypeTest {
   @Order(2)
   public void retieveFromDatabase() throws SQLException, IOException {
     Assumptions.assumeTrue(conn != null);
-    Statement stmt = conn.createStatement();
-    ResultSet rs = stmt.executeQuery("select c1, c2 from emp_json order by c1");
-    while(rs.next()) {
-      
-      JavaType type = TypeFactory.defaultInstance().constructParametricType(List.class, Phone.class); 
-      List<Phone> phones = (List<Phone>) JacksonOsonConverter.convertValue(
-          rs.getObject(2, JsonNode.class), type);
+    List<Phone> retrievedPhones = new ArrayList<>();
+    try(Statement stmt = conn.createStatement();) {
+      try ( ResultSet rs = stmt.executeQuery("select c1, c2 from emp_json order by c1");) {
+        while(rs.next()) {
+          JavaType type = TypeFactory.defaultInstance().constructParametricType(List.class, Phone.class);
+          List<Phone> phones = (List<Phone>) JacksonOsonConverter.convertValue(
+                  rs.getObject(2, JsonNode.class), type);
+          retrievedPhones.addAll(phones);
 
-        for (Phone phone : phones) {
-            System.out.println(phone.toString());
         }
+      }
     }
-    rs.close();
-    stmt.close();
+    Assertions.assertEquals(insertedPhones, retrievedPhones);
 
+  }
+  @AfterAll
+  public void tearDown() throws SQLException {
+    Assumptions.assumeTrue(conn != null);
+    conn.close();
   }
 
 }
