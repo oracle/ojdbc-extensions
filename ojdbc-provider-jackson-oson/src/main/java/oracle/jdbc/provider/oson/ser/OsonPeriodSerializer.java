@@ -42,6 +42,7 @@ package oracle.jdbc.provider.oson.ser;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.fasterxml.jackson.databind.util.TokenBuffer;
 import oracle.jdbc.provider.oson.OsonGenerator;
 
 import java.io.IOException;
@@ -84,8 +85,13 @@ public class OsonPeriodSerializer extends StdSerializer<Period> {
    */
   @Override
   public void serialize(Period value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-    final OsonGenerator _gen = (OsonGenerator)gen;
+    if (gen instanceof TokenBuffer) {
+      gen.writeString(value.toString());
+    } else {
+      final OsonGenerator _gen = (OsonGenerator)gen;
 
-    _gen.writePeriod(value);
+      _gen.writePeriod(value);
+    }
+
   }
 }
