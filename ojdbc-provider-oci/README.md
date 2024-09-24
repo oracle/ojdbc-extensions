@@ -392,8 +392,8 @@ The TCPS Wallet Provider provides Oracle JDBC with keys and certificates managed
 to establish secure TLS connections with an Autonomous Database. This is a Resource Provider identified by the name
 `ojdbc-provider-oci-vault-tls`.
 
-- If the wallet is protected with a password, it is treated as a PKCS12 keystore.
-- If no password is provided, the wallet is treated as an SSO keystore.
+- The type parameter must be specified to indicate the wallet format: SSO, PKCS12, or PEM.
+- The password must be provided for wallets that require a password (e.g., PKCS12 or password-protected PEM files).
 
 In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider also supports the parameters listed below.
 
@@ -422,7 +422,7 @@ Optional password for PKCS12 or protected PEM files. If omitted, the file is ass
 </td>
 <td>Any valid password for the wallet</td>
 <td>
-<i>No default value. PKCS12 wallets require a password.</i>
+<i>No default value. PKCS12 and password-protected PEM files require a password.</i>
 </td>
 </tr>
 <tr>
@@ -438,7 +438,7 @@ Specifies the type of the file being used.
 </tbody>
 </table>
 
-An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault.properties](example-vault.properties).
+An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault-wallet.properties](example-vault-wallet.properties).
 
 ## SEPS Wallet Provider
 
@@ -446,8 +446,10 @@ The SEPS Wallet Provider provides Oracle JDBC with a username and password manag
 stored in a Secure External Password Store (SEPS) wallet. This is a Resource Provider identified by the name
 `ojdbc-provider-oci-vault-seps`.
 
-- If the wallet is protected with a password, it is treated as a PKCS12 keystore.
-- If no password is provided, the wallet is treated as an SSO keystore.
+- The provider first retrieves the default credentials (oracle.security.client.default_username and
+oracle.security.client.default_password). If the default credentials are not found, it looks for indexed connection strings 
+(e.g., oracle.security.client.connect_string1, oracle.security.client.username1, oracle.security.client.password1).
+If multiple connection strings are found, an error is thrown.
 
 In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider also supports the parameters listed below.
 
@@ -482,7 +484,7 @@ Optional password for wallets stored as PKCS12 keystores. If omitted, the wallet
 </tbody>
 </table>
 
-An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault.properties](example-vault.properties).
+An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault-wallet.properties](example-vault-wallet.properties).
 
 
 ## Access Token Provider
