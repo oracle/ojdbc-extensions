@@ -214,6 +214,9 @@ public class Employee {
    */
   private Period totalPeriod;
 
+  /**
+   * Boxed primitive types
+   */
   private Integer idBoxed;
   private Boolean isActiveBoxed;
   private Byte rankBoxed;
@@ -222,9 +225,6 @@ public class Employee {
   private Long salaryBoxed;
   private Float performanceScoreBoxed;
   private Double bonusBoxed;
-
-  //todo: add annotations
-
 
   /**
    * Default constructor for the Employee class.
