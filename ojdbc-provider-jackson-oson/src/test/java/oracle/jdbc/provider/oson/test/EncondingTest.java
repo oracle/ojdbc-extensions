@@ -160,7 +160,8 @@ public class EncondingTest {
   public void convertToOsonUsingStreamAndObjectNode(String encoding) throws Exception {
     Assumptions.assumeTrue(conn != null);
     objectNode = om.valueToTree(employee);
-
+//    Employee readTest = om.treeToValue(objectNode, Employee.class);
+//    System.out.println(readTest);
     JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
     try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
       try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
@@ -170,6 +171,7 @@ public class EncondingTest {
       InsertBytes(out.toByteArray());
       // Retrieve the converted bytes
       ObjectNode objectNodeAfterConvert =  ReadObjectNode();
+
       verifyEquals(objectNode, objectNodeAfterConvert);
     }
   }

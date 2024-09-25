@@ -105,6 +105,7 @@ public class OsonParser extends ParserBase {
     OSON_EVENT_TO_JSON_TOKEN.put(OracleJsonParser.Event.VALUE_FLOAT, JsonToken.VALUE_NUMBER_FLOAT);
     OSON_EVENT_TO_JSON_TOKEN.put(OracleJsonParser.Event.VALUE_TIMESTAMP, JsonToken.VALUE_STRING);
     OSON_EVENT_TO_JSON_TOKEN.put(OracleJsonParser.Event.VALUE_TIMESTAMPTZ, JsonToken.VALUE_STRING);
+    OSON_EVENT_TO_JSON_TOKEN.put(OracleJsonParser.Event.VALUE_BINARY,JsonToken.VALUE_EMBEDDED_OBJECT);
   }
 
   /**
@@ -197,7 +198,7 @@ public class OsonParser extends ParserBase {
 
         case VALUE_BINARY:
           if(DEBUG) logger.log(Level.FINEST, "VALUE_BINARY");
-          return JsonToken.VALUE_STRING;
+          return JsonToken.VALUE_EMBEDDED_OBJECT;
           
         case VALUE_INTERVALDS:
           if(DEBUG) logger.log(Level.FINEST, "VALUE_INTERVALDS");
@@ -270,6 +271,14 @@ public class OsonParser extends ParserBase {
       parser.skipObject();
     }
     return this;
+  }
+  @Override
+  public Object getEmbeddedObject()
+  {
+    if (currentEvent == Event.VALUE_BINARY) {
+      return parser.getBytes();
+    }
+    return null;
   }
 
   /**

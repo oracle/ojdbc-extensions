@@ -55,6 +55,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.Period;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -329,8 +330,8 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeBinary(Base64Variant bv, byte[] data, int offset, int len) throws IOException {
     _verifyValueWrite("writeBinary");
-    //gen.write(Base64.getEncoder().encode(Arrays.copyOfRange(data, offset, offset+len)));
-    gen.write(Arrays.copyOfRange(data, offset, offset+len));
+    gen.write(Base64.getEncoder().encode(Arrays.copyOfRange(data, offset, offset+len)));
+//    gen.write(Arrays.copyOfRange(data, offset, offset+len));
   }
 
   /**

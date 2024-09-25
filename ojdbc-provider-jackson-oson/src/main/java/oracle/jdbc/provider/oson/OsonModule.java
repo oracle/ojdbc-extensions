@@ -108,26 +108,26 @@ public class OsonModule extends SimpleModule {
   public OsonModule() {
     super(VERSION);
 
-    addDeserializer(LocalDateTime.class, OsonLocalDateTimeDeserializer.INSTANCE);
-    addSerializer(LocalDateTime.class, OsonLocalDateTimeSerializer.INSTANCE);
+//    addDeserializer(LocalDateTime.class, OsonLocalDateTimeDeserializer.INSTANCE);
+//    addSerializer(LocalDateTime.class, OsonLocalDateTimeSerializer.INSTANCE);
 
-    addDeserializer(OffsetDateTime.class, OsonOffsetDateTimeDeserializer.INSTANCE);
-    addSerializer(OffsetDateTime.class, OsonOffsetDateTimeSerializer.INSTANCE);
+//    addDeserializer(OffsetDateTime.class, OsonOffsetDateTimeDeserializer.INSTANCE);
+//    addSerializer(OffsetDateTime.class, OsonOffsetDateTimeSerializer.INSTANCE);
     
-    addDeserializer(Period.class, OsonPeriodDeserializer.INSTANCE);
-    addSerializer(Period.class, OsonPeriodSerializer.INSTANCE);
-    
-    addDeserializer(Duration.class, OsonDurationDeserializer.INSTANCE);
-    addSerializer(Duration.class, OsonDurationSerializer.INSTANCE);
-    
-    addDeserializer(BigInteger.class, OsonBigIntegerDeserializer.INSTANCE);
-    addSerializer(BigInteger.class, OsonBigIntegerSerializer.INSTANCE);
-    
-    addDeserializer(Year.class, OsonYearDeserializer.INSTANCE);
-    addSerializer(Year.class, OsonYearSerializer.INSTANCE);
-    
-    addDeserializer(byte[].class, OsonByteDeserializer.INSTANCE);
-    addSerializer(byte[].class, OsonByteSerializer.INSTANCE);
+//    addDeserializer(Period.class, OsonPeriodDeserializer.INSTANCE);
+//    addSerializer(Period.class, OsonPeriodSerializer.INSTANCE);
+//
+//    addDeserializer(Duration.class, OsonDurationDeserializer.INSTANCE);
+//    addSerializer(Duration.class, OsonDurationSerializer.INSTANCE);
+//
+//    addDeserializer(BigInteger.class, OsonBigIntegerDeserializer.INSTANCE);
+//    addSerializer(BigInteger.class, OsonBigIntegerSerializer.INSTANCE);
+//
+//    addDeserializer(Year.class, OsonYearDeserializer.INSTANCE);
+//    addSerializer(Year.class, OsonYearSerializer.INSTANCE);
+//
+//    addDeserializer(byte[].class, OsonByteDeserializer.INSTANCE);
+//    addSerializer(byte[].class, OsonByteSerializer.INSTANCE);
     
   }
 }

@@ -43,6 +43,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 
+import com.fasterxml.jackson.databind.node.TreeTraversingParser;
 import oracle.jdbc.provider.oson.OsonParser;
 
 import java.io.IOException;
@@ -86,8 +87,13 @@ public class OsonBigIntegerDeserializer extends StdScalarDeserializer<BigInteger
    */
   @Override
   public BigInteger deserialize(JsonParser p, DeserializationContext ctxt) throws IOException{
-    final OsonParser _parser = (OsonParser)p;
+    if( p instanceof TreeTraversingParser) {
+      return p.getBigIntegerValue();
+    }
+    else {
+      final OsonParser _parser = (OsonParser)p;
 
-    return _parser.getBigIntegerValue();
+      return _parser.getBigIntegerValue();
+    }
   }
 }

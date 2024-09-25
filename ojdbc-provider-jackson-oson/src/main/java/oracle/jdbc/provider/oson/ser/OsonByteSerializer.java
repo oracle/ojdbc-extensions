@@ -82,15 +82,16 @@ public class OsonByteSerializer extends StdSerializer<byte[]> {
    */
   @Override
   public void serialize(byte[] value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-    if (gen instanceof TokenBuffer) {
-      gen.writeBinary(provider.getConfig().getBase64Variant(),
-              value, 0, value.length);
-    } else {
-      final OsonGenerator _gen = (OsonGenerator)gen;
-
-      _gen.writeBinary(value);
-    }
-
+//    if (gen instanceof TokenBuffer) {
+//      gen.writeBinary(provider.getConfig().getBase64Variant(),
+//              value, 0, value.length);
+//    } else {
+//      final OsonGenerator _gen = (OsonGenerator)gen;
+//
+//      _gen.writeBinary(value);
+//    }
+          gen.writeBinary(provider.getConfig().getBase64Variant(),
+  value, 0, value.length);
 
   }
 }
