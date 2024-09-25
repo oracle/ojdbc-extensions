@@ -39,6 +39,8 @@
 package oracle.jdbc.provider.oson.test;
 
 import oracle.jdbc.provider.oson.JacksonOsonConverter;
+import oracle.jdbc.provider.oson.model.AnnonationTest;
+import oracle.jdbc.provider.oson.model.AnnotationTestInstances;
 import oracle.jdbc.provider.oson.model.Employee;
 import oracle.jdbc.provider.oson.model.EmployeeInstances;
 import oracle.sql.json.OracleJsonFactory;
@@ -48,7 +50,6 @@ import org.junit.jupiter.api.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 
 /**
  * The {@code SerializerTest} class tests the serialization and deserialization of
@@ -86,6 +87,26 @@ public class SerializerTest {
    Employee j = (Employee) conv.deserialize(oParser, Employee.class);
 
    Assertions.assertEquals(emp, j);
+
+  }
+
+  @Test
+  @Order(2)
+  public void serialiZerTest2() {
+      JacksonOsonConverter conv = new JacksonOsonConverter();
+
+      OracleJsonFactory factory = new OracleJsonFactory();
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+      AnnonationTest annOrig = AnnotationTestInstances.getRandomInstance();
+
+      OracleJsonGenerator oGen = factory.createJsonBinaryGenerator(out);
+      conv.serialize(oGen, annOrig );
+      oGen.close();
+
+      OracleJsonParser oParser = factory.createJsonBinaryParser(new ByteArrayInputStream(out.toByteArray()));
+      AnnonationTest annDeser = (AnnonationTest) conv.deserialize(oParser, AnnonationTest.class);
+      Assertions.assertEquals(annOrig, annDeser);
 
   }
 }

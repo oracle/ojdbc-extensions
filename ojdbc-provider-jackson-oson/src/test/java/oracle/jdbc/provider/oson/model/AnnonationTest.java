@@ -50,7 +50,7 @@ public class AnnonationTest {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "MM-dd")
     private MonthDay monthDay;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
     private Instant instant;
 
 
@@ -225,6 +225,29 @@ public class AnnonationTest {
 
     public void setInstant(Instant instant) {
         this.instant = instant;
+    }
+
+    @Override
+    public String toString() {
+        return "AnnonationTest{" +
+                "name='" + name + '\'' +
+                ", age=" + age +
+                ", isActive=" + isActive +
+                ", dateOfBirth=" + dateOfBirth +
+                ", localDate=" + localDate +
+                ", localTime=" + localTime +
+                ", localDateTime=" + localDateTime +
+                ", zonedDateTime=" + zonedDateTime +
+                ", offsetDateTime=" + offsetDateTime +
+                ", offsetTime=" + offsetTime +
+                ", yearMonth=" + yearMonth +
+                ", monthDay=" + monthDay +
+                ", instant=" + instant +
+                ", email='" + email + '\'' +
+                ", phones=" + phones +
+                ", address=" + address +
+                ", job=" + job +
+                '}';
     }
 
     @Override

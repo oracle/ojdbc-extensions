@@ -29,7 +29,7 @@ public class AnnotationTestInstances {
         return testList;
     }
 
-    public static AnnonationTest getRandomInstances () {
+    public static AnnonationTest getRandomInstance() {
         if (testList.isEmpty())
             instantiateInstances();
         return testList.get(new Random().nextInt(testList.size()));
