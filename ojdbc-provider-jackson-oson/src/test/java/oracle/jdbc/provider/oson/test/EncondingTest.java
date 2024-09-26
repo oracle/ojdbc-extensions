@@ -56,9 +56,6 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.io.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -66,6 +63,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.*;
 import java.time.*;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * The {@code AllTypesTest} class is a JUnit test class for testing the conversion of
@@ -94,18 +93,14 @@ public class EncondingTest {
   Connection conn = null;
   PreparedStatement insertStatement = null;
 
-  ObjectNode objectNode;
+  private static final Employee employee = EmployeeInstances.getEmployee();
 
-  Employee employee = EmployeeInstances.getEmployee();
+  private static final ObjectNode objectNode;
 
-  /**
-   * Sets up the test environment by initializing the database connection and creating
-   * the necessary tables for testing.
-   */
-  @BeforeAll
-  public static void beforeAll() {
+  static {
     om.findAndRegisterModules();
     om.registerModule(new OsonModule());
+    objectNode = om.valueToTree(employee);
   }
 
   @BeforeEach
@@ -150,32 +145,6 @@ public class EncondingTest {
   }
 
 
-  /**
-   * Converts the {@code AllOracleTypes} object to OSON format.
-   *
-   */
-  @Order(5)
-  @ParameterizedTest()
-  @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
-  public void convertToOsonUsingStreamAndObjectNode(String encoding) throws Exception {
-    Assumptions.assumeTrue(conn != null);
-    objectNode = om.valueToTree(employee);
-    Employee readTest = om.treeToValue(objectNode, Employee.class);
-    System.out.println(readTest);
-    JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
-    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-      try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
-        om.writeValue(osonGen, objectNode);
-      }
-      // Insert the converted bytes
-      InsertBytes(out.toByteArray());
-      // Retrieve the converted bytes
-      ObjectNode objectNodeAfterConvert =  ReadObjectNode();
-
-      verifyEquals(objectNode, objectNodeAfterConvert);
-    }
-  }
-
   @Order(2)
   @ParameterizedTest()
   @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
@@ -217,12 +186,72 @@ public class EncondingTest {
 
   }
 
-  @AfterAll
-  public void tearDown() throws SQLException {
+
+  /**
+   * Converts the {@code AllOracleTypes} object to OSON format.
+   *
+   */
+  @Order(5)
+  @ParameterizedTest()
+  @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
+  public void convertToOsonUsingStreamAndObjectNode(String encoding) throws Exception {
     Assumptions.assumeTrue(conn != null);
-    conn.close();
+
+    JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
+    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+      try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
+        om.writeValue(osonGen, objectNode);
+      }
+      // Insert the converted bytes
+      InsertBytes(out.toByteArray());
+      ObjectNode intermediateNode = om.readValue(out.toByteArray(), ObjectNode.class);
+      verifyEquals(objectNode, intermediateNode);
+      // Retrieve the converted bytes
+      ObjectNode objectNodeAfterConvert =  ReadObjectNode();
+      verifyEquals(objectNode, objectNodeAfterConvert);
+    }
   }
 
+  @Order(6)
+  @ParameterizedTest()
+  @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
+  public void convertToOsonUsingFileAndObjectNode(String encoding) throws Exception {
+    Assumptions.assumeTrue(conn != null);
+
+    JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
+    File out = new File("file.json");
+    try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
+      om.writeValue(osonGen, objectNode);
+    }
+    // Insert the converted bytes
+    InsertBytes(Files.readAllBytes(Paths.get(out.getPath())));
+    // Retrieve the converted bytes
+    ObjectNode objectNodeAfterConvert =  ReadObjectNode();
+    verifyEquals(objectNode, objectNodeAfterConvert);
+
+  }
+
+  @Order(7)
+  @ParameterizedTest()
+  @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
+  public void convertToOsonUsingDataOutputAndObjectNode(String encoding) throws Exception {
+    Assumptions.assumeTrue(conn != null);
+
+    JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
+    try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+         DataOutputStream out = new DataOutputStream(byteArrayOutputStream)) {
+      try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator((DataOutput) out, jsonEncoding)) {
+        om.writeValue(osonGen, objectNode);
+      }
+      // Insert the converted bytes
+      InsertBytes(byteArrayOutputStream.toByteArray());
+
+    }
+    // Retrieve the converted bytes
+    ObjectNode objectNodeAfterConvert =  ReadObjectNode();
+    verifyEquals(objectNode, objectNodeAfterConvert);
+
+  }
 
   private void InsertBytes(byte[] bytes) throws SQLException {
     try (PreparedStatement pstmt = conn.prepareStatement("insert into all_types_json (c1,c2) values(?,?)")) {
@@ -248,21 +277,35 @@ public class EncondingTest {
     }
   }
 
-
   private void verifyEquals(Employee employee, Employee employeeAfterConvert) {
     assertEquals(employee, employeeAfterConvert);
   }
 
-  private void verifyEquals(ObjectNode original, ObjectNode converted) {
-    original.fieldNames().forEachRemaining(name -> {
-      System.out.println("Name:" + name);
-      JsonNode originalNode = original.get(name);
-      JsonNode convertedNode = converted.get(name);
-      System.out.println(originalNode);
-      System.out.println(originalNode.getNodeType());
-      System.out.println(convertedNode);
-      System.out.println(convertedNode.getNodeType());
-    });
+  private void verifyEquals(ObjectNode original, ObjectNode converted) throws Exception {
+    assertEquals(original.get("employeeId").intValue(), converted.get("employeeId").intValue());
+    assertEquals(original.get("salary").decimalValue(), converted.get("salary").decimalValue());
+    assertEquals(original.get("largeNumber").bigIntegerValue(), converted.get("largeNumber").bigIntegerValue());
+    assertEquals(original.get("firstName").toString(), converted.get("firstName").toString());
+    assertEquals(original.get("middleInitial").toString(), converted.get("middleInitial").toString());
+    assertEquals(original.get("lastName").toString(), converted.get("lastName").toString());
+    assertEquals(om.convertValue(original.get("hireDate"), Date.class), om.convertValue(converted.get("hireDate"), Date.class));
+    assertEquals(om.convertValue(original.get("localHireDate"), LocalDate.class), om.convertValue(converted.get("localHireDate"), LocalDate.class));
+    assertEquals(om.convertValue(original.get("loginInstant"), Instant.class), om.convertValue(converted.get("loginInstant"), Instant.class));
+    assertEquals(om.convertValue(original.get("loginLocalTime"), LocalTime.class), om.convertValue(converted.get("loginLocalTime"), LocalTime.class));
+    assertEquals(om.convertValue(original.get("salaryMonthDay"), MonthDay.class), om.convertValue(converted.get("salaryMonthDay"), MonthDay.class));
+    assertEquals(om.convertValue(original.get("incrementYearmonth"), YearMonth.class), om.convertValue(converted.get("incrementYearmonth"), YearMonth.class));
+    assertEquals(original.get("logoutTime").longValue(), converted.get("logoutTime").longValue());
+    assertEquals(om.convertValue(original.get("startTime"), Time.class), om.convertValue(converted.get("startTime"), Time.class));
+    assertEquals(om.convertValue(original.get("lastUpdated"), Timestamp.class), om.convertValue(converted.get("lastUpdated"), Timestamp.class));
+    assertEquals(om.convertValue(original.get("localDateTime"), LocalDateTime.class), om.convertValue(converted.get("localDateTime"), LocalDateTime.class));
+    assertEquals(om.convertValue(original.get("offsetDateTime"), OffsetDateTime.class), om.convertValue(converted.get("offsetDateTime"), OffsetDateTime.class));
+    assertEquals(om.convertValue(original.get("yearJoined"), Year.class), om.convertValue(converted.get("yearJoined"), Year.class));
+    assertEquals(om.convertValue(original.get("durationOfEmployment"), Duration.class), om.convertValue(converted.get("durationOfEmployment"), Duration.class));
+    assertEquals(original.get("resume").toString(), converted.get("resume").toString());
+    assertEquals(original.get("active").booleanValue(), converted.get("active").booleanValue());
+    assertEquals(om.convertValue(original.get("vacationZonedDateTime"), ZonedDateTime.class), om.convertValue(converted.get("vacationZonedDateTime"), ZonedDateTime.class));
+    assertArrayEquals(original.get("rawData").binaryValue(), converted.get("rawData").binaryValue());
+    assertArrayEquals(original.get("picture").binaryValue(), converted.get("picture").binaryValue());
   }
 
 }
