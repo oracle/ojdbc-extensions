@@ -41,6 +41,7 @@ package oracle.jdbc.provider.oson.deser;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.deser.std.NumberDeserializers;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 
 import com.fasterxml.jackson.databind.node.TreeTraversingParser;
@@ -88,7 +89,7 @@ public class OsonBigIntegerDeserializer extends StdScalarDeserializer<BigInteger
   @Override
   public BigInteger deserialize(JsonParser p, DeserializationContext ctxt) throws IOException{
     if( p instanceof TreeTraversingParser) {
-      return p.getBigIntegerValue();
+      return NumberDeserializers.BigIntegerDeserializer.instance.deserialize(p, ctxt);
     }
     else {
       final OsonParser _parser = (OsonParser)p;

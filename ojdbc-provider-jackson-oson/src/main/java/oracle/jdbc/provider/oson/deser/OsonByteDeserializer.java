@@ -41,7 +41,10 @@ package oracle.jdbc.provider.oson.deser;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.deser.std.NumberDeserializers;
+import com.fasterxml.jackson.databind.deser.std.PrimitiveArrayDeserializers;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
+import com.fasterxml.jackson.databind.node.TreeTraversingParser;
 import oracle.jdbc.provider.oson.OsonParser;
 
 import java.io.IOException;
@@ -83,8 +86,14 @@ public class OsonByteDeserializer extends StdScalarDeserializer<byte[]> {
     */
    @Override
    public byte[] deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-      final OsonParser _parser = (OsonParser)p;
+      if(p instanceof TreeTraversingParser) {
+         return (byte[]) PrimitiveArrayDeserializers.forType(byte.class).deserialize(p,ctxt);
+      } else {
+         final OsonParser _parser = (OsonParser)p;
 
-      return _parser.getBinaryValue();
+         return _parser.getBinaryValue();
+      }
+
+
    }
 }
