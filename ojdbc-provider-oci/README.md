@@ -392,6 +392,11 @@ The TCPS Wallet Provider provides Oracle JDBC with keys and certificates managed
 to establish secure TLS connections with an Autonomous Database. This is a Resource Provider identified by the name
 `ojdbc-provider-oci-vault-tls`.
 
+For example, when connecting to Autonomous Database Serverless with mutual TLS (mTLS), you need to configure the JDBC-thin
+driver with its client certificate. If this certificate is stored in a wallet file (e.g., `cwallet.sso`, `ewallet.p12`, `ewallet.pem`),
+you may store it in a vault secret in OCI for additional security.
+You can then use this provider that will retrieve the wallet content using the OCI SDK and pass it to the JDBC thin driver.
+
 - The type parameter must be specified to indicate the wallet format: SSO, PKCS12, or PEM.
 - The password must be provided for wallets that require a password (e.g., PKCS12 or password-protected PEM files).
 
@@ -445,6 +450,12 @@ An example of a [connection properties file](https://docs.oracle.com/en/database
 The SEPS Wallet Provider provides Oracle JDBC with a username and password managed by the OCI Vault service,
 stored in a Secure External Password Store (SEPS) wallet. This is a Resource Provider identified by the name
 `ojdbc-provider-oci-vault-seps`.
+
+- The SEPS wallet securely stores encrypted database credentials, including the username, password, and connection strings.
+These credentials can be stored as default values, such as **oracle.security.client.default_username** and **oracle.security.client.default_password**,
+or as indexed credentials, for example, **oracle.security.client.username1**, **oracle.security.client.password1**,
+and **oracle.security.client.connect_string1**.
+
 
 - The provider first retrieves the default credentials (oracle.security.client.default_username and
 oracle.security.client.default_password). If the default credentials are not found, it looks for indexed connection strings 
