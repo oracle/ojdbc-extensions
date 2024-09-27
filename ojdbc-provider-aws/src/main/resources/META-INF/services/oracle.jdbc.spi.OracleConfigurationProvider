@@ -1,1 +1,2 @@
 oracle.jdbc.provider.aws.configuration.AWSS3ConfigurationProvider
+oracle.jdbc.provider.aws.configuration.AWSAppConfigProvider
