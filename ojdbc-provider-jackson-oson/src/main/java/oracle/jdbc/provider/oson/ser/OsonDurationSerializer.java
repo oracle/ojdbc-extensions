@@ -37,15 +37,19 @@
  */
 package oracle.jdbc.provider.oson.ser;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 import com.fasterxml.jackson.datatype.jsr310.DecimalUtils;
+import com.fasterxml.jackson.datatype.jsr310.ser.DurationSerializer;
+import com.fasterxml.jackson.datatype.jsr310.util.DurationUnitConverter;
 import oracle.jdbc.provider.oson.OsonGenerator;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Serializer class for handling {@link Duration} objects using Oson's generation system.
@@ -60,7 +64,7 @@ import java.time.Duration;
  * @see OsonGenerator
  * @see Duration
  */
-public class OsonDurationSerializer extends StdSerializer<Duration> {
+public class OsonDurationSerializer extends DurationSerializer {
 
   /**
    * A singleton instance of the serializer.
@@ -71,8 +75,33 @@ public class OsonDurationSerializer extends StdSerializer<Duration> {
    * Default constructor that initializes the serializer for the {@link Duration} class.
    */
   public OsonDurationSerializer() {
-    super(Duration.class);
+    super();
   }
+
+  protected OsonDurationSerializer(OsonDurationSerializer base,
+                               Boolean useTimestamp, DateTimeFormatter dtf) {
+    super(base, useTimestamp, dtf);
+  }
+
+  protected OsonDurationSerializer(OsonDurationSerializer base,
+                               Boolean useTimestamp, Boolean useNanoseconds, DateTimeFormatter dtf) {
+    super(base, useTimestamp, useNanoseconds, dtf);
+  }
+
+  protected OsonDurationSerializer(OsonDurationSerializer base, DurationUnitConverter converter) {
+    super(base, converter);
+  }
+
+  @Override
+  protected DurationSerializer withFormat(Boolean useTimestamp, DateTimeFormatter dtf, JsonFormat.Shape shape) {
+    return new OsonDurationSerializer(this, useTimestamp, dtf);
+  }
+
+  protected DurationSerializer withConverter(DurationUnitConverter converter) {
+    return new OsonDurationSerializer(this, converter);
+  }
+
+
 
   /**
    * Serializes a {@link Duration} object into JSON format using the {@link OsonGenerator}.
@@ -84,12 +113,11 @@ public class OsonDurationSerializer extends StdSerializer<Duration> {
    */
   @Override
   public void serialize(Duration value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-    if (gen instanceof TokenBuffer) {
-      gen.writeNumber(DecimalUtils.toBigDecimal(value.getSeconds(), value.getNano()));
-    } else {
-      final OsonGenerator _gen = (OsonGenerator)gen;
-
-      _gen.writeDuration(value);
+    if (useTimestamp(provider) && gen instanceof OsonGenerator) {
+      ((OsonGenerator) gen).writeDuration(value);
+    }
+    else {
+      super.serialize(value, gen, provider);
     }
 
   }

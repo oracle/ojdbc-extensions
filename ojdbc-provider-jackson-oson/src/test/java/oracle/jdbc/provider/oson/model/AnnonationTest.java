@@ -23,7 +23,7 @@ public class AnnonationTest {
     @JsonProperty("is_active")
     private boolean isActive;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")  // todo: Formatter with Date and Time types (All)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd@HH:mm:ss.SSSZ")  // todo: Formatter with Date and Time types (All)
     private Date dateOfBirth;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
@@ -32,7 +32,7 @@ public class AnnonationTest {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
     private LocalTime localTime;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd@HH:mm:ss")
     private LocalDateTime localDateTime;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
@@ -115,6 +115,7 @@ public class AnnonationTest {
         isActive = active;
     }
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd@HH:mm:ss.SSSZ")
     public Date getDateOfBirth() {
         return dateOfBirth;
     }
@@ -171,6 +172,7 @@ public class AnnonationTest {
         this.localTime = localTime;
     }
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd@HH:mm:ss")
     public LocalDateTime getLocalDateTime() {
         return localDateTime;
     }

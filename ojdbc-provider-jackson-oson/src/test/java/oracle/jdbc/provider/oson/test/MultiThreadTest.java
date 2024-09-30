@@ -4,6 +4,8 @@ package oracle.jdbc.provider.oson.test;
 import oracle.jdbc.provider.oson.JacksonOsonConverter;
 import oracle.jdbc.provider.oson.model.Employee;
 import oracle.jdbc.provider.oson.model.EmployeeInstances;
+import oracle.jdbc.provider.oson.model.Organisation;
+import oracle.jdbc.provider.oson.model.OrganisationInstances;
 import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonGenerator;
 import oracle.sql.json.OracleJsonParser;
@@ -12,6 +14,8 @@ import org.junit.jupiter.api.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -69,7 +73,6 @@ public class MultiThreadTest {
 
     System.out.println("Total time: "+(System.currentTimeMillis() - start));
   }
-
   /**
    * Runs a multithreaded test with a thread pool of 10 threads that serializes and deserializes
    * {@link Employee} objects. It ensures that the deserialized object is equal to the original.
@@ -79,44 +82,47 @@ public class MultiThreadTest {
   @Order(2)
   public void multithreadTest2() {
 
-    ExecutorService executorService = Executors.newFixedThreadPool(8);
-    long start = System.currentTimeMillis();
+    int[] threads = new int[]{6,8,10,12,14,16};
+    List<Organisation> organisations = OrganisationInstances.getInstances();
+    System.out.println("Starting Test: "+organisations.size());
+    for (int thread : threads) {
+      ExecutorService executorService = Executors.newFixedThreadPool(thread);
+      long start = System.currentTimeMillis();
 
-    for (int i = 0; i < 10; i++) {
-      executorService.execute(() -> {
-        try {
-          for (int j =0;j<1000;j++) {
-            Employee employee = EmployeeInstances.getEmployee();
+      for (int i = 0; i < 100; i++) {
+        executorService.execute(() -> {
+          try {
+            for (Organisation organisation : organisations) {
+              JacksonOsonConverter conv = new JacksonOsonConverter();
+              OracleJsonFactory jsonFactory = new OracleJsonFactory();
+              ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-            JacksonOsonConverter conv = new JacksonOsonConverter();
-            OracleJsonFactory jsonFactory = new OracleJsonFactory();
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-            OracleJsonGenerator generator = jsonFactory.createJsonBinaryGenerator(out);
-            conv.serialize(generator, employee);
-            generator.close();
+              OracleJsonGenerator generator = jsonFactory.createJsonBinaryGenerator(out);
+              conv.serialize(generator, organisation);
+              generator.close();
 
 
-            OracleJsonParser oParser = jsonFactory.createJsonBinaryParser(new ByteArrayInputStream(out.toByteArray()));
-            Employee deserEmployee = (Employee) conv.deserialize(oParser, Employee.class);
+              OracleJsonParser oParser = jsonFactory.createJsonBinaryParser(new ByteArrayInputStream(out.toByteArray()));
+              Organisation deserOrg = (Organisation) conv.deserialize(oParser, Organisation.class);
 
-            Assertions.assertTrue(deserEmployee.equals(employee));
+              Assertions.assertTrue(deserOrg.equals(organisation));
+            }
+          } catch (Exception e) {
+            e.printStackTrace();
           }
+        });
 
+      }
 
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
-      });
+      executorService.shutdown();
+
+      while (!executorService.isTerminated()) {
+      }
+
+      System.out.println("Thread Count: "+thread+" Total time: "+(System.currentTimeMillis() - start));
 
     }
-
-    executorService.shutdown();
-
-    while (!executorService.isTerminated()) {
-    }
-
-    System.out.println("Total time: "+(System.currentTimeMillis() - start));
 
   }
+
 }

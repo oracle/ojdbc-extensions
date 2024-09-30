@@ -38,6 +38,9 @@
 
 package oracle.jdbc.provider.oson.test;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import oracle.jdbc.provider.oson.JacksonOsonConverter;
 import oracle.jdbc.provider.oson.model.AnnonationTest;
 import oracle.jdbc.provider.oson.model.AnnotationTestInstances;
@@ -50,6 +53,7 @@ import org.junit.jupiter.api.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 /**
  * The {@code SerializerTest} class tests the serialization and deserialization of
@@ -78,7 +82,6 @@ public class SerializerTest {
    ByteArrayOutputStream out = new ByteArrayOutputStream();
 
    Employee emp = EmployeeInstances.getEmployee();
-   
    OracleJsonGenerator oGen = factory.createJsonBinaryGenerator(out);
    conv.serialize(oGen, emp );
    oGen.close();
@@ -92,13 +95,20 @@ public class SerializerTest {
 
   @Test
   @Order(2)
-  public void serialiZerTest2() {
+  public void serialiZerTest2() throws IOException {
       JacksonOsonConverter conv = new JacksonOsonConverter();
-
+      AnnonationTest annOrig = AnnotationTestInstances.getRandomInstance();
       OracleJsonFactory factory = new OracleJsonFactory();
       ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-      AnnonationTest annOrig = AnnotationTestInstances.getRandomInstance();
+//      ByteArrayOutputStream out = new ByteArrayOutputStream();
+//      JsonFactory factory = new JsonFactory();
+//      JsonGenerator generator = factory.createGenerator(out);
+//      AnnonationTest annOrig = AnnotationTestInstances.getRandomInstance();
+//      ObjectMapper mapper = new ObjectMapper();
+//      mapper.findAndRegisterModules();
+//      mapper.writeValue(generator, annOrig);
+//      generator.close();
+//      AnnonationTest deser = mapper.readValue(out.toByteArray(), AnnonationTest.class);
 
       OracleJsonGenerator oGen = factory.createJsonBinaryGenerator(out);
       conv.serialize(oGen, annOrig );

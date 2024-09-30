@@ -1,10 +1,6 @@
 package oracle.jdbc.provider.oson.model;
 
-import java.sql.Date;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.time.*;
 
 public class AnnotationTestInstances {
@@ -67,7 +63,7 @@ public class AnnotationTestInstances {
                     "Full Name " + i,
                     20 + i,
                     i % 2 == 0,
-                    Date.valueOf("2015-01-10"),
+                    new Date(),
                     "email" + i + "@example.com",
                     phonesList.get(new Random().nextInt(phonesList.size())),
                     address,

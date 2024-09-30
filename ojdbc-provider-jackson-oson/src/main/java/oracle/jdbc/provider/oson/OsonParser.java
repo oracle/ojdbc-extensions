@@ -439,6 +439,9 @@ public class OsonParser extends ParserBase {
     if (id == JsonTokenId.ID_FIELD_NAME) {
       return currentEvent == OracleJsonParser.Event.KEY_NAME;
     }
+    if(id == JsonTokenId.ID_STRING) {
+      return currentEvent == OracleJsonParser.Event.VALUE_STRING;
+    }
 
     return false;
   }

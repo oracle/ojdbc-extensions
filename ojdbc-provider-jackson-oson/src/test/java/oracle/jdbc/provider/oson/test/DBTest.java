@@ -105,19 +105,19 @@ public class DBTest {
       ods.setUser(userName);
       ods.setPassword(password);
       conn = ods.getConnection();
-      
+
       //setup db tables
       try(Statement stmt = conn.createStatement()) {
         stmt.execute("drop table if exists emp_json");
         stmt.execute("create table emp_json(c1 number, c2 JSON) tablespace tbs1");
       }
 
-      
-    } 
+
+    }
     catch (Exception e) {
       e.printStackTrace();
     }
-    
+
   }
 
   /**
@@ -164,3 +164,15 @@ public class DBTest {
     conn.close();
   }
 }
+
+//
+// 1. Pojo instance (Using Object Mapper)
+// 2. Serialize to OSON
+// 3. Deserialise from OSON to POJO
+// 4. POJO to JSON
+
+// Test 2
+// 1. Pojo instance (Using Object Mapper)
+// 2. Serialize to OSON
+// 2.5 DB store and retrieve in String
+// 3. Check for mat of date in String

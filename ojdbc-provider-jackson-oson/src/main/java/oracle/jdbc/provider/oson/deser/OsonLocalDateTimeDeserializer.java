@@ -38,7 +38,9 @@
 package oracle.jdbc.provider.oson.deser;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonTokenId;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
@@ -48,6 +50,7 @@ import oracle.jdbc.provider.oson.OsonParser;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Deserializer class for handling {@link LocalDateTime} objects using {@link OsonParser}
@@ -62,18 +65,46 @@ import java.time.LocalDateTime;
  * @see OsonParser
  * @see LocalDateTime
  */
-public class OsonLocalDateTimeDeserializer extends StdScalarDeserializer<LocalDateTime> {
+public class OsonLocalDateTimeDeserializer extends LocalDateTimeDeserializer {
 
   /**
    * A singleton instance of the deserializer.
    */
   public static final OsonLocalDateTimeDeserializer INSTANCE = new OsonLocalDateTimeDeserializer();
 
+  public OsonLocalDateTimeDeserializer(DateTimeFormatter formatter) {
+    super(formatter);
+  }
+
+  protected OsonLocalDateTimeDeserializer(LocalDateTimeDeserializer base, Boolean leniency) {
+    super(base, leniency);
+  }
+
+  @Override
+  protected OsonLocalDateTimeDeserializer withDateFormat(DateTimeFormatter formatter) {
+    return new OsonLocalDateTimeDeserializer(formatter);
+  }
+
+  @Override
+  protected OsonLocalDateTimeDeserializer withLeniency(Boolean leniency) {
+    return new OsonLocalDateTimeDeserializer(this, leniency);
+  }
+
+  @Override
+  protected LocalDateTime _fromString(JsonParser p, DeserializationContext ctxt, String string0) throws IOException {
+    return super._fromString(p, ctxt, string0);
+  }
+
+  @Override
+  protected OsonLocalDateTimeDeserializer withShape(JsonFormat.Shape shape) {
+    return this;
+  }
+
   /**
    * Default constructor that initializes the deserializer for the {@link LocalDateTime} class.
    */
   protected OsonLocalDateTimeDeserializer() {
-    super(LocalDateTime.class);
+    super(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
   }
 
   /**
@@ -86,12 +117,12 @@ public class OsonLocalDateTimeDeserializer extends StdScalarDeserializer<LocalDa
    */
   @Override
   public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-    if (p instanceof TreeTraversingParser) {
-      return LocalDateTimeDeserializer.INSTANCE.deserialize(p, ctxt);
-    } else {
+    if(!p.hasTokenId(JsonTokenId.ID_STRING) && p instanceof OsonParser) {
       final OsonParser _parser = (OsonParser)p;
 
       return _parser.readLocalDateTime();
+    } else {
+      return super.deserialize(p, ctxt);
     }
 
   }

@@ -37,16 +37,23 @@
  */
 package oracle.jdbc.provider.oson.deser;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonTokenId;
+import com.fasterxml.jackson.databind.BeanProperty;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 import com.fasterxml.jackson.databind.node.TreeTraversingParser;
 import com.fasterxml.jackson.datatype.jsr310.deser.InstantDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.deser.JSR310DateTimeDeserializerBase;
 import oracle.jdbc.provider.oson.OsonParser;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 
 /**
  * Deserializer class for handling {@link OffsetDateTime} objects using {@link OsonParser}.
@@ -61,7 +68,7 @@ import java.time.OffsetDateTime;
  * @see OsonParser
  * @see OffsetDateTime
  */
-public class OsonOffsetDateTimeDeserializer extends StdScalarDeserializer<OffsetDateTime> {
+public class OsonOffsetDateTimeDeserializer extends InstantDeserializer<OffsetDateTime> {
 
   /**
    * A singleton instance of the deserializer.
@@ -72,8 +79,47 @@ public class OsonOffsetDateTimeDeserializer extends StdScalarDeserializer<Offset
    * Default constructor that initializes the deserializer for the {@link OffsetDateTime} class.
    */
   protected OsonOffsetDateTimeDeserializer() {
-    super(OffsetDateTime.class);
+    super(OffsetDateTime.class, DateTimeFormatter.ISO_OFFSET_DATE_TIME,
+            OffsetDateTime::from,
+            a -> OffsetDateTime.ofInstant(Instant.ofEpochMilli(a.value), a.zoneId),
+            a -> OffsetDateTime.ofInstant(Instant.ofEpochSecond(a.integer, a.fraction), a.zoneId),
+            (d, z) -> (d.isEqual(OffsetDateTime.MIN) || d.isEqual(OffsetDateTime.MAX) ? d : d.withOffsetSameInstant(z.getRules().getOffset(d.toLocalDateTime()))),
+            true);
   }
+
+  protected OsonOffsetDateTimeDeserializer(OsonOffsetDateTimeDeserializer base, DateTimeFormatter f)
+  {
+    super(base,f);
+  }
+
+  @SuppressWarnings("unchecked")
+  protected OsonOffsetDateTimeDeserializer(OsonOffsetDateTimeDeserializer base, Boolean adjustToContextTimezoneOverride)
+  {
+    super(base, adjustToContextTimezoneOverride);
+  }
+
+  @SuppressWarnings("unchecked")
+  protected OsonOffsetDateTimeDeserializer(OsonOffsetDateTimeDeserializer base, DateTimeFormatter f, Boolean leniency)
+  {
+    super(base, f, leniency);
+  }
+
+  @Override
+  protected OsonOffsetDateTimeDeserializer withDateFormat(DateTimeFormatter dtf) {
+    if (dtf == _formatter) {
+      return this;
+    }
+    return new OsonOffsetDateTimeDeserializer(this, dtf);
+  }
+
+  @Override
+  protected OsonOffsetDateTimeDeserializer withLeniency(Boolean leniency) {
+    return new OsonOffsetDateTimeDeserializer(this, _formatter, leniency);
+  }
+
+  @Override
+  protected OsonOffsetDateTimeDeserializer withShape(JsonFormat.Shape shape) { return this; }
+
 
   /**
    * Deserializes an {@link OffsetDateTime} object from the JSON input using the {@link OsonParser}.
@@ -85,12 +131,12 @@ public class OsonOffsetDateTimeDeserializer extends StdScalarDeserializer<Offset
    */
   @Override
   public OffsetDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-    if (p instanceof TreeTraversingParser) {
-      return InstantDeserializer.OFFSET_DATE_TIME.deserialize(p, ctxt);
-    } else {
+    if(!p.hasTokenId(JsonTokenId.ID_STRING) && p instanceof OsonParser) {
       final OsonParser _parser = (OsonParser)p;
 
       return _parser.readOffsetDateTime();
+    } else {
+      return super.deserialize(p, ctxt);
     }
 
   }

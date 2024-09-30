@@ -38,11 +38,13 @@
 package oracle.jdbc.provider.oson.deser;
 
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonTokenId;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 import com.fasterxml.jackson.databind.node.TreeTraversingParser;
 import com.fasterxml.jackson.datatype.jsr310.deser.DurationDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.util.DurationUnitConverter;
 import oracle.jdbc.provider.oson.OsonParser;
 
 import java.io.IOException;
@@ -62,7 +64,7 @@ import java.time.Duration;
  * @see OsonParser
  * @see Duration
  */
-public class OsonDurationDeserializer extends StdScalarDeserializer<Duration> {
+public class OsonDurationDeserializer extends DurationDeserializer {
 
   /**
    * A singleton instance of the deserializer.
@@ -74,8 +76,29 @@ public class OsonDurationDeserializer extends StdScalarDeserializer<Duration> {
    * Default constructor that initializes the deserializer for the {@link Duration} class.
    */
   protected OsonDurationDeserializer() {
-    super(Duration.class);
+    super();
   }
+
+  protected OsonDurationDeserializer(DurationDeserializer base, Boolean leniency) {
+    super(base, leniency);
+  }
+
+  /**
+   * @since 2.12
+   */
+  protected OsonDurationDeserializer(OsonDurationDeserializer base, DurationUnitConverter converter) {
+    super(base, base._isLenient);
+  }
+
+  @Override
+  protected OsonDurationDeserializer withLeniency(Boolean leniency) {
+    return new OsonDurationDeserializer(this, leniency);
+  }
+
+  protected DurationDeserializer withConverter(DurationUnitConverter converter) {
+    return new OsonDurationDeserializer(this, converter);
+  }
+
 
   /**
    * Deserializes a {@link Duration} object from the JSON input using the {@link OsonParser}.
@@ -87,12 +110,12 @@ public class OsonDurationDeserializer extends StdScalarDeserializer<Duration> {
    */
   @Override
   public Duration deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-    if (p instanceof TreeTraversingParser) {
-      return DurationDeserializer.INSTANCE.deserialize(p, ctxt);
-    } else {
+    if(!p.hasTokenId(JsonTokenId.ID_STRING) && p instanceof OsonParser) {
       final OsonParser _parser = (OsonParser)p;
 
       return _parser.readDuration();
+    } else {
+      return super.deserialize(p, ctxt);
     }
 
   }

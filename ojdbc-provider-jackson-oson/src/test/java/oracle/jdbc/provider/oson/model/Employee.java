@@ -1017,7 +1017,8 @@ public class Employee {
             && Objects.equals(isActiveBoxed, employee.isActiveBoxed) && Objects.equals(rankBoxed, employee.rankBoxed)
             && Objects.equals(genderBoxed, employee.genderBoxed) && Objects.equals(ageBoxed, employee.ageBoxed)
             && Objects.equals(salaryBoxed, employee.salaryBoxed) && Objects.equals(performanceScoreBoxed, employee.performanceScoreBoxed)
-            && Objects.equals(bonusBoxed, employee.bonusBoxed);
+            && Objects.equals(bonusBoxed, employee.bonusBoxed)
+            && Arrays.equals(picture, employee.picture) && Arrays.equals(rawData, employee.rawData);
   }
 
   @Override

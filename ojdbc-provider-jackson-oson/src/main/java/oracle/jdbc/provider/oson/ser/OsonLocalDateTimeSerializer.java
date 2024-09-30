@@ -38,16 +38,19 @@
 
 package oracle.jdbc.provider.oson.ser;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import oracle.jdbc.provider.oson.OsonGenerator;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Serializer class for handling {@link LocalDateTime} objects using {@link OsonGenerator}.
@@ -62,7 +65,7 @@ import java.time.LocalDateTime;
  * @see OsonGenerator
  * @see LocalDateTime
  */
-public class OsonLocalDateTimeSerializer extends StdSerializer<LocalDateTime> {
+public class OsonLocalDateTimeSerializer extends LocalDateTimeSerializer {
 
   /**
    * A singleton instance of the serializer.
@@ -73,7 +76,25 @@ public class OsonLocalDateTimeSerializer extends StdSerializer<LocalDateTime> {
    * Default constructor that initializes the serializer for the {@link LocalDateTime} class.
    */
   public OsonLocalDateTimeSerializer() {
-    super(LocalDateTime.class);
+    super(null);
+  }
+
+  public OsonLocalDateTimeSerializer(DateTimeFormatter f) {
+    super(f);
+  }
+
+  protected OsonLocalDateTimeSerializer(LocalDateTimeSerializer base, Boolean useTimestamp, Boolean useNanoseconds, DateTimeFormatter f) {
+    super(base, useTimestamp, useNanoseconds, f);
+  }
+
+  @Override
+  protected LocalDateTimeSerializer withFormat(Boolean useTimestamp, DateTimeFormatter f, JsonFormat.Shape shape) {
+    return new OsonLocalDateTimeSerializer(this, useTimestamp, _useNanoseconds, f);
+  }
+
+  @Override
+  protected DateTimeFormatter _defaultFormatter() {
+    return super._defaultFormatter();
   }
 
   /**
@@ -86,14 +107,27 @@ public class OsonLocalDateTimeSerializer extends StdSerializer<LocalDateTime> {
    */
   @Override
   public void serialize(LocalDateTime value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-    if (gen instanceof TokenBuffer) {
-      LocalDateTimeSerializer.INSTANCE.serialize(value, gen, provider);
-    } else {
-      final OsonGenerator _gen = (OsonGenerator)gen;
 
-      _gen.writeLocalDateTime(value);
+    if (useTimestamp(provider) && gen instanceof OsonGenerator) {
+      ((OsonGenerator) gen).writeLocalDateTime(value);
     }
+    else {
+      super.serialize(value, gen, provider);
+    }
+  }
 
+  @Override
+  public void serializeWithType(LocalDateTime value, JsonGenerator g, SerializerProvider provider, TypeSerializer typeSer) throws IOException {
+    super.serializeWithType(value, g, provider, typeSer);
+  }
 
+  @Override
+  protected JsonToken serializationShape(SerializerProvider provider) {
+    return super.serializationShape(provider);
+  }
+
+  @Override
+  protected LocalDateTimeSerializer withFeatures(Boolean writeZoneId, Boolean writeNanoseconds) {
+    return (LocalDateTimeSerializer) super.withFeatures(writeZoneId, writeNanoseconds);
   }
 }

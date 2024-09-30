@@ -113,7 +113,7 @@ public class OsonModule extends SimpleModule {
 
     addDeserializer(OffsetDateTime.class, OsonOffsetDateTimeDeserializer.INSTANCE);
     addSerializer(OffsetDateTime.class, OsonOffsetDateTimeSerializer.INSTANCE);
-    
+
     addDeserializer(Period.class, OsonPeriodDeserializer.INSTANCE);
     addSerializer(Period.class, OsonPeriodSerializer.INSTANCE);
 
