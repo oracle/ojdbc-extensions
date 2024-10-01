@@ -42,6 +42,11 @@ public class VaultSEPSProviderTest {
             .ifPresent(password -> testParameters.put("walletPassword",
                     password));
 
+    Optional.ofNullable(TestProperties.getOptional(
+                    OciTestProperty.OCI_SEPS_CONNECTION_STRING_INDEX))
+            .ifPresent(index -> testParameters.put("connectionStringIndex",
+                    index));
+
     Map<OracleResourceProvider.Parameter, CharSequence> parameterValues =
             createParameterValues(PASSWORD_PROVIDER, testParameters);
 
@@ -63,6 +68,11 @@ public class VaultSEPSProviderTest {
             OciTestProperty.OCI_SEPS_WALLET_PASSWORD))
             .ifPresent(password -> testParameters.put("walletPassword",
                     password));
+
+    Optional.ofNullable(TestProperties.getOptional(
+                    OciTestProperty.OCI_SEPS_CONNECTION_STRING_INDEX))
+            .ifPresent(index -> testParameters.put("connectionStringIndex",
+                    index));
 
     Map<OracleResourceProvider.Parameter, CharSequence> parameterValues =
             createParameterValues(USERNAME_PROVIDER, testParameters);

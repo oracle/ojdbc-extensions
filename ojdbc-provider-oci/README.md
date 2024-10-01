@@ -457,10 +457,15 @@ or as indexed credentials, for example, **oracle.security.client.username1**, **
 and **oracle.security.client.connect_string1**.
 
 
-- The provider first retrieves the default credentials (oracle.security.client.default_username and
-oracle.security.client.default_password). If the default credentials are not found, it looks for indexed connection strings 
-(e.g., oracle.security.client.connect_string1, oracle.security.client.username1, oracle.security.client.password1).
-If multiple connection strings are found, an error is thrown.
+- The provider retrieves credentials based on the following logic: If connectionStringIndex is not specified,
+it first attempts to retrieve the default credentials (`oracle.security.client.default_username` and `oracle.security.client.default_password`). 
+If default credentials are not found, it checks for a single set of credentials associated with a connection string.
+If exactly one connection string is found, it uses the associated credentials. However, if multiple connection strings
+are found, an error is thrown, prompting you to specify a `connectionStringIndex`. If `connectionStringIndex` is specified,
+the provider attempts to retrieve the credentials associated with the specified connection string index
+(e.g., **oracle.security.client.username{idx}**, **oracle.security.client.password{idx}**,
+**oracle.security.client.connect_string{idx}**). If credentials for the specified index are not found,
+an error is thrown indicating that no connection string was found with that index.
 
 In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider also supports the parameters listed below.
 
@@ -490,6 +495,16 @@ Optional password for wallets stored as PKCS12 keystores. If omitted, the wallet
 <td>Any valid password for the SEPS wallet</td>
 <td>
 <i>No default value. PKCS12 wallets require a password.</i>
+</td>
+</tr>
+<tr>
+<td>connectionStringIndex</td>
+<td>
+Optional parameter to specify the index of the connection string to use when retrieving credentials from the wallet
+</td>
+<td>A positive integer representing the index of the desired credential set (e.g., 1, 2, 3, etc.). </td>
+<td>
+<i>No default value. If not specified, the provider follows the default behavior as described above</i>
 </td>
 </tr>
 </tbody>
