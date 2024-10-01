@@ -13,8 +13,6 @@ import org.junit.jupiter.api.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -85,27 +83,31 @@ public class MultiThreadTest {
     int[] threads = new int[]{6,8,10,12,14,16};
     List<Organisation> organisations = OrganisationInstances.getInstances();
     System.out.println("Starting Test: "+organisations.size());
+
     for (int thread : threads) {
       ExecutorService executorService = Executors.newFixedThreadPool(thread);
       long start = System.currentTimeMillis();
-
+      // fix leak
       for (int i = 0; i < 100; i++) {
         executorService.execute(() -> {
           try {
             for (Organisation organisation : organisations) {
               JacksonOsonConverter conv = new JacksonOsonConverter();
               OracleJsonFactory jsonFactory = new OracleJsonFactory();
-              ByteArrayOutputStream out = new ByteArrayOutputStream();
+              try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                try (OracleJsonGenerator generator = jsonFactory.createJsonBinaryGenerator(out)) {
+                  conv.serialize(generator, organisation);
+                }
+                try(ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray())) {
+                  try (OracleJsonParser oParser = jsonFactory.createJsonBinaryParser(in)) {
+                    Organisation deserOrg = (Organisation) conv.deserialize(oParser, Organisation.class);
+                      Assertions.assertEquals(deserOrg, organisation);
+                      oParser.close();
+                  }
+                }
 
-              OracleJsonGenerator generator = jsonFactory.createJsonBinaryGenerator(out);
-              conv.serialize(generator, organisation);
-              generator.close();
+              }
 
-
-              OracleJsonParser oParser = jsonFactory.createJsonBinaryParser(new ByteArrayInputStream(out.toByteArray()));
-              Organisation deserOrg = (Organisation) conv.deserialize(oParser, Organisation.class);
-
-              Assertions.assertTrue(deserOrg.equals(organisation));
             }
           } catch (Exception e) {
             e.printStackTrace();

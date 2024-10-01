@@ -37,14 +37,17 @@
  */
 package oracle.jdbc.provider.oson.ser;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
+import com.fasterxml.jackson.datatype.jsr310.ser.YearSerializer;
 import oracle.jdbc.provider.oson.OsonGenerator;
 
 import java.io.IOException;
 import java.time.Year;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Serializer class for handling {@link Year} objects using {@link OsonGenerator}.
@@ -59,7 +62,7 @@ import java.time.Year;
  * @see OsonGenerator
  * @see Year
  */
-public class OsonYearSerializer extends StdSerializer<Year> {
+public class OsonYearSerializer extends YearSerializer {
 
   /**
    * A singleton instance of the serializer.
@@ -70,8 +73,22 @@ public class OsonYearSerializer extends StdSerializer<Year> {
    * Default constructor that initializes the serializer for the {@link Year} class.
    */
   public OsonYearSerializer() {
-    super(Year.class);
+    super();
   }
+
+  public OsonYearSerializer(DateTimeFormatter formatter) {
+    super( formatter);
+  }
+
+  protected OsonYearSerializer(OsonYearSerializer base, Boolean useTimestamp, DateTimeFormatter formatter) {
+    super(base, useTimestamp, formatter);
+  }
+
+  @Override
+  protected OsonYearSerializer withFormat(Boolean useTimestamp, DateTimeFormatter formatter, JsonFormat.Shape shape) {
+    return new OsonYearSerializer(this, useTimestamp, formatter);
+  }
+
 
   /**
    * Serializes a {@link Year} object into JSON format using the {@link OsonGenerator}.
@@ -84,12 +101,13 @@ public class OsonYearSerializer extends StdSerializer<Year> {
    */
   @Override
   public void serialize(Year value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-    if (gen instanceof TokenBuffer) {
-      gen.writeNumber(value.getValue());
-    } else {
+    if (useTimestamp(provider) && gen instanceof OsonGenerator) {
       final OsonGenerator _gen = (OsonGenerator)gen;
 
       _gen.writeNumber(value.getValue());
+    }
+    else {
+      super.serialize(value, gen, provider);
     }
   }
 }

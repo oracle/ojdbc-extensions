@@ -20,7 +20,7 @@ public class OrganisationInstances {
 
 
     public static void buildOrganisationInstances() {
-        for (int i = 0; i < 9; i++) {
+        for (int i = 0; i < 10; i++) {
             int no_of_employees = employeesCount[i];
             String organisationName = organizations[i];
             List<Employee> employees = new ArrayList<>();

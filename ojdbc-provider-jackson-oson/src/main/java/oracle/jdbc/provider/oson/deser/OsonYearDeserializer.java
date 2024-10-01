@@ -37,7 +37,9 @@
  */
 package oracle.jdbc.provider.oson.deser;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonTokenId;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 import com.fasterxml.jackson.databind.node.TreeTraversingParser;
@@ -46,6 +48,7 @@ import oracle.jdbc.provider.oson.OsonParser;
 
 import java.io.IOException;
 import java.time.Year;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Deserializer class for handling {@link Year} objects using {@link OsonParser}.
@@ -60,7 +63,7 @@ import java.time.Year;
  * @see OsonParser
  * @see Year
  */
-public class OsonYearDeserializer extends StdScalarDeserializer<Year> {
+public class OsonYearDeserializer extends YearDeserializer {
 
   /**
    * A singleton instance of the deserializer.
@@ -71,8 +74,31 @@ public class OsonYearDeserializer extends StdScalarDeserializer<Year> {
    * Default constructor that initializes the deserializer for the {@link Year} class.
    */
   protected OsonYearDeserializer() {
-    super(Year.class);
+    super();
   }
+
+  public OsonYearDeserializer(DateTimeFormatter formatter) {
+    super(formatter);
+  }
+
+  protected OsonYearDeserializer(OsonYearDeserializer base, Boolean leniency) {
+    super(base, leniency);
+  }
+
+  @Override
+  protected OsonYearDeserializer withDateFormat(DateTimeFormatter dtf) {
+    return new OsonYearDeserializer(dtf);
+  }
+
+  @Override
+  protected OsonYearDeserializer withLeniency(Boolean leniency) {
+    return new OsonYearDeserializer(this, leniency);
+  }
+
+  @Override
+  protected OsonYearDeserializer withShape(JsonFormat.Shape shape) { return this; }
+
+
 
   /**
    * Deserializes a {@link Year} object from the JSON input using the {@link OsonParser}.
@@ -85,12 +111,13 @@ public class OsonYearDeserializer extends StdScalarDeserializer<Year> {
    */
   @Override
   public Year deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-    if (p instanceof TreeTraversingParser) {
-      return YearDeserializer.INSTANCE.deserialize(p, ctxt);
-    } else {
+
+    if(!p.hasTokenId(JsonTokenId.ID_STRING) && p instanceof OsonParser) {
       final OsonParser _parser = (OsonParser)p;
 
       return Year.of(_parser.getIntValue());
+    } else {
+      return super.deserialize(p, ctxt);
     }
 
 

@@ -83,9 +83,7 @@ public class OsonDurationDeserializer extends DurationDeserializer {
     super(base, leniency);
   }
 
-  /**
-   * @since 2.12
-   */
+
   protected OsonDurationDeserializer(OsonDurationDeserializer base, DurationUnitConverter converter) {
     super(base, base._isLenient);
   }
