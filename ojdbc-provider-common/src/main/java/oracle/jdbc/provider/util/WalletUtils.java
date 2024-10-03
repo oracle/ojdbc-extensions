@@ -182,7 +182,7 @@ public final class WalletUtils {
    *
    */
   public static Credentials getCredentials(
-    byte[] walletBytes, char[] walletPassword,String connectionStringIndex) {
+    byte[] walletBytes, char[] walletPassword, String connectionStringIndex) {
 
     OracleWallet wallet = new OracleWallet();
     try {
