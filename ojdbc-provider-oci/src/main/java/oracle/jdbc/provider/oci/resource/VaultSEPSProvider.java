@@ -79,10 +79,14 @@ public class VaultSEPSProvider
   private static final oracle.jdbc.provider.parameter.Parameter<String> PASSWORD =
           oracle.jdbc.provider.parameter.Parameter.create();
 
+  private static final oracle.jdbc.provider.parameter.Parameter<String> CONNECTION_STRING_INDEX =
+          oracle.jdbc.provider.parameter.Parameter.create();
+
 
   private static final ResourceParameter[] PARAMETERS = {
           new ResourceParameter("ocid", OCID),
-          new ResourceParameter("walletPassword", PASSWORD)
+          new ResourceParameter("walletPassword", PASSWORD),
+          new ResourceParameter("connectionStringIndex", CONNECTION_STRING_INDEX)
   };
 
   /**
@@ -119,8 +123,10 @@ public class VaultSEPSProvider
     char[] walletPassword = parameterSet.getOptional(PASSWORD) != null
       ? parameterSet.getOptional(PASSWORD).toCharArray()
       : null;
+
+    String connectionStringIndex = parameterSet.getOptional(CONNECTION_STRING_INDEX);
     byte[] walletBytes = Base64.getDecoder().decode(secret.getBase64Secret());
-    return WalletUtils.getCredentials(walletBytes, walletPassword);
+    return WalletUtils.getCredentials(walletBytes, walletPassword, connectionStringIndex);
   }
 
 }

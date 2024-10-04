@@ -32,16 +32,16 @@ public final class TlsUtils {
    * Creates a {@code KeyStore} loaded with the contents of a given stream.
    *
    * @param inputStream Contents of the key store. Not null.
-   *
    * @param password Password for the key store. May be null if the store is not
    * password protected.
-   *
    * @param type The type of the key store, such as: "JKS", "SSO", or "PKCS12".
    * Not null.
-   *
    * @param provider The provider of the KeyStore. May be null to use the most
    * preferred {@linkplain Security#getProviders() provider} for the given
    * key store type.
+   * @return The loaded KeyStore.
+   * @throws IllegalStateException If failed to load KeyStore.
+   *
    */
   public static KeyStore loadKeyStore(
     InputStream inputStream, char[] password, String type, Provider provider) {
@@ -72,6 +72,7 @@ public final class TlsUtils {
    * encrypted. Can be {@code null} for unencrypted keys.
    * @return An initialized KeyStore containing the private key and
    * associated certificates from the PEM data.
+   * @throws Exception If an error occurs while creating the KeyStore.
    */
   public static KeyStore createPEMKeyStore(
     byte[] fileBytes, char[] password) throws Exception {
