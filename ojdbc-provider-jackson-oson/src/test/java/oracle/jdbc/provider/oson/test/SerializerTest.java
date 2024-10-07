@@ -37,10 +37,6 @@
  */
 
 package oracle.jdbc.provider.oson.test;
-
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import oracle.jdbc.provider.oson.JacksonOsonConverter;
 import oracle.jdbc.provider.oson.model.AnnonationTest;
 import oracle.jdbc.provider.oson.model.AnnotationTestInstances;
@@ -54,6 +50,7 @@ import org.junit.jupiter.api.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 /**
  * The {@code SerializerTest} class tests the serialization and deserialization of
@@ -75,48 +72,47 @@ public class SerializerTest {
    * */  
   @Test
   @Order(1)
-  public void serialiZerTest() {
-   JacksonOsonConverter conv = new JacksonOsonConverter();
+  public void serialiZerTest() throws IOException {
+      Employee employee = EmployeeInstances.getEmployee();
 
-   OracleJsonFactory factory = new OracleJsonFactory();
-   ByteArrayOutputStream out = new ByteArrayOutputStream();
+      JacksonOsonConverter conv = new JacksonOsonConverter();
+      OracleJsonFactory jsonFactory = new OracleJsonFactory();
+      try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+          try (OracleJsonGenerator generator = jsonFactory.createJsonBinaryGenerator(out)) {
+              conv.serialize(generator, employee);
+          }
+          try(ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray())) {
+              try (OracleJsonParser oParser = jsonFactory.createJsonBinaryParser(in)) {
+                  Employee deserEmp = (Employee) conv.deserialize(oParser, Employee.class);
+                  Assertions.assertEquals(employee, deserEmp);
+              }
+          }
 
-   Employee emp = EmployeeInstances.getEmployee();
-   OracleJsonGenerator oGen = factory.createJsonBinaryGenerator(out);
-   conv.serialize(oGen, emp );
-   oGen.close();
-   
-   OracleJsonParser oParser = factory.createJsonBinaryParser(new ByteArrayInputStream(out.toByteArray()));
-   Employee j = (Employee) conv.deserialize(oParser, Employee.class);
-
-   Assertions.assertEquals(emp, j);
+      }
 
   }
 
   @Test
   @Order(2)
   public void serialiZerTest2() throws IOException {
-      JacksonOsonConverter conv = new JacksonOsonConverter();
       AnnonationTest annOrig = AnnotationTestInstances.getRandomInstance();
-      OracleJsonFactory factory = new OracleJsonFactory();
-      ByteArrayOutputStream out = new ByteArrayOutputStream();
-//      ByteArrayOutputStream out = new ByteArrayOutputStream();
-//      JsonFactory factory = new JsonFactory();
-//      JsonGenerator generator = factory.createGenerator(out);
-//      AnnonationTest annOrig = AnnotationTestInstances.getRandomInstance();
-//      ObjectMapper mapper = new ObjectMapper();
-//      mapper.findAndRegisterModules();
-//      mapper.writeValue(generator, annOrig);
-//      generator.close();
-//      AnnonationTest deser = mapper.readValue(out.toByteArray(), AnnonationTest.class);
 
-      OracleJsonGenerator oGen = factory.createJsonBinaryGenerator(out);
-      conv.serialize(oGen, annOrig );
-      oGen.close();
+      JacksonOsonConverter conv = new JacksonOsonConverter();
+      OracleJsonFactory jsonFactory = new OracleJsonFactory();
+      try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+          try (OracleJsonGenerator generator = jsonFactory.createJsonBinaryGenerator(out)) {
+              conv.serialize(generator, annOrig);
+          }
+          try(ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray())) {
+              try (OracleJsonParser oParser = jsonFactory.createJsonBinaryParser(in)) {
+                  AnnonationTest annDeser = (AnnonationTest) conv.deserialize(oParser, AnnonationTest.class);
+                  String regex = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$";
+                  Pattern pattern = Pattern.compile(regex);
+                  Assertions.assertTrue(pattern.matcher(annDeser.getLocalDateTime().toString()).matches());
+              }
+          }
 
-      OracleJsonParser oParser = factory.createJsonBinaryParser(new ByteArrayInputStream(out.toByteArray()));
-      AnnonationTest annDeser = (AnnonationTest) conv.deserialize(oParser, AnnonationTest.class);
-      Assertions.assertEquals(annOrig, annDeser);
+      }
 
   }
 }

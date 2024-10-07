@@ -38,12 +38,12 @@
 
 package oracle.jdbc.provider.oson.test;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import oracle.jdbc.OracleType;
 import oracle.jdbc.datasource.impl.OracleDataSource;
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.oson.OsonFactory;
-import oracle.jdbc.provider.oson.OsonGenerator;
 import oracle.jdbc.provider.oson.OsonModule;
 import oracle.jdbc.provider.oson.OsonTestProperty;
 import oracle.jdbc.provider.oson.model.*;
@@ -52,10 +52,9 @@ import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The {@code DBTest} class is a JUnit test class that tests insertion and retrieval
@@ -131,12 +130,14 @@ public class AnnotationOSONTest {
     @Order(1)
     public void insertIntoDatabase() throws IOException, SQLException {
         Assumptions.assumeTrue(conn != null);
-        insertedEmployee = AnnotationTestInstances.getRandomInstance();
-        try(PreparedStatement pstmt = conn.prepareStatement("insert into emp_json (c1,c2) values(?,?)")) {
-            pstmt.setInt(1, 1);
-            pstmt.setObject(2, insertedEmployee, OracleType.JSON);
-            pstmt.execute();
+        for(AnnonationTest test : AnnotationTestInstances.getTestList()) {
+            try(PreparedStatement pstmt = conn.prepareStatement("insert into emp_json (c1,c2) values(?,?)")) {
+                pstmt.setInt(1, AnnotationTestInstances.getTestList().indexOf(test));
+                pstmt.setObject(2, test, OracleType.JSON);
+                pstmt.execute();
+            }
         }
+
 
     }
 
@@ -147,13 +148,19 @@ public class AnnotationOSONTest {
      */
     @Test
     @Order(2)
-    public void retieveFromDatabase() throws Exception {
+    public void retrieveFromDatabase() throws Exception {
         Assumptions.assumeTrue(conn != null);
         try(Statement stmt = conn.createStatement()) {
             try(ResultSet rs = stmt.executeQuery("SELECT json_serialize(c2 PRETTY ORDERED) from emp_json")) {
                 while(rs.next()) {
                     String retrievedEmployee = rs.getString(1);
-                    System.out.println(retrievedEmployee);
+                    JsonNode jsonNode = om.readTree(retrievedEmployee);
+                    String regex = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$";
+
+                    Pattern pattern = Pattern.compile(regex);
+
+                    Matcher matcher = pattern.matcher(jsonNode.get("localDateTime").asText());
+                    Assertions.assertTrue(matcher.matches());
 
                 }
             }
@@ -166,15 +173,3 @@ public class AnnotationOSONTest {
         conn.close();
     }
 }
-
-//
-// 1. Pojo instance (Using Object Mapper)
-// 2. Serialize to OSON
-// 3. Deserialise from OSON to POJO
-// 4. POJO to JSON
-
-// Test 2
-// 1. Pojo instance (Using Object Mapper)
-// 2. Serialize to OSON
-// 2.5 DB store and retrieve in String
-// 3. Check for mat of date in String

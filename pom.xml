@@ -58,31 +58,6 @@
       <properties>
         <maven.compiler.release>8</maven.compiler.release>
       </properties>
-      <repositories>
-        <repository>
-          <id>jdbc-dev-local</id>
-          <name>jdbc-dev-local</name>
-          <url>https://artifacthub-phx.oci.oraclecorp.com/jdbc-dev-local</url>
-        </repository>
-        <repository>
-          <id>dbtools-dev-third-party</id>
-          <name>dbtools-dev-third-party</name>
-          <url>https://artifacthub-phx.oci.oraclecorp.com/dbtools-dev-third-party</url>
-        </repository>
-      </repositories>
-      <pluginRepositories>
-        <pluginRepository>
-          <id>maven-central</id>
-          <name>maven-central</name>
-          <url>https://repo1.maven.org/maven2</url>
-        </pluginRepository>
-        <pluginRepository>
-          <id>artifactory</id>
-          <name>artifactory</name>
-          <url>https://artifacthub-phx.oci.oraclecorp.com/dbtools-dev-third-party</url>
-        </pluginRepository>
-      </pluginRepositories>
-
     </profile>
   </profiles>
 

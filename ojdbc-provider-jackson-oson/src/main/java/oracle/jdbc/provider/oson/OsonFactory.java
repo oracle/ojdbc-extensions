@@ -60,8 +60,8 @@ public class OsonFactory extends JsonFactory {
   /**
    * A ThreadLocal object to ensure thread-safe creation of OracleJsonFactory instances.
    */
-  private final ThreadLocal<OracleJsonFactory> factory = ThreadLocal.withInitial(OracleJsonFactory::new);
-
+//  private final ThreadLocal<OracleJsonFactory> factory = ThreadLocal.withInitial(OracleJsonFactory::new);
+  OracleJsonFactory factory = new OracleJsonFactory();
   /**
    * Creates a JSON generator that writes to the given output stream, using UTF-8 encoding.
    *
@@ -92,7 +92,7 @@ public class OsonFactory extends JsonFactory {
 
     // todo:check for other encodings
     OsonGenerator g = new OsonGenerator(_generatorFeatures, null,
-        factory.get().createJsonBinaryGenerator(out), out);
+        factory.createJsonBinaryGenerator(out), out);
     ObjectCodec codec = getCodec();
     if (codec != null) {
       g.setCodec(codec);
@@ -113,7 +113,7 @@ public class OsonFactory extends JsonFactory {
   @Override
   public JsonGenerator createGenerator(Writer out) throws IOException {
     OsonGenerator g = new OsonGenerator(_generatorFeatures, null, 
-        factory.get().createJsonTextGenerator(out));
+        factory.createJsonTextGenerator(out));
     ObjectCodec codec = getCodec();
     if (codec != null) {
       g.setCodec(codec);
@@ -332,7 +332,7 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   public JsonParser _createParser(InputStream in, IOContext ctxt) {
-    return new OsonParser(ctxt, _factoryFeatures, factory.get().createJsonBinaryParser(in));
+    return new OsonParser(ctxt, _factoryFeatures, factory.createJsonBinaryParser(in));
   }
 
   /**
@@ -345,7 +345,7 @@ public class OsonFactory extends JsonFactory {
   @Override
   public JsonParser _createParser(Reader r, IOContext ctxt) {
     
-    return new OsonParser(ctxt, _factoryFeatures, factory.get().createJsonTextParser(r));
+    return new OsonParser(ctxt, _factoryFeatures, factory.createJsonTextParser(r));
   }
 
   /**
@@ -362,7 +362,7 @@ public class OsonFactory extends JsonFactory {
   @Override
   public JsonParser _createParser(char[] data, int offset, int len, IOContext ctxt, boolean recyclable) {
     return new OsonParser(ctxt, _factoryFeatures, 
-        factory.get().createJsonTextParser(new CharArrayReader(data, offset, len)));
+        factory.createJsonTextParser(new CharArrayReader(data, offset, len)));
   }
 
   /**
@@ -377,7 +377,7 @@ public class OsonFactory extends JsonFactory {
   @Override
   public JsonParser _createParser(byte[] data, int offset, int len, IOContext ctxt) {
     return new OsonParser(ctxt, _factoryFeatures, 
-        factory.get().createJsonBinaryParser(ByteBuffer.wrap(data, offset, len)));
+        factory.createJsonBinaryParser(ByteBuffer.wrap(data, offset, len)));
   }
 
   /**

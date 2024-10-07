@@ -38,18 +38,17 @@
 
 package oracle.jdbc.provider.oson.ser;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.fasterxml.jackson.databind.util.TokenBuffer;
-import com.fasterxml.jackson.datatype.jsr310.DecimalUtils;
+
+import com.fasterxml.jackson.datatype.jsr310.ser.OffsetDateTimeSerializer;
 import oracle.jdbc.provider.oson.OsonGenerator;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.util.function.Function;
-import java.util.function.ToLongFunction;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Serializer class for handling {@link OffsetDateTime} objects using {@link OsonGenerator}.
@@ -64,7 +63,7 @@ import java.util.function.ToLongFunction;
  * @see OsonGenerator
  * @see OffsetDateTime
  */
-public class OsonOffsetDateTimeSerializer extends StdSerializer<OffsetDateTime> {
+public class OsonOffsetDateTimeSerializer extends OffsetDateTimeSerializer {
 
   /**
    * A singleton instance of the serializer.
@@ -76,8 +75,32 @@ public class OsonOffsetDateTimeSerializer extends StdSerializer<OffsetDateTime> 
    * Default constructor that initializes the serializer for the {@link OffsetDateTime} class.
    */
   public OsonOffsetDateTimeSerializer() {
-    super(OffsetDateTime.class);
+    super();
+  }
 
+  protected OsonOffsetDateTimeSerializer(OffsetDateTimeSerializer base,
+                                     Boolean useTimestamp, Boolean useNanoseconds, DateTimeFormatter formatter) {
+    super(base, useTimestamp, useNanoseconds, formatter);
+  }
+
+  /**
+   * @since 2.14
+   */
+  public OsonOffsetDateTimeSerializer(OffsetDateTimeSerializer base, Boolean useTimestamp,
+                                  DateTimeFormatter formatter, JsonFormat.Shape shape) {
+    super(base, useTimestamp, formatter, shape);
+  }
+
+  @Override
+  protected OsonOffsetDateTimeSerializer withFormat(Boolean useTimestamp,
+                                                        DateTimeFormatter formatter, JsonFormat.Shape shape)
+  {
+    return new OsonOffsetDateTimeSerializer(this, useTimestamp, formatter, shape);
+  }
+
+  @Override
+  protected OsonOffsetDateTimeSerializer withFeatures(Boolean writeZoneId, Boolean writeNanoseconds) {
+    return new OsonOffsetDateTimeSerializer(this, _useTimestamp, writeNanoseconds, _formatter);
   }
 
   /**
@@ -90,14 +113,15 @@ public class OsonOffsetDateTimeSerializer extends StdSerializer<OffsetDateTime> 
    */
   @Override
   public void serialize(OffsetDateTime value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-    if(gen instanceof TokenBuffer) {
-
-      gen.writeNumber(DecimalUtils.toBigDecimal(value.toInstant().toEpochMilli(), (int) value.toInstant().getEpochSecond()));
-    } else {
+    if (useTimestamp(provider) && gen instanceof OsonGenerator) {
       final OsonGenerator _gen = (OsonGenerator)gen;
 
       _gen.writeOffsetDateTime(value);
     }
+    else {
+      super.serialize(value, gen, provider);
+    }
+
 
 
   }
