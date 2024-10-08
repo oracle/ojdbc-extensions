@@ -51,6 +51,8 @@ import java.util.Base64;
 import java.util.Map;
 
 import static oracle.jdbc.provider.oci.vault.SecretFactory.OCID;
+import static oracle.jdbc.provider.util.CommonParameters.CONNECTION_STRING_INDEX;
+import static oracle.jdbc.provider.util.CommonParameters.PASSWORD;
 
 /**
  * <p>
@@ -75,12 +77,6 @@ import static oracle.jdbc.provider.oci.vault.SecretFactory.OCID;
 public class VaultSEPSProvider
         extends OciResourceProvider
         implements UsernameProvider, PasswordProvider {
-
-  private static final oracle.jdbc.provider.parameter.Parameter<String> PASSWORD =
-          oracle.jdbc.provider.parameter.Parameter.create();
-
-  private static final oracle.jdbc.provider.parameter.Parameter<String> CONNECTION_STRING_INDEX =
-          oracle.jdbc.provider.parameter.Parameter.create();
 
 
   private static final ResourceParameter[] PARAMETERS = {

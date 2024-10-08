@@ -1,5 +1,6 @@
 package oracle.jdbc.provider.util;
 
+import oracle.security.pki.OraclePKIProvider;
 import javax.crypto.EncryptedPrivateKeyInfo;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
@@ -26,6 +27,9 @@ import java.util.List;
  * Common operations related to Transport Layer Security (TLS) in Java.
  */
 public final class TlsUtils {
+
+  private static final String PEM_KEYSTORE_TYPE = "PEM";
+
   private TlsUtils() {}
 
   /**
@@ -160,6 +164,60 @@ public final class TlsUtils {
     catch (GeneralSecurityException generalSecurityException) {
       throw new IllegalStateException(
         "Failed initialize SSLContext", generalSecurityException);
+    }
+  }
+
+  /**
+   * Creates an SSLContext using the provided file bytes and optional
+   * password.
+   * <p>
+   * Based on the specified type (SSO, PKCS12, or PEM), this method
+   * processes the file data accordingly. It converts the file into a
+   * KeyStore, which is then used to initialize the SSLContext for secure
+   * communication. The password is only required for PKCS12 and
+   * encrypted PEM files.
+   * </p>
+   *
+   * @param fileBytes The bytes representing the file, decoded from base64.
+   * @param password  The password for the file, or {@code null} if the
+   * file does not require a password.
+   * @param type The type of the file (PEM, PKCS12, or SSO).
+   * @return An initialized SSLContext ready for secure communication.
+   */
+  public static SSLContext createSSLContext(
+          byte[] fileBytes, char[] password, String type)
+          throws Exception {
+    KeyStore keyStore = (PEM_KEYSTORE_TYPE.equalsIgnoreCase(type)) ?
+            createPEMKeyStore(fileBytes, password) :
+            loadKeyStore(fileBytes, password, type);
+    return createSSLContext(keyStore, keyStore, password);
+  }
+
+  /**
+   * Loads a KeyStore for either SSO or PKCS12 format based on the specified
+   * type.
+   * <p>
+   * This method takes the file bytes and password (if applicable) and
+   * loads the corresponding KeyStore. It supports both SSO (password-less)
+   * and PKCS12 (password-protected) keystores, as specified by the
+   * {@code type} parameter.
+   * </p>
+   *
+   * @param fileBytes The byte array representing the file, decoded
+   * from base64.
+   * @param password The password for the file, or {@code null} for SSO
+   * files.
+   * @param type The type of the KeyStore (SSO or PKCS12).
+   * @return An initialized KeyStore containing the keys and certificates
+   * from the file.
+   */
+  static KeyStore loadKeyStore(
+          byte[] fileBytes, char[] password, String type)
+          throws IOException {
+    try (ByteArrayInputStream fileStream =
+                 new ByteArrayInputStream(fileBytes)) {
+      return loadKeyStore(
+              fileStream, password, type, new OraclePKIProvider());
     }
   }
 }

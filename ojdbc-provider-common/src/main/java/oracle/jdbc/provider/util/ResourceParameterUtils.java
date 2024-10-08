@@ -36,76 +36,35 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.azure;
+package oracle.jdbc.provider.util;
 
-import com.azure.core.util.Configuration;
+import oracle.jdbc.provider.resource.ResourceParameter;
 
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import java.util.stream.Stream;
 
 /**
- * Names of properties that configure Azure tests. Descriptions and examples of
- * each property can be found in the "example-test.properties" file within the
- * root directory of the project.
+ * A utility class for manipulating {@link ResourceParameter} arrays.
  */
-public enum AzureTestProperty {
+public final class ResourceParameterUtils {
 
-  AZURE_TENANT_ID,
-
-  AZURE_CLIENT_ID,
-
-  AZURE_CLIENT_SECRET,
-
-  AZURE_CLIENT_CERTIFICATE_PATH,
-
-  AZURE_CLIENT_PFX_CERTIFICATE_PATH,
-
-  AZURE_CLIENT_PFX_PASSWORD,
-
-  AZURE_USERNAME,
-
-  AZURE_PASSWORD,
-
-  AZURE_MANAGED_IDENTITY,
-
-  AZURE_APP_CONFIG_NAME,
-
-  AZURE_APP_CONFIG_KEY,
-
-  AZURE_APP_CONFIG_LABEL,
-
-  AZURE_TOKEN_SCOPE,
-
-  AZURE_KEY_VAULT_URL,
-
-  AZURE_KEY_VAULT_SECRET_NAME,
-
-  AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME,
-
-  AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME_MULTIPLE_KEYS,
-
-  AZURE_KEY_VAULT_SECRET_PAYLOAD_KEY,
-
-  AZURE_TLS_FILE_TYPE,
-
-  AZURE_TLS_FILE_PASSWORD;
+  private ResourceParameterUtils() {}
 
   /**
-   * Aborts the calling test if the given {@code names} are not configured in
-   * the environment read by the Azure SDK.
-   * @param names Names of configurable values that the Azure SDK reads from the
-   * environment.
+   * Combines two arrays of resource parameters into a single array.
+   * This method is useful when you need to merge parameters from different
+   * sources into a unified set.
+   *
+   * @param baseParams The first array of resource parameters to combine.
+   * @param additionalParams The second array of resource parameters to combine.
+   * @return A new array containing all elements from both input arrays.
+   *
    */
-  public static void abortIfEnvNotConfigured(String... names) {
-    Configuration configuration = Configuration.getGlobalConfiguration();
-
-    for (String name : names) {
-      assumeTrue(
-        configuration.contains(name),
-        String.format(
-          "\"%s\" is not configured in the environment read by the" +
-            " Azure SDK for Java",
-          name));
-    }
+  public static ResourceParameter[] combineParameters(
+          ResourceParameter[] baseParams, ResourceParameter[] additionalParams) {
+    return Stream.concat(
+                    Stream.of(baseParams),
+                    Stream.of(additionalParams))
+            .toArray(ResourceParameter[]::new);
   }
 
 }
