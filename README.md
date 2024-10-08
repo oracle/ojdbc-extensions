@@ -14,11 +14,16 @@ contain providers for a particular cloud platform:
 <dt><a href="ojdbc-provider-gcp/README.md">Oracle JDBC GCP Providers</a></dt>
 <dd>Providers for integration with Google Cloud Platform</dd>
 </dl>
-And the last one contains a provider for Open Telemetry:
+The next one contains a provider for Open Telemetry:
 <dl>
 <dt><a href="ojdbc-provider-opentelemetry/README.md">Oracle JDBC Open Telemetry Provider</a></dt>
 <dd>Provider for integration with Open Telemetry</dd>
+</dl>
+And The last one contains a provider for Jackson-OSON
 <dl>
+<dt><a href="ojdbc-provider-jackson-oson/README.md">Oracle JDBC Open Telemetry Provider</a></dt>
+<dd>Provider Jackson-OSON</dd>
+</dl>
 Visit any of the links above to learn about providers which are available for 
 a particular platform.
 
@@ -125,6 +130,8 @@ this project:
 [ojdbc-provider-gcp](ojdbc-provider-gcp/README.md#installation)
 
 [ojdbc-provider-opentelemetry](ojdbc-provider-opentelemetry/README.md#installation)
+
+[ojdbc-provider-jackson-oson](ojdbc-provider-jackson-oson/README.md#installation)
 
 Each module listed above is distributed on the Maven Central Repository as a
 separate jar file. Coordinates can be found by visiting the links above.

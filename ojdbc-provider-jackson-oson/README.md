@@ -13,7 +13,20 @@ in order to use the Oracle JDBC driver's JSON processing capabilities.
 - **POJO Mapping**: Seamless mapping between Plain Old Java Objects (POJOs) and Oracle OSON formats.
 - **Java Types Handling**: Support for various complex and basic Java types during serialization and deserialization.
 - **Jackson Annotation support**: Support for Jackson Annotations. Note: When **@Format** annotation is used, the values are processed as Strings.
+
 ## Installation
+
+All providers in this module are distributed as single jar on the Maven Central
+Repository. The jar is compiled for JDK 8, and is forward compatible with later
+JDK versions. The coordinates for the latest release are:
+```xml
+<dependency>
+  <groupId>com.oracle.database.jdbc</groupId>
+  <artifactId>ojdbc-provider-jackson-oson</artifactId>
+  <version>1.0.1</version>
+</dependency>
+```
+## Building the provider module
 1. Clone the repository:
    ```bash
    git clone https://github.com/oracle/ojdbc-extensions.git
