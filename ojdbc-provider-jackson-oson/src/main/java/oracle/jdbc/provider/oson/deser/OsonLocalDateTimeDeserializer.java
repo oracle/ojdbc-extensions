@@ -72,13 +72,23 @@ public class OsonLocalDateTimeDeserializer extends LocalDateTimeDeserializer {
    */
   public static final OsonLocalDateTimeDeserializer INSTANCE = new OsonLocalDateTimeDeserializer();
 
+  /**
+   * Constructor for LocalDateTime Deserialiser
+   * @param formatter
+   */
   public OsonLocalDateTimeDeserializer(DateTimeFormatter formatter) {
     super(formatter);
   }
 
+  /**
+   * Constructor for LocalDateTime Deserialiser
+   * @param base
+   * @param leniency
+   */
   protected OsonLocalDateTimeDeserializer(LocalDateTimeDeserializer base, Boolean leniency) {
     super(base, leniency);
   }
+
 
   @Override
   protected OsonLocalDateTimeDeserializer withDateFormat(DateTimeFormatter formatter) {

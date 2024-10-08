@@ -92,7 +92,17 @@ public class SerializerTest {
 
   }
 
-  @Test
+    /**
+     * Tests the serialization and deserialization of an {@link AnnonationTest} object with
+     * Jackson Annotations.
+     * <p>
+     * This test uses the {@link JacksonOsonConverter} to serialize an {@code Employee} object
+     * into binary JSON format using an {@link OracleJsonGenerator}, and then deserializes it
+     * back into an {@code Employee} object using an {@link OracleJsonParser}.
+     * The test verifies that the deserialized object is equal to the original.
+     * </p>
+     * */
+    @Test
   @Order(2)
   public void serialiZerTest2() throws IOException {
       AnnonationTest annOrig = AnnotationTestInstances.getRandomInstance();

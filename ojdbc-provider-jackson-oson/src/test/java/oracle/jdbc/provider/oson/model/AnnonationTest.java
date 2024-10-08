@@ -47,6 +47,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Pojo to test Jackson annotations.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({ "full_name", "dateOfBirth", "email", "age", "isActive", "phones", "address", "job",
         "localDate", "localTime", "localDateTime", "zonedDateTime", "offsetDateTime", "offsetTime", "yearMonth", "monthDay", "instant"})

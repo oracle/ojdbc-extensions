@@ -41,7 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Builds and returns {@Code Organisation}
+ * Builds and returns {@link Organisation} instances
  */
 public class OrganisationInstances {
     static final String[] organizations = {

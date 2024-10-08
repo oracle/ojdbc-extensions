@@ -75,7 +75,7 @@ public class MultiThreadTest {
     System.out.println("Total time: "+(System.currentTimeMillis() - start));
   }
   /**
-   * Runs a multithreaded test with a thread pool of 10 threads that serializes and deserializes
+   * Runs a multithreaded test with varying thread count that serializes and deserializes
    * {@link Employee} objects. It ensures that the deserialized object is equal to the original.
    *
    */

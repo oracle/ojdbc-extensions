@@ -149,6 +149,11 @@ public class ListTypeTest {
     Assertions.assertEquals(insertedPhones, retrievedPhones);
 
   }
+
+  /**
+   * Cleanup the connection.
+   * @throws SQLException
+   */
   @AfterAll
   public void tearDown() throws SQLException {
     Assumptions.assumeTrue(conn != null);

@@ -6,12 +6,13 @@ JSON data handling in Oracle environments.
 The module implements [**oracle.jdbc.spi.JsonProvider**](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OsonProvider.html) 
 in order to use the Oracle JDBC driver's JSON processing capabilities.
 ## Features
-- **OSON Generators**: Custom logic for generating JSON representations of Java objects.
-- **OSON Parsers**: Parsing Oracle-specific JSON data into Java objects.
-- **Serializers**: Custom serializers for transforming Java types into JSON format.
-- **Deserializers**: Custom deserializers for mapping JSON data back into Java POJOs.
+- **OSON Generators**: Custom logic for generating Oracle JSON (OSON) representations of Java objects.
+- **OSON Parsers**: Parsing Oracle-specific JSON(OSON bytes) data into Java objects.
+- **Serializers**: Custom serializers for transforming Java types into OSON bytes.
+- **Deserializers**: Custom deserializers for mapping OSON bytes back into Java POJOs.
 - **POJO Mapping**: Seamless mapping between Plain Old Java Objects (POJOs) and Oracle OSON formats.
 - **Java Types Handling**: Support for various complex and basic Java types during serialization and deserialization.
+- **Jackson Annotation support**: Support for Jackson Annotations. Note: When **@Format** annotation is used, the values are processed as Strings.
 ## Installation
 1. Clone the repository:
    ```bash

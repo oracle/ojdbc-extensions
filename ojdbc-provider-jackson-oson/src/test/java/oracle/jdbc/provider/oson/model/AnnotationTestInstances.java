@@ -41,6 +41,9 @@ package oracle.jdbc.provider.oson.model;
 import java.util.*;
 import java.time.*;
 
+/**
+ * POJO to build random instances for {@link AnnonationTest} class.
+ */
 public class AnnotationTestInstances {
     private static List<AnnonationTest> testList = new ArrayList<AnnonationTest>();
 

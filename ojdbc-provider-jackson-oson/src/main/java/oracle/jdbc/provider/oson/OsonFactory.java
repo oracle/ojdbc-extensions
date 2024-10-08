@@ -47,8 +47,6 @@ import oracle.sql.json.OracleJsonParser;
 import java.io.*;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * The OsonFactory class extends the JsonFactory to provide custom JSON generation and parsing
@@ -58,9 +56,8 @@ import java.util.Map;
 public class OsonFactory extends JsonFactory {
 
   /**
-   * A ThreadLocal object to ensure thread-safe creation of OracleJsonFactory instances.
+   * {@link OracleJsonFactory} object to create generator/parser instances.
    */
-//  private final ThreadLocal<OracleJsonFactory> factory = ThreadLocal.withInitial(OracleJsonFactory::new);
   OracleJsonFactory factory = new OracleJsonFactory();
   /**
    * Creates a JSON generator that writes to the given output stream, using UTF-8 encoding.

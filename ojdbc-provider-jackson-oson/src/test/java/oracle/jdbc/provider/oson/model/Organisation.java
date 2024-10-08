@@ -40,6 +40,9 @@ package oracle.jdbc.provider.oson.model;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * POJO to test Large objects with Nesting.
+ */
 public class Organisation {
     private String organisationName;
     private List<Employee> employees;
