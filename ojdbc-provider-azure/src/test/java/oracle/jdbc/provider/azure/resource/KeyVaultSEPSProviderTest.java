@@ -67,7 +67,7 @@ public class KeyVaultSEPSProviderTest {
                     .filter(parameter -> "walletPassword".equals(parameter.name()))
                     .findFirst()
                     .orElseThrow(AssertionError::new);
-    assertFalse(walletPasswordParameter.isSensitive());
+    assertTrue(walletPasswordParameter.isSensitive());
     assertFalse(walletPasswordParameter.isRequired());
     assertNull(walletPasswordParameter.defaultValue());
 
