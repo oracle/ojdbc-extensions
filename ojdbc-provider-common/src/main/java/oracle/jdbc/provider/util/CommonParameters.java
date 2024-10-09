@@ -41,6 +41,7 @@ package oracle.jdbc.provider.util;
 import oracle.jdbc.provider.parameter.Parameter;
 
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
+import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.SENSITIVE;
 
 /**
  * A utility class that defines common parameters used across various
@@ -63,7 +64,7 @@ public final class CommonParameters {
    * only required when dealing with password-protected files.
    */
   public static final Parameter<String> PASSWORD =
-          Parameter.create();
+          Parameter.create(SENSITIVE);
 
   /**
    * A parameter for specifying the type of the file being used.

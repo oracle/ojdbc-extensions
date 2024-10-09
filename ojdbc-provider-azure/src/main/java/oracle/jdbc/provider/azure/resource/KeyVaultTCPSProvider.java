@@ -79,7 +79,7 @@ public class KeyVaultTCPSProvider
         implements TlsConfigurationProvider {
 
   private static final ResourceParameter[] TCPS_PARAMETERS = {
-          new ResourceParameter("password", PASSWORD),
+          new ResourceParameter("walletPassword", PASSWORD),
           new ResourceParameter("type", TYPE)
   };
 

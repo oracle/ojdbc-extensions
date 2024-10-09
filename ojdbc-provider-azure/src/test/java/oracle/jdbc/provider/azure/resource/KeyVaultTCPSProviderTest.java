@@ -56,14 +56,14 @@ public class KeyVaultTCPSProviderTest {
     assertTrue(typeParameter.isRequired());
     assertNull(typeParameter.defaultValue());
 
-    OracleResourceProvider.Parameter passwordParameter =
+    OracleResourceProvider.Parameter walletPasswordParameter =
             parameters.stream()
-                    .filter(parameter -> "password".equals(parameter.name()))
+                    .filter(parameter -> "walletPassword".equals(parameter.name()))
                     .findFirst()
                     .orElseThrow(AssertionError::new);
-    assertTrue(passwordParameter.isSensitive());
-    assertFalse(passwordParameter.isRequired());
-    assertNull(passwordParameter.defaultValue());
+    assertTrue(walletPasswordParameter.isSensitive());
+    assertFalse(walletPasswordParameter.isRequired());
+    assertNull(walletPasswordParameter.defaultValue());
 
   }
 
@@ -84,7 +84,7 @@ public class KeyVaultTCPSProviderTest {
 
     Optional.ofNullable(TestProperties.getOptional(
                     AzureTestProperty.AZURE_TLS_FILE_PASSWORD))
-            .ifPresent(password -> testParameters.put("password",
+            .ifPresent(password -> testParameters.put("walletPassword",
                     password));
 
     AzureResourceProviderTestUtil.configureAuthentication(testParameters);
