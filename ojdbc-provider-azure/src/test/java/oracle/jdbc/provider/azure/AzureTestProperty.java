@@ -85,9 +85,15 @@ public enum AzureTestProperty {
 
   AZURE_KEY_VAULT_SECRET_PAYLOAD_KEY,
 
+  AZURE_TLS_WALLET_SECRET_NAME,
+
   AZURE_TLS_FILE_TYPE,
 
-  AZURE_TLS_FILE_PASSWORD;
+  AZURE_TLS_FILE_PASSWORD,
+
+  AZURE_SEPS_WALLET_PASSWORD,
+
+  AZURE_SEPS_CONNECTION_STRING_INDEX, AZURE_SEPS_WALLET_SECRET_NAME;
 
   /**
    * Aborts the calling test if the given {@code names} are not configured in

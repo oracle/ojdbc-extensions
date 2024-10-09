@@ -76,7 +76,7 @@ public class KeyVaultTCPSProviderTest {
             TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
     testParameters.put(
             "secretName",
-            TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_SECRET_NAME));
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_TLS_WALLET_SECRET_NAME));
 
     testParameters.put(
             "type",
