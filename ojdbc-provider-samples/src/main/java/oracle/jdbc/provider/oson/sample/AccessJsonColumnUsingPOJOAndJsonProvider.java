@@ -39,15 +39,10 @@ package oracle.jdbc.provider.oson.sample;
 
 import oracle.jdbc.OracleConnection;
 import oracle.jdbc.OracleType;
-import oracle.jdbc.datasource.impl.OracleDataSource;
 import oracle.jdbc.provider.oson.sample.model.*;
 import oracle.jdbc.provider.oson.JacksonOsonProvider;
-import oracle.jdbc.provider.Configuration;
 
-import java.math.BigDecimal;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * <p>
@@ -74,7 +69,7 @@ public class AccessJsonColumnUsingPOJOAndJsonProvider {
     }
   }
 
-  public static void retieveFromDatabase(Connection conn) throws SQLException {
+  public static void retrieveFromDatabase(Connection conn) throws SQLException {
 
     try (Statement stmt = conn.createStatement();
         ResultSet rs = stmt.executeQuery("select id, json_value from jackson_oson_sample order by id")) {
@@ -95,7 +90,7 @@ public class AccessJsonColumnUsingPOJOAndJsonProvider {
       Connection conn = JacksonOsonSampleUtil.createConnection();
       JacksonOsonSampleUtil.createTable(conn);
       insertIntoDatabase(conn);
-      retieveFromDatabase(conn);
+      retrieveFromDatabase(conn);
       JacksonOsonSampleUtil.dropTable(conn);
       conn.close();
     } catch (SQLException sqlException) {

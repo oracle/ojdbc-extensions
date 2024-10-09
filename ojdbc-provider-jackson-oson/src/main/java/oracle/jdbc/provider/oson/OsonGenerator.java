@@ -50,6 +50,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -248,7 +250,7 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeRawUTF8String(byte[] buffer, int offset, int len) throws IOException {
     _verifyValueWrite("writeRawUTF8String");
-    gen.write(new String(buffer, offset, len));
+    gen.write(new String(buffer, offset, len, StandardCharsets.UTF_8));
   }
 
   /**
@@ -262,7 +264,7 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeUTF8String(byte[] buffer, int offset, int len) throws IOException {
     _verifyValueWrite("writeUTF8String");
-    gen.write(new String(buffer, offset, len));
+    gen.write(new String(buffer, offset, len, StandardCharsets.UTF_8));
   }
 
   /**

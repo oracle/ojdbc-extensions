@@ -106,6 +106,8 @@ public class OsonParser extends ParserBase {
     OSON_EVENT_TO_JSON_TOKEN.put(OracleJsonParser.Event.VALUE_TIMESTAMP, JsonToken.VALUE_STRING);
     OSON_EVENT_TO_JSON_TOKEN.put(OracleJsonParser.Event.VALUE_TIMESTAMPTZ, JsonToken.VALUE_STRING);
     OSON_EVENT_TO_JSON_TOKEN.put(OracleJsonParser.Event.VALUE_BINARY,JsonToken.VALUE_EMBEDDED_OBJECT);
+    OSON_EVENT_TO_JSON_TOKEN.put(OracleJsonParser.Event.VALUE_INTERVALDS, JsonToken.VALUE_STRING);
+    OSON_EVENT_TO_JSON_TOKEN.put(OracleJsonParser.Event.VALUE_INTERVALYM, JsonToken.VALUE_STRING);
   }
 
   /**
@@ -143,73 +145,20 @@ public class OsonParser extends ParserBase {
       currentEvent = parser.next();
 
       switch (currentEvent) {
-        case START_OBJECT:
-          return JsonToken.START_OBJECT;
-          
-        case END_OBJECT:
-          return JsonToken.END_OBJECT;
-
-        case START_ARRAY:
-          return JsonToken.START_ARRAY;
-          
-        case END_ARRAY:
-          return JsonToken.END_ARRAY;
-
         case KEY_NAME:
           if(DEBUG) logger.log(Level.FINEST, "KEY_NAME> " + parser.getString());
           this.fieldName = parser.getString();
           return JsonToken.FIELD_NAME;
 
-        case VALUE_STRING:
-          if(DEBUG) logger.log(Level.FINEST, "VALUE_STRING> " + parser.getString());
-          return JsonToken.VALUE_STRING;
-
         case VALUE_DECIMAL:
           if(DEBUG) logger.log(Level.FINEST, "VALUE_DECIMAL> " + parser.getBigDecimal()+" / "+parser.isIntegralNumber());
           return parser.isIntegralNumber() ? JsonToken.VALUE_NUMBER_INT : JsonToken.VALUE_NUMBER_FLOAT;
-
-        case VALUE_FLOAT:
-          if(DEBUG) logger.log(Level.FINEST, "VALUE_FLOAT> " + parser.getFloat());
-          return JsonToken.VALUE_NUMBER_FLOAT;
-
-        case VALUE_DOUBLE:
-          if(DEBUG) logger.log(Level.FINEST, "VALUE_DOUBLE> " + parser.getDouble());
-          return JsonToken.VALUE_NUMBER_FLOAT;
-
-        case VALUE_NULL:
-          if(DEBUG) logger.log(Level.FINEST, "VALUE_NULL");
-          return JsonToken.VALUE_NULL;
-
-        case VALUE_TRUE:
-          if(DEBUG) logger.log(Level.FINEST, "VALUE_TRUE");
-          return JsonToken.VALUE_TRUE;
-
-        case VALUE_FALSE:
-          if(DEBUG) logger.log(Level.FINEST, "VALUE_FALSE");
-          return JsonToken.VALUE_FALSE;
-
-        case VALUE_TIMESTAMP:
-          if(DEBUG) logger.log(Level.FINEST, "VALUE_TIMESTAMP");
-          return JsonToken.VALUE_STRING;
-
-        case VALUE_TIMESTAMPTZ:
-          if(DEBUG) logger.log(Level.FINEST, "VALUE_TIMESTAMPTZ");
-          return JsonToken.VALUE_STRING;
-
-        case VALUE_BINARY:
-          if(DEBUG) logger.log(Level.FINEST, "VALUE_BINARY");
-          return JsonToken.VALUE_EMBEDDED_OBJECT;
-          
-        case VALUE_INTERVALDS:
-          if(DEBUG) logger.log(Level.FINEST, "VALUE_INTERVALDS");
-          return JsonToken.VALUE_STRING;
-          
-        case VALUE_INTERVALYM:
-          if(DEBUG) logger.log(Level.FINEST, "VALUE_INTERVALYM");
-          return JsonToken.VALUE_STRING;
           
         default:
-          throw new IllegalStateException("event: " + currentEvent);
+          JsonToken token = OSON_EVENT_TO_JSON_TOKEN.get(currentEvent);
+          if(token == null) throw new IllegalStateException("Invalid event " + currentEvent);
+          if(DEBUG) logger.log(Level.FINEST, token.toString());
+          return token;
       }
     }
 
@@ -249,7 +198,7 @@ public class OsonParser extends ParserBase {
   @Override
   public JsonToken nextValue() throws IOException {
     if(DEBUG) logger.log(Level.FINEST, "nextValue");
-    return null;
+    return super.nextValue();
   }
 
   /**
@@ -311,71 +260,21 @@ public class OsonParser extends ParserBase {
       currentEvent = parser.next();
     }
     switch (currentEvent) {
-      case START_OBJECT:
-        return JsonToken.START_OBJECT;
-      case END_OBJECT:
-        return JsonToken.END_OBJECT;
-
-      case START_ARRAY:
-        return JsonToken.START_ARRAY;
-      case END_ARRAY:
-        return JsonToken.END_ARRAY;
 
       case KEY_NAME:
         if(DEBUG) logger.log(Level.FINEST, "KEY_NAME> " + parser.getString());
         this.fieldName = parser.getString();
         return JsonToken.FIELD_NAME;
 
-      case VALUE_STRING:
-        if(DEBUG) logger.log(Level.FINEST, "VALUE_STRING> " + parser.getString());
-        return JsonToken.VALUE_STRING;
-
       case VALUE_DECIMAL:
         if(DEBUG) logger.log(Level.FINEST, "VALUE_DECIMAL> " + parser.getBigDecimal()+" / "+parser.isIntegralNumber());
         return parser.isIntegralNumber() ? JsonToken.VALUE_NUMBER_INT : JsonToken.VALUE_NUMBER_FLOAT;
 
-      case VALUE_FLOAT:
-        if(DEBUG) logger.log(Level.FINEST, "VALUE_FLOAT> " + parser.getFloat());
-        return JsonToken.VALUE_NUMBER_FLOAT;
-
-      case VALUE_DOUBLE:
-        if(DEBUG) logger.log(Level.FINEST, "VALUE_DOUBLE> " + parser.getDouble());
-        return JsonToken.VALUE_NUMBER_FLOAT;
-
-      case VALUE_NULL:
-        if(DEBUG) logger.log(Level.FINEST, "VALUE_NULL");
-        return JsonToken.VALUE_NULL;
-
-      case VALUE_TRUE:
-        if(DEBUG) logger.log(Level.FINEST, "VALUE_TRUE");
-        return JsonToken.VALUE_TRUE;
-
-      case VALUE_FALSE:
-        if(DEBUG) logger.log(Level.FINEST, "VALUE_FALSE");
-        return JsonToken.VALUE_FALSE;
-
-      case VALUE_TIMESTAMP:
-        if(DEBUG) logger.log(Level.FINEST, "VALUE_TIMESTAMP");
-        return JsonToken.VALUE_STRING;
-
-      case VALUE_TIMESTAMPTZ:
-        if(DEBUG) logger.log(Level.FINEST, "VALUE_TIMESTAMPTZ");
-        return JsonToken.VALUE_STRING;
-        
-      case VALUE_BINARY:
-        if(DEBUG) logger.log(Level.FINEST, "VALUE_BINARY");
-        return JsonToken.VALUE_STRING;
-        
-      case VALUE_INTERVALDS:
-        if(DEBUG) logger.log(Level.FINEST, "VALUE_INTERVALDS");
-        return JsonToken.VALUE_STRING;
-        
-      case VALUE_INTERVALYM:
-        if(DEBUG) logger.log(Level.FINEST, "VALUE_INTERVALYM");
-        return JsonToken.VALUE_STRING;
-
       default:
-        throw new IllegalStateException("event: " + currentEvent);
+        JsonToken token = OSON_EVENT_TO_JSON_TOKEN.get(currentEvent);
+        if(token == null) throw new IllegalStateException("Invalid event " + currentEvent);
+        if(DEBUG) logger.log(Level.FINEST, token.toString());
+        return token;
     }
 
   }
@@ -394,15 +293,7 @@ public class OsonParser extends ParserBase {
    */
   @Override
   public int getCurrentTokenId() {
-    if(DEBUG) logger.log(Level.FINEST, "getCurrentTokenId");
-    JsonToken jt;
-    if ((jt = OSON_EVENT_TO_JSON_TOKEN.get(currentEvent)) != null) {
-      return jt.id();
-    } else if( currentEvent == OracleJsonParser.Event.VALUE_DECIMAL ) {
-      return parser.isIntegralNumber() ? JsonToken.VALUE_NUMBER_INT.id() : JsonToken.VALUE_NUMBER_FLOAT.id();
-    }
-
-    return -1;
+    return currentTokenId();
   }
 
   /**
@@ -431,7 +322,7 @@ public class OsonParser extends ParserBase {
   }
 
   /**
-   * Checks if the provided id matches the ID FIELD.
+   * Checks if the provided id matches the current Event's ID.
    */
   @Override
   public boolean hasTokenId(final int id) {
@@ -447,7 +338,7 @@ public class OsonParser extends ParserBase {
   }
 
   /**
-   * Checks if the current token matches the provided JsonToken.
+   * Checks if the current event token matches the provided JsonToken.
    *
    * @param jsonToken The JsonToken to check against.
    * @return true if the current token matches the provided JsonToken, false otherwise.

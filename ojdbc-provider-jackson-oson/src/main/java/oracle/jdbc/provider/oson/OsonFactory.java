@@ -58,7 +58,7 @@ public class OsonFactory extends JsonFactory {
   /**
    * {@link OracleJsonFactory} object to create generator/parser instances.
    */
-  OracleJsonFactory factory = new OracleJsonFactory();
+  private static final OracleJsonFactory factory = new OracleJsonFactory();
   /**
    * Creates a JSON generator that writes to the given output stream, using UTF-8 encoding.
    *
@@ -87,7 +87,6 @@ public class OsonFactory extends JsonFactory {
       out = _outputDecorator.decorate(ctxt, out);
     }
 
-    // todo:check for other encodings
     OsonGenerator g = new OsonGenerator(_generatorFeatures, null,
         factory.createJsonBinaryGenerator(out), out);
     ObjectCodec codec = getCodec();
@@ -109,8 +108,9 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   public JsonGenerator createGenerator(Writer out) throws IOException {
-    OsonGenerator g = new OsonGenerator(_generatorFeatures, null, 
-        factory.createJsonTextGenerator(out));
+    IOContext ctxt = _createContext(_createContentReference(out), true);
+    OsonGenerator g = new OsonGenerator(_generatorFeatures, null,
+        factory.createJsonTextGenerator(_decorate(out,ctxt)));
     ObjectCodec codec = getCodec();
     if (codec != null) {
       g.setCodec(codec);
@@ -244,7 +244,7 @@ public class OsonFactory extends JsonFactory {
   @Override
   public JsonParser createParser(InputStream in) throws IOException {
     IOContext ctxt = _createContext(in, true);
-    return _createParser(in, ctxt);
+    return _createParser(_decorate(in, ctxt), ctxt);
   }
 
   /**
@@ -341,7 +341,6 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   public JsonParser _createParser(Reader r, IOContext ctxt) {
-    
     return new OsonParser(ctxt, _factoryFeatures, factory.createJsonTextParser(r));
   }
 

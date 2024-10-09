@@ -64,112 +64,112 @@ import java.util.regex.Pattern;
 @TestMethodOrder(OrderAnnotation.class)
 public class AnnotationOSONTest {
 
-    /**
-     * The connection to the Oracle database.
-     */
-    Connection conn = null;
+  /**
+   * The connection to the Oracle database.
+   */
+  Connection conn = null;
 
-    /**
-     * The OSON factory for creating OSON parsers and generators.
-     */
-    OsonFactory osonFactory = new OsonFactory();
+  /**
+   * The OSON factory for creating OSON parsers and generators.
+   */
+  OsonFactory osonFactory = new OsonFactory();
 
-    /**
-     * The {@code ObjectMapper} used for OSON processing.
-     */
-    ObjectMapper om = new ObjectMapper(osonFactory);
+  /**
+   * The {@code ObjectMapper} used for OSON processing.
+   */
+  ObjectMapper om = new ObjectMapper(osonFactory);
 
-    /**
-     * The byte array that holds the serialized object data.
-     */
-    byte[] objectBytes = null;
+  /**
+   * The byte array that holds the serialized object data.
+   */
+  byte[] objectBytes = null;
 
-    /**
-     * The implyee instance inserted into DB.
-     */
-    AnnonationTest insertedEmployee = null;
+  /**
+   * The implyee instance inserted into DB.
+   */
+  AnnonationTest insertedEmployee = null;
 
-    /**
-     * Sets up the database connection and the required tables before all tests are run.
-     */
-    @BeforeAll
-    public void setup() {
-        try {
-            om.findAndRegisterModules();
-            om.registerModule(new OsonModule());
-            String url = TestProperties.getOrAbort(OsonTestProperty.JACKSON_OSON_URL);
-            String userName = TestProperties.getOrAbort(OsonTestProperty.JACKSON_OSON_USERNAME);
-            String password = TestProperties.getOrAbort(OsonTestProperty.JACKSON_OSON_PASSWORD);
-            OracleDataSource ods = new OracleDataSource();
-            ods.setURL(url);
-            ods.setUser(userName);
-            ods.setPassword(password);
-            conn = ods.getConnection();
+  /**
+   * Sets up the database connection and the required tables before all tests are run.
+   */
+  @BeforeAll
+  public void setup() {
+    try {
+      om.findAndRegisterModules();
+      om.registerModule(new OsonModule());
+      String url = TestProperties.getOrAbort(OsonTestProperty.JACKSON_OSON_URL);
+      String userName = TestProperties.getOrAbort(OsonTestProperty.JACKSON_OSON_USERNAME);
+      String password = TestProperties.getOrAbort(OsonTestProperty.JACKSON_OSON_PASSWORD);
+      OracleDataSource ods = new OracleDataSource();
+      ods.setURL(url);
+      ods.setUser(userName);
+      ods.setPassword(password);
+      conn = ods.getConnection();
 
-            //setup db tables
-            try(Statement stmt = conn.createStatement()) {
-                stmt.execute("drop table if exists emp_json");
-                stmt.execute("create table emp_json(c1 number, c2 JSON) tablespace tbs1");
-            }
-
-
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    /**
-     * Inserts an {@code Employee} object into the database in JSON format.
-     *
-     * @throws IOException   if there is an error during object serialization.
-     * @throws SQLException  if there is a database access error.
-     */
-    @Test
-    @Order(1)
-    public void insertIntoDatabase() throws IOException, SQLException {
-        Assumptions.assumeTrue(conn != null);
-        for(AnnonationTest test : AnnotationTestInstances.getTestList()) {
-            try(PreparedStatement pstmt = conn.prepareStatement("insert into emp_json (c1,c2) values(?,?)")) {
-                pstmt.setInt(1, AnnotationTestInstances.getTestList().indexOf(test));
-                pstmt.setObject(2, test, OracleType.JSON);
-                pstmt.execute();
-            }
-        }
+      //setup db tables
+      try(Statement stmt = conn.createStatement()) {
+        stmt.execute("drop table if exists emp_json");
+        stmt.execute("create table emp_json(c1 number, c2 JSON) tablespace tbs1");
+      }
 
 
     }
+    catch (Exception e) {
+      e.printStackTrace();
+    }
 
-    /**
-     * Retrieves the {@code Employee} object from the database and prints its details.
-     *
-     * @throws Exception if there is an error during retrieval or object conversion.
-     */
-    @Test
-    @Order(2)
-    public void retrieveFromDatabase() throws Exception {
-        Assumptions.assumeTrue(conn != null);
-        try(Statement stmt = conn.createStatement()) {
-            try(ResultSet rs = stmt.executeQuery("SELECT json_serialize(c2 PRETTY ORDERED) from emp_json")) {
-                while(rs.next()) {
-                    String retrievedEmployee = rs.getString(1);
-                    JsonNode jsonNode = om.readTree(retrievedEmployee);
-                    String regex = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$";
+  }
 
-                    Pattern pattern = Pattern.compile(regex);
+  /**
+   * Inserts an {@code Employee} object into the database in JSON format.
+   *
+   * @throws IOException   if there is an error during object serialization.
+   * @throws SQLException  if there is a database access error.
+   */
+  @Test
+  @Order(1)
+  public void insertIntoDatabase() throws IOException, SQLException {
+    Assumptions.assumeTrue(conn != null);
+    for(AnnonationTest test : AnnotationTestInstances.getTestList()) {
+      try(PreparedStatement pstmt = conn.prepareStatement("insert into emp_json (c1,c2) values(?,?)")) {
+        pstmt.setInt(1, AnnotationTestInstances.getTestList().indexOf(test));
+        pstmt.setObject(2, test, OracleType.JSON);
+        pstmt.execute();
+      }
+    }
 
-                    Matcher matcher = pattern.matcher(jsonNode.get("localDateTime").asText());
-                    Assertions.assertTrue(matcher.matches());
 
-                }
-            }
+  }
+
+  /**
+   * Retrieves the {@code Employee} object from the database and prints its details.
+   *
+   * @throws Exception if there is an error during retrieval or object conversion.
+   */
+  @Test
+  @Order(2)
+  public void retrieveFromDatabase() throws Exception {
+    Assumptions.assumeTrue(conn != null);
+    try(Statement stmt = conn.createStatement()) {
+      try(ResultSet rs = stmt.executeQuery("SELECT json_serialize(c2 PRETTY ORDERED) from emp_json")) {
+        while(rs.next()) {
+          String retrievedEmployee = rs.getString(1);
+          JsonNode jsonNode = om.readTree(retrievedEmployee);
+          String regex = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$";
+
+          Pattern pattern = Pattern.compile(regex);
+
+          Matcher matcher = pattern.matcher(jsonNode.get("localDateTime").asText());
+          Assertions.assertTrue(matcher.matches());
+
         }
+      }
     }
+  }
 
-    @AfterAll
-    public void tearDown() throws SQLException {
-        Assumptions.assumeTrue(conn != null);
-        conn.close();
-    }
+  @AfterAll
+  public void tearDown() throws SQLException {
+    Assumptions.assumeTrue(conn != null);
+    conn.close();
+  }
 }

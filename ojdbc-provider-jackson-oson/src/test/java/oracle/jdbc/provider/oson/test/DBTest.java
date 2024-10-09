@@ -43,20 +43,15 @@ import oracle.jdbc.OracleType;
 import oracle.jdbc.datasource.impl.OracleDataSource;
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.oson.OsonFactory;
-import oracle.jdbc.provider.oson.OsonGenerator;
 import oracle.jdbc.provider.oson.OsonTestProperty;
 import oracle.jdbc.provider.oson.model.EmployeeInstances;
-import oracle.jdbc.provider.oson.model.Phone;
 import oracle.jdbc.provider.oson.model.Employee;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * The {@code DBTest} class is a JUnit test class that tests insertion and retrieval
@@ -146,7 +141,7 @@ public class DBTest {
    */
   @Test
   @Order(2)
-  public void retieveFromDatabase() throws Exception {
+  public void retrieveFromDatabase() throws Exception {
     Assumptions.assumeTrue(conn != null);
     try(Statement stmt = conn.createStatement()) {
       try(ResultSet rs = stmt.executeQuery("select c1, c2 from emp_json order by c1")) {

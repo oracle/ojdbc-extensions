@@ -132,7 +132,7 @@ public class ListTypeTest {
    */
   @Test
   @Order(2)
-  public void retieveFromDatabase() throws SQLException, IOException {
+  public void retrieveFromDatabase() throws SQLException, IOException {
     Assumptions.assumeTrue(conn != null);
     List<Phone> retrievedPhones = new ArrayList<>();
     try(Statement stmt = conn.createStatement();) {

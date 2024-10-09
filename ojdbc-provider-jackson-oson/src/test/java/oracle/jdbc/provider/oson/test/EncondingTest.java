@@ -98,50 +98,50 @@ public class EncondingTest {
   private static final ObjectNode objectNode;
 
   static {
-    om.findAndRegisterModules();
-    om.registerModule(new OsonModule());
-    objectNode = om.valueToTree(employee);
+  om.findAndRegisterModules();
+  om.registerModule(new OsonModule());
+  objectNode = om.valueToTree(employee);
   }
 
   @BeforeEach
   public void setup() throws Exception {
-      OracleDataSource ods = new OracleDataSource();
-      ods.setURL(URL);
-      ods.setUser(USER_NAME);
-      ods.setPassword(PASSWORD);
-      conn = ods.getConnection();
-      //setup db tables
-      try (Statement stmt = conn.createStatement()) {
-        stmt.addBatch("drop table if exists all_types_json");
-        stmt.addBatch("create table all_types_json(c1 number, c2 JSON) tablespace tbs1");
-        stmt.executeBatch();
-      }
+    OracleDataSource ods = new OracleDataSource();
+    ods.setURL(URL);
+    ods.setUser(USER_NAME);
+    ods.setPassword(PASSWORD);
+    conn = ods.getConnection();
+    //setup db tables
+    try (Statement stmt = conn.createStatement()) {
+    stmt.addBatch("drop table if exists all_types_json");
+    stmt.addBatch("create table all_types_json(c1 number, c2 JSON) tablespace tbs1");
+    stmt.executeBatch();
+    }
   }
 
   /**
    * Converts the {@code AllOracleTypes} object to OSON format.
    *
    * @throws StreamWriteException in case of a write failure.
-   * @throws DatabindException    in case of a databind failure.
-   * @throws IOException          in case of an I/O failure.
+   * @throws DatabindException  in case of a databind failure.
+   * @throws IOException      in case of an I/O failure.
    */
   @Order(1)
   @ParameterizedTest()
   @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
   public void convertToOsonUsingStream(String encoding) throws Exception {
-    Assumptions.assumeTrue(conn != null);
+  Assumptions.assumeTrue(conn != null);
 
-    JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
-    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-      try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
-        om.writeValue(osonGen, employee);
-      }
-      // Insert the converted bytes
-      InsertBytes(out.toByteArray());
-      // Retrieve the converted bytes
-      Employee employeeAfterConvert =  ReadObject();
-      verifyEquals(employee, employeeAfterConvert);
+  JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
+  try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+    try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
+    om.writeValue(osonGen, employee);
     }
+    // Insert the converted bytes
+    InsertBytes(out.toByteArray());
+    // Retrieve the converted bytes
+    Employee employeeAfterConvert =  ReadObject();
+    verifyEquals(employee, employeeAfterConvert);
+  }
   }
 
 
@@ -149,18 +149,18 @@ public class EncondingTest {
   @ParameterizedTest()
   @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
   public void convertToOsonUsingFile(String encoding) throws Exception {
-    Assumptions.assumeTrue(conn != null);
+  Assumptions.assumeTrue(conn != null);
 
-    JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
-    File out = new File("file.json");
-    try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
-      om.writeValue(osonGen, employee);
-    }
-    // Insert the converted bytes
-    InsertBytes(Files.readAllBytes(Paths.get(out.getPath())));
-    // Retrieve the converted bytes
-    Employee employeeAfterConvert =  ReadObject();
-    verifyEquals(employee, employeeAfterConvert);
+  JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
+  File out = new File("file.json");
+  try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
+    om.writeValue(osonGen, employee);
+  }
+  // Insert the converted bytes
+  InsertBytes(Files.readAllBytes(Paths.get(out.getPath())));
+  // Retrieve the converted bytes
+  Employee employeeAfterConvert =  ReadObject();
+  verifyEquals(employee, employeeAfterConvert);
 
   }
 
@@ -168,21 +168,21 @@ public class EncondingTest {
   @ParameterizedTest()
   @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
   public void convertToOsonUsingDataOutput(String encoding) throws Exception {
-    Assumptions.assumeTrue(conn != null);
+  Assumptions.assumeTrue(conn != null);
 
-    JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
-    try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        DataOutputStream out = new DataOutputStream(byteArrayOutputStream)) {
-      try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator((DataOutput) out, jsonEncoding)) {
-        om.writeValue(osonGen, employee);
-      }
-      // Insert the converted bytes
-      InsertBytes(byteArrayOutputStream.toByteArray());
-
+  JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
+  try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    DataOutputStream out = new DataOutputStream(byteArrayOutputStream)) {
+    try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator((DataOutput) out, jsonEncoding)) {
+    om.writeValue(osonGen, employee);
     }
-    // Retrieve the converted bytes
-    Employee employeeAfterConvert =  ReadObject();
-    verifyEquals(employee, employeeAfterConvert);
+    // Insert the converted bytes
+    InsertBytes(byteArrayOutputStream.toByteArray());
+
+  }
+  // Retrieve the converted bytes
+  Employee employeeAfterConvert =  ReadObject();
+  verifyEquals(employee, employeeAfterConvert);
 
   }
 
@@ -195,39 +195,39 @@ public class EncondingTest {
   @ParameterizedTest()
   @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
   public void convertToOsonUsingStreamAndObjectNode(String encoding) throws Exception {
-    Assumptions.assumeTrue(conn != null);
+  Assumptions.assumeTrue(conn != null);
 
-    JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
-    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-      try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
-        om.writeValue(osonGen, objectNode);
-      }
-      // Insert the converted bytes
-      InsertBytes(out.toByteArray());
-      ObjectNode intermediateNode = om.readValue(out.toByteArray(), ObjectNode.class);
-      verifyEquals(objectNode, intermediateNode);
-      // Retrieve the converted bytes
-      ObjectNode objectNodeAfterConvert =  ReadObjectNode();
-      verifyEquals(objectNode, objectNodeAfterConvert);
+  JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
+  try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+    try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
+    om.writeValue(osonGen, objectNode);
     }
+    // Insert the converted bytes
+    InsertBytes(out.toByteArray());
+    ObjectNode intermediateNode = om.readValue(out.toByteArray(), ObjectNode.class);
+    verifyEquals(objectNode, intermediateNode);
+    // Retrieve the converted bytes
+    ObjectNode objectNodeAfterConvert =  ReadObjectNode();
+    verifyEquals(objectNode, objectNodeAfterConvert);
+  }
   }
 
   @Order(6)
   @ParameterizedTest()
   @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
   public void convertToOsonUsingFileAndObjectNode(String encoding) throws Exception {
-    Assumptions.assumeTrue(conn != null);
+  Assumptions.assumeTrue(conn != null);
 
-    JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
-    File out = new File("file.json");
-    try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
-      om.writeValue(osonGen, objectNode);
-    }
-    // Insert the converted bytes
-    InsertBytes(Files.readAllBytes(Paths.get(out.getPath())));
-    // Retrieve the converted bytes
-    ObjectNode objectNodeAfterConvert =  ReadObjectNode();
-    verifyEquals(objectNode, objectNodeAfterConvert);
+  JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
+  File out = new File("file.json");
+  try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
+    om.writeValue(osonGen, objectNode);
+  }
+  // Insert the converted bytes
+  InsertBytes(Files.readAllBytes(Paths.get(out.getPath())));
+  // Retrieve the converted bytes
+  ObjectNode objectNodeAfterConvert =  ReadObjectNode();
+  verifyEquals(objectNode, objectNodeAfterConvert);
 
   }
 
@@ -235,77 +235,77 @@ public class EncondingTest {
   @ParameterizedTest()
   @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
   public void convertToOsonUsingDataOutputAndObjectNode(String encoding) throws Exception {
-    Assumptions.assumeTrue(conn != null);
+  Assumptions.assumeTrue(conn != null);
 
-    JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
-    try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-         DataOutputStream out = new DataOutputStream(byteArrayOutputStream)) {
-      try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator((DataOutput) out, jsonEncoding)) {
-        om.writeValue(osonGen, objectNode);
-      }
-      // Insert the converted bytes
-      InsertBytes(byteArrayOutputStream.toByteArray());
-
+  JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
+  try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+     DataOutputStream out = new DataOutputStream(byteArrayOutputStream)) {
+    try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator((DataOutput) out, jsonEncoding)) {
+    om.writeValue(osonGen, objectNode);
     }
-    // Retrieve the converted bytes
-    ObjectNode objectNodeAfterConvert =  ReadObjectNode();
-    verifyEquals(objectNode, objectNodeAfterConvert);
+    // Insert the converted bytes
+    InsertBytes(byteArrayOutputStream.toByteArray());
+
+  }
+  // Retrieve the converted bytes
+  ObjectNode objectNodeAfterConvert =  ReadObjectNode();
+  verifyEquals(objectNode, objectNodeAfterConvert);
 
   }
 
   private void InsertBytes(byte[] bytes) throws SQLException {
-    try (PreparedStatement pstmt = conn.prepareStatement("insert into all_types_json (c1,c2) values(?,?)")) {
-      pstmt.setInt(1, 1);
-      pstmt.setBytes(2, bytes);
-      pstmt.executeUpdate();
-    }
+  try (PreparedStatement pstmt = conn.prepareStatement("insert into all_types_json (c1,c2) values(?,?)")) {
+    pstmt.setInt(1, 1);
+    pstmt.setBytes(2, bytes);
+    pstmt.executeUpdate();
+  }
   }
 
   private Employee ReadObject() throws SQLException, IOException {
-    try (Statement stmt = conn.createStatement();
-         ResultSet rs = stmt.executeQuery("select c1, c2 from all_types_json order by c1")) {
-      assertTrue(rs.next());
-      return om.readValue(rs.getObject(2, OracleJsonDatum.class).shareBytes(), Employee.class);
-    }
+  try (Statement stmt = conn.createStatement();
+     ResultSet rs = stmt.executeQuery("select c1, c2 from all_types_json order by c1")) {
+    assertTrue(rs.next());
+    return om.readValue(rs.getObject(2, OracleJsonDatum.class).shareBytes(), Employee.class);
+  }
   }
 
   private ObjectNode ReadObjectNode() throws SQLException, IOException {
-    try (Statement stmt = conn.createStatement();
-         ResultSet rs = stmt.executeQuery("select c1, c2 from all_types_json order by c1")) {
-      assertTrue(rs.next());
-      return om.readValue(rs.getObject(2, OracleJsonDatum.class).shareBytes(), ObjectNode.class);
-    }
+  try (Statement stmt = conn.createStatement();
+     ResultSet rs = stmt.executeQuery("select c1, c2 from all_types_json order by c1")) {
+    assertTrue(rs.next());
+    return om.readValue(rs.getObject(2, OracleJsonDatum.class).shareBytes(), ObjectNode.class);
+  }
   }
 
   private void verifyEquals(Employee employee, Employee employeeAfterConvert) {
-    assertEquals(employee, employeeAfterConvert);
+  assertEquals(employee, employeeAfterConvert);
   }
 
   private void verifyEquals(ObjectNode original, ObjectNode converted) throws Exception {
-    assertEquals(original.get("employeeId").intValue(), converted.get("employeeId").intValue());
-    assertEquals(original.get("salary").decimalValue(), converted.get("salary").decimalValue());
-    assertEquals(original.get("largeNumber").bigIntegerValue(), converted.get("largeNumber").bigIntegerValue());
-    assertEquals(original.get("firstName").toString(), converted.get("firstName").toString());
-    assertEquals(original.get("middleInitial").toString(), converted.get("middleInitial").toString());
-    assertEquals(original.get("lastName").toString(), converted.get("lastName").toString());
-    assertEquals(om.convertValue(original.get("hireDate"), Date.class), om.convertValue(converted.get("hireDate"), Date.class));
-    assertEquals(om.convertValue(original.get("localHireDate"), LocalDate.class), om.convertValue(converted.get("localHireDate"), LocalDate.class));
-    assertEquals(om.convertValue(original.get("loginInstant"), Instant.class), om.convertValue(converted.get("loginInstant"), Instant.class));
-    assertEquals(om.convertValue(original.get("loginLocalTime"), LocalTime.class), om.convertValue(converted.get("loginLocalTime"), LocalTime.class));
-    assertEquals(om.convertValue(original.get("salaryMonthDay"), MonthDay.class), om.convertValue(converted.get("salaryMonthDay"), MonthDay.class));
-    assertEquals(om.convertValue(original.get("incrementYearmonth"), YearMonth.class), om.convertValue(converted.get("incrementYearmonth"), YearMonth.class));
-    assertEquals(original.get("logoutTime").longValue(), converted.get("logoutTime").longValue());
-    assertEquals(om.convertValue(original.get("startTime"), Time.class), om.convertValue(converted.get("startTime"), Time.class));
-    assertEquals(om.convertValue(original.get("lastUpdated"), Timestamp.class), om.convertValue(converted.get("lastUpdated"), Timestamp.class));
-    assertEquals(om.convertValue(original.get("localDateTime"), LocalDateTime.class), om.convertValue(converted.get("localDateTime"), LocalDateTime.class));
-    assertEquals(om.convertValue(original.get("offsetDateTime"), OffsetDateTime.class), om.convertValue(converted.get("offsetDateTime"), OffsetDateTime.class));
-    assertEquals(om.convertValue(original.get("yearJoined"), Year.class), om.convertValue(converted.get("yearJoined"), Year.class));
-    assertEquals(om.convertValue(original.get("durationOfEmployment"), Duration.class), om.convertValue(converted.get("durationOfEmployment"), Duration.class));
-    assertEquals(original.get("resume").toString(), converted.get("resume").toString());
-    assertEquals(original.get("active").booleanValue(), converted.get("active").booleanValue());
-    assertEquals(om.convertValue(original.get("vacationZonedDateTime"), ZonedDateTime.class), om.convertValue(converted.get("vacationZonedDateTime"), ZonedDateTime.class));
-    assertArrayEquals(original.get("rawData").binaryValue(), converted.get("rawData").binaryValue());
-    assertArrayEquals(original.get("picture").binaryValue(), converted.get("picture").binaryValue());
+  assertEquals(original.get("employeeId").intValue(), converted.get("employeeId").intValue());
+  assertEquals(original.get("salary").decimalValue(), converted.get("salary").decimalValue());
+  assertEquals(original.get("largeNumber").bigIntegerValue(), converted.get("largeNumber").bigIntegerValue());
+  assertEquals(original.get("firstName").toString(), converted.get("firstName").toString());
+  assertEquals(original.get("middleInitial").toString(), converted.get("middleInitial").toString());
+  assertEquals(original.get("lastName").toString(), converted.get("lastName").toString());
+  assertEquals(om.convertValue(original.get("hireDate"), Date.class), om.convertValue(converted.get("hireDate"), Date.class));
+  assertEquals(om.convertValue(original.get("localHireDate"), LocalDate.class), om.convertValue(converted.get("localHireDate"), LocalDate.class));
+  assertEquals(om.convertValue(original.get("loginInstant"), Instant.class), om.convertValue(converted.get("loginInstant"), Instant.class));
+  assertEquals(om.convertValue(original.get("loginLocalTime"), LocalTime.class), om.convertValue(converted.get("loginLocalTime"), LocalTime.class));
+  assertEquals(om.convertValue(original.get("salaryMonthDay"), MonthDay.class), om.convertValue(converted.get("salaryMonthDay"), MonthDay.class));
+  assertEquals(om.convertValue(original.get("incrementYearmonth"), YearMonth.class), om.convertValue(converted.get("incrementYearmonth"), YearMonth.class));
+  assertEquals(original.get("logoutTime").longValue(), converted.get("logoutTime").longValue());
+  assertEquals(om.convertValue(original.get("startTime"), Time.class), om.convertValue(converted.get("startTime"), Time.class));
+  assertEquals(om.convertValue(original.get("lastUpdated"), Timestamp.class), om.convertValue(converted.get("lastUpdated"), Timestamp.class));
+  assertEquals(om.convertValue(original.get("localDateTime"), LocalDateTime.class), om.convertValue(converted.get("localDateTime"), LocalDateTime.class));
+  assertEquals(om.convertValue(original.get("offsetDateTime"), OffsetDateTime.class), om.convertValue(converted.get("offsetDateTime"), OffsetDateTime.class));
+  assertEquals(om.convertValue(original.get("yearJoined"), Year.class), om.convertValue(converted.get("yearJoined"), Year.class));
+  assertEquals(om.convertValue(original.get("durationOfEmployment"), Duration.class), om.convertValue(converted.get("durationOfEmployment"), Duration.class));
+  assertEquals(original.get("resume").toString(), converted.get("resume").toString());
+  assertEquals(original.get("active").booleanValue(), converted.get("active").booleanValue());
+  assertEquals(om.convertValue(original.get("vacationZonedDateTime"), ZonedDateTime.class), om.convertValue(converted.get("vacationZonedDateTime"), ZonedDateTime.class));
+  assertArrayEquals(original.get("rawData").binaryValue(), converted.get("rawData").binaryValue());
+  assertArrayEquals(original.get("picture").binaryValue(), converted.get("picture").binaryValue());
   }
 
 }

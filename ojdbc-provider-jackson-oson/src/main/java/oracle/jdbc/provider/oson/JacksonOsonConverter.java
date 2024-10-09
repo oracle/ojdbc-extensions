@@ -126,5 +126,13 @@ public class JacksonOsonConverter implements OsonConverter{
       return om.convertValue(fromValue, javaType);
   }
 
+  /**
+   * Get the object mapper instances with registered custom modules.
+   * @return the Object mapper with registered modules
+   */
+  public static ObjectMapper getObjectMapper() {
+    return om;
+  }
+
 
 }
