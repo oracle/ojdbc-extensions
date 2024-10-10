@@ -1,1 +1,2 @@
 oracle.jdbc.provider.azure.resource.KeyVaultUserNameProvider
+oracle.jdbc.provider.azure.resource.KeyVaultSEPSProvider

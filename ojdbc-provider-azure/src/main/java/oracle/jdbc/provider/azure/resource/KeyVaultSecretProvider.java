@@ -41,6 +41,7 @@ package oracle.jdbc.provider.azure.resource;
 import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
+import oracle.jdbc.provider.util.ResourceParameterUtils;
 
 import java.util.Map;
 
@@ -62,6 +63,11 @@ class KeyVaultSecretProvider extends AzureResourceProvider {
 
   protected KeyVaultSecretProvider(String valueType) {
     super(valueType, PARAMETERS);
+  }
+
+  public KeyVaultSecretProvider(String valueType, ResourceParameter[] additionalParameters) {
+    super(valueType, ResourceParameterUtils
+            .combineParameters(PARAMETERS, additionalParameters));
   }
 
   /**
