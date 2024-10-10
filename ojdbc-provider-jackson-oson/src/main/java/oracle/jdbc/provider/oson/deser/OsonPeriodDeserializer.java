@@ -86,12 +86,13 @@ public class OsonPeriodDeserializer extends StdScalarDeserializer<Period> {
    */
   @Override
   public Period deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-    if (p instanceof TreeTraversingParser) {
-      return JSR310StringParsableDeserializer.PERIOD.deserialize(p, ctxt);
-    } else {
+    if (p instanceof OsonParser) {
       final OsonParser _parser = (OsonParser)p;
 
       return _parser.readPeriod();
+
+    } else {
+      return JSR310StringParsableDeserializer.PERIOD.deserialize(p, ctxt);
     }
 
 

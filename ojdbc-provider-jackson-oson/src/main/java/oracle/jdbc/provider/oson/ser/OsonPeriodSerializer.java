@@ -85,12 +85,12 @@ public class OsonPeriodSerializer extends StdSerializer<Period> {
    */
   @Override
   public void serialize(Period value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-    if (gen instanceof TokenBuffer) {
-      gen.writeString(value.toString());
-    } else {
+    if (gen instanceof OsonGenerator) {
       final OsonGenerator _gen = (OsonGenerator)gen;
 
       _gen.writePeriod(value);
+    } else {
+      gen.writeString(value.toString());
     }
 
   }

@@ -83,12 +83,6 @@ public class OsonBigIntegerSerializer extends StdSerializer<BigInteger> {
    */
   @Override
   public void serialize(BigInteger value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-    if( gen instanceof TokenBuffer) {
-      gen.writeNumber((BigInteger) value);
-    } else {
-      final OsonGenerator _gen = (OsonGenerator)gen;
-
-      _gen.writeNumber(value);
-    }
+    gen.writeNumber((BigInteger) value);
   }
 }

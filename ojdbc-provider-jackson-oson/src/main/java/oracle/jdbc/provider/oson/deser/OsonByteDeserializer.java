@@ -86,12 +86,12 @@ public class OsonByteDeserializer extends StdScalarDeserializer<byte[]> {
     */
    @Override
    public byte[] deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-      if(p instanceof TreeTraversingParser) {
-         return (byte[]) PrimitiveArrayDeserializers.forType(byte.class).deserialize(p,ctxt);
-      } else {
+      if(p instanceof OsonParser) {
          final OsonParser _parser = (OsonParser)p;
 
          return _parser.getBinaryValue();
+      } else {
+         return (byte[]) PrimitiveArrayDeserializers.forType(byte.class).deserialize(p,ctxt);
       }
 
 

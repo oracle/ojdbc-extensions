@@ -87,13 +87,13 @@ public class OsonBigIntegerDeserializer extends StdScalarDeserializer<BigInteger
    */
   @Override
   public BigInteger deserialize(JsonParser p, DeserializationContext ctxt) throws IOException{
-    if( p instanceof TreeTraversingParser) {
-      return NumberDeserializers.BigIntegerDeserializer.instance.deserialize(p, ctxt);
-    }
-    else {
+    if( p instanceof OsonParser) {
       final OsonParser _parser = (OsonParser)p;
 
       return _parser.getBigIntegerValue();
+    }
+    else {
+      return NumberDeserializers.BigIntegerDeserializer.instance.deserialize(p, ctxt);
     }
   }
 }

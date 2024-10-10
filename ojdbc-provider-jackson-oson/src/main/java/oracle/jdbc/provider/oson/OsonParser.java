@@ -64,16 +64,16 @@ import java.util.logging.Logger;
  */
 public class OsonParser extends ParserBase {
 
-  /** Logger for debugging purposes */
+  /** Logger for debugging purposes. */
   private static final boolean DEBUG = false;
 
-  /** Logger for debugging purposes */
+  /** Logger for debugging purposes. */
   private final Logger logger = Logger.getLogger("OsonLogger");
 
-  /** The OracleJsonParser instance to parse Oracle JSON data */
+  /** The OracleJsonParser instance to parse Oracle JSON data. */
   private final OracleJsonParser parser;
 
-
+  /** Contains the current field name and hence makes this instance stateful. */
   private String fieldName;
 
   private OracleJsonParser.Event currentEvent;
@@ -153,7 +153,7 @@ public class OsonParser extends ParserBase {
         case VALUE_DECIMAL:
           if(DEBUG) logger.log(Level.FINEST, "VALUE_DECIMAL> " + parser.getBigDecimal()+" / "+parser.isIntegralNumber());
           return parser.isIntegralNumber() ? JsonToken.VALUE_NUMBER_INT : JsonToken.VALUE_NUMBER_FLOAT;
-          
+
         default:
           JsonToken token = OSON_EVENT_TO_JSON_TOKEN.get(currentEvent);
           if(token == null) throw new IllegalStateException("Invalid event " + currentEvent);

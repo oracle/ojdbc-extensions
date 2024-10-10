@@ -145,7 +145,7 @@ public class OsonGenerator extends GeneratorBase {
    */
   @Override
   public void writeStartArray() throws IOException {
-    _verifyValueWrite("write start array");
+    _verifyValueWrite("writeStartArray");
     _writeContext = _writeContext.createChildArrayContext();
     gen.writeStartArray();
   }

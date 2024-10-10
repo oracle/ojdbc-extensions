@@ -232,7 +232,7 @@ public class OsonFactory extends JsonFactory {
   @Override
   public JsonParser createParser(Reader r) throws IOException {
     IOContext ctxt = _createContext(r, true);
-    return _createParser(r, ctxt);
+    return _createParser(_decorate(r,ctxt), ctxt);
   }
 
   /**
@@ -318,6 +318,11 @@ public class OsonFactory extends JsonFactory {
     return _createParser(r, ctxt);
   }
 
+  @Override
+  public JsonParser createParser(DataInput in) throws IOException {
+    return _createParser(in, null);
+  }
+
 
   /**
    * Creates a OSON parser from a InputStream
@@ -386,7 +391,8 @@ public class OsonFactory extends JsonFactory {
   }
 
   /**
-   * Creating OSON parser is not supported for DataInput.
+   * Creating OSON parser is not supported natively for DataInput.
+   * The DataInput in converted to InputStream and then parsed.
    * @param input DataInput to use for reading content to parse
    * @param ctxt I/O context to use for parsing
    *
@@ -395,7 +401,17 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   protected JsonParser _createParser(DataInput input, IOContext ctxt) throws IOException {
-    throw new UnsupportedOperationException("Cannot create parser for Data input values");
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    while (true) {
+      try {
+        byteArrayOutputStream.write(input.readByte());
+      }catch (EOFException e) {
+        break;
+      }
     }
+    InputStream inputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+    return new OsonParser(ctxt, _factoryFeatures,
+            factory.createJsonBinaryParser(inputStream));
+  }
   
 }
