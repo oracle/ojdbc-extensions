@@ -45,10 +45,8 @@ import oracle.jdbc.provider.oson.deser.*;
 import oracle.jdbc.provider.oson.ser.*;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 import java.io.FileReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.time.*;

@@ -45,8 +45,6 @@ import oracle.sql.json.OracleJsonGenerator;
 import oracle.sql.json.OracleJsonParser;
 
 import java.io.IOException;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Converter class that facilitates the integration of Jackson and Oson libraries.

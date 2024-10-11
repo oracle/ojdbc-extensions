@@ -133,6 +133,30 @@ public class OsonParser extends ParserBase {
   }
 
   /**
+   * Returns the JsonToken corresponding to the OSON Event.
+   * @param event
+   * @return
+   */
+  private JsonToken fromOsonEvent(Event event) {
+    switch (event) {
+      case KEY_NAME:
+        if(DEBUG) logger.log(Level.FINEST, "KEY_NAME> " + parser.getString());
+        this.fieldName = parser.getString();
+        return JsonToken.FIELD_NAME;
+
+      case VALUE_DECIMAL:
+        if(DEBUG) logger.log(Level.FINEST, "VALUE_DECIMAL> " + parser.getBigDecimal()+" / "+parser.isIntegralNumber());
+        return parser.isIntegralNumber() ? JsonToken.VALUE_NUMBER_INT : JsonToken.VALUE_NUMBER_FLOAT;
+
+      default:
+        JsonToken token = OSON_EVENT_TO_JSON_TOKEN.get(currentEvent);
+        if(token == null) throw new IllegalStateException("Invalid event " + currentEvent);
+        if(DEBUG) logger.log(Level.FINEST, token.toString());
+        return token;
+    }
+  }
+
+  /**
    * Returns the next token from the OracleJsonParser.
    *
    * @return The next JsonToken.
@@ -143,23 +167,7 @@ public class OsonParser extends ParserBase {
     if(DEBUG) logger.log(Level.FINEST, "nextToken");
     if (parser.hasNext()) {
       currentEvent = parser.next();
-
-      switch (currentEvent) {
-        case KEY_NAME:
-          if(DEBUG) logger.log(Level.FINEST, "KEY_NAME> " + parser.getString());
-          this.fieldName = parser.getString();
-          return JsonToken.FIELD_NAME;
-
-        case VALUE_DECIMAL:
-          if(DEBUG) logger.log(Level.FINEST, "VALUE_DECIMAL> " + parser.getBigDecimal()+" / "+parser.isIntegralNumber());
-          return parser.isIntegralNumber() ? JsonToken.VALUE_NUMBER_INT : JsonToken.VALUE_NUMBER_FLOAT;
-
-        default:
-          JsonToken token = OSON_EVENT_TO_JSON_TOKEN.get(currentEvent);
-          if(token == null) throw new IllegalStateException("Invalid event " + currentEvent);
-          if(DEBUG) logger.log(Level.FINEST, token.toString());
-          return token;
-      }
+      return fromOsonEvent(currentEvent);
     }
 
     return null;
@@ -249,7 +257,9 @@ public class OsonParser extends ParserBase {
   }
 
   /**
-   * Returns the current JsonToken.
+   * Returns the current JsonToken. Retrieves the next token if the
+   * current event is null, otherwise returns the JsonToken corresponding
+   * to the current event.
    *
    * @return The current JsonToken.
    */
@@ -259,24 +269,7 @@ public class OsonParser extends ParserBase {
     if (currentEvent == null && parser.hasNext()) {
       currentEvent = parser.next();
     }
-    switch (currentEvent) {
-
-      case KEY_NAME:
-        if(DEBUG) logger.log(Level.FINEST, "KEY_NAME> " + parser.getString());
-        this.fieldName = parser.getString();
-        return JsonToken.FIELD_NAME;
-
-      case VALUE_DECIMAL:
-        if(DEBUG) logger.log(Level.FINEST, "VALUE_DECIMAL> " + parser.getBigDecimal()+" / "+parser.isIntegralNumber());
-        return parser.isIntegralNumber() ? JsonToken.VALUE_NUMBER_INT : JsonToken.VALUE_NUMBER_FLOAT;
-
-      default:
-        JsonToken token = OSON_EVENT_TO_JSON_TOKEN.get(currentEvent);
-        if(token == null) throw new IllegalStateException("Invalid event " + currentEvent);
-        if(DEBUG) logger.log(Level.FINEST, token.toString());
-        return token;
-    }
-
+    return fromOsonEvent(currentEvent);
   }
 
   /**

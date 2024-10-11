@@ -37,12 +37,10 @@
  */
 
 package oracle.jdbc.provider.oson.test;
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import oracle.jdbc.provider.oson.JacksonOsonConverter;
 import oracle.jdbc.provider.oson.OsonFactory;
-import oracle.jdbc.provider.oson.OsonParser;
 import oracle.jdbc.provider.oson.model.AnnonationTest;
 import oracle.jdbc.provider.oson.model.AnnotationTestInstances;
 import oracle.jdbc.provider.oson.model.Employee;
@@ -152,14 +150,87 @@ public class SerializerTest {
                 conv.serialize(generator,employee);
             }
             try(ByteArrayInputStream input = new ByteArrayInputStream(out.toByteArray())) {
-                DataInputStream in = new DataInputStream(input);
-                try (JsonParser oParser = jsonFactory.createParser((DataInput) in)) {
+                DataInput in = new DataInputStream(input);
+                try (JsonParser oParser = jsonFactory.createParser(in)) {
                     Employee deserEmp = mapper.readValue(oParser, Employee.class);
                     Assertions.assertEquals(employee, deserEmp);
                 }
             }
 
         }
+    }
 
+    /**
+     * Tests the serialization and deserialization of an {@link AnnonationTest} object.
+     * <p>
+     * This test uses the {@link JacksonOsonConverter} to serialize an {@code AnnonationTest} object
+     * into binary JSON format using an {@link OracleJsonGenerator}, and then deserializes it
+     * back into an {@code Employee} object using an {@link OracleJsonParser}.
+     * The test verifies that the deserialized object is equal to the original.
+     * </p>
+     * */
+    @Test
+    @Order(4)
+    public void serialiZerTest4() throws IOException {
+        AnnonationTest employee = AnnotationTestInstances.getRandomInstance();
+
+        JacksonOsonConverter conv = new JacksonOsonConverter();
+        ObjectMapper mapper = conv.getObjectMapper();
+        OsonFactory jsonFactory = new OsonFactory();
+        OracleJsonFactory oracleJsonFactory = new OracleJsonFactory();
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            try (OracleJsonGenerator generator = oracleJsonFactory.createJsonBinaryGenerator(out)) {
+                conv.serialize(generator,employee);
+            }
+
+            String jsonString = mapper.writeValueAsString(employee);
+            Reader reader = new StringReader(jsonString);
+            try (JsonParser oParser = jsonFactory.createParser(reader)) {
+                AnnonationTest deserEmp = mapper.readValue(oParser, AnnonationTest.class);
+                Assertions.assertEquals(employee, deserEmp);
+            }
+
+        }
+    }
+
+    /**
+     * Tests the serialization and deserialization of an {@link Employee} object.
+     * <p>
+     * This test uses the {@link JacksonOsonConverter} to serialize an {@code Employee} object
+     * into binary JSON format using an {@link OracleJsonGenerator}, and then deserializes it
+     * back into an {@code Employee} object using an {@link OracleJsonParser}.
+     * The test verifies that the deserialized object is equal to the original.
+     * </p>
+     * */
+    @Test
+    @Order(5)
+    public void serialiZerTest5() throws IOException {
+        Employee employee = EmployeeInstances.getEmployee();
+
+        JacksonOsonConverter conv = new JacksonOsonConverter();
+        ObjectMapper mapper = conv.getObjectMapper();
+        OsonFactory jsonFactory = new OsonFactory();
+        OracleJsonFactory oracleJsonFactory = new OracleJsonFactory();
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            try (OracleJsonGenerator generator = oracleJsonFactory.createJsonBinaryGenerator(out)) {
+                conv.serialize(generator,employee);
+            }
+            try {
+                FileOutputStream fos = new FileOutputStream("oson");
+                fos.write(out.toByteArray());
+                fos.close();
+
+                FileInputStream fis = new FileInputStream("oson");
+                DataInput dis = new DataInputStream(fis);
+                try (JsonParser oParser = jsonFactory.createParser(dis)) {
+                    Employee deserEmp = mapper.readValue(oParser, Employee.class);
+                    Assertions.assertEquals(employee, deserEmp);
+                }
+                fis.close();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
+        }
     }
 }

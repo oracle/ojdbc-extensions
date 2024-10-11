@@ -43,7 +43,6 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.NumberDeserializers;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 
-import com.fasterxml.jackson.databind.node.TreeTraversingParser;
 import oracle.jdbc.provider.oson.OsonParser;
 
 import java.io.IOException;

@@ -50,14 +50,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.Period;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

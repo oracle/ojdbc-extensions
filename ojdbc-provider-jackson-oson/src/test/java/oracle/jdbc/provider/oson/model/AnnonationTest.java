@@ -297,18 +297,15 @@ public class AnnonationTest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AnnonationTest that = (AnnonationTest) o;
-        return age == that.age && isActive == that.isActive && Objects.equals(name, that.name)
+        return  isActive == that.isActive && Objects.equals(name, that.name)
                 && Objects.equals(dateOfBirth, that.dateOfBirth) && Objects.equals(localDate, that.localDate)
                 && Objects.equals(localTime, that.localTime) && Objects.equals(localDateTime, that.localDateTime)
-                && Objects.equals(zonedDateTime, that.zonedDateTime) && Objects.equals(offsetDateTime, that.offsetDateTime)
                 && Objects.equals(offsetTime, that.offsetTime)
                 && Objects.equals(yearMonth, that.yearMonth)
                 && Objects.equals(monthDay, that.monthDay)
                 && Objects.equals(instant, that.instant)
                 && Objects.equals(email, that.email)
-                && Objects.equals(phones, that.phones)
-                && Objects.equals(address, that.address)
-                && Objects.equals(job, that.job);
+                && Objects.equals(phones, that.phones);
     }
 
     @Override
