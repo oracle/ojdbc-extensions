@@ -57,6 +57,8 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
+
 /**
  * <p>
  * Factory for requesting secrets from the Vault service. Secrets are
@@ -67,7 +69,7 @@ import java.util.regex.Pattern;
 public final class SecretFactory extends OciResourceFactory<Secret> {
 
   /** OCID of a secret bundle */
-  public static final Parameter<String> OCID = Parameter.create();
+  public static final Parameter<String> OCID = Parameter.create(REQUIRED);
 
   private static final ResourceFactory<Secret> INSTANCE =
     CachedResourceFactory.create(new SecretFactory());
