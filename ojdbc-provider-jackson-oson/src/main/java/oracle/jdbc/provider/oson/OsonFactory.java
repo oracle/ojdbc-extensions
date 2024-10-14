@@ -406,7 +406,7 @@ public class OsonFactory extends JsonFactory {
       @Override
       public int read() throws IOException {
         try {
-          return input.readUnsignedByte() & 0xFF;
+          return input.readUnsignedByte();
         }catch (EOFException e) {
           return -1;
         }
