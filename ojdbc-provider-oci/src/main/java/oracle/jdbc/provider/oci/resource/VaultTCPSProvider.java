@@ -79,7 +79,7 @@ public class VaultTCPSProvider
 
   private static final ResourceParameter[] PARAMETERS = {
           new ResourceParameter("ocid", OCID),
-          new ResourceParameter("password", PASSWORD),
+          new ResourceParameter("walletPassword", PASSWORD),
           new ResourceParameter("type", TYPE)
   };
 
