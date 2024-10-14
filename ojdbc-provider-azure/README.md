@@ -24,6 +24,10 @@ This module contains providers for integration between Oracle JDBC and Azure.
 <dd>Provides a username from the Key Vault service</dd>
 <dt><a href="#key-vault-password-provider">Key Vault Password Provider</a></dt>
 <dd>Provides a password from the Key Vault service</dd>
+<dt><a href="#key-vault-tcps-wallet-provider">Key Vault TCPS Wallet Provider</a></dt>
+<dd>Provides TCPS/TLS wallet for secure connections to an Autonomous Database from the Key Vault service</dd>
+<dt><a href="#key-vault-seps-wallet-provider">Key Vault SEPS Wallet Provider</a></dt>
+<dd>Provides SEPS (Secure External Password Store) wallets for secure username and password retrieval from the Key Vault service</dd> 
 <dt><a href="#common-parameters-for-resource-providers">Common Parameters for Resource Providers</a></dt>
 <dd>Common parameters supported by the resource providers</dd>
 </dl>
@@ -359,6 +363,149 @@ An example of a
 [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
 that configures this provider can be found in
 [example-vault.properties](example-key-vault.properties).
+
+## Key Vault TCPS Wallet Provider
+
+The TCPS Wallet Provider provides Oracle JDBC with keys and certificates managed by the Azure Key Vault service
+to establish secure TLS connections with an Autonomous Database. This is a Resource Provider identified by the name
+`ojdbc-provider-azure-key-vault-tl`.
+
+For example, when connecting to Autonomous Database Serverless with mutual TLS (mTLS), you need to configure the JDBC-thin
+driver with its client certificate. If this certificate is stored in a wallet file (e.g., `cwallet.sso`, `ewallet.p12`, `ewallet.pem`),
+ou may store it in an Azure Key Vault secret for additional security.
+You can then use this provider that will retrieve the wallet content from Azure Key Vault using the Azure SDK
+and pass it to the JDBC thin driver.
+
+- The type parameter must be specified to indicate the wallet format: SSO, PKCS12, or PEM.
+- The walletpassword must be provided for wallets that require a password (e.g., PKCS12 or password-protected PEM files).
+
+In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider also supports the parameters listed below.
+
+<table>
+<thead><tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Accepted Values</th>
+<th>Default Value</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>vaultUrl</td>
+<td>The URL of the Azure Key Vault containing the TCPS file.</td>
+<td> The <a href="https://docs.microsoft.com/en-us/azure/key-vault/general/overview">Azure Key Vault URL</a>, typically in the form: 
+<pre>https://{vault-name}.vault.azure.net/</pre> 
+</td>
+<td>
+<i>No default value. A value must be configured for this parameter.</i>
+</td>
+</tr>
+<tr>
+<td>secretName</td>
+<td>The name of the secret containing the TCPS wallet file in Azure Key Vault.</td>
+<td>Any valid secret name</td>
+<td> 
+<i>No default value. A value must be configured for this parameter.</i> 
+</td>
+</tr>
+<tr>
+<td>walletPassword</td>
+<td>
+Optional password for PKCS12 or protected PEM files. If omitted, the file is assumed to be SSO or an non-protected PEM file.
+</td>
+<td>Any valid password for the wallet</td>
+<td>
+<i>No default value. PKCS12 and password-protected PEM files require a password.</i>
+</td>
+</tr>
+<tr>
+<td>type</td>
+<td>
+Specifies the type of the file being used.
+</td>
+<td>SSO, PKCS12, PEM</td>
+<td>
+<i>No default value. The file type must be specified.</i>
+</td>
+</tr>
+</tbody>
+</table>
+
+An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-key-vault-wallet.properties](example-key-vault-wallet.properties).
+
+## Key Vault SEPS Wallet Provider
+
+The SEPS Wallet Provider provides Oracle JDBC with a username and password managed by the Azure Key Vault service,
+stored in a Secure External Password Store (SEPS) wallet. This is a Resource Provider identified by the name
+`ojdbc-provider-azure-key-vault-seps`.
+
+- The SEPS wallet securely stores encrypted database credentials, including the username, password, and connection strings.
+  These credentials can be stored as default values, such as **oracle.security.client.default_username** and **oracle.security.client.default_password**,
+  or as indexed credentials, for example, **oracle.security.client.username1**, **oracle.security.client.password1**,
+  and **oracle.security.client.connect_string1**.
+
+
+- The provider retrieves credentials based on the following logic: If connectionStringIndex is not specified,
+  it first attempts to retrieve the default credentials (`oracle.security.client.default_username` and `oracle.security.client.default_password`).
+  If default credentials are not found, it checks for a single set of credentials associated with a connection string.
+  If exactly one connection string is found, it uses the associated credentials. However, if multiple connection strings
+  are found, an error is thrown, prompting you to specify a `connectionStringIndex`. If `connectionStringIndex` is specified,
+  the provider attempts to retrieve the credentials associated with the specified connection string index
+  (e.g., **oracle.security.client.username{idx}**, **oracle.security.client.password{idx}**,
+  **oracle.security.client.connect_string{idx}**). If credentials for the specified index are not found,
+  an error is thrown indicating that no connection string was found with that index.
+
+In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider also supports the parameters listed below.
+
+<table>
+<thead><tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Accepted Values</th>
+<th>Default Value</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>vaultUrl</td>
+<td>The URL of the Azure Key Vault containing the SEPS wallet.</td>
+<td> The <a href="https://docs.microsoft.com/en-us/azure/key-vault/general/overview">Azure Key Vault URL</a>, typically in the form: 
+<pre>https://{vault-name}.vault.azure.net/</pre> 
+</td>
+<td>
+<i>No default value. A value must be configured for this parameter.</i>
+</td>
+</tr>
+<tr>
+<td>secretName</td>
+<td>The name of the secret containing the SEPS wallet file in Azure Key Vault.</td>
+<td>Any valid secret name</td>
+<td> 
+<i>No default value. A value must be configured for this parameter.</i> 
+</td>
+</tr>
+<tr>
+<td>walletPassword</td>
+<td>
+Optional password for wallets stored as PKCS12 keystores. If omitted, the wallet is assumed to be an SSO wallet.
+</td>
+<td>Any valid password for the SEPS wallet</td>
+<td>
+<i>No default value. PKCS12 wallets require a password.</i>
+</td>
+</tr>
+<tr>
+<td>connectionStringIndex</td>
+<td>
+Optional parameter to specify the index of the connection string to use when retrieving credentials from the wallet
+</td>
+<td>A positive integer representing the index of the desired credential set (e.g., 1, 2, 3, etc.). </td>
+<td>
+<i>No default value. If not specified, the provider follows the default behavior as described above</i>
+</td>
+</tr>
+</tbody>
+</table>
+
+An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-key-vault-wallet.properties](example-key-vault-wallet.properties).
 
 ## Common Parameters for Resource Providers
 Providers classified as Resource Providers in this module all support a

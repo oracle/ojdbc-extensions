@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2023 Oracle and/or its affiliates.
+ ** Copyright (c) 2024 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -36,36 +36,37 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.oci.resource;
+package oracle.jdbc.provider.azure.resource;
 
-import oracle.jdbc.provider.oci.vault.Secret;
-import oracle.jdbc.provider.oci.vault.SecretFactory;
+import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
+import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
 import oracle.jdbc.provider.util.TlsUtils;
 import oracle.jdbc.spi.TlsConfigurationProvider;
 
+
 import javax.net.ssl.SSLContext;
 import java.util.Base64;
 import java.util.Map;
 
-import static oracle.jdbc.provider.oci.vault.SecretFactory.OCID;
-import static oracle.jdbc.provider.util.CommonParameters.TYPE;
+
 import static oracle.jdbc.provider.util.CommonParameters.PASSWORD;
+import static oracle.jdbc.provider.util.CommonParameters.TYPE;
+
 
 /**
  * <p>
  * A provider for TCPS/TLS files used to establish secure TLS communication
- * with an Autonomous Database. The file is retrieved from OCI Vault, where
- * it is stored as a base64-encoded string. This provider supports different
- * file types including SSO, PKCS12, and PEM formats.
+ * with an Autonomous Database. The file is retrieved from Azure Key Vault,
+ * where it is stored as a base64-encoded string. This provider supports
+ * different file types including SSO, PKCS12, and PEM formats.
  * </p>
  * <p>
  * The type of the file must be explicitly specified using the {@code type}
  * parameter. Based on the type, the file may contain private keys and
  * certificates for establishing secure communication. A password is only
- * required
- * for PKCS12 or encrypted PEM files.
+ * required for PKCS12 or encrypted PEM files.
  * </p>
  * <p>
  * This class implements the {@link TlsConfigurationProvider} SPI defined by
@@ -73,13 +74,12 @@ import static oracle.jdbc.provider.util.CommonParameters.PASSWORD;
  * {@link java.util.ServiceLoader}.
  * </p>
  */
-public class VaultTCPSProvider
-        extends OciResourceProvider
+public class KeyVaultTCPSProvider
+        extends KeyVaultSecretProvider
         implements TlsConfigurationProvider {
 
-  private static final ResourceParameter[] PARAMETERS = {
-          new ResourceParameter("ocid", OCID),
-          new ResourceParameter("password", PASSWORD),
+  private static final ResourceParameter[] TCPS_PARAMETERS = {
+          new ResourceParameter("walletPassword", PASSWORD),
           new ResourceParameter("type", TYPE)
   };
 
@@ -87,25 +87,23 @@ public class VaultTCPSProvider
    * A public no-arg constructor used by {@link java.util.ServiceLoader} to
    * construct an instance of this provider.
    */
-  public VaultTCPSProvider() {
-    super("vault-tls", PARAMETERS);
+  public KeyVaultTCPSProvider() {
+    super("key-vault-tls", TCPS_PARAMETERS);
   }
 
   /**
-   * Retrieves an SSLContext by loading a file from OCI Vault and configuring it
-   * for secure TLS communication with Autonomous Database.
+   * Retrieves an SSLContext by loading a file from Azure Key Vault and
+   * configuring it for secure TLS communication with Autonomous Database.
    * <p>
-   * The file is stored in OCI Vault as a base64-encoded string. The type of
-   * the file
-   * (SSO, PKCS12, or PEM) must be explicitly provided, and the method
-   * processes the file
-   * data accordingly, extracting keys and certificates, and creating an
-   * SSLContext.
+   * The file is stored in Azure Key Vault as a base64-encoded string.
+   * The type of the file (SSO, PKCS12, or PEM) must be explicitly provided,
+   * and the method processes the file data accordingly, extracting keys and
+   * certificates, and creating an SSLContext.
    * </p>
    *
    * @param parameterValues The parameters required to access the file,
-   * including the OCID, password (if applicable), and file type (SSO,
-   * PKCS12, PEM).
+   * including the vault URL, the secret name, password (if applicable), and
+   * file type (SSO, PKCS12, PEM).
    * @return An initialized SSLContext for establishing secure communications.
    * @throws IllegalStateException If the SSLContext cannot be created due to
    * errors during processing.
@@ -114,14 +112,13 @@ public class VaultTCPSProvider
   public SSLContext getSSLContext(Map<Parameter, CharSequence> parameterValues) {
     try {
       ParameterSet parameterSet = parseParameterValues(parameterValues);
-      Secret secret = SecretFactory
+
+      KeyVaultSecret secret = KeyVaultSecretFactory
               .getInstance()
               .request(parameterSet)
               .getContent();
 
-      byte[] fileBytes = Base64
-              .getDecoder()
-              .decode(secret.getBase64Secret());
+      byte[] fileBytes = Base64.getDecoder().decode(secret.getValue());
 
       char[] password = parameterSet.getOptional(PASSWORD) != null
               ? parameterSet.getOptional(PASSWORD).toCharArray()
@@ -134,5 +131,4 @@ public class VaultTCPSProvider
               ("Failed to create SSLContext from the file", e);
     }
   }
-
 }

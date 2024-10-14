@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2023 Oracle and/or its affiliates.
+ ** Copyright (c) 2024 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -36,10 +36,10 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.oci.resource;
+package oracle.jdbc.provider.azure.resource;
 
-import oracle.jdbc.provider.oci.vault.Secret;
-import oracle.jdbc.provider.oci.vault.SecretFactory;
+import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
+import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
 import oracle.jdbc.provider.util.WalletUtils;
@@ -50,37 +50,14 @@ import oracle.jdbc.spi.UsernameProvider;
 import java.util.Base64;
 import java.util.Map;
 
-import static oracle.jdbc.provider.oci.vault.SecretFactory.OCID;
 import static oracle.jdbc.provider.util.CommonParameters.CONNECTION_STRING_INDEX;
 import static oracle.jdbc.provider.util.CommonParameters.PASSWORD;
 
-/**
- * <p>
- * A provider for retrieving both the username and password from a Secure
- * External Password Store (SEPS) wallet stored in Oracle Cloud
- * Infrastructure (OCI) Vault. The wallet can be in either SSO or PKCS12 format.
- * If a password is provided, the wallet is treated as PKCS12, otherwise, it
- * is assumed to be in SSO format.
- * </p>
- * <p>
- * This class implements the {@link UsernameProvider} and
- * {@link PasswordProvider} SPIs defined by Oracle JDBC.
- * It is designed to be located and instantiated by
- * {@link java.util.ServiceLoader}.
- * </p>
- *
- * <p>
- * The SEPS wallet is stored in the OCI Vault as a base64-encoded string and
- * is decoded when retrieved by this provider.
- * </p>
- */
-public class VaultSEPSProvider
-        extends OciResourceProvider
-        implements UsernameProvider, PasswordProvider {
+public class KeyVaultSEPSProvider
+   extends KeyVaultSecretProvider
+   implements UsernameProvider, PasswordProvider {
 
-
-  private static final ResourceParameter[] PARAMETERS = {
-          new ResourceParameter("ocid", OCID),
+  private static final ResourceParameter[] SEPS_PARAMETERS = {
           new ResourceParameter("walletPassword", PASSWORD),
           new ResourceParameter("connectionStringIndex", CONNECTION_STRING_INDEX)
   };
@@ -89,8 +66,8 @@ public class VaultSEPSProvider
    * A public no-arg constructor used by {@link java.util.ServiceLoader} to
    * construct an instance of this provider.
    */
-  public VaultSEPSProvider() {
-    super("vault-seps", PARAMETERS);
+  public KeyVaultSEPSProvider() {
+    super("key-vault-seps", SEPS_PARAMETERS);
   }
 
   @Override
@@ -105,23 +82,24 @@ public class VaultSEPSProvider
 
   /**
    * Retrieves the OracleWallet by decoding the base64-encoded wallet stored
-   * in OCI Vault and opening it as either SSO or PKCS12, based on whether a
-   * password is provided.
+   * in Azure Key Vault and opening it as either SSO, PKCS12, or PEM, based on
+   * whether a password is provided.
    */
   private WalletUtils.Credentials getWalletCredentials(
-    Map<OracleResourceProvider.Parameter, CharSequence> parameterValues) {
+          Map<OracleResourceProvider.Parameter, CharSequence> parameterValues) {
 
     ParameterSet parameterSet = parseParameterValues(parameterValues);
-    Secret secret = SecretFactory.getInstance()
-      .request(parameterSet)
-      .getContent();
+    KeyVaultSecret secret = KeyVaultSecretFactory
+            .getInstance()
+            .request(parameterSet)
+            .getContent();
 
     char[] walletPassword = parameterSet.getOptional(PASSWORD) != null
-      ? parameterSet.getOptional(PASSWORD).toCharArray()
-      : null;
+            ? parameterSet.getOptional(PASSWORD).toCharArray()
+            : null;
 
     String connectionStringIndex = parameterSet.getOptional(CONNECTION_STRING_INDEX);
-    byte[] walletBytes = Base64.getDecoder().decode(secret.getBase64Secret());
+    byte[] walletBytes = Base64.getDecoder().decode(secret.getValue());
     return WalletUtils.getCredentials(walletBytes, walletPassword, connectionStringIndex);
   }
 
