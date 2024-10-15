@@ -42,7 +42,8 @@ import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 
 import static java.lang.String.format;
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
@@ -50,7 +51,7 @@ import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.SENSITIVE
 
 /**
  * <p>
- * A factory for creating {@link TokenCredential} objects from the Azure SDK
+ * A factory for creating {@link AwsCredentials} objects from the Azure SDK
  * for Java.
  * </p><p>
  * This class is implemented using the azure-identity module of the Azure SDK
@@ -62,49 +63,49 @@ import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.SENSITIVE
  * properties and URL parameters.
  * </p>
  */
-public final class AwsBasicCredentialsFactory
-    implements ResourceFactory<AwsBasicCredentials> {
+public final class AWSCredentialsFactory
+    implements ResourceFactory<AwsCredentials> {
 
   /** Method of authentication supported by the Azure SDK */
-  public static final Parameter<AwsAuthenticationMethod>
+  public static final Parameter<AWSAuthenticationMethod>
     AUTHENTICATION_METHOD = Parameter.create(REQUIRED);
 
   public static final Parameter<String> ACCESS_KEY_ID = Parameter.create(REQUIRED);
 
   public static final Parameter<String> SECRET_ACCESS_KEY = Parameter.create(SENSITIVE, REQUIRED);
 
-  private static final AwsBasicCredentialsFactory INSTANCE
-      = new AwsBasicCredentialsFactory();
+  private static final AWSCredentialsFactory INSTANCE
+      = new AWSCredentialsFactory();
 
-  private AwsBasicCredentialsFactory() { }
+  private AWSCredentialsFactory() { }
 
   /**
    * Returns a singleton of {@code TokenCredentialFactory}.
    * @return a singleton of {@code TokenCredentialFactory}
    */
-  public static AwsBasicCredentialsFactory getInstance() {
+  public static AWSCredentialsFactory getInstance() {
     return INSTANCE;
   }
 
   @Override
-  public Resource<AwsBasicCredentials> request(ParameterSet parameterSet) {
-    AwsBasicCredentials awsBasicCredentials = getCredential(parameterSet);
+  public Resource<AwsCredentials> request(ParameterSet parameterSet) {
+    AwsCredentials awsCredentials = getCredential(parameterSet);
     // TODO: Access tokens expire. Does a TokenCredential internally cache one?
     //   If so, then return an expiring resource.
-    return Resource.createPermanentResource(awsBasicCredentials, true);
+    return Resource.createPermanentResource(awsCredentials, true);
   }
 
   /**
    * Returns credentials for requesting an access token. The type of credentials
    * used are configured by the parameters of the given {@code parameters}.
    * Supported parameters are defined by the class variables in
-   * {@link AwsBasicCredentialsFactory}.
-   * @param parameters parameters that configure credentials. Not null.
+   * {@link AWSCredentialsFactory}.
+   * @param parameterSet parameters that configure credentials. Not null.
    * @return Credentials configured by parameters
    */
-  private static AwsBasicCredentials getCredential(ParameterSet parameterSet) {
+  private static AwsCredentials getCredential(ParameterSet parameterSet) {
 
-    AwsAuthenticationMethod authenticationMethod =
+    AWSAuthenticationMethod authenticationMethod =
       parameterSet.getRequired(AUTHENTICATION_METHOD);
 
     switch (authenticationMethod) {
@@ -117,16 +118,14 @@ public final class AwsBasicCredentialsFactory
   }
 
   /**
-   * Returns credentials resolved by {@link DefaultAzureCredential}, and
-   * {@link #TENANT_ID} or {@link #CLIENT_ID} as optional parameters.
+   * Returns credentials resolved by {@link DefaultCredentialsProvider}.
    * @param parameterSet
    * @return
    */
-  private static AwsBasicCredentials defaultCredentials(ParameterSet parameterSet) {
-    return AwsBasicCredentials.create(
-        requireParameter(parameterSet, ACCESS_KEY_ID, "ACCESS_KEY_ID"),
-        requireParameter(parameterSet, SECRET_ACCESS_KEY, "SECRET_ACCESS_KEY")
-    );
+  private static AwsCredentials defaultCredentials(ParameterSet parameterSet) {
+    return DefaultCredentialsProvider
+        .builder()
+        .build().resolveCredentials();
   }
 
   /**
