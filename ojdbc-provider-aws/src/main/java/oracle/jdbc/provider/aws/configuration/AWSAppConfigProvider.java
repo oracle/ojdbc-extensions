@@ -1,10 +1,10 @@
 package oracle.jdbc.provider.aws.configuration;
 
 import oracle.jdbc.driver.OracleConfigurationJsonProvider;
-import oracle.jdbc.provider.aws.authentication.AwsBasicCredentialsFactory;
+import oracle.jdbc.provider.aws.authentication.AWSCredentialsFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.spi.OracleConfigurationCachableProvider;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.appconfig.AppConfigClient;
 import software.amazon.awssdk.services.appconfig.model.GetConfigurationProfileRequest;
@@ -20,25 +20,23 @@ import java.util.Properties;
 
 public class AWSAppConfigProvider extends OracleConfigurationJsonProvider
     implements OracleConfigurationCachableProvider {
-  private ParameterSet parameters;
+  private AWSAppConfigurationURLParser urlParser;
 
   @Override
   public InputStream getJson(String location) throws SQLException {
     // TODO: make sure the parameters thread safe
     // Get basic credentials
-    AwsBasicCredentials credentials =
-        AwsBasicCredentialsFactory.getInstance()
-            .request(parameters)
-            .getContent();
+    ParameterSet parameters = urlParser.getParameters();
+    AwsCredentials credentials = AWSCredentialsFactory.getInstance()
+        .request(parameters)
+        .getContent();
     // Get region
-    String region = parameters.getOptional(AWSAppConfigurationURLParser.REGION);
+    String region = parameters.getRequired(AWSAppConfigurationURLParser.REGION);
     // Get the identifiers of app config
-    String applicationIdentifier = parameters.getRequired(
-        AWSAppConfigurationURLParser.APPLICATION_IDENTIFIER);
-    String environmentIdentifier = parameters.getRequired(
-        AWSAppConfigurationURLParser.ENVIRONMENT_IDENTIFIER);
-    String configurationProfileIdentifier = parameters.getRequired(
-        AWSAppConfigurationURLParser.CONFIGURATION_PROFILE_IDENTIFIER);
+    String applicationIdentifier = urlParser.applicationIdentifier();
+    String environmentIdentifier = urlParser.environmentIdentifier();
+    String configurationProfileIdentifier =
+        urlParser.configurationProfileIdentifier();
 
     // Get the configuration data
     AppConfigDataClient appConfigDataClient = AppConfigDataClient.builder()
@@ -67,28 +65,36 @@ public class AWSAppConfigProvider extends OracleConfigurationJsonProvider
     return new ByteArrayInputStream(data.getBytes());
   }
 
+  /**
+   * {@inheritDoc}
+   * Overrides the method in parent class to determine the type of AppConfig in
+   * the first place. If the AppConfig is a Freeform, we assume it's a JSON
+   * payload and parse it by calling
+   * {@link OracleConfigurationJsonProvider#getConnectionProperties(String)}.
+   * If it's a Feature Flag, throws {@link UnsupportedOperationException}.
+   * @param location
+   * @return Properties retrieved from {@code location}
+   * @throws SQLException
+   */
   @Override
   public Properties getConnectionProperties(String location)
       throws SQLException {
     // Parse parameters
-    AWSAppConfigurationURLParser appConfigUrlParser =
+    urlParser =
         new AWSAppConfigurationURLParser(location);
-    parameters = appConfigUrlParser.getParameters();
+    ParameterSet parameters = urlParser.getParameters();
 
     // Get basic credentials
-    AwsBasicCredentials credentials =
-        AwsBasicCredentialsFactory.getInstance()
+    AwsCredentials credentials =
+        AWSCredentialsFactory.getInstance()
             .request(parameters)
             .getContent();
     // Get region
     String region = parameters.getOptional(AWSAppConfigurationURLParser.REGION);
     // Get the identifiers of app config
-    String applicationIdentifier = parameters.getRequired(
-        AWSAppConfigurationURLParser.APPLICATION_IDENTIFIER);
-    String configurationProfileIdentifier = parameters.getRequired(
-        AWSAppConfigurationURLParser.CONFIGURATION_PROFILE_IDENTIFIER);
-
-
+    String applicationIdentifier = urlParser.applicationIdentifier();
+    String configurationProfileIdentifier = urlParser
+        .configurationProfileIdentifier();
 
     // Is Feature Flags or Freeform?
     AppConfigClient appConfigClient = AppConfigClient.builder()

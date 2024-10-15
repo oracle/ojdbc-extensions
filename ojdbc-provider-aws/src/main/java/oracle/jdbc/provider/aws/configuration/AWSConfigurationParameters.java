@@ -38,8 +38,8 @@
 
 package oracle.jdbc.provider.aws.configuration;
 
-import oracle.jdbc.provider.aws.authentication.AwsAuthenticationMethod;
-import oracle.jdbc.provider.aws.authentication.AwsBasicCredentialsFactory;
+import oracle.jdbc.provider.aws.authentication.AWSAuthenticationMethod;
+import oracle.jdbc.provider.aws.authentication.AWSCredentialsFactory;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 
 public final class AWSConfigurationParameters {
@@ -54,47 +54,23 @@ public final class AWSConfigurationParameters {
 
     return builder.addParameter(
         "AUTHENTICATION",
-        AwsBasicCredentialsFactory.AUTHENTICATION_METHOD,
-        AwsAuthenticationMethod.DEFAULT,
-        AWSConfigurationParameters::parseAuthentication)
-      .addParameter(
-        "ACCESS_KEY_ID",
-        AwsBasicCredentialsFactory.ACCESS_KEY_ID)
-      .addParameter(
-        "SECRET_ACCESS_KEY",
-        AwsBasicCredentialsFactory.SECRET_ACCESS_KEY);
-//      .addParameter(
-//        "AZURE_CLIENT_ID",
-//        TokenCredentialFactory.CLIENT_ID)
-//      .addParameter(
-//        "AZURE_TENANT_ID",
-//        TokenCredentialFactory.TENANT_ID)
-//      .addParameter(
-//        "AZURE_CLIENT_SECRET",
-//        TokenCredentialFactory.CLIENT_SECRET)
-//      .addParameter(
-//        "AZURE_CLIENT_CERTIFICATE_PATH",
-//        TokenCredentialFactory.CLIENT_CERTIFICATE_PATH)
-//      .addParameter(
-//        "AZURE_CLIENT_CERTIFICATE_PASSWORD",
-//        TokenCredentialFactory.CLIENT_CERTIFICATE_PASSWORD)
-//      .addParameter(
-//        "AZURE_REDIRECT_URL",
-//        TokenCredentialFactory.REDIRECT_URL);
+        AWSCredentialsFactory.AUTHENTICATION_METHOD,
+        AWSAuthenticationMethod.DEFAULT,
+        AWSConfigurationParameters::parseAuthentication);
   }
 
   /**
    * Parses the value of the AUTHENTICATION parameter as an
-   * {@link AwsAuthenticationMethod}.
+   * {@link AWSAuthenticationMethod}.
    * @param authentication Parameter value to parse. Not null.
    * @return Authentication method parsed from the {@code value}. Not null.
    * @throws IllegalArgumentException If the {@code value} is not recognized.
    */
-  private static AwsAuthenticationMethod parseAuthentication(
+  private static AWSAuthenticationMethod parseAuthentication(
     String authentication) {
     switch (authentication) {
-      case "AZURE_DEFAULT":
-        return AwsAuthenticationMethod.DEFAULT;
+      case "AWS_DEFAULT":
+        return AWSAuthenticationMethod.DEFAULT;
       default:
         throw new IllegalArgumentException(
           "Unrecognized value: " + authentication);
