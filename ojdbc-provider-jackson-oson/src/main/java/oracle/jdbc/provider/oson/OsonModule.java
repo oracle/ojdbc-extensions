@@ -43,10 +43,7 @@ import com.fasterxml.jackson.core.util.VersionUtil;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import oracle.jdbc.provider.oson.deser.*;
 import oracle.jdbc.provider.oson.ser.*;
-import org.apache.maven.model.Model;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 
-import java.io.FileReader;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.time.*;
@@ -93,11 +90,10 @@ public class OsonModule extends SimpleModule {
         artifactId = properties.getProperty("groupId");
 
       } else {
-        MavenXpp3Reader reader = new MavenXpp3Reader();
-        Model model = reader.read(new FileReader("pom.xml"));
-        providerVersion = model.getParent().getVersion();
-        groupId = model.getParent().getGroupId();
-        artifactId = model.getParent().getArtifactId();
+        // when the tests are run locally using IDE.
+        providerVersion = "1.0";
+        groupId = "com.oracle.database.jdbc";
+        artifactId = "ojdbc-provider-jackson-oson";
       }
     } catch (Exception e) {
     }
