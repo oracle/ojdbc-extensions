@@ -44,10 +44,10 @@ import oracle.jdbc.spi.OracleResourceProvider;
 import oracle.jdbc.spi.TlsConfigurationProvider;
 import org.junit.jupiter.api.Test;
 
+import javax.net.ssl.SSLContext;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.createParameterValues;
 import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.findProvider;
@@ -102,34 +102,117 @@ public class KeyVaultTCPSProviderTest {
     assertTrue(walletPasswordParameter.isSensitive());
     assertFalse(walletPasswordParameter.isRequired());
     assertNull(walletPasswordParameter.defaultValue());
-
   }
 
   @Test
-  public void testGetSSLContext() {
-
+  public void testPKCS12TcpsWallet() {
     Map<String, String> testParameters = new HashMap<>();
     testParameters.put(
             "vaultUrl",
             TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
     testParameters.put(
             "secretName",
-            TestProperties.getOrAbort(AzureTestProperty.AZURE_TLS_WALLET_SECRET_NAME));
-
-    testParameters.put(
-            "type",
-            TestProperties.getOrAbort(AzureTestProperty.AZURE_TLS_FILE_TYPE));
-
-    Optional.ofNullable(TestProperties.getOptional(
-                    AzureTestProperty.AZURE_TLS_FILE_PASSWORD))
-            .ifPresent(password -> testParameters.put("walletPassword",
-                    password));
-
-    AzureResourceProviderTestUtil.configureAuthentication(testParameters);
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_PKCS12_TLS_WALLET_SECRET_NAME));
+    testParameters.put("type", "PKCS12");
+    testParameters.put("walletPassword",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_PKCS12_TLS_WALLET_PASSWORD));
 
     Map<OracleResourceProvider.Parameter, CharSequence> parameterValues =
             createParameterValues(PROVIDER, testParameters);
-    assertNotNull(PROVIDER.getSSLContext(parameterValues));
 
+    SSLContext sslContext = PROVIDER.getSSLContext(parameterValues);
+    assertNotNull(sslContext);
+  }
+
+  @Test
+  public void testSSOTcpsWallet() {
+    Map<String, String> testParameters = new HashMap<>();
+    testParameters.put(
+            "vaultUrl",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
+    testParameters.put(
+            "secretName",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_SSO_TLS_WALLET_SECRET_NAME));
+    testParameters.put("type", "SSO");
+
+    Map<OracleResourceProvider.Parameter, CharSequence> parameterValues =
+            createParameterValues(PROVIDER, testParameters);
+
+    SSLContext sslContext = PROVIDER.getSSLContext(parameterValues);
+    assertNotNull(sslContext);
+  }
+
+  @Test
+  public void testPEMTcpsWallet() {
+    Map<String, String> testParameters = new HashMap<>();
+    testParameters.put(
+            "vaultUrl",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
+    testParameters.put(
+            "secretName",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_PEM_TLS_WALLET_SECRET_NAME));
+    testParameters.put("type", "PEM");
+    testParameters.put("walletPassword",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_PEM_TLS_WALLET_PASSWORD));
+
+    Map<OracleResourceProvider.Parameter, CharSequence> parameterValues =
+            createParameterValues(PROVIDER, testParameters);
+
+    SSLContext sslContext = PROVIDER.getSSLContext(parameterValues);
+    assertNotNull(sslContext);
+  }
+
+  @Test
+  public void testPKCS12MissingPassword() {
+    Map<String, String> testParameters = new HashMap<>();
+    testParameters.put(
+            "vaultUrl",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
+    testParameters.put(
+            "secretName",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_PKCS12_TLS_WALLET_SECRET_NAME));
+    testParameters.put("type", "PKCS12");
+
+    Map<OracleResourceProvider.Parameter, CharSequence> parameterValues = createParameterValues(PROVIDER, testParameters);
+
+    assertThrows(IllegalStateException.class, () -> {
+      PROVIDER.getSSLContext(parameterValues);
+    });
+  }
+
+  @Test
+  public void testPemMissingPassword() {
+    Map<String, String> testParameters = new HashMap<>();
+    testParameters.put(
+            "vaultUrl",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
+    testParameters.put(
+            "secretName",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_PEM_TLS_WALLET_SECRET_NAME));
+    testParameters.put("type", "PEM");
+
+    Map<OracleResourceProvider.Parameter, CharSequence> parameterValues = createParameterValues(PROVIDER, testParameters);
+
+    assertThrows(IllegalStateException.class, () -> {
+      PROVIDER.getSSLContext(parameterValues);
+    });
+  }
+
+  @Test
+  public void testCorruptedBase64TCPSWallet() {
+    Map<String, String> testParameters = new HashMap<>();
+    testParameters.put(
+            "vaultUrl",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
+    testParameters.put(
+            "secretName",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_CORRUPTED_TLS_WALLET_SECRET_NAME));
+    testParameters.put("type", "SSO");
+
+    Map<OracleResourceProvider.Parameter, CharSequence> parameterValues = createParameterValues(PROVIDER, testParameters);
+
+    assertThrows(IllegalStateException.class, () -> {
+      PROVIDER.getSSLContext(parameterValues);
+    });
   }
 }

@@ -48,7 +48,6 @@ import org.junit.jupiter.api.Test;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.createParameterValues;
 import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.findProvider;
@@ -118,64 +117,197 @@ public class KeyVaultSEPSProviderTest {
     assertFalse(connStringParameter.isSensitive());
     assertFalse(connStringParameter.isRequired());
     assertNull(connStringParameter.defaultValue());
-
   }
 
   @Test
-  public void testGetUsername() {
+  public void testPKCS12PasswordWithConnectionStringIndex() {
     Map<String, String> testParameters = new HashMap<>();
     testParameters.put(
             "vaultUrl",
             TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
     testParameters.put(
             "secretName",
-            TestProperties.getOrAbort(AzureTestProperty.AZURE_SEPS_WALLET_SECRET_NAME));
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_PKCS12_SEPS_WALLET_SECRET_NAME));
+    testParameters.put(
+            "walletPassword",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_PKCS12_SEPS_WALLET_PASSWORD));
+    testParameters.put(
+            "connectionStringIndex",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_SEPS_CONNECTION_STRING_INDEX));
 
-    Optional.ofNullable(TestProperties.getOptional(
-                    AzureTestProperty.AZURE_SEPS_WALLET_PASSWORD))
-            .ifPresent(password -> testParameters.put("walletPassword",
-                    password));
-
-    Optional.ofNullable(TestProperties.getOptional(
-                    AzureTestProperty.AZURE_SEPS_CONNECTION_STRING_INDEX))
-            .ifPresent(password -> testParameters.put("connectionStringIndex",
-                    password));
-
-    AzureResourceProviderTestUtil.configureAuthentication(testParameters);
-
-    Map<OracleResourceProvider.Parameter, CharSequence> parameterValues =
-            createParameterValues(USERNAME_PROVIDER, testParameters);
-
-    assertNotNull(USERNAME_PROVIDER.getUsername(parameterValues));
-
+    Map<OracleResourceProvider.Parameter, CharSequence> parameterValues = createParameterValues(PASSWORD_PROVIDER, testParameters);
+    char[] password = PASSWORD_PROVIDER.getPassword(parameterValues);
+    assertNotNull(password);
   }
 
   @Test
-  public void testGetPassword() {
+  public void testPKCS12PasswordWithoutConnectionStringIndex() {
     Map<String, String> testParameters = new HashMap<>();
     testParameters.put(
             "vaultUrl",
             TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
     testParameters.put(
             "secretName",
-            TestProperties.getOrAbort(AzureTestProperty.AZURE_SEPS_WALLET_SECRET_NAME));
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_PKCS12_SEPS_WALLET_SECRET_NAME));
+    testParameters.put(
+            "walletPassword",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_PKCS12_SEPS_WALLET_PASSWORD));
 
-    Optional.ofNullable(TestProperties.getOptional(
-                    AzureTestProperty.AZURE_SEPS_WALLET_PASSWORD))
-            .ifPresent(password -> testParameters.put("walletPassword",
-                    password));
+    Map<OracleResourceProvider.Parameter, CharSequence> parameterValues = createParameterValues(PASSWORD_PROVIDER, testParameters);
+    char[] password = PASSWORD_PROVIDER.getPassword(parameterValues);
+    assertNotNull(password);
+  }
 
-    Optional.ofNullable(TestProperties.getOptional(
-                    AzureTestProperty.AZURE_SEPS_CONNECTION_STRING_INDEX))
-            .ifPresent(password -> testParameters.put("connectionStringIndex",
-                    password));
+  @Test
+  public void testSSOPasswordWithConnectionStringIndex() {
+    Map<String, String> testParameters = new HashMap<>();
+    testParameters.put(
+            "vaultUrl",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
+    testParameters.put(
+            "secretName",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_SSO_SEPS_WALLET_SECRET_NAME));
+    testParameters.put(
+            "connectionStringIndex",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_SEPS_CONNECTION_STRING_INDEX));
 
-    AzureResourceProviderTestUtil.configureAuthentication(testParameters);
+    Map<OracleResourceProvider.Parameter, CharSequence> parameterValues =
+            createParameterValues(PASSWORD_PROVIDER, testParameters);
+
+    char[] password = PASSWORD_PROVIDER.getPassword(parameterValues);
+    assertNotNull(password);
+  }
+
+  @Test
+  public void testSSOPasswordWithoutConnectionStringIndex() {
+    Map<String, String> testParameters = new HashMap<>();
+    testParameters.put(
+            "vaultUrl",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
+    testParameters.put(
+            "secretName",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_SSO_SEPS_WALLET_SECRET_NAME));
+
+    Map<OracleResourceProvider.Parameter, CharSequence> parameterValues =
+            createParameterValues(PASSWORD_PROVIDER, testParameters);
+
+    char[] password = PASSWORD_PROVIDER.getPassword(parameterValues);
+    assertNotNull(password);
+  }
+
+  @Test
+  public void testPKCS12UsernameWithConnectionStringIndex() {
+    Map<String, String> testParameters = new HashMap<>();
+    testParameters.put(
+            "vaultUrl",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
+    testParameters.put(
+            "secretName",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_PKCS12_SEPS_WALLET_SECRET_NAME));
+    testParameters.put(
+            "walletPassword",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_PKCS12_SEPS_WALLET_PASSWORD));
+    testParameters.put(
+            "connectionStringIndex",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_SEPS_CONNECTION_STRING_INDEX));
 
     Map<OracleResourceProvider.Parameter, CharSequence> parameterValues =
             createParameterValues(USERNAME_PROVIDER, testParameters);
 
-    assertNotNull(PASSWORD_PROVIDER.getPassword(parameterValues));
+    String username = USERNAME_PROVIDER.getUsername(parameterValues);
+    assertNotNull(username);
+  }
 
+  @Test
+  public void testPKCS12UsernameWithoutConnectionStringIndex() {
+    Map<String, String> testParameters = new HashMap<>();
+    testParameters.put(
+            "vaultUrl",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
+    testParameters.put(
+            "secretName",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_PKCS12_SEPS_WALLET_SECRET_NAME));
+    testParameters.put(
+            "walletPassword",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_PKCS12_SEPS_WALLET_PASSWORD));
+
+    Map<OracleResourceProvider.Parameter, CharSequence> parameterValues =
+            createParameterValues(USERNAME_PROVIDER, testParameters);
+
+    String username = USERNAME_PROVIDER.getUsername(parameterValues);
+    assertNotNull(username);
+  }
+
+  @Test
+  public void testSSOUsernameWithConnectionStringIndex() {
+    Map<String, String> testParameters = new HashMap<>();
+    testParameters.put(
+            "vaultUrl",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
+    testParameters.put(
+            "secretName",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_SSO_SEPS_WALLET_SECRET_NAME));
+    testParameters.put(
+            "connectionStringIndex",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_SEPS_CONNECTION_STRING_INDEX));
+
+    Map<OracleResourceProvider.Parameter, CharSequence> parameterValues =
+            createParameterValues(USERNAME_PROVIDER, testParameters);
+
+    String username = USERNAME_PROVIDER.getUsername(parameterValues);
+    assertNotNull(username);
+  }
+
+  @Test
+  public void testSSOUsernameWithoutConnectionStringIndex() {
+    Map<String, String> testParameters = new HashMap<>();
+    testParameters.put(
+            "vaultUrl",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
+    testParameters.put(
+            "secretName",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_SSO_SEPS_WALLET_SECRET_NAME));
+
+    Map<OracleResourceProvider.Parameter, CharSequence> parameterValues =
+            createParameterValues(USERNAME_PROVIDER, testParameters);
+
+    String username = USERNAME_PROVIDER.getUsername(parameterValues);
+    assertNotNull(username);
+  }
+
+  @Test
+  public void testPKCS12WalletMissingPassword() {
+    Map<String, String> testParameters = new HashMap<>();
+    testParameters.put(
+            "vaultUrl",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
+    testParameters.put(
+            "secretName",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_PKCS12_SEPS_WALLET_SECRET_NAME));
+
+    Map<OracleResourceProvider.Parameter, CharSequence> parameterValues
+            = createParameterValues(PASSWORD_PROVIDER, testParameters);
+
+    assertThrows(IllegalStateException.class, () -> {
+      PASSWORD_PROVIDER.getPassword(parameterValues);
+    });
+  }
+
+  @Test
+  public void testCorruptedBase64SEPSWallet() {
+    Map<String, String> testParameters = new HashMap<>();
+    testParameters.put(
+            "vaultUrl",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
+    testParameters.put(
+            "secretName",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_CORRUPTED_SEPS_WALLET_SECRET_NAME));
+
+    Map<OracleResourceProvider.Parameter, CharSequence> parameterValues =
+            createParameterValues(PASSWORD_PROVIDER, testParameters);
+
+    assertThrows(IllegalStateException.class, () -> {
+      PASSWORD_PROVIDER.getPassword(parameterValues);
+    });
   }
 }
