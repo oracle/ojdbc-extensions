@@ -216,11 +216,12 @@ public class SerializerTest {
                 conv.serialize(generator,employee);
             }
             try {
-                FileOutputStream fos = new FileOutputStream("oson");
+                File tmpFile = File.createTempFile("oson",null,null);
+                FileOutputStream fos = new FileOutputStream(tmpFile);
                 fos.write(out.toByteArray());
                 fos.close();
 
-                FileInputStream fis = new FileInputStream("oson");
+                FileInputStream fis = new FileInputStream(tmpFile);
                 DataInput dis = new DataInputStream(fis);
                 try (JsonParser oParser = jsonFactory.createParser(dis)) {
                     Employee deserEmp = mapper.readValue(oParser, Employee.class);

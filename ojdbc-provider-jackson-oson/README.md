@@ -32,7 +32,7 @@ JDK versions. The coordinates for the latest release are:
    git clone https://github.com/oracle/ojdbc-extensions.git
 2. Navigate to the project directory:
    ```bash
-   cd oracle-provider-jackson-oson
+   cd ojdbc-provider-jackson-oson
 3. Build the module and it's dependencies:
    ```bash
    mvn clean -pl ojdbc-provider-jackson-oson -amd install

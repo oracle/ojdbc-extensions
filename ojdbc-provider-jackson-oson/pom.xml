@@ -23,6 +23,7 @@
         <dependency>
             <groupId>com.oracle.database.jdbc</groupId>
             <artifactId>ojdbc-provider-common</artifactId>
+            <version>1.0.1</version>
         </dependency>
         <dependency>
             <groupId>com.oracle.database.jdbc</groupId>
