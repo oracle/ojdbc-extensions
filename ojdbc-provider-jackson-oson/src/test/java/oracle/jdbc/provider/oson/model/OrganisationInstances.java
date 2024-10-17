@@ -35,52 +35,48 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.gcp.configuration;
+package oracle.jdbc.provider.oson.model;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
-
-import oracle.jdbc.driver.OracleConfigurationJsonProvider;
-import oracle.jdbc.provider.gcp.secrets.GcpSecretManagerFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.util.OracleConfigurationCache;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * A provider for JSON payload which contains configuration from GCP Secret
- * Manager.
- * See {@link #getJson(String)} for the spec of the JSON payload.
- **/
-public class GcpSecretManagerConfigurationProvider extends OracleConfigurationJsonProvider {
+ * Builds and returns {@link Organisation} instances
+ */
+public class OrganisationInstances {
+    static final String[] organizations = {
+            "Oracle Corporation",
+            "Oracle Financial Services",
+            "Oracle Cloud Infrastructure",
+            "Oracle Consulting",
+            "Oracle Academy",
+            "Oracle Labs",
+            "Oracle Hospitality",
+            "Oracle NetSuite",
+            "Oracle Japan",
+            "Oracle University"
+    };
+    static List<Organisation> organisationInstances = new ArrayList<Organisation>();
 
-  @Override
-  public String getType() {
-    return "gcpsecretmanager";
-  }
 
-  /**
-   * {@inheritDoc}
-   * <p>
-   * Returns the JSON payload stored in GCP Secret Manager secret.
-   * </p>
-   * 
-   * @param location resource name of the secret version (to obtain the resource
-   *                 name, click on "Actions" and "Copy resource name")
-   * @return JSON payload
-   */
-  @Override
-  public InputStream getJson(String location) throws SQLException {
-    Map<String, String> namedValues = new HashMap<>();
-    namedValues.put("secretVersionName", location);
-    ParameterSet parameterSet = GcpConfigurationParameters.getParser().parseNamedValues(namedValues);
-    return new ByteArrayInputStream(
-        GcpSecretManagerFactory.getInstance().request(parameterSet).getContent().getData().toByteArray());
-  }
+    public static void buildOrganisationInstances() {
+        for (int i = 0; i < 10; i++) {
+            int no_of_employees = employeesCount[i];
+            String organisationName = organizations[i];
+            List<Employee> employees = new ArrayList<>();
+            for (int j = 0; j < no_of_employees; j++) {
+                employees.add(EmployeeInstances.getEmployee());
+            }
+            organisationInstances.add(new Organisation(organisationName, employees));
+        }
+    }
 
-  @Override
-  public OracleConfigurationCache getCache() {
-    return null;
-  }
+    static final int[] employeesCount = {100, 100, 100, 100, 100, 100, 100, 100, 100, 100};
+
+    public static List<Organisation> getInstances() {
+        if (organisationInstances.isEmpty()) {
+            buildOrganisationInstances();
+        }
+        return organisationInstances;
+    }
 }

@@ -35,52 +35,15 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.gcp.configuration;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
-
-import oracle.jdbc.driver.OracleConfigurationJsonProvider;
-import oracle.jdbc.provider.gcp.secrets.GcpSecretManagerFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.util.OracleConfigurationCache;
+package oracle.jdbc.provider.oson;
 
 /**
- * A provider for JSON payload which contains configuration from GCP Secret
- * Manager.
- * See {@link #getJson(String)} for the spec of the JSON payload.
- **/
-public class GcpSecretManagerConfigurationProvider extends OracleConfigurationJsonProvider {
-
-  @Override
-  public String getType() {
-    return "gcpsecretmanager";
-  }
-
-  /**
-   * {@inheritDoc}
-   * <p>
-   * Returns the JSON payload stored in GCP Secret Manager secret.
-   * </p>
-   * 
-   * @param location resource name of the secret version (to obtain the resource
-   *                 name, click on "Actions" and "Copy resource name")
-   * @return JSON payload
-   */
-  @Override
-  public InputStream getJson(String location) throws SQLException {
-    Map<String, String> namedValues = new HashMap<>();
-    namedValues.put("secretVersionName", location);
-    ParameterSet parameterSet = GcpConfigurationParameters.getParser().parseNamedValues(namedValues);
-    return new ByteArrayInputStream(
-        GcpSecretManagerFactory.getInstance().request(parameterSet).getContent().getData().toByteArray());
-  }
-
-  @Override
-  public OracleConfigurationCache getCache() {
-    return null;
-  }
+ * Properties that are read from the test.properties file in order to run the
+ * tests of the oson provider.
+ */
+public enum OsonTestProperty {
+  JACKSON_OSON_URL,
+  JACKSON_OSON_USERNAME,
+  JACKSON_OSON_PASSWORD
 }

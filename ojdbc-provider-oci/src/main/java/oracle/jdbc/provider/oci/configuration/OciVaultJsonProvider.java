@@ -3,6 +3,7 @@ package oracle.jdbc.provider.oci.configuration;
 import oracle.jdbc.driver.OracleConfigurationJsonProvider;
 import oracle.jdbc.provider.oci.vault.SecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.util.OracleConfigurationCache;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -58,5 +59,10 @@ public class OciVaultJsonProvider extends OracleConfigurationJsonProvider {
   @Override
   public String getType() {
     return "ocivault";
+  }
+
+  @Override
+  public OracleConfigurationCache getCache() {
+    return null;
   }
 }

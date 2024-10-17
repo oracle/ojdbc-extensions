@@ -35,52 +35,62 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.gcp.configuration;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 
-import oracle.jdbc.driver.OracleConfigurationJsonProvider;
-import oracle.jdbc.provider.gcp.secrets.GcpSecretManagerFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.util.OracleConfigurationCache;
+package oracle.jdbc.provider.oson.ser;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import oracle.jdbc.provider.oson.OsonGenerator;
+
+import java.io.IOException;
+import java.time.Period;
 
 /**
- * A provider for JSON payload which contains configuration from GCP Secret
- * Manager.
- * See {@link #getJson(String)} for the spec of the JSON payload.
- **/
-public class GcpSecretManagerConfigurationProvider extends OracleConfigurationJsonProvider {
+ * Serializer class for handling {@link Period} objects using {@link OsonGenerator}.
+ * This class extends {@link StdSerializer} to enable the serialization of {@link Period} values into JSON format.
+ * <p>
+ * It overrides the {@link #serialize(Period, JsonGenerator, SerializerProvider)} method to provide
+ * a custom implementation that uses the Oson library's {@link OsonGenerator#writePeriod(Period)} method
+ * for writing {@link Period} values to the JSON output.
+ * </p>
+ *
+ * @see StdSerializer
+ * @see OsonGenerator
+ * @see Period
+ */
+public class OsonPeriodSerializer extends StdSerializer<Period> {
 
-  @Override
-  public String getType() {
-    return "gcpsecretmanager";
+  /**
+   * A singleton instance of the serializer.
+   */
+  public static final OsonPeriodSerializer INSTANCE = new OsonPeriodSerializer();
+
+  /**
+   * Default constructor that initializes the serializer for the {@link Period} class.
+   */
+  public OsonPeriodSerializer() {
+    super(Period.class);
   }
 
   /**
-   * {@inheritDoc}
-   * <p>
-   * Returns the JSON payload stored in GCP Secret Manager secret.
-   * </p>
-   * 
-   * @param location resource name of the secret version (to obtain the resource
-   *                 name, click on "Actions" and "Copy resource name")
-   * @return JSON payload
+   * Serializes a {@link Period} object into JSON format using the {@link OsonGenerator}.
+   *
+   * @param value the {@link Period} value to serialize
+   * @param gen the {@link JsonGenerator} for writing JSON output
+   * @param provider the serializer provider
+   * @throws IOException if there is a problem with writing the output
    */
   @Override
-  public InputStream getJson(String location) throws SQLException {
-    Map<String, String> namedValues = new HashMap<>();
-    namedValues.put("secretVersionName", location);
-    ParameterSet parameterSet = GcpConfigurationParameters.getParser().parseNamedValues(namedValues);
-    return new ByteArrayInputStream(
-        GcpSecretManagerFactory.getInstance().request(parameterSet).getContent().getData().toByteArray());
-  }
+  public void serialize(Period value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+    if (gen instanceof OsonGenerator) {
+      final OsonGenerator _gen = (OsonGenerator)gen;
 
-  @Override
-  public OracleConfigurationCache getCache() {
-    return null;
+      _gen.writePeriod(value);
+    } else {
+      gen.writeString(value.toString());
+    }
+
   }
 }

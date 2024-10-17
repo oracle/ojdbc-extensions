@@ -35,52 +35,59 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.gcp.configuration;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.sql.SQLException;
-import java.util.HashMap;
+package oracle.jdbc.provider.oson;
+
+import oracle.jdbc.spi.JsonProvider;
+import oracle.jdbc.spi.OsonConverter;
+
 import java.util.Map;
 
-import oracle.jdbc.driver.OracleConfigurationJsonProvider;
-import oracle.jdbc.provider.gcp.secrets.GcpSecretManagerFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.util.OracleConfigurationCache;
-
 /**
- * A provider for JSON payload which contains configuration from GCP Secret
- * Manager.
- * See {@link #getJson(String)} for the spec of the JSON payload.
- **/
-public class GcpSecretManagerConfigurationProvider extends OracleConfigurationJsonProvider {
+ * Provider class for integrating Jackson with the Oson library.
+ * This class implements the {@link JsonProvider} interface to supply Jackson-based JSON conversion
+ * capabilities for Oson's serialization and deserialization processes.
+ * <p>
+ * It provides the implementation of {@link OsonConverter} that uses Jackson
+ * for handling JSON data. The provider ensures that the Jackson-based converter can be accessed
+ * and used within the Oson library.
+ * </p>
+ *
+ * @see JsonProvider
+ * @see OsonConverter
+ * @see JacksonOsonConverter
+ */
+public class JacksonOsonProvider implements JsonProvider{
 
+  /**
+   * The name of the Jackson JSON provider.
+   */
+  public static final String PROVIDER_NAME = "jackson-json-provider";
+
+  /**
+   * Default constructor.
+   */
+  public JacksonOsonProvider () {}
+
+  /**
+   * Returns the name of this JSON provider.
+   *
+   * @return the name of the provider
+   */
   @Override
-  public String getType() {
-    return "gcpsecretmanager";
+  public String getName() {
+    return PROVIDER_NAME;
   }
 
   /**
-   * {@inheritDoc}
-   * <p>
-   * Returns the JSON payload stored in GCP Secret Manager secret.
-   * </p>
-   * 
-   * @param location resource name of the secret version (to obtain the resource
-   *                 name, click on "Actions" and "Copy resource name")
-   * @return JSON payload
+   * Provides an instance of {@link OsonConverter} that uses Jackson for JSON processing.
+   *
+   * @param parameterValues a map of parameters and their values for the converter (can be null)
+   * @return an instance of {@link JacksonOsonConverter}
    */
   @Override
-  public InputStream getJson(String location) throws SQLException {
-    Map<String, String> namedValues = new HashMap<>();
-    namedValues.put("secretVersionName", location);
-    ParameterSet parameterSet = GcpConfigurationParameters.getParser().parseNamedValues(namedValues);
-    return new ByteArrayInputStream(
-        GcpSecretManagerFactory.getInstance().request(parameterSet).getContent().getData().toByteArray());
+  public OsonConverter getOsonConverter(Map<Parameter, CharSequence> parameterValues) {
+    return new JacksonOsonConverter();
   }
 
-  @Override
-  public OracleConfigurationCache getCache() {
-    return null;
-  }
 }

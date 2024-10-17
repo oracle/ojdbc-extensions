@@ -35,52 +35,64 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.gcp.configuration;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
+package oracle.jdbc.provider.oson.deser;
 
-import oracle.jdbc.driver.OracleConfigurationJsonProvider;
-import oracle.jdbc.provider.gcp.secrets.GcpSecretManagerFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.util.OracleConfigurationCache;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.deser.JSR310StringParsableDeserializer;
+import oracle.jdbc.provider.oson.OsonParser;
+
+import java.io.IOException;
+import java.time.Period;
 
 /**
- * A provider for JSON payload which contains configuration from GCP Secret
- * Manager.
- * See {@link #getJson(String)} for the spec of the JSON payload.
- **/
-public class GcpSecretManagerConfigurationProvider extends OracleConfigurationJsonProvider {
+ * Deserializer class for handling {@link Period} objects using Oson's parsing system.
+ * This class extends {@link StdScalarDeserializer} to enable the deserialization of {@link Period} values from JSON data.
+ * <p>
+ * It overrides the {@link #deserialize(JsonParser, DeserializationContext)} method to provide
+ * a custom implementation that uses the Oson library's {@link OsonParser#readPeriod()} method
+ * for extracting {@link Period} values from the JSON content.
+ * </p>
+ *
+ * @see StdScalarDeserializer
+ * @see OsonParser
+ * @see Period
+ */
+public class OsonPeriodDeserializer extends StdScalarDeserializer<Period> {
 
-  @Override
-  public String getType() {
-    return "gcpsecretmanager";
+  /**
+   * A singleton instance of the deserializer.
+   */
+  public static final OsonPeriodDeserializer INSTANCE = new OsonPeriodDeserializer();
+
+  /**
+   * Default constructor that initializes the deserializer for the {@link Period} class.
+   */
+  protected OsonPeriodDeserializer() {
+    super(Period.class);
   }
 
   /**
-   * {@inheritDoc}
-   * <p>
-   * Returns the JSON payload stored in GCP Secret Manager secret.
-   * </p>
-   * 
-   * @param location resource name of the secret version (to obtain the resource
-   *                 name, click on "Actions" and "Copy resource name")
-   * @return JSON payload
+   * Deserializes a {@link Period} object from the JSON input using the {@link OsonParser}.
+   *
+   * @param p the {@link JsonParser} for reading the JSON content
+   * @param ctxt the deserialization context
+   * @return the deserialized {@link Period} object
+   * @throws IOException if there is a problem with reading the input
    */
   @Override
-  public InputStream getJson(String location) throws SQLException {
-    Map<String, String> namedValues = new HashMap<>();
-    namedValues.put("secretVersionName", location);
-    ParameterSet parameterSet = GcpConfigurationParameters.getParser().parseNamedValues(namedValues);
-    return new ByteArrayInputStream(
-        GcpSecretManagerFactory.getInstance().request(parameterSet).getContent().getData().toByteArray());
-  }
+  public Period deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    if (p instanceof OsonParser) {
+      final OsonParser _parser = (OsonParser)p;
 
-  @Override
-  public OracleConfigurationCache getCache() {
-    return null;
+      return _parser.readPeriod();
+
+    } else {
+      return JSR310StringParsableDeserializer.PERIOD.deserialize(p, ctxt);
+    }
+
+
   }
 }

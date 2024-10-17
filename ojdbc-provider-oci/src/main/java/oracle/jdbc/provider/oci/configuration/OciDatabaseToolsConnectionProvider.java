@@ -305,7 +305,6 @@ public class OciDatabaseToolsConnectionProvider
       .getContent();
   }
 
-  @Override
   public Properties removeProperties(String location) {
     Properties deletedProp = cache.remove(location);
     return deletedProp;
@@ -318,6 +317,11 @@ public class OciDatabaseToolsConnectionProvider
     } catch (BmcException bmcException) {
       throw new OracleConfigurationProviderNetworkError(bmcException);
     }
+  }
+
+  @Override
+  public OracleConfigurationCache getCache() {
+    return null;
   }
 }
 

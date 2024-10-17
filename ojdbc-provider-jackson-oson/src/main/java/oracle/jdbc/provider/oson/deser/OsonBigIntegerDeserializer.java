@@ -35,52 +35,64 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.gcp.configuration;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
+package oracle.jdbc.provider.oson.deser;
 
-import oracle.jdbc.driver.OracleConfigurationJsonProvider;
-import oracle.jdbc.provider.gcp.secrets.GcpSecretManagerFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.util.OracleConfigurationCache;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.deser.std.NumberDeserializers;
+import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
+
+import oracle.jdbc.provider.oson.OsonParser;
+
+import java.io.IOException;
+import java.math.BigInteger;
 
 /**
- * A provider for JSON payload which contains configuration from GCP Secret
- * Manager.
- * See {@link #getJson(String)} for the spec of the JSON payload.
- **/
-public class GcpSecretManagerConfigurationProvider extends OracleConfigurationJsonProvider {
+ * Deserializer class for handling BigInteger objects using {@link OsonParser}.
+ * This class extends {@link StdScalarDeserializer} to enable the deserialization of BigInteger
+ * values from JSON data.
+ * <p>
+ * It overrides the {@link #deserialize(JsonParser, DeserializationContext)} method to provide
+ * a custom implementation that uses the Oson library's {@link OsonParser#getBigIntegerValue()} method
+ * for extracting BigInteger values from the JSON content.
+ * </p>
+ *
+ * @see StdScalarDeserializer
+ * @see OsonParser
+ * @see BigInteger
+ */
+public class OsonBigIntegerDeserializer extends StdScalarDeserializer<BigInteger> {
 
-  @Override
-  public String getType() {
-    return "gcpsecretmanager";
+  /**
+   * A singleton instance of the deserializer.
+   */
+  public static final OsonBigIntegerDeserializer INSTANCE = new OsonBigIntegerDeserializer();
+
+  /**
+   * Default constructor that initializes the deserializer for the {@link BigInteger} class.
+   */
+  protected OsonBigIntegerDeserializer() {
+    super(BigInteger.class);
   }
 
   /**
-   * {@inheritDoc}
-   * <p>
-   * Returns the JSON payload stored in GCP Secret Manager secret.
-   * </p>
-   * 
-   * @param location resource name of the secret version (to obtain the resource
-   *                 name, click on "Actions" and "Copy resource name")
-   * @return JSON payload
+   * Deserializes a BigInteger from the JSON input using the {@link OsonParser}.
+   *
+   * @param p the {@link JsonParser} for reading the JSON content
+   * @param ctxt the deserialization context
+   * @return the deserialized {@link BigInteger} value
+   * @throws IOException if there is a problem with reading the input
    */
   @Override
-  public InputStream getJson(String location) throws SQLException {
-    Map<String, String> namedValues = new HashMap<>();
-    namedValues.put("secretVersionName", location);
-    ParameterSet parameterSet = GcpConfigurationParameters.getParser().parseNamedValues(namedValues);
-    return new ByteArrayInputStream(
-        GcpSecretManagerFactory.getInstance().request(parameterSet).getContent().getData().toByteArray());
-  }
+  public BigInteger deserialize(JsonParser p, DeserializationContext ctxt) throws IOException{
+    if( p instanceof OsonParser) {
+      final OsonParser _parser = (OsonParser)p;
 
-  @Override
-  public OracleConfigurationCache getCache() {
-    return null;
+      return _parser.getBigIntegerValue();
+    }
+    else {
+      return NumberDeserializers.BigIntegerDeserializer.instance.deserialize(p, ctxt);
+    }
   }
 }

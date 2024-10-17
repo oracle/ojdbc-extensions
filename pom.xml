@@ -32,12 +32,18 @@
   <properties>
     <maven.compiler.target>1.8</maven.compiler.target>
     <maven.compiler.source>1.8</maven.compiler.source>
-    <jdbc.version>23.4.0.24.05</jdbc.version>
+    <jdbc.version>23.6.0.24.09.240830</jdbc.version>
     <junit.version>5.9.0</junit.version>
     <mockito.version>4.11.0</mockito.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>
+  <dependencies>
+    <dependency>
+      <groupId>com.oracle.database.jdbc</groupId>
+      <artifactId>ojdbc8</artifactId>
+    </dependency>
+  </dependencies>
 
   <profiles>
     <!--
@@ -62,6 +68,7 @@
     <module>ojdbc-provider-samples</module>
     <module>ojdbc-provider-opentelemetry</module>
     <module>ojdbc-provider-gcp</module>
+    <module>ojdbc-provider-jackson-oson</module>
   </modules>
 
   <dependencyManagement>
@@ -79,7 +86,7 @@
       <dependency>
         <groupId>com.oracle.database.security</groupId>
         <artifactId>oraclepki</artifactId>
-        <version>${jdbc.version}</version>
+        <version>23.4.0.24.05</version>
       </dependency>
       <dependency>
         <groupId>org.junit.jupiter</groupId>
@@ -121,6 +128,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.1.2</version>
       </plugin>
+      <!--
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
@@ -156,6 +164,7 @@
           </tags>
         </configuration>
       </plugin>
+      -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>

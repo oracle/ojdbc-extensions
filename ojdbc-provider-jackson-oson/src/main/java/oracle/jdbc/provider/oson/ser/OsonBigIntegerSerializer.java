@@ -35,52 +35,53 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.gcp.configuration;
+package oracle.jdbc.provider.oson.ser;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import oracle.jdbc.provider.oson.OsonGenerator;
 
-import oracle.jdbc.driver.OracleConfigurationJsonProvider;
-import oracle.jdbc.provider.gcp.secrets.GcpSecretManagerFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.util.OracleConfigurationCache;
+import java.io.IOException;
+import java.math.BigInteger;
 
 /**
- * A provider for JSON payload which contains configuration from GCP Secret
- * Manager.
- * See {@link #getJson(String)} for the spec of the JSON payload.
- **/
-public class GcpSecretManagerConfigurationProvider extends OracleConfigurationJsonProvider {
+ * Serializer class for handling {@link BigInteger} objects using {@link OsonGenerator}.
+ * This class extends {@link StdSerializer} to enable the serialization of {@link BigInteger} values into JSON format.
+ * <p>
+ * It overrides the {@link #serialize(BigInteger, JsonGenerator, SerializerProvider)} method to provide
+ * a custom implementation that uses the Oson library's {@link OsonGenerator#writeNumber(BigInteger)} method
+ * for writing {@link BigInteger} values to the JSON output.
+ * </p>
+ *
+ * @see StdSerializer
+ * @see OsonGenerator
+ * @see BigInteger
+ */
+public class OsonBigIntegerSerializer extends StdSerializer<BigInteger> {
 
-  @Override
-  public String getType() {
-    return "gcpsecretmanager";
+  /**
+   * A singleton instance of the serializer.
+   */
+  public static final OsonBigIntegerSerializer INSTANCE = new OsonBigIntegerSerializer();
+
+  /**
+   * Default constructor that initializes the serializer for the {@link BigInteger} class.
+   */
+  public OsonBigIntegerSerializer() {
+    super(BigInteger.class);
   }
 
   /**
-   * {@inheritDoc}
-   * <p>
-   * Returns the JSON payload stored in GCP Secret Manager secret.
-   * </p>
-   * 
-   * @param location resource name of the secret version (to obtain the resource
-   *                 name, click on "Actions" and "Copy resource name")
-   * @return JSON payload
+   * Serializes a {@link BigInteger} object into JSON format using the {@link OsonGenerator}.
+   *
+   * @param value the {@link BigInteger} value to serialize
+   * @param gen the {@link JsonGenerator} for writing JSON output
+   * @param provider the serializer provider
+   * @throws IOException if there is a problem with writing the output
    */
   @Override
-  public InputStream getJson(String location) throws SQLException {
-    Map<String, String> namedValues = new HashMap<>();
-    namedValues.put("secretVersionName", location);
-    ParameterSet parameterSet = GcpConfigurationParameters.getParser().parseNamedValues(namedValues);
-    return new ByteArrayInputStream(
-        GcpSecretManagerFactory.getInstance().request(parameterSet).getContent().getData().toByteArray());
-  }
-
-  @Override
-  public OracleConfigurationCache getCache() {
-    return null;
+  public void serialize(BigInteger value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+    gen.writeNumber((BigInteger) value);
   }
 }
