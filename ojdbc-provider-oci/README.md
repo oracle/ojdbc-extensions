@@ -421,7 +421,7 @@ The <a href="https://docs.oracle.com/en-us/iaas/Content/General/Concepts/identif
 </td>
 </tr>
 <tr>
-<td>password</td>
+<td>walletPassword</td>
 <td>
 Optional password for PKCS12 or protected PEM files. If omitted, the file is assumed to be SSO or an non-protected PEM file.
 </td>
