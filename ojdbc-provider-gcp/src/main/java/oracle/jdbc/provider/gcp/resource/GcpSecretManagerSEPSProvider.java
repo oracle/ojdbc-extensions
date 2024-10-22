@@ -100,9 +100,10 @@ public class GcpSecretManagerSEPSProvider
   }
 
   /**
-   * Retrieves the OracleWallet by decoding the wallet stored in GCP Secret Manager.
+   * Retrieves the OracleWallet by fetching the wallet stored in GCP Secret Manager.
    * The wallet can be stored either as a base64-encoded string or as an imported file.
-   * It is opened as either SSO, PKCS12, or PEM, based on whether a password is provided.
+   * It is opened as either SSO or PKCS12, based on whether a password is
+   * provided.
    * If no password is provided, the wallet is treated as an SSO wallet. A connection
    * string index can also be specified to select the correct credentials from the wallet.
    */

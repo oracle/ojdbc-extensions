@@ -82,7 +82,7 @@ public class KeyVaultSEPSProvider
 
   /**
    * Retrieves the OracleWallet by decoding the base64-encoded wallet stored
-   * in Azure Key Vault and opening it as either SSO, PKCS12, or PEM, based on
+   * in Azure Key Vault and opening it as either SSO or PKCS12, based on
    * whether a password is provided.
    */
   private WalletUtils.Credentials getWalletCredentials(
