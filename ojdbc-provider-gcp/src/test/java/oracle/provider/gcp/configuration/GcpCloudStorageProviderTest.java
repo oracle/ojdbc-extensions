@@ -42,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import oracle.provider.gcp.GcpTestProperty;
 import org.junit.jupiter.api.Test;
 
 import oracle.jdbc.provider.TestProperties;
@@ -49,9 +50,6 @@ import oracle.jdbc.spi.OracleConfigurationProvider;
 
 public class GcpCloudStorageProviderTest {
 
-  private enum GcpTestProperties {
-    GCP_OBJECT_STORAGE_URL
-  }
 
   static {
     OracleConfigurationProvider.allowedProviders.add("gcpstorage");
@@ -61,7 +59,7 @@ public class GcpCloudStorageProviderTest {
 
   @Test
   public void testDefaultAuthentication() throws SQLException {
-    String location = TestProperties.getOrAbort(GcpTestProperties.GCP_OBJECT_STORAGE_URL);
+    String location = TestProperties.getOrAbort(GcpTestProperty.GCP_OBJECT_STORAGE_URL);
     Properties properties = PROVIDER
         .getConnectionProperties(location);
     assertTrue(properties.containsKey("URL"), "Contains property URL");
