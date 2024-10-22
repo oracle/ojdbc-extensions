@@ -66,7 +66,6 @@ import java.util.logging.Logger;
  */
 public class OsonGenerator extends GeneratorBase {
 
-  private static final boolean DEBUG = false;
   private Logger logger = Logger.getLogger("OsonLogger");
 
   private OutputStream out = null;
@@ -77,7 +76,9 @@ public class OsonGenerator extends GeneratorBase {
   /**
    * Constructs an OsonGenerator with the specified features, codec, OracleJsonGenerator,
    * and output stream.
-   *
+   * <p>
+   * Note that the underlying <code>OutputStream</code> will not hold any data until the close method is called on this instance
+   * @see #close()
    * @param features The features for the generator.
    * @param codec The codec for object serialization.
    * @param gen The OracleJsonGenerator instance.
@@ -103,12 +104,12 @@ public class OsonGenerator extends GeneratorBase {
 
   /**
    * Flushes the generator and writes any buffered output to the underlying stream.
-   *
+   * @see OracleJsonGenerator#flush() Generator flush
    * @throws IOException If an I/O error occurs.
    */
   @Override
   public void flush() throws IOException {
-    if(DEBUG) logger.log(Level.FINEST, "flush");
+    logger.log(Level.FINEST, "flush");
     gen.flush();
   }
 
@@ -117,7 +118,7 @@ public class OsonGenerator extends GeneratorBase {
    */
   @Override
   protected void _releaseBuffers() {
-    if(DEBUG) logger.log(Level.FINEST, "_releaseBuffers");
+    logger.log(Level.FINEST, "_releaseBuffers");
     if(out instanceof ByteArrayOutputStream)
       ((ByteArrayOutputStream) out).reset();
   }
@@ -501,7 +502,7 @@ public class OsonGenerator extends GeneratorBase {
    */
   @Override
   public void close() throws IOException {
-    if(DEBUG) logger.log(Level.FINEST, "close");
+    logger.log(Level.FINEST, "close (isClosed() ? == "+isClosed()+")");
     gen.close();
     closed = true;
   }

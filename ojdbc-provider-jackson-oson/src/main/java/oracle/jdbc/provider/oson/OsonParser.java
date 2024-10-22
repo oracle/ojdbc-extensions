@@ -65,9 +65,6 @@ import java.util.logging.Logger;
 public class OsonParser extends ParserBase {
 
   /** Logger for debugging purposes. */
-  private static final boolean DEBUG = false;
-
-  /** Logger for debugging purposes. */
   private final Logger logger = Logger.getLogger("OsonLogger");
 
   /** The OracleJsonParser instance to parse Oracle JSON data. */
@@ -140,18 +137,21 @@ public class OsonParser extends ParserBase {
   private JsonToken fromOsonEvent(Event event) {
     switch (event) {
       case KEY_NAME:
-        if(DEBUG) logger.log(Level.FINEST, "KEY_NAME> " + parser.getString());
+        if (logger.isLoggable(Level.FINEST))
+            logger.log(Level.FINEST, "KEY_NAME> " + parser.getString());
         this.fieldName = parser.getString();
         return JsonToken.FIELD_NAME;
 
       case VALUE_DECIMAL:
-        if(DEBUG) logger.log(Level.FINEST, "VALUE_DECIMAL> " + parser.getBigDecimal()+" / "+parser.isIntegralNumber());
+        if (logger.isLoggable(Level.FINEST))
+          logger.log(Level.FINEST, "VALUE_DECIMAL> " + parser.getBigDecimal()+" / "+parser.isIntegralNumber());
         return parser.isIntegralNumber() ? JsonToken.VALUE_NUMBER_INT : JsonToken.VALUE_NUMBER_FLOAT;
 
       default:
         JsonToken token = OSON_EVENT_TO_JSON_TOKEN.get(currentEvent);
         if(token == null) throw new IllegalStateException("Invalid event " + currentEvent);
-        if(DEBUG) logger.log(Level.FINEST, token.toString());
+        if (logger.isLoggable(Level.FINEST))
+          logger.log(Level.FINEST, token.toString());
         return token;
     }
   }
@@ -164,7 +164,8 @@ public class OsonParser extends ParserBase {
    */
   @Override
   public JsonToken nextToken() throws IOException {
-    if(DEBUG) logger.log(Level.FINEST, "nextToken");
+    if (logger.isLoggable(Level.FINEST))
+      logger.log(Level.FINEST, "nextToken");
     if (parser.hasNext()) {
       currentEvent = parser.next();
       return fromOsonEvent(currentEvent);
@@ -205,7 +206,7 @@ public class OsonParser extends ParserBase {
 
   @Override
   public JsonToken nextValue() throws IOException {
-    if(DEBUG) logger.log(Level.FINEST, "nextValue");
+    logger.log(Level.FINEST, "nextValue");
     return super.nextValue();
   }
 
@@ -217,7 +218,7 @@ public class OsonParser extends ParserBase {
    */
   @Override
   public JsonParser skipChildren() throws IOException {
-    if(DEBUG) logger.log(Level.FINEST, "skipChildren");
+    logger.log(Level.FINEST, "skipChildren");
     if (currentEvent == null && parser.hasNext()) {
       currentEvent = parser.next();
     }
@@ -265,7 +266,7 @@ public class OsonParser extends ParserBase {
    */
   @Override
   public JsonToken getCurrentToken() {
-    if(DEBUG) logger.log(Level.FINEST, "getCurrentToken");
+    logger.log(Level.FINEST, "getCurrentToken");
     if (currentEvent == null && parser.hasNext()) {
       currentEvent = parser.next();
     }
@@ -294,7 +295,7 @@ public class OsonParser extends ParserBase {
    */
   @Override
   public int currentTokenId() {
-    if(DEBUG) logger.log(Level.FINEST, "getCurrentTokenId");
+    logger.log(Level.FINEST, "getCurrentTokenId");
     JsonToken jt;
     if ((jt = OSON_EVENT_TO_JSON_TOKEN.get(currentEvent)) != null) {
       return jt.id();
@@ -310,7 +311,7 @@ public class OsonParser extends ParserBase {
    */
   @Override
   public boolean hasCurrentToken() {
-    if(DEBUG) logger.log(Level.FINEST, "hasCurrentToken");
+    logger.log(Level.FINEST, "hasCurrentToken");
     return currentEvent != null;
   }
 
@@ -319,7 +320,7 @@ public class OsonParser extends ParserBase {
    */
   @Override
   public boolean hasTokenId(final int id) {
-    if(DEBUG) logger.log(Level.FINEST, "hasTokenId( " + id + " )");
+    logger.log(Level.FINEST, "hasTokenId( " + id + " )");
     if (id == JsonTokenId.ID_FIELD_NAME) {
       return currentEvent == OracleJsonParser.Event.KEY_NAME;
     }
@@ -338,7 +339,8 @@ public class OsonParser extends ParserBase {
    */
   @Override
   public boolean hasToken(JsonToken jsonToken) {
-    if(DEBUG) logger.log(Level.FINEST, "hasToken( " + jsonToken + " )");
+    if (logger.isLoggable(Level.FINEST))
+      logger.log(Level.FINEST, "hasToken( " + jsonToken + " )");
     JsonToken jt = OSON_EVENT_TO_JSON_TOKEN.get(currentEvent);
 
     if (jt != null) {
@@ -364,7 +366,7 @@ public class OsonParser extends ParserBase {
    */
   @Override
   public JsonToken getLastClearedToken() {
-    if(DEBUG) logger.log(Level.FINEST, "getLastClearedToken");
+    logger.log(Level.FINEST, "getLastClearedToken");
     if (lastClearedEvent == null) {
       return null;
     }
@@ -396,7 +398,7 @@ public class OsonParser extends ParserBase {
    */
   @Override
   public String getText() throws IOException {
-    if(DEBUG) logger.log(Level.FINEST, "getText");
+    logger.log(Level.FINEST, "getText");
     return parser.getString();
   }
 
@@ -406,7 +408,7 @@ public class OsonParser extends ParserBase {
   //discuss
   @Override
   public char[] getTextCharacters() throws IOException {
-    if(DEBUG) logger.log(Level.FINEST, "getTextCharacters");
+    logger.log(Level.FINEST, "getTextCharacters");
     return parser.getString().toCharArray();
   }
 
@@ -416,7 +418,7 @@ public class OsonParser extends ParserBase {
   //discuss
   @Override
   public int getTextLength() throws IOException {
-    if(DEBUG) logger.log(Level.FINEST, "getTextLength");
+    logger.log(Level.FINEST, "getTextLength");
     return parser.getString().length();
   }
 
@@ -426,7 +428,7 @@ public class OsonParser extends ParserBase {
   // discuss
   @Override
   public int getTextOffset() throws IOException {
-    if(DEBUG) logger.log(Level.FINEST, "getTextOffset");
+    logger.log(Level.FINEST, "getTextOffset");
     return 0;
   }
 
@@ -435,7 +437,7 @@ public class OsonParser extends ParserBase {
    */
   @Override
   public Number getNumberValue() throws IOException {
-    if(DEBUG) logger.log(Level.FINEST, "getNumberValue");
+    logger.log(Level.FINEST, "getNumberValue");
     return parser.getBigDecimal();
   }
 
@@ -444,7 +446,7 @@ public class OsonParser extends ParserBase {
    */
   @Override
   public NumberType getNumberType() throws IOException {
-    if(DEBUG) logger.log(Level.FINEST, "getNumberType "+parser.isIntegralNumber());
+    logger.log(Level.FINEST, "getNumberType "+parser.isIntegralNumber());
     switch(currentEvent) {
       case VALUE_FLOAT:
         return NumberType.FLOAT;
@@ -460,7 +462,7 @@ public class OsonParser extends ParserBase {
    */
   @Override
   public int getIntValue() throws IOException {
-    if(DEBUG) logger.log(Level.FINEST, "getIntValue");
+    logger.log(Level.FINEST, "getIntValue");
     return parser.getInt();
   }
 
@@ -469,7 +471,7 @@ public class OsonParser extends ParserBase {
    */
   @Override
   public long getLongValue() throws IOException {
-    if(DEBUG) logger.log(Level.FINEST, "getLongValue");
+    logger.log(Level.FINEST, "getLongValue");
     return parser.getLong();
   }
 
@@ -511,7 +513,7 @@ public class OsonParser extends ParserBase {
   //discuss
   @Override
   public byte[] getBinaryValue(Base64Variant base64Variant) throws IOException {
-    if(DEBUG) logger.log(Level.FINEST, "getBinaryValue");
+    logger.log(Level.FINEST, "getBinaryValue");
     return parser.getBytes();
   }
 
@@ -520,7 +522,7 @@ public class OsonParser extends ParserBase {
    */
   @Override
   public String getValueAsString(String s) throws IOException {
-    if(DEBUG) logger.log(Level.FINEST, "getValueAsString");
+    logger.log(Level.FINEST, "getValueAsString");
     if (currentToken() == JsonToken.FIELD_NAME) {
       return fieldName;
     }
@@ -535,7 +537,8 @@ public class OsonParser extends ParserBase {
    * @return The LocalDateTime value parsed.
    */
   public LocalDateTime readLocalDateTime() {
-    if(DEBUG) logger.log(Level.FINEST, "readLocalDateTime " + currentEvent);
+    if (logger.isLoggable(Level.FINEST))
+      logger.log(Level.FINEST, "readLocalDateTime " + currentEvent);
     if(currentEvent == OracleJsonParser.Event.VALUE_STRING) {
       return LocalDateTime.parse( parser.getString() );
     } else {
@@ -549,7 +552,8 @@ public class OsonParser extends ParserBase {
    */
 
   public OffsetDateTime readOffsetDateTime() {
-    if(DEBUG) logger.log(Level.FINEST, "readOffsetDateTime " + currentEvent);
+    if (logger.isLoggable(Level.FINEST))
+      logger.log(Level.FINEST, "readOffsetDateTime " + currentEvent);
     if(currentEvent == OracleJsonParser.Event.VALUE_STRING) {
       return OffsetDateTime.parse( parser.getString() );
     } else {
@@ -563,7 +567,8 @@ public class OsonParser extends ParserBase {
    * @return The Duration value parsed.
    */
   public Duration readDuration() {
-    if(DEBUG) logger.log(Level.FINEST, "readDuration " + currentEvent);
+    if (logger.isLoggable(Level.FINEST))
+      logger.log(Level.FINEST, "readDuration " + currentEvent);
     if(currentEvent == OracleJsonParser.Event.VALUE_STRING) {
       return Duration.parse( parser.getString() );
     } else {
@@ -577,7 +582,8 @@ public class OsonParser extends ParserBase {
    * @return The Period value parsed.
    */
   public Period readPeriod() {
-    if(DEBUG) logger.log(Level.FINEST,"readPeriod " + currentEvent);
+    if (logger.isLoggable(Level.FINEST))
+      logger.log(Level.FINEST,"readPeriod " + currentEvent);
     if(currentEvent == OracleJsonParser.Event.VALUE_STRING) {
       return Period.parse( parser.getString() );
     } else {
