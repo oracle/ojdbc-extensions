@@ -35,10 +35,10 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
+
 package oracle.jdbc.provider.gcp.resource;
 
 import oracle.jdbc.datasource.impl.OracleDataSource;
-import oracle.jdbc.provider.Configuration;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -47,59 +47,46 @@ import java.sql.Statement;
 import java.util.Properties;
 
 /**
- * A standalone example that configures Oracle JDBC to be provided with the
- * connection properties retrieved from OCI Object Storage.
+ * Example demonstrating how to configure Oracle JDBC with the TCPS Wallet
+ * Provider to establish a secure TLS connection to an Oracle Autonomous
+ * Database.
+ * <p>
+ * The wallet is retrieved from GCP Secret Manager to enable secure TLS communication.
+ * </p>
  */
-public class VaultSecretPasswordResourceExample {
-  /**
-   * An GCP SecretManager resource name configured as a JVM system property,
-   * environment variable, or configuration.properties file entry named
-   * "gcp_secret_version_name".
-   */
-  private static final String RESOURCE_NAME = Configuration
-      .getRequired("gcp_secret_version_name");
+public class SimpleTCPSWalletProviderExample {
+  private static final String DB_URL = "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=your_db_host))(connect_data=(service_name=your_service_name))(security=(ssl_server_dn_match=yes)))";
+  private static final String JDBC_URL = "jdbc:oracle:thin:@" + DB_URL;
+  private static final String USERNAME = "DB_USER";
+  private static final String PASSWORD = "DB_PASSWORD";
 
-  private static final String DB_URL = "(description=(retry_count=2)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=adb.us-phoenix-1.oraclecloud.com))(connect_data=(service_name=gebqqvpozhjbqbs_awyonurbg0gp0smq_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))";
 
-  /**
-   * <p>
-   * Connects to a database using connection properties retrieved from GCP
-   * Object Storage.
-   * </p>
-   * <p>
-   * Providers use Google Cloud APIs which support Application Default
-   * Credentials; the libraries look for credentials in a set of defined
-   * locations and use those credentials to authenticate requests to the API.
-   * </p>
-   * 
-   * @see <a href=
-   *      "https://cloud.google.com/docs/authentication/application-default-credentials">
-   *      Application Default Credentials</a>
-   * 
-   * @param args the command line arguments
-   * @throws SQLException if an error occurs during the database calls
-   */
   public static void main(String[] args) throws SQLException {
-    String url = "jdbc:oracle:thin:@" + DB_URL;
+    try {
+      OracleDataSource ds = new OracleDataSource();
+      ds.setURL(JDBC_URL);
+      ds.setUser(USERNAME);
+      ds.setPassword(PASSWORD);
 
-    // Standard JDBC code
-    OracleDataSource ds = new OracleDataSource();
-    ds.setURL(url);
-    ds.setUser("DB_USER");
-    Properties properties = new Properties();
-    properties.put("oracle.jdbc.provider.password", "ojdbc-provider-gcp-secretmanager-password");
-    properties.put("oracle.jdbc.provider.password.secretVersionName", RESOURCE_NAME);
-    ds.setConnectionProperties(properties);
+      Properties connectionProps = new Properties();
+      connectionProps.put("oracle.jdbc.provider.tlsConfiguration",
+        "ojdbc-provider-gcp-secretmanager-tls");
+      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.secretVersionName",
+        "projects/{your-project-id}/secrets/{your-secret-name}/versions/{version-number}");
+      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.type","SSO");
+      ds.setConnectionProperties(connectionProps);
 
-    try (Connection cn = ds.getConnection()) {
-      String connectionString = cn.getMetaData().getURL();
-      System.out.println("Connected to: " + connectionString);
+      try (Connection cn = ds.getConnection()) {
+        String connectionString = cn.getMetaData().getURL();
+        System.out.println("Connected to: " + connectionString);
 
-      Statement st = cn.createStatement();
-      ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
-      if (rs.next())
-        System.out.println(rs.getString(1));
+        Statement st = cn.createStatement();
+        ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
+        if (rs.next())
+          System.out.println(rs.getString(1));
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
     }
   }
-
 }
