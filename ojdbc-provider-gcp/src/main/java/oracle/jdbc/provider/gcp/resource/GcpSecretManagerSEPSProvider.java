@@ -36,14 +36,11 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.azure.resource;
+package oracle.jdbc.provider.gcp.resource;
 
-import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
-import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
 import oracle.jdbc.provider.util.WalletUtils;
-import oracle.jdbc.spi.OracleResourceProvider;
 import oracle.jdbc.spi.PasswordProvider;
 import oracle.jdbc.spi.UsernameProvider;
 
@@ -53,8 +50,30 @@ import java.util.Map;
 import static oracle.jdbc.provider.util.CommonParameters.CONNECTION_STRING_INDEX;
 import static oracle.jdbc.provider.util.CommonParameters.PASSWORD;
 
-public class KeyVaultSEPSProvider
-   extends KeyVaultSecretProvider
+/**
+ * <p>
+ * A provider for retrieving both the username and password from a Secure
+ * External Password Store (SEPS) wallet stored in Google Cloud Platform (GCP)
+ * Secret Manager. The wallet can be in either SSO or PKCS12 format. If a
+ * password is provided, the wallet is treated as PKCS12, otherwise, it
+ * is assumed to be in SSO format.
+ * </p>
+ * <p>
+ * This class implements the {@link UsernameProvider} and
+ * {@link PasswordProvider} SPIs defined by Oracle JDBC.
+ * It is designed to be located and instantiated by
+ * {@link java.util.ServiceLoader}.
+ * </p>
+ *
+ * <p>
+ * The SEPS wallet is stored in GCP Secret Manager as a base64-encoded string,
+ * or it may be stored in binary format. This provider decodes the wallet if it
+ * is base64-encoded and retrieves the username and password required for
+ * database authentication.
+ * </p>
+ */
+public class GcpSecretManagerSEPSProvider
+   extends GcpSecretManagerProvider
    implements UsernameProvider, PasswordProvider {
 
   private static final ResourceParameter[] SEPS_PARAMETERS = {
@@ -66,8 +85,8 @@ public class KeyVaultSEPSProvider
    * A public no-arg constructor used by {@link java.util.ServiceLoader} to
    * construct an instance of this provider.
    */
-  public KeyVaultSEPSProvider() {
-    super("key-vault-seps", SEPS_PARAMETERS);
+  public GcpSecretManagerSEPSProvider() {
+    super("secretmanager-seps", SEPS_PARAMETERS);
   }
 
   @Override
@@ -81,26 +100,29 @@ public class KeyVaultSEPSProvider
   }
 
   /**
-   * Retrieves the OracleWallet by decoding the base64-encoded wallet stored
-   * in Azure Key Vault and opening it as either SSO or PKCS12, based on
-   * whether a password is provided.
+   * Retrieves the OracleWallet by fetching the wallet stored in GCP Secret Manager.
+   * The wallet can be stored either as a base64-encoded string or as an imported file.
+   * It is opened as either SSO or PKCS12, based on whether a password is
+   * provided.
+   * If no password is provided, the wallet is treated as an SSO wallet. A connection
+   * string index can also be specified to select the correct credentials from the wallet.
    */
   private WalletUtils.Credentials getWalletCredentials(
-          Map<OracleResourceProvider.Parameter, CharSequence> parameterValues) {
+          Map<Parameter, CharSequence> parameterValues) {
 
     ParameterSet parameterSet = parseParameterValues(parameterValues);
-    KeyVaultSecret secret = KeyVaultSecretFactory
-            .getInstance()
-            .request(parameterSet)
-            .getContent();
+
+    byte[] walletBytes = getSecret(parameterValues).toByteArray();
+
+    if (WalletUtils.isBase64Encoded(walletBytes)) {
+      walletBytes = Base64.getDecoder().decode(walletBytes);
+    }
 
     char[] walletPassword = parameterSet.getOptional(PASSWORD) != null
             ? parameterSet.getOptional(PASSWORD).toCharArray()
             : null;
 
     String connectionStringIndex = parameterSet.getOptional(CONNECTION_STRING_INDEX);
-    byte[] walletBytes = Base64.getDecoder().decode(secret.getValue());
     return WalletUtils.getCredentials(walletBytes, walletPassword, connectionStringIndex);
   }
-
 }

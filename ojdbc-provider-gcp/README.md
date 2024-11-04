@@ -23,6 +23,10 @@ Provider</a></dt>
 <dd>Provides passwords managed by the Secret Manager service</dd>
 <dt><a href="#vault-username-provider">Secret Manager Username Provider</a></dt>
 <dd>Provides usernames managed by the Secret Manager service</dd>
+<dt><a href="#secret-manager-tcps-wallet-provider">Secret Manager TCPS Wallet Provider</a></dt>
+<dd>Provides TCPS/TLS wallet for secure connections to an Autonomous Database from the Secret Manager service</dd>
+<dt><a href="#secret-manager-seps-wallet-provider">Secret Manager SEPS Wallet Provider</a></dt>
+<dd>Provides SEPS (Secure External Password Store) wallets for secure username and password retrieval from the Secret Manager service</dd>
 </dl>
 
 Visit any of the links above to find information and usage examples for a
@@ -216,4 +220,112 @@ An example of a
 that configures this provider can be found in
 [example-vault.properties](example-vault.properties).
 
+## Secret Manager TCPS Wallet Provider
+
+The TCPS Wallet Provider provides Oracle JDBC with keys and certificates managed by the GCP Secret Manager service to establish secure TLS connections with an Autonomous Database. This is a Resource Provider identified by the name `ojdbc-provider-gcp-secretmanager-tls`.
+
+For example, when connecting to an Autonomous Database Serverless with mutual TLS (mTLS), you need to configure the JDBC-thin driver with its client certificate. If this certificate is stored in a wallet file (e.g., `cwallet.sso`, `ewallet.p12`, `ewallet.pem`), you may store it in a GCP Secret Manager secret for additional security. You can then use this provider to retrieve the wallet content from GCP Secret Manager using the GCP SDK and pass it to the JDBC thin driver.
+
+- The type parameter must be specified to indicate the wallet format: SSO, PKCS12, or PEM.
+- The wallet password must be provided for wallets that require a password (e.g., PKCS12 or password-protected PEM files).
+- This provider handles both cases where the wallet is stored as a base64-encoded string or directly as an imported file in GCP Secret Manager.
+
+<table>
+<thead><tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Accepted Values</th>
+<th>Default Value</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>secretVersionName</td>
+<td>The name of the secret version in GCP Secret Manager that contains the TCPS wallet file.</td>
+<td> The <a href="https://cloud.google.com/secret-manager/docs/creating-and-accessing-secrets">GCP Secret Manager Secret Version</a>, typically in the form: 
+<pre>projects/{project-id}/secrets/{secret-id}/versions/{version-id}</pre> 
+</td>
+<td>
+<i>No default value. A value must be configured for this parameter.</i>
+</td>
+</tr>
+<tr>
+<td>walletPassword</td>
+<td>
+Optional password for PKCS12 or protected PEM files. If omitted, the file is assumed to be SSO or a non-protected PEM file.
+</td>
+<td>Any valid password for the wallet</td>
+<td>
+<i>No default value. PKCS12 and password-protected PEM files require a password.</i>
+</td>
+</tr>
+<tr>
+<td>type</td>
+<td>
+Specifies the type of the file being used.
+</td>
+<td>SSO, PKCS12, PEM</td>
+<td>
+<i>No default value. The file type must be specified.</i>
+</td>
+</tr>
+</tbody>
+</table>
+
+An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-secret-manager-wallet.properties](example-secret-manager-wallet.properties).
+
+This provider automatically handles cases where the wallet is stored as either a base64-encoded string or an imported file in GCP Secret Manager. It detects the format and processes the wallet accordingly, ensuring flexibility in how users manage and retrieve their wallet data.
+
+
+## Secret Manager SEPS Wallet Provider
+
+The SEPS Wallet Provider provides Oracle JDBC with a username and password managed by the GCP Secret Manager service, stored in a Secure External Password Store (SEPS) wallet. This is a Resource Provider identified by the name `ojdbc-provider-gcp-secretmanager-seps`.
+
+- The SEPS wallet securely stores encrypted database credentials, including the username, password, and connection strings. These credentials can be stored as default values, such as **oracle.security.client.default_username** and **oracle.security.client.default_password**, or as indexed credentials, for example, **oracle.security.client.username1**, **oracle.security.client.password1**, and **oracle.security.client.connect_string1**.
+
+- The provider retrieves credentials based on the following logic: If `connectionStringIndex` is not specified, it first attempts to retrieve the default credentials (`oracle.security.client.default_username` and `oracle.security.client.default_password`). If default credentials are not found, it checks for a single set of credentials associated with a connection string. If exactly one connection string is found, it uses the associated credentials. However, if multiple connection strings are found, an error is thrown, prompting you to specify a `connectionStringIndex`. If `connectionStringIndex` is specified, the provider attempts to retrieve the credentials associated with the specified connection string index (e.g., **oracle.security.client.username{idx}**, **oracle.security.client.password{idx}**, **oracle.security.client.connect_string{idx}**). If credentials for the specified index are not found, an error is thrown indicating that no connection string was found with that index.
+
+<table>
+<thead><tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Accepted Values</th>
+<th>Default Value</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>secretVersionName</td>
+<td>The name of the secret version in GCP Secret Manager that contains the SEPS wallet file.</td>
+<td> The <a href="https://cloud.google.com/secret-manager/docs/creating-and-accessing-secrets">GCP Secret Manager Secret Version</a>, typically in the form: 
+<pre>projects/{project-id}/secrets/{secret-id}/versions/{version-id}</pre> 
+</td>
+<td>
+<i>No default value. A value must be configured for this parameter.</i>
+</td>
+</tr>
+<tr>
+<td>walletPassword</td>
+<td>
+Optional password for wallets stored as PKCS12 keystores. If omitted, the wallet is assumed to be an SSO wallet.
+</td>
+<td>Any valid password for the SEPS wallet</td>
+<td>
+<i>No default value. PKCS12 wallets require a password.</i>
+</td>
+</tr>
+<tr>
+<td>connectionStringIndex</td>
+<td>
+Optional parameter to specify the index of the connection string to use when retrieving credentials from the wallet.
+</td>
+<td>A positive integer representing the index of the desired credential set (e.g., 1, 2, 3, etc.).</td>
+<td>
+<i>No default value. If not specified, the provider follows the default behavior as described above.</i>
+</td>
+</tr>
+</tbody>
+</table>
+
+An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-secret-manager-wallet.properties](example-secret-manager-wallet.properties).
+
+This provider supports wallets stored in GCP Secret Manager as both base64-encoded strings and imported files. It automatically detects the storage format and processes the wallet accordingly, ensuring flexibility in managing your SEPS credentials.
 

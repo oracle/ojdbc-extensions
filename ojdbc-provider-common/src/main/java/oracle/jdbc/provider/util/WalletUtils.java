@@ -6,6 +6,7 @@ import oracle.security.pki.OracleWallet;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Enumeration;
 
 /**
@@ -246,6 +247,18 @@ public final class WalletUtils {
     catch (OracleSecretStoreException | IOException exception) {
       throw new IllegalStateException(
         "Failed to extract credentials from wallet", exception);
+    }
+  }
+
+  /**
+   * Checks if the given byte array is Base64-encoded.
+   */
+  public static boolean isBase64Encoded(byte[] secretBytes) {
+    try {
+      Base64.getDecoder().decode(secretBytes);
+      return true;
+    } catch (IllegalArgumentException e) {
+      return false;
     }
   }
 

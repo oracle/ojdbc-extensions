@@ -80,7 +80,7 @@ public class SimpleVaultSecretPasswordResourceExample {
     ds.setURL(url);
     ds.setUser("DB_USER");
     Properties properties = new Properties();
-    properties.put("oracle.jdbc.provider.password", "ojdbc-provider-gcp-secret-password");
+    properties.put("oracle.jdbc.provider.password", "ojdbc-provider-gcp-secretmanager-password");
     properties.put("oracle.jdbc.provider.password.secretVersionName", RESOURCE_NAME);
     ds.setConnectionProperties(properties);
 

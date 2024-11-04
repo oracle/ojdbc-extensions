@@ -35,35 +35,43 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.provider.gcp.configuration;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+package oracle.provider.gcp;
 
-import java.sql.SQLException;
-import java.util.Properties;
+/**
+ * Names of properties that configure GCP tests. Descriptions and examples of
+ * each property can be found in the "example-test.properties" file within the
+ * root directory of the project.
+ */
+public enum GcpTestProperty {
 
-import oracle.provider.gcp.GcpTestProperty;
-import org.junit.jupiter.api.Test;
+  GCP_OBJECT_STORAGE_URL,
 
-import oracle.jdbc.provider.TestProperties;
-import oracle.jdbc.spi.OracleConfigurationProvider;
+  SECRET_VERSION_NAME_CONFIG,
 
-public class GcpSecretManagerConfigurationProviderTest {
+  GCP_SECRET_MANAGER_USERNAME_SECRET_VERSION,
 
-  static {
-    OracleConfigurationProvider.allowedProviders.add("gcpsecretmanager");
-  }
+  GCP_SECRET_MANAGER_PASSWORD_SECRET_VERSION,
 
-  private static final OracleConfigurationProvider PROVIDER = OracleConfigurationProvider.find("gcpsecretmanager");
+  GCP_PKCS12_TLS_WALLET_SECRET_VERSION_NAME,
 
-  @Test
-  public void testGetProperties() throws SQLException {
-    String secretVersionName =
-            TestProperties.getOrAbort(GcpTestProperty.SECRET_VERSION_NAME_CONFIG);
-    Properties properties = PROVIDER
-        .getConnectionProperties(secretVersionName);
-    assertTrue(properties.containsKey("URL"), "Contains property URL");
-    assertTrue(properties.containsKey("user"), "Contains property user");
-    assertTrue(properties.containsKey("password"), "Contains property password");
-  }
+  GCP_PKCS12_TLS_WALLET_PASSWORD,
+
+  GCP_SSO_TLS_WALLET_SECRET_VERSION_NAME,
+
+  GCP_PEM_TLS_WALLET_SECRET_VERSION_NAME,
+
+  GCP_PEM_TLS_WALLET_PASSWORD,
+
+  GCP_CORRUPTED_TLS_WALLET_SECRET_VERSION_NAME,
+
+  GCP_PKCS12_SEPS_SECRET_VERSION_NAME,
+
+  GCP_PKCS12_SEPS_WALLET_PASSWORD,
+
+  GCP_SEPS_CONNECTION_STRING_INDEX,
+
+  GCP_SSO_SEPS_SECRET_VERSION_NAME,
+
+  GCP_CORRUPTED_SEPS_WALLET_SECRET_VERSION_NAME;
 }

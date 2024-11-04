@@ -35,35 +35,58 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.provider.gcp.configuration;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+package oracle.jdbc.provider.gcp.resource;
 
+import oracle.jdbc.datasource.impl.OracleDataSource;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Properties;
 
-import oracle.provider.gcp.GcpTestProperty;
-import org.junit.jupiter.api.Test;
+/**
+ * Example demonstrating how to configure Oracle JDBC with the TCPS Wallet
+ * Provider to establish a secure TLS connection to an Oracle Autonomous
+ * Database.
+ * <p>
+ * The wallet is retrieved from GCP Secret Manager to enable secure TLS communication.
+ * </p>
+ */
+public class SimpleTCPSWalletProviderExample {
+  private static final String DB_URL = "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=your_db_host))(connect_data=(service_name=your_service_name))(security=(ssl_server_dn_match=yes)))";
+  private static final String JDBC_URL = "jdbc:oracle:thin:@" + DB_URL;
+  private static final String USERNAME = "DB_USER";
+  private static final String PASSWORD = "DB_PASSWORD";
 
-import oracle.jdbc.provider.TestProperties;
-import oracle.jdbc.spi.OracleConfigurationProvider;
 
-public class GcpSecretManagerConfigurationProviderTest {
+  public static void main(String[] args) throws SQLException {
+    try {
+      OracleDataSource ds = new OracleDataSource();
+      ds.setURL(JDBC_URL);
+      ds.setUser(USERNAME);
+      ds.setPassword(PASSWORD);
 
-  static {
-    OracleConfigurationProvider.allowedProviders.add("gcpsecretmanager");
-  }
+      Properties connectionProps = new Properties();
+      connectionProps.put("oracle.jdbc.provider.tlsConfiguration",
+        "ojdbc-provider-gcp-secretmanager-tls");
+      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.secretVersionName",
+        "projects/{your-project-id}/secrets/{your-secret-name}/versions/{version-number}");
+      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.type","SSO");
+      ds.setConnectionProperties(connectionProps);
 
-  private static final OracleConfigurationProvider PROVIDER = OracleConfigurationProvider.find("gcpsecretmanager");
+      try (Connection cn = ds.getConnection()) {
+        String connectionString = cn.getMetaData().getURL();
+        System.out.println("Connected to: " + connectionString);
 
-  @Test
-  public void testGetProperties() throws SQLException {
-    String secretVersionName =
-            TestProperties.getOrAbort(GcpTestProperty.SECRET_VERSION_NAME_CONFIG);
-    Properties properties = PROVIDER
-        .getConnectionProperties(secretVersionName);
-    assertTrue(properties.containsKey("URL"), "Contains property URL");
-    assertTrue(properties.containsKey("user"), "Contains property user");
-    assertTrue(properties.containsKey("password"), "Contains property password");
+        Statement st = cn.createStatement();
+        ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
+        if (rs.next())
+          System.out.println(rs.getString(1));
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
   }
 }
