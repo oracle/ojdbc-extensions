@@ -112,4 +112,44 @@ public final class CommonParameters {
   public static final Parameter<String> CONNECTION_STRING_INDEX =
     Parameter.create();
 
+  /**
+   * <p>
+   * A parameter for specifying the consumer group to be used for connecting
+   * to an Oracle Autonomous Database.
+   * This consumer group determines the level of concurrency, prioritization,
+   * and performance for database connections.
+   * </p>
+   *
+   * <p><b>Supported Consumer Groups:</b></p>
+   * <ul>
+   *     <li>
+   *       <b>HIGH:</b> Typically used for workloads that require higher
+   *       concurrency limits.
+   *     </li>
+   *     <li>
+   *       <b>MEDIUM:</b> Default consumer group for balanced performance
+   *       and concurrency.
+   *     </li>
+   *     <li>
+   *       <b>LOW:</b> Lower priority with typically higher concurrency limits
+   *       suitable for non-critical workloads.
+   *     </li>
+   *     <li>
+   *       <b>TP:</b> Optimized for transaction processing, providing a balance
+   *       between concurrency and response time.
+   *     </li>
+   *     <li>
+   *       <b>TPURGENT:</b> Highest priority consumer group intended for urgent
+   *       transaction processing requirements.
+   *     </li>
+   * </ul>
+   *
+   * <p>The choice of consumer group allows users to align database connection
+   * priorities and concurrency levels with the specific requirements of
+   * their workload.
+   * If no consumer group is specified, MEDIUM is typically used as the default.
+   * </p>
+   */
+  public static final Parameter<String> CONSUMER_GROUP = Parameter.create();
+
 }

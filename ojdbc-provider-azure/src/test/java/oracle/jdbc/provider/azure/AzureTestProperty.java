@@ -105,7 +105,11 @@ public enum AzureTestProperty {
 
   AZURE_CORRUPTED_SEPS_WALLET_SECRET_NAME,
 
-  AZURE_SEPS_CONNECTION_STRING_INDEX;
+  AZURE_SEPS_CONNECTION_STRING_INDEX,
+
+  AZURE_TNS_NAMES_SECRET_NAME,
+
+  AZURE_CONSUMER_GROUP;
 
   /**
    * Aborts the calling test if the given {@code names} are not configured in

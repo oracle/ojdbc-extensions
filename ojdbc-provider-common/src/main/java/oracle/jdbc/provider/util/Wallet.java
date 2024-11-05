@@ -36,9 +36,7 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.oci.database;
-
-import oracle.jdbc.provider.util.TlsUtils;
+package oracle.jdbc.provider.util;
 
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
@@ -167,7 +165,7 @@ public final class Wallet {
    * @throws IllegalStateException If the files are not found or can not be
    * decoded.
    */
-  static Wallet unzip(ZipInputStream zipStream, char[] password) {
+  public static Wallet unzip(ZipInputStream zipStream, char[] password) {
 
     TNSNames tnsNames = null;
     KeyStore keyStore = null;

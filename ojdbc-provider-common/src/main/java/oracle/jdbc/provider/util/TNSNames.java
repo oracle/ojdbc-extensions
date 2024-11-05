@@ -36,7 +36,7 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.oci.database;
+package oracle.jdbc.provider.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -60,7 +60,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * and use the information to establish a network connection with an ADB
  * instance.
  */
-final class TNSNames {
+public final class TNSNames {
 
   /**
    * Maximum size, in bytes, of a connection string.
@@ -94,7 +94,7 @@ final class TNSNames {
    * @return The connection string for the {@code consumerGroup}, or null if
    * none is defined.
    */
-  String getConnectionString(ConsumerGroup consumerGroup) {
+  public String getConnectionString(ConsumerGroup consumerGroup) {
     return connectionStrings.get(consumerGroup);
   }
 
@@ -105,7 +105,7 @@ final class TNSNames {
    * And here:
    * https://docs.oracle.com/en/database/oracle/oracle-database/23/netrf/local-naming-parameters-in-tns-ora-file.html#GUID-47DAB4DF-1D35-46E5-B227-339FF912E058
    */
-  static TNSNames read(InputStream inputStream) {
+  public static TNSNames read(InputStream inputStream) {
 
     BufferedReader reader =
         new BufferedReader(new InputStreamReader(inputStream, UTF_8));
@@ -217,7 +217,7 @@ final class TNSNames {
    * file. These groups are pre-defined for each type of ADB workload type:
    * https://docs.oracle.com/en/cloud/paas/autonomous-database/adbsa/connect-predefined-generic.html#GUID-E49773B3-6C07-4F6F-906B-42705D237523
    */
-  enum ConsumerGroup {
+  public enum ConsumerGroup {
     HIGH("high"),
     MEDIUM("medium"),
     LOW("low"),

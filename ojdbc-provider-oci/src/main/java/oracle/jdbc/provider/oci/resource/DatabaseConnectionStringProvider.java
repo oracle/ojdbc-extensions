@@ -38,14 +38,16 @@
 
 package oracle.jdbc.provider.oci.resource;
 
-import oracle.jdbc.provider.oci.database.Wallet;
 import oracle.jdbc.provider.oci.database.WalletFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
+import oracle.jdbc.provider.util.Wallet;
 import oracle.jdbc.spi.ConnectionStringProvider;
 
 import java.util.Locale;
 import java.util.Map;
+
+import static oracle.jdbc.provider.util.CommonParameters.CONSUMER_GROUP;
 
 /**
  * <p>
@@ -60,9 +62,6 @@ import java.util.Map;
 public final class DatabaseConnectionStringProvider
   extends OciResourceProvider
   implements ConnectionStringProvider {
-
-  private static final oracle.jdbc.provider.parameter.Parameter<String>
-    CONSUMER_GROUP = oracle.jdbc.provider.parameter.Parameter.create();
 
   private static final ResourceParameter[] PARAMETERS =
     new ResourceParameter[] {
