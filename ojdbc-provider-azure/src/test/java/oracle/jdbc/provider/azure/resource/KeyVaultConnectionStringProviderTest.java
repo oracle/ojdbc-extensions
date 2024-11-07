@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2023 Oracle and/or its affiliates.
+ ** Copyright (c) 2024 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -42,7 +42,6 @@ import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.azure.AzureTestProperty;
 import oracle.jdbc.spi.ConnectionStringProvider;
 import oracle.jdbc.spi.OracleResourceProvider.Parameter;
-import oracle.jdbc.spi.UsernameProvider;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
@@ -51,7 +50,11 @@ import java.util.Map;
 
 import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.createParameterValues;
 import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.findProvider;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class KeyVaultConnectionStringProviderTest {
 
@@ -60,7 +63,7 @@ public class KeyVaultConnectionStringProviderTest {
       ConnectionStringProvider.class, "ojdbc-provider-azure-key-vault-tnsnames");
 
   /**
-   * Verifies that {@link UsernameProvider#getParameters()} includes parameters
+   * Verifies that {@link ConnectionStringProvider#getParameters()} includes parameters
    * to configure a vault URL and secret name.
    */
   @Test
@@ -86,35 +89,89 @@ public class KeyVaultConnectionStringProviderTest {
     assertTrue(secretNameParameter.isRequired());
     assertNull(secretNameParameter.defaultValue());
 
+    Parameter consumerGroupParameter =
+      parameters.stream()
+        .filter(parameter -> "consumer-group".equals(parameter.name()))
+        .findFirst()
+        .orElseThrow(AssertionError::new);
+    assertFalse(consumerGroupParameter.isSensitive());
+    assertFalse(consumerGroupParameter.isRequired());
+    assertNotNull(consumerGroupParameter.defaultValue());
   }
 
-  /**
-   * Verifies that {@link UsernameProvider#getUsername(Map)} returns the
-   * username identified by a vault URL and secret name.
-   */
   @Test
-  public void testGetConnectionString() {
-
+  public void testDefaultConsumerGroup() {
     Map<String, String> testParameters = new HashMap<>();
-    testParameters.put(
-      "vaultUrl",
+    testParameters.put("vaultUrl",
       TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
-    testParameters.put(
-      "secretName",
+
+    testParameters.put("secretName",
+      TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_SECRET_NAME));
+
+    AzureResourceProviderTestUtil.configureAuthentication(testParameters);
+    Map<Parameter, CharSequence> parameterValues = createParameterValues(PROVIDER, testParameters);
+
+    String connectionString = PROVIDER.getConnectionString(parameterValues);
+    assertNotNull(connectionString);
+  }
+
+  @Test
+  public void testValidConsumerGroups() {
+    Map<String, String> testParameters = new HashMap<>();
+    testParameters.put("vaultUrl",
+      TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
+
+    testParameters.put("secretName",
       TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_SECRET_NAME));
 
     testParameters.put(
-            "consumer-group",
-            TestProperties.getOrAbort(AzureTestProperty.AZURE_CONSUMER_GROUP));
+      "consumer-group",
+       TestProperties.getOrAbort(AzureTestProperty.AZURE_CONSUMER_GROUP));
 
     AzureResourceProviderTestUtil.configureAuthentication(testParameters);
+    Map<Parameter, CharSequence> parameterValues = createParameterValues(PROVIDER, testParameters);
 
-    Map<Parameter, CharSequence> parameterValues =
-      createParameterValues(PROVIDER, testParameters);
+    String connectionString = PROVIDER.getConnectionString(parameterValues);
+    assertNotNull(connectionString);
+  }
 
-    System.out.println(PROVIDER.getConnectionString(parameterValues));
+  @Test
+  public void testInvalidConsumerGroup() {
+    Map<String, String> testParameters = new HashMap<>();
+    testParameters.put("vaultUrl",
+      TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
 
-    assertNotNull(PROVIDER.getConnectionString(parameterValues));
+    testParameters.put("secretName",
+      TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_SECRET_NAME));
+    testParameters.put("consumer-group", "INVALID_GROUP");
+
+    AzureResourceProviderTestUtil.configureAuthentication(testParameters);
+    Map<Parameter, CharSequence> parameterValues = createParameterValues(PROVIDER, testParameters);
+
+    assertThrows(IllegalArgumentException.class,
+            () -> PROVIDER.getConnectionString(parameterValues),
+            "Expected IllegalArgumentException for invalid consumer group"
+    );
+  }
+
+  @Test
+  public void testNonExistentConsumerGroupInTnsnames() {
+    Map<String, String> testParameters = new HashMap<>();
+    testParameters.put("vaultUrl",
+      TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
+
+    testParameters.put("secretName",
+      TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_SECRET_NAME));
+
+    testParameters.put("consumer-group",
+      "TPURGENT");  // Valid name but not in tnsnames.ora
+
+    AzureResourceProviderTestUtil.configureAuthentication(testParameters);
+    Map<Parameter, CharSequence> parameterValues = createParameterValues(PROVIDER, testParameters);
+
+    assertThrows(IllegalArgumentException.class,
+            () -> PROVIDER.getConnectionString(parameterValues),
+            "Expected IllegalArgumentException for a non-existent consumer group in tnsnames.ora");
   }
 
 }

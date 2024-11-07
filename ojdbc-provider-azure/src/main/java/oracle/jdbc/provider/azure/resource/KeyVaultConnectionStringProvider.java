@@ -45,6 +45,7 @@ import oracle.jdbc.provider.resource.ResourceParameter;
 import oracle.jdbc.provider.util.TNSNames;
 import oracle.jdbc.spi.ConnectionStringProvider;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Base64;
 import java.util.Locale;
@@ -101,45 +102,47 @@ public class KeyVaultConnectionStringProvider
    * the consumer group.
    * @return The connection string associated with the specified consumer group
    * in the tnsnames.ora file.
-   * @throws IllegalStateException If the connection string cannot be retrieved
-   * or the consumer group is invalid.
+   * @throws IllegalStateException If there is an error reading the tnsnames.ora file
+   * or accessing the Azure Key Vault.
+   * @throws IllegalArgumentException If the specified consumer group is invalid or
+   * does not exist in the tnsnames.ora file.
    */
   @Override
   public String getConnectionString(Map<Parameter, CharSequence> parameterValues) {
-    try {
-      ParameterSet parameterSet = parseParameterValues(parameterValues);
+    ParameterSet parameterSet = parseParameterValues(parameterValues);
 
-      // Retrieve the secret containing tnsnames.ora content from Azure Key Vault
-      KeyVaultSecret secret = KeyVaultSecretFactory
-              .getInstance()
-              .request(parameterSet)
-              .getContent();
+    // Retrieve the secret containing tnsnames.ora content from Azure Key Vault
+    KeyVaultSecret secret = KeyVaultSecretFactory
+            .getInstance()
+            .request(parameterSet)
+            .getContent();
 
-      // Decode the base64-encoded tnsnames.ora content
-      byte[] fileBytes = Base64.getDecoder().decode(secret.getValue());
+    // Decode the base64-encoded tnsnames.ora content
+    byte[] fileBytes = Base64.getDecoder().decode(secret.getValue());
 
-      TNSNames tnsNames;
-      try (InputStream inputStream = new ByteArrayInputStream(fileBytes)) {
-        tnsNames = TNSNames.read(inputStream);
-      }
-
-      TNSNames.ConsumerGroup consumerGroup = TNSNames.ConsumerGroup.valueOf(
-              parameterSet
-                .getRequired(CONSUMER_GROUP)
-                .toUpperCase(Locale.ENGLISH));
-
-      // Retrieve the connection string for the specified consumer group
-      String connectionString = tnsNames.getConnectionString(consumerGroup);
-
-      if (connectionString == null) {
-        throw new IllegalArgumentException(
-                "Unrecognized or unavailable consumer group: " + consumerGroup);
-      }
-
-      return connectionString;
-
-    } catch (Exception e) {
-      throw new IllegalStateException("Failed to retrieve connection string", e);
+    TNSNames tnsNames;
+    try (InputStream inputStream = new ByteArrayInputStream(fileBytes)) {
+      tnsNames = TNSNames.read(inputStream);
+    } catch (IOException e) {
+      throw new IllegalStateException("Failed to read tnsnames.ora content", e);
     }
+
+    String consumerGroupString = parameterSet.getRequired(CONSUMER_GROUP)
+            .toUpperCase(Locale.ENGLISH);
+
+    TNSNames.ConsumerGroup consumerGroup;
+    try {
+      consumerGroup = TNSNames.ConsumerGroup.valueOf(consumerGroupString);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException("Invalid consumer group specified: "
+              + consumerGroupString, e);
+    }
+
+    String connectionString = tnsNames.getConnectionString(consumerGroup);
+    if (connectionString == null) {
+      throw new IllegalArgumentException("Consumer group specified is valid but does not exist in tnsnames.ora");
+    }
+
+    return connectionString;
   }
 }
