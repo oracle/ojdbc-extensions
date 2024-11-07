@@ -126,7 +126,7 @@ public class KeyVaultConnectionStringProviderTest {
 
     testParameters.put(
       "consumer-group",
-       TestProperties.getOrAbort(AzureTestProperty.AZURE_CONSUMER_GROUP));
+       TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_CONSUMER_GROUP));
 
     AzureResourceProviderTestUtil.configureAuthentication(testParameters);
     Map<Parameter, CharSequence> parameterValues = createParameterValues(PROVIDER, testParameters);
