@@ -28,6 +28,8 @@ This module contains providers for integration between Oracle JDBC and Azure.
 <dd>Provides TCPS/TLS wallet for secure connections to an Autonomous Database from the Key Vault service</dd>
 <dt><a href="#key-vault-seps-wallet-provider">Key Vault SEPS Wallet Provider</a></dt>
 <dd>Provides SEPS (Secure External Password Store) wallets for secure username and password retrieval from the Key Vault service</dd> 
+<dt><a href="#key-vault-connection-string-provider">Key Vault Connection String Provider</a></dt>
+<dd>Provides connection strings for secure database connectivity based on consumer groups, retrieved from the tnsnames.ora file stored in Azure Key Vault.</dd> 
 <dt><a href="#common-parameters-for-resource-providers">Common Parameters for Resource Providers</a></dt>
 <dd>Common parameters supported by the resource providers</dd>
 </dl>
@@ -506,6 +508,51 @@ Optional parameter to specify the index of the connection string to use when ret
 </table>
 
 An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-key-vault-wallet.properties](example-key-vault-wallet.properties).
+
+## Key Vault Connection String Provider
+
+The Key Vault Connection String Provider provides Oracle JDBC with a connection string managed by the Azure Key Vault service.
+This is a Resource Provider identified by the name `ojdbc-provider-azure-key-vault-tnsnames`.
+
+This provider retrieves and decodes a `tnsnames.ora` file stored as a base64-encoded secret. in Azure Key Vault, allowing selection of
+connection strings based on predefined consumer groups such as `HIGH`, `MEDIUM`, `LOW`, `TRANSACTION_PROCESSING`,
+and `TRANSACTION_PROCESSING_URGENT`.For more details, refer to the official Oracle documentation on [Consumer Groups and Database Service Levels](https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/manage-priorities.html#GUID-6CEFC4B7-6EF8-4237-A004-C88F570A480B).
+
+This enables flexible configuration for secure database connections based on workload and concurrency requirements.
+
+In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider also supports the parameters listed below.
+
+<table>
+<thead>
+  <tr>
+    <th>Parameter Name</th>
+    <th>Description</th>
+    <th>Accepted Values</th>
+    <th>Default Value</th>
+  </tr>
+</thead>
+<tbody> 
+  <tr> <td>vaultUrl</td> 
+    <td>The URL of the Azure Key Vault containing the tnsnames.ora file.</td> 
+    <td> The <a href="https://docs.microsoft.com/en-us/azure/key-vault/general/overview">Azure Key Vault URL</a>, typically in the form: <pre>https://{vault-name}.vault.azure.net/</pre> </td> 
+    <td> <i>No default value. A value must be configured for this parameter.</i> </td> 
+  </tr> 
+  <tr>
+    <td>secretName</td> 
+    <td>The name of the secret containing the tnsnames.ora file in Azure Key Vault.</td> 
+    <td>Any valid secret name</td> 
+    <td> <i>No default value. A value must be configured for this parameter.</i> </td>
+  </tr>
+  <tr>
+    <td>consumerGroup</td>
+    <td>Specifies the consumer group to retrieve the appropriate connection string from the tnsnames.ora file.</td> 
+    <td>HIGH, MEDIUM, LOW, TRANSACTION_PROCESSING, TRANSACTION_PROCESSING_URGENT</td>
+    <td>MEDIUM</td> 
+  </tr> 
+</tbody>
+</table>
+
+An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-key-vault.properties](example-key-vault.properties).
 
 ## Common Parameters for Resource Providers
 Providers classified as Resource Providers in this module all support a
