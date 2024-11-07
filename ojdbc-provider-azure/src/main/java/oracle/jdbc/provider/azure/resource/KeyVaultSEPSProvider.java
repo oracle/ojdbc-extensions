@@ -38,8 +38,6 @@
 
 package oracle.jdbc.provider.azure.resource;
 
-import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
-import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
 import oracle.jdbc.provider.util.WalletUtils;
@@ -87,19 +85,19 @@ public class KeyVaultSEPSProvider
    */
   private WalletUtils.Credentials getWalletCredentials(
           Map<OracleResourceProvider.Parameter, CharSequence> parameterValues) {
-
     ParameterSet parameterSet = parseParameterValues(parameterValues);
-    KeyVaultSecret secret = KeyVaultSecretFactory
-            .getInstance()
-            .request(parameterSet)
-            .getContent();
+
+    // Retrieve the secret containing the wallet content from Azure Key Vault
+    String secretValue = getSecret(parameterValues);
+
+    // Decode the base64-encoded wallet content
+    byte[] walletBytes = Base64.getDecoder().decode(secretValue);
 
     char[] walletPassword = parameterSet.getOptional(PASSWORD) != null
             ? parameterSet.getOptional(PASSWORD).toCharArray()
             : null;
 
     String connectionStringIndex = parameterSet.getOptional(CONNECTION_STRING_INDEX);
-    byte[] walletBytes = Base64.getDecoder().decode(secret.getValue());
     return WalletUtils.getCredentials(walletBytes, walletPassword, connectionStringIndex);
   }
 

@@ -55,6 +55,8 @@ public class SimpleConnectionStringProviderAzureExample {
     try {
       OracleDataSource ds = new OracleDataSource();
       ds.setURL("jdbc:oracle:thin:@");
+      ds.setUser("DB_USERNAME");
+      ds.setPassword("DB_PASSWORD");
 
       Properties connectionProps = new Properties();
 

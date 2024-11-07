@@ -38,8 +38,6 @@
 
 package oracle.jdbc.provider.azure.resource;
 
-import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
-import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
 import oracle.jdbc.provider.util.TlsUtils;
@@ -113,12 +111,9 @@ public class KeyVaultTCPSProvider
     try {
       ParameterSet parameterSet = parseParameterValues(parameterValues);
 
-      KeyVaultSecret secret = KeyVaultSecretFactory
-              .getInstance()
-              .request(parameterSet)
-              .getContent();
+      String secretValue = getSecret(parameterValues);
 
-      byte[] fileBytes = Base64.getDecoder().decode(secret.getValue());
+      byte[] fileBytes = Base64.getDecoder().decode(secretValue);
 
       char[] password = parameterSet.getOptional(PASSWORD) != null
               ? parameterSet.getOptional(PASSWORD).toCharArray()

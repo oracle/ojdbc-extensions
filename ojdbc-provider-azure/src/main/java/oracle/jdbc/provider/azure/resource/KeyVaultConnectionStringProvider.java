@@ -38,8 +38,6 @@
 
 package oracle.jdbc.provider.azure.resource;
 
-import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
-import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
 import oracle.jdbc.provider.util.TNSNames;
@@ -109,16 +107,12 @@ public class KeyVaultConnectionStringProvider
    */
   @Override
   public String getConnectionString(Map<Parameter, CharSequence> parameterValues) {
-    ParameterSet parameterSet = parseParameterValues(parameterValues);
 
     // Retrieve the secret containing tnsnames.ora content from Azure Key Vault
-    KeyVaultSecret secret = KeyVaultSecretFactory
-            .getInstance()
-            .request(parameterSet)
-            .getContent();
+    String secretValue = getSecret(parameterValues);
 
     // Decode the base64-encoded tnsnames.ora content
-    byte[] fileBytes = Base64.getDecoder().decode(secret.getValue());
+    byte[] fileBytes = Base64.getDecoder().decode(secretValue);
 
     TNSNames tnsNames;
     try (InputStream inputStream = new ByteArrayInputStream(fileBytes)) {
@@ -127,7 +121,8 @@ public class KeyVaultConnectionStringProvider
       throw new IllegalStateException("Failed to read tnsnames.ora content", e);
     }
 
-    String consumerGroupString = parameterSet.getRequired(CONSUMER_GROUP)
+    String consumerGroupString = parseParameterValues(parameterValues)
+            .getRequired(CONSUMER_GROUP)
             .toUpperCase(Locale.ENGLISH);
 
     TNSNames.ConsumerGroup consumerGroup;
