@@ -112,4 +112,41 @@ public final class CommonParameters {
   public static final Parameter<String> CONNECTION_STRING_INDEX =
     Parameter.create();
 
+  /**
+   * A parameter for specifying the TNS alias used to retrieve the connection
+   * string from the tnsnames.ora file.
+   *
+   * <p>This parameter allows selecting a specific connection string based on
+   * the alias defined in the tnsnames.ora file. The alias
+   * corresponds to the network service name that maps to a database service
+   * and its connection parameters.</p>
+   *
+   * <p><b>Usage Example:</b></p>
+   * <p>Suppose your tnsnames.ora file contains the following entries:</p>
+   * <pre>
+   * MYDB1 =
+   *   (DESCRIPTION =
+   *     (ADDRESS = (PROTOCOL = TCP)(HOST = dbhost1.example.com)(PORT = 1521))
+   *     (CONNECT_DATA =
+   *       (SERVICE_NAME = mydb1_service)
+   *     )
+   *   )
+   *
+   * MYDB2 =
+   *   (DESCRIPTION =
+   *     (ADDRESS = (PROTOCOL = TCP)(HOST = dbhost2.example.com)(PORT = 1521))
+   *     (CONNECT_DATA =
+   *       (SERVICE_NAME = mydb2_service)
+   *     )
+   *   )
+   * </pre>
+   * <p>You can set the tnsAlias parameter to <code>"MYDB1"</code> or
+   * <code>"MYDB2"</code> to select the corresponding connection string.</p>
+   *
+   * <p><b>Note:</b> The alias should exactly match one of the aliases defined
+   * in your tnsnames.ora file.</p>
+   */
+  public static final Parameter<String> TNS_ALIAS = Parameter.create();
+
+
 }
