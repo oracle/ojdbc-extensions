@@ -89,18 +89,18 @@ public class KeyVaultConnectionStringProviderTest {
     assertTrue(secretNameParameter.isRequired());
     assertNull(secretNameParameter.defaultValue());
 
-    Parameter consumerGroupParameter =
+    Parameter aliasParameter =
       parameters.stream()
-        .filter(parameter -> "consumer-group".equals(parameter.name()))
+        .filter(parameter -> "tns-alias".equals(parameter.name()))
         .findFirst()
         .orElseThrow(AssertionError::new);
-    assertFalse(consumerGroupParameter.isSensitive());
-    assertFalse(consumerGroupParameter.isRequired());
-    assertNotNull(consumerGroupParameter.defaultValue());
+    assertFalse(aliasParameter.isSensitive());
+    assertFalse(aliasParameter.isRequired());
+    assertNull(aliasParameter.defaultValue());
   }
 
   @Test
-  public void testDefaultConsumerGroup() {
+  public void testValidAlias() {
     Map<String, String> testParameters = new HashMap<>();
     testParameters.put("vaultUrl",
       TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
@@ -108,15 +108,19 @@ public class KeyVaultConnectionStringProviderTest {
     testParameters.put("secretName",
       TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_SECRET_NAME));
 
+    testParameters.put("tns-alias",
+      TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_ALIAS_SECRET_NAME));
+
     AzureResourceProviderTestUtil.configureAuthentication(testParameters);
-    Map<Parameter, CharSequence> parameterValues = createParameterValues(PROVIDER, testParameters);
+    Map<Parameter, CharSequence> parameterValues =
+      createParameterValues(PROVIDER, testParameters);
 
     String connectionString = PROVIDER.getConnectionString(parameterValues);
     assertNotNull(connectionString);
   }
 
   @Test
-  public void testValidConsumerGroups() {
+  public void testInvalidOrNonExistentAlias() {
     Map<String, String> testParameters = new HashMap<>();
     testParameters.put("vaultUrl",
       TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
@@ -124,54 +128,55 @@ public class KeyVaultConnectionStringProviderTest {
     testParameters.put("secretName",
       TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_SECRET_NAME));
 
-    testParameters.put(
-      "consumer-group",
-       TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_CONSUMER_GROUP));
+    testParameters.put("tns-alias", "INVALID_ALIAS");
 
     AzureResourceProviderTestUtil.configureAuthentication(testParameters);
-    Map<Parameter, CharSequence> parameterValues = createParameterValues(PROVIDER, testParameters);
-
-    String connectionString = PROVIDER.getConnectionString(parameterValues);
-    assertNotNull(connectionString);
-  }
-
-  @Test
-  public void testInvalidConsumerGroup() {
-    Map<String, String> testParameters = new HashMap<>();
-    testParameters.put("vaultUrl",
-      TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
-
-    testParameters.put("secretName",
-      TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_SECRET_NAME));
-    testParameters.put("consumer-group", "INVALID_GROUP");
-
-    AzureResourceProviderTestUtil.configureAuthentication(testParameters);
-    Map<Parameter, CharSequence> parameterValues = createParameterValues(PROVIDER, testParameters);
+    Map<Parameter, CharSequence> parameterValues =
+      createParameterValues(PROVIDER, testParameters);
 
     assertThrows(IllegalArgumentException.class,
             () -> PROVIDER.getConnectionString(parameterValues),
-            "Expected IllegalArgumentException for invalid consumer group"
+            "Expected IllegalArgumentException for invalid alias"
     );
   }
 
   @Test
-  public void testNonExistentConsumerGroupInTnsnames() {
+  public void testMissingAliasParameter() {
     Map<String, String> testParameters = new HashMap<>();
     testParameters.put("vaultUrl",
-      TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
 
     testParameters.put("secretName",
-      TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_SECRET_NAME));
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_SECRET_NAME));
 
-    testParameters.put("consumer-group",
-      "TPURGENT");  // Valid name but not in tnsnames.ora
+    AzureResourceProviderTestUtil.configureAuthentication(testParameters);
+    Map<Parameter, CharSequence> parameterValues =
+            createParameterValues(PROVIDER, testParameters);
+
+    assertThrows(IllegalArgumentException.class,
+            () -> PROVIDER.getConnectionString(parameterValues),
+            "Expected IllegalArgumentException when tns-alias parameter is missing"
+    );
+  }
+
+  @Test
+  public void testNonBase64EncodedTnsnamesContent() {
+    Map<String, String> testParameters = new HashMap<>();
+    testParameters.put("vaultUrl",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
+
+    testParameters.put("secretName",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_NON_BASE64_TNS_NAMES_SECRET_NAME));
+    testParameters.put("tns-alias",
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_SECRET_NAME));
 
     AzureResourceProviderTestUtil.configureAuthentication(testParameters);
     Map<Parameter, CharSequence> parameterValues = createParameterValues(PROVIDER, testParameters);
 
     assertThrows(IllegalArgumentException.class,
             () -> PROVIDER.getConnectionString(parameterValues),
-            "Expected IllegalArgumentException for a non-existent consumer group in tnsnames.ora");
+            "Expected IllegalStateException for non-base64-encoded tnsnames.ora content"
+    );
   }
 
 }

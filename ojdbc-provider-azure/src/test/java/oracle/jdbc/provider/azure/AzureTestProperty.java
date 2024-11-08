@@ -109,7 +109,9 @@ public enum AzureTestProperty {
 
   AZURE_TNS_NAMES_SECRET_NAME,
 
-  AZURE_TNS_NAMES_CONSUMER_GROUP;
+  AZURE_TNS_ALIAS_SECRET_NAME,
+
+  AZURE_NON_BASE64_TNS_NAMES_SECRET_NAME;
 
   /**
    * Aborts the calling test if the given {@code names} are not configured in

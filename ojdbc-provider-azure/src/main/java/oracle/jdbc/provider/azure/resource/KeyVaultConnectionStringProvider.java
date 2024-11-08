@@ -38,7 +38,6 @@
 
 package oracle.jdbc.provider.azure.resource;
 
-import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
 import oracle.jdbc.provider.util.TNSNames;
 import oracle.jdbc.spi.ConnectionStringProvider;
@@ -46,34 +45,30 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Base64;
-import java.util.Locale;
 import java.util.Map;
 
-import static oracle.jdbc.provider.util.CommonParameters.CONSUMER_GROUP;
+import static oracle.jdbc.provider.util.CommonParameters.TNS_ALIAS;
 
 
 /**
  * <p>
  * A provider for securely retrieving the connection string from a tnsnames.ora
  * file stored in Azure Key Vault for use with an Oracle Autonomous Database.
- * The tnsnames.ora file is stored as a base64-encoded secret in Azure Key Vault
- * and is decoded, parsed, and used to select connection strings based on
- * predefined Consumer Groups (e.g., HIGH, MEDIUM, LOW, TRANSACTION_PROCESSING,
- * TRANSACTION_PROCESSING_URGENT).
+ * The tnsnames.ora file is stored as a base64-encoded secret in Azure Key Vault,
+ * and is decoded and parsed to select connection strings based on specified aliases.
  * </p>
  * <p>
  * This class implements the {@link ConnectionStringProvider} SPI defined by
  * Oracle JDBC.
  * It is designed to be instantiated via {@link java.util.ServiceLoader}.
  * </p>
- *
  */
 public class KeyVaultConnectionStringProvider
         extends KeyVaultSecretProvider
         implements ConnectionStringProvider {
 
-  private static final ResourceParameter[] CONSUMER_GROUP_PARAMETERS = {
-          new ResourceParameter("consumer-group", CONSUMER_GROUP, "MEDIUM")
+  private static final ResourceParameter[] TNS_NAMES_PARAMETERS = {
+          new ResourceParameter("tns-alias", TNS_ALIAS)
   };
 
   /**
@@ -81,28 +76,26 @@ public class KeyVaultConnectionStringProvider
    * construct an instance of this provider.
    */
   public KeyVaultConnectionStringProvider() {
-    super("key-vault-tnsnames", CONSUMER_GROUP_PARAMETERS);
+    super("key-vault-tnsnames", TNS_NAMES_PARAMETERS);
   }
 
   /**
    * Retrieves a database connection string from the tnsnames.ora file stored
    * in Azure Key Vault.
    * <p>
-   * This method accesses the file in Azure Key Vault, decodes it if stored
-   * in base64 format, and parses the tnsnames.ora content. It returns the
-   * connection string for a specified consumer group (e.g., HIGH, MEDIUM,
-   * LOW, TRANSACTION_PROCESSING, TRANSACTION_PROCESSING_URGENT) to allow
-   * flexible connection configuration.
+   * This method accesses the file in Azure Key Vault, decodes it, and parses
+   * the tnsnames.ora content. It returns the connection string associated
+   * with the specified alias from the tnsnames.ora file.
    * </p>
    *
    * @param parameterValues The parameters required to access the tnsnames.ora
    * file in Azure Key Vault, including the vault URL, the secret name, and
-   * the consumer group.
-   * @return The connection string associated with the specified consumer group
+   * the tns-alias.
+   * @return The connection string associated with the specified alias
    * in the tnsnames.ora file.
-   * @throws IllegalStateException If there is an error reading the tnsnames.ora file
-   * or accessing the Azure Key Vault.
-   * @throws IllegalArgumentException If the specified consumer group is invalid or
+   * @throws IllegalStateException If there is an error reading the tnsnames.ora
+   * file or accessing the Azure Key Vault.
+   * @throws IllegalArgumentException If the specified alias is invalid or
    * does not exist in the tnsnames.ora file.
    */
   @Override
@@ -121,23 +114,21 @@ public class KeyVaultConnectionStringProvider
       throw new IllegalStateException("Failed to read tnsnames.ora content", e);
     }
 
-    String consumerGroupString = parseParameterValues(parameterValues)
-            .getRequired(CONSUMER_GROUP)
-            .toUpperCase(Locale.ENGLISH);
-
-    TNSNames.ConsumerGroup consumerGroup;
+    String alias;
     try {
-      consumerGroup = TNSNames.ConsumerGroup.valueOf(consumerGroupString);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException("Invalid consumer group specified: "
-              + consumerGroupString, e);
+      alias = parseParameterValues(parameterValues).getRequired(TNS_ALIAS);
+    } catch (IllegalStateException e) {
+      throw new IllegalArgumentException(
+              "Required parameter 'tns-alias' is missing", e
+      );
     }
 
-    String connectionString = tnsNames.getConnectionString(consumerGroup);
+    String connectionString = tnsNames.getConnectionStringByAlias(alias);
     if (connectionString == null) {
-      throw new IllegalArgumentException("Consumer group specified is valid but does not exist in tnsnames.ora");
+      throw new IllegalArgumentException(
+              "Alias specified does not exist in tnsnames.ora: " + alias
+      );
     }
-
     return connectionString;
   }
 }

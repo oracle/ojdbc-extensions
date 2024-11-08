@@ -113,43 +113,40 @@ public final class CommonParameters {
     Parameter.create();
 
   /**
-   * <p>
-   * A parameter for specifying the consumer group to be used for connecting
-   * to an Oracle Autonomous Database.
-   * This consumer group determines the level of concurrency, prioritization,
-   * and performance for database connections.
-   * </p>
+   * A parameter for specifying the TNS alias used to retrieve the connection
+   * string from the tnsnames.ora file.
    *
-   * <p><b>Supported Consumer Groups:</b></p>
-   * <ul>
-   *     <li>
-   *       <b>HIGH:</b> Typically used for workloads that require higher
-   *       concurrency limits.
-   *     </li>
-   *     <li>
-   *       <b>MEDIUM:</b> Default consumer group for balanced performance
-   *       and concurrency.
-   *     </li>
-   *     <li>
-   *       <b>LOW:</b> Lower priority with typically higher concurrency limits
-   *       suitable for non-critical workloads.
-   *     </li>
-   *     <li>
-   *       <b>TP:</b> Optimized for transaction processing, providing a balance
-   *       between concurrency and response time.
-   *     </li>
-   *     <li>
-   *       <b>TPURGENT:</b> Highest priority consumer group intended for urgent
-   *       transaction processing requirements.
-   *     </li>
-   * </ul>
+   * <p>This parameter allows selecting a specific connection string based on
+   * the alias defined in the tnsnames.ora file. The alias
+   * corresponds to the network service name that maps to a database service
+   * and its connection parameters.</p>
    *
-   * <p>The choice of consumer group allows users to align database connection
-   * priorities and concurrency levels with the specific requirements of
-   * their workload.
-   * If no consumer group is specified, MEDIUM is typically used as the default.
-   * </p>
+   * <p><b>Usage Example:</b></p>
+   * <p>Suppose your tnsnames.ora file contains the following entries:</p>
+   * <pre>
+   * MYDB1 =
+   *   (DESCRIPTION =
+   *     (ADDRESS = (PROTOCOL = TCP)(HOST = dbhost1.example.com)(PORT = 1521))
+   *     (CONNECT_DATA =
+   *       (SERVICE_NAME = mydb1_service)
+   *     )
+   *   )
+   *
+   * MYDB2 =
+   *   (DESCRIPTION =
+   *     (ADDRESS = (PROTOCOL = TCP)(HOST = dbhost2.example.com)(PORT = 1521))
+   *     (CONNECT_DATA =
+   *       (SERVICE_NAME = mydb2_service)
+   *     )
+   *   )
+   * </pre>
+   * <p>You can set the tnsAlias parameter to <code>"MYDB1"</code> or
+   * <code>"MYDB2"</code> to select the corresponding connection string.</p>
+   *
+   * <p><b>Note:</b> The alias should exactly match one of the aliases defined
+   * in your tnsnames.ora file.</p>
    */
-  public static final Parameter<String> CONSUMER_GROUP = Parameter.create();
+  public static final Parameter<String> TNS_ALIAS = Parameter.create();
+
 
 }

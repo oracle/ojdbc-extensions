@@ -47,8 +47,6 @@ import oracle.jdbc.spi.ConnectionStringProvider;
 import java.util.Locale;
 import java.util.Map;
 
-import static oracle.jdbc.provider.util.CommonParameters.CONSUMER_GROUP;
-
 /**
  * <p>
  * A provider of connection strings for an Autonomous Database. The connection
@@ -62,6 +60,9 @@ import static oracle.jdbc.provider.util.CommonParameters.CONSUMER_GROUP;
 public final class DatabaseConnectionStringProvider
   extends OciResourceProvider
   implements ConnectionStringProvider {
+
+  private static final oracle.jdbc.provider.parameter.Parameter<String>
+          CONSUMER_GROUP = oracle.jdbc.provider.parameter.Parameter.create();
 
   private static final ResourceParameter[] PARAMETERS =
     new ResourceParameter[] {
