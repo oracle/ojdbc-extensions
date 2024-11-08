@@ -103,6 +103,7 @@ public class AzureAppConfigurationProviderURLParserTest {
     @Test
     void testValidUrlWithSecret() throws SQLException {
       String url = composeURL(options);
+      removeCacheEntry(url);
       verifyValidUrl(url);
     }
 
@@ -110,6 +111,7 @@ public class AzureAppConfigurationProviderURLParserTest {
     void testInvalidUrlWithSecret() {
       String invalidUrl = composeURL(options)
           .replace("@config-azure", "@config-azurex");
+      removeCacheEntry(invalidUrl);
       verifyInvalidTypeThrowsException(invalidUrl);
     }
 
@@ -117,6 +119,7 @@ public class AzureAppConfigurationProviderURLParserTest {
     void testInvalidKeyWithSecret() {
       ConfigurationClient client = getSecretCredentialClient();
       String url = composeURL(options);
+      removeCacheEntry(url);
       verifyInvalidKeyThrowsException(client, url);
     }
 
@@ -124,6 +127,7 @@ public class AzureAppConfigurationProviderURLParserTest {
     void testNonWhitelistedKeyWithSecret() {
       ConfigurationClient client = getSecretCredentialClient();
       String url = composeURL(options);
+      removeCacheEntry(url);
       verifyNonWhitelistedKeyThrowsException(client, url);
     }
   }
@@ -141,6 +145,7 @@ public class AzureAppConfigurationProviderURLParserTest {
             AzureTestProperty.AZURE_CLIENT_CERTIFICATE_PATH),
         "AZURE_TENANT_ID=" + TestProperties.getOrAbort(
             AzureTestProperty.AZURE_TENANT_ID));
+    removeCacheEntry(url);
     verifyValidUrl(url);
   }
 
@@ -159,6 +164,7 @@ public class AzureAppConfigurationProviderURLParserTest {
             AzureTestProperty.AZURE_CLIENT_PFX_PASSWORD),
         "AZURE_TENANT_ID=" + TestProperties.getOrAbort(
             AzureTestProperty.AZURE_TENANT_ID));
+    removeCacheEntry(url);
     verifyValidUrl(url);
   }
 
