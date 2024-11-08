@@ -511,7 +511,8 @@ An example of a [connection properties file](https://docs.oracle.com/en/database
 
 ## Key Vault Connection String Provider
 
-The Connection String Provider provides Oracle JDBC with a connection string managed by the Azure Key Vault service. This is a Resource Provider identified by the name `key-vault-tnsnames`.
+The Connection String Provider provides Oracle JDBC with a connection string managed by the Azure Key Vault service.
+This is a Resource Provider identified by the name `ojdbc-provider-azure-key-vault-tnsnames`.
 
 This provider retrieves and decodes a `tnsnames.ora` file stored as a base64-encoded secret in Azure Key Vault, allowing selection of connection strings based on specified aliases.
 
