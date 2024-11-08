@@ -70,9 +70,9 @@ public class SimpleConnectionStringProviderAzureExample {
       connectionProps.put("oracle.jdbc.provider.connectionString.secretName",
         "your-tnsnames-secret-name");
 
-      // Specify the consumer group to retrieve the corresponding connection string
-      connectionProps.put("oracle.jdbc.provider.connectionString.consumerGroup",
-        "MEDIUM");
+      // Specify the tns-alias to retrieve the corresponding connection string
+      connectionProps.put("oracle.jdbc.provider.connectionString.tns-alias",
+        "YOUR_TNS_ALIAS");
 
       // TLS Configuration for secure connection
       connectionProps.put("oracle.jdbc.provider.tlsConfiguration", "ojdbc-provider-azure-key-vault-tls");
@@ -86,18 +86,18 @@ public class SimpleConnectionStringProviderAzureExample {
       ds.setConnectionProperties(connectionProps);
 
       try (Connection cn = ds.getConnection()) {
-        String connectionString = cn.getMetaData().getURL();
-        System.out.println("Connected to: " + connectionString);
 
-        Statement st = cn.createStatement();
-        ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
-        if (rs.next()) {
-          System.out.println(rs.getString(1));
+        String query = "SELECT 'Hello, db' FROM sys.dual";
+        try (Statement st = cn.createStatement();
+             ResultSet rs = st.executeQuery(query)) {
+
+          if (rs.next()) {
+            System.out.println(rs.getString(1));
+          }
         }
       }
     } catch (SQLException e) {
       throw new RuntimeException("Connection failed: ", e);
     }
   }
-
 }
