@@ -91,7 +91,7 @@ public class AzureAppConfigurationProvider
    * in a frequency of 60 seconds if the remote location is unreachable.
     */
   private static final long MS_RETRY_INTERVAL = 60_000L;
-  private final OracleConfigurationCache cache = OracleConfigurationCache
+  private static final OracleConfigurationCache CACHE = OracleConfigurationCache
     .create(100);
 
   /**
@@ -113,7 +113,7 @@ public class AzureAppConfigurationProvider
   @Override
   public Properties getConnectionProperties(String location) {
     // If the location was already consulted, re-use the properties
-    Properties cachedProp = cache.get(location);
+    Properties cachedProp = CACHE.get(location);
     if (Objects.nonNull(cachedProp)) {
       return cachedProp;
     }
@@ -126,7 +126,7 @@ public class AzureAppConfigurationProvider
 
       properties.remove(CONFIG_TTL_JSON_OBJECT_NAME);
 
-      cache.put(
+      CACHE.put(
         location,
         properties,
         configTimeToLive,
@@ -134,7 +134,7 @@ public class AzureAppConfigurationProvider
         MS_REFRESH_TIMEOUT,
         MS_RETRY_INTERVAL);
     } else {
-      cache.put(location,
+      CACHE.put(location,
         properties,
         () -> this.refreshProperties(location),
         MS_REFRESH_TIMEOUT,
@@ -272,10 +272,13 @@ public class AzureAppConfigurationProvider
       }
   }
 
+  /**
+   * {@inheritDoc}
+   * @return cache of this provider which is used to store configuration
+   */
   @Override
-  public Properties removeProperties(String location) {
-    Properties deletedProp = cache.remove(location);
-    return deletedProp;
+  public OracleConfigurationCache getCache() {
+    return CACHE;
   }
 }
 
