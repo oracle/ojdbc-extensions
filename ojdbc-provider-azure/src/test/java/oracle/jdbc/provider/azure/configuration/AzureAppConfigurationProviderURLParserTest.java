@@ -45,6 +45,10 @@ import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod;
 import oracle.jdbc.datasource.impl.OracleDataSource;
 import oracle.jdbc.provider.azure.AzureTestProperty;
+import oracle.jdbc.spi.OracleConfigurationCachableProvider;
+import oracle.jdbc.spi.OracleConfigurationProvider;
+import oracle.jdbc.util.OracleConfigurationCache;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
@@ -65,6 +69,14 @@ import static org.junit.jupiter.api.Assertions.*;
  * specified by its JavaDoc.
  */
 public class AzureAppConfigurationProviderURLParserTest {
+  private static OracleConfigurationCache CACHE;
+  @BeforeAll
+  static void init() {
+    CACHE = ((AzureAppConfigurationProvider)OracleConfigurationProvider
+        .find("azure"))
+        .getCache();
+  }
+
 
   /**
    * Verifies {@link AzureAuthenticationMethod#SERVICE_PRINCIPLE}
@@ -83,27 +95,36 @@ public class AzureAppConfigurationProviderURLParserTest {
           AzureTestProperty.AZURE_CLIENT_SECRET),
         "AZURE_TENANT_ID=" + TestProperties.getOrAbort(
           AzureTestProperty.AZURE_TENANT_ID)};
+
+      AzureAppConfigurationProvider provider =
+          (AzureAppConfigurationProvider)OracleConfigurationProvider
+              .find("azure");
     }
     @Test
     void testValidUrlWithSecret() throws SQLException {
-      verifyValidUrl(options);
+      String url = composeURL(options);
+      verifyValidUrl(url);
     }
 
     @Test
     void testInvalidUrlWithSecret() {
-      verifyInvalidTypeThrowsException(options);
+      String invalidUrl = composeURL(options)
+          .replace("@config-azure", "@config-azurex");
+      verifyInvalidTypeThrowsException(invalidUrl);
     }
 
     @Test
     void testInvalidKeyWithSecret() {
       ConfigurationClient client = getSecretCredentialClient();
-      verifyInvalidKeyThrowsException(client, options);
+      String url = composeURL(options);
+      verifyInvalidKeyThrowsException(client, url);
     }
 
     @Test
     void testNonWhitelistedKeyWithSecret() {
       ConfigurationClient client = getSecretCredentialClient();
-      verifyNonWhitelistedKeyThrowsException(client, options);
+      String url = composeURL(options);
+      verifyNonWhitelistedKeyThrowsException(client, url);
     }
   }
 
@@ -112,15 +133,15 @@ public class AzureAppConfigurationProviderURLParserTest {
    */
   @Test
   public void testServicePrincipleCertificate() throws SQLException {
-    verifyValidUrl(
-      "AUTHENTICATION=AZURE_SERVICE_PRINCIPAL",
-      "AZURE_CLIENT_ID=" + TestProperties.getOrAbort(
-        AzureTestProperty.AZURE_CLIENT_ID),
-      "AZURE_CLIENT_CERTIFICATE_PATH=" +
-        TestProperties.getOrAbort(
-          AzureTestProperty.AZURE_CLIENT_CERTIFICATE_PATH),
-      "AZURE_TENANT_ID=" + TestProperties.getOrAbort(
-        AzureTestProperty.AZURE_TENANT_ID));
+    String url = composeURL(
+        "AUTHENTICATION=AZURE_SERVICE_PRINCIPAL",
+        "AZURE_CLIENT_ID=" + TestProperties.getOrAbort(
+            AzureTestProperty.AZURE_CLIENT_ID),
+        "AZURE_CLIENT_CERTIFICATE_PATH=" + TestProperties.getOrAbort(
+            AzureTestProperty.AZURE_CLIENT_CERTIFICATE_PATH),
+        "AZURE_TENANT_ID=" + TestProperties.getOrAbort(
+            AzureTestProperty.AZURE_TENANT_ID));
+    verifyValidUrl(url);
   }
 
   /**
@@ -128,24 +149,27 @@ public class AzureAppConfigurationProviderURLParserTest {
    */
   @Test
   public void testServicePrinciplePfxCertificate() throws SQLException {
-    verifyValidUrl(
-      "AUTHENTICATION=AZURE_SERVICE_PRINCIPAL",
-      "AZURE_CLIENT_ID=" + TestProperties.getOrAbort(
-        AzureTestProperty.AZURE_CLIENT_ID),
-      "AZURE_CLIENT_CERTIFICATE_PATH=" +
-        TestProperties.getOrAbort(
-          AzureTestProperty.AZURE_CLIENT_PFX_CERTIFICATE_PATH),
-      "AZURE_CLIENT_CERTIFICATE_PASSWORD=" +
-        TestProperties.getOrAbort(AzureTestProperty.AZURE_CLIENT_PFX_PASSWORD),
-      "AZURE_TENANT_ID=" + TestProperties.getOrAbort(
-        AzureTestProperty.AZURE_TENANT_ID));
+    String url = composeURL(
+        "AUTHENTICATION=AZURE_SERVICE_PRINCIPAL",
+        "AZURE_CLIENT_ID=" + TestProperties.getOrAbort(
+            AzureTestProperty.AZURE_CLIENT_ID),
+        "AZURE_CLIENT_CERTIFICATE_PATH=" + TestProperties.getOrAbort(
+            AzureTestProperty.AZURE_CLIENT_PFX_CERTIFICATE_PATH),
+        "AZURE_CLIENT_CERTIFICATE_PASSWORD=" + TestProperties.getOrAbort(
+            AzureTestProperty.AZURE_CLIENT_PFX_PASSWORD),
+        "AZURE_TENANT_ID=" + TestProperties.getOrAbort(
+            AzureTestProperty.AZURE_TENANT_ID));
+    verifyValidUrl(url);
   }
 
   /** Verifies a valid URL */
-  private static void verifyValidUrl(String... options) throws SQLException {
+  private static void verifyValidUrl(String url) throws SQLException {
+    // Remove the entry from cache before verifying url
+
+
     // No changes required, configuration provider is loaded at runtime
     OracleDataSource ds = new OracleDataSource();
-    ds.setURL(composeURL(options));
+    ds.setURL(url);
 
     // Standard JDBC code
     int result = -1;
@@ -161,11 +185,7 @@ public class AzureAppConfigurationProviderURLParserTest {
   /**
    * Verifies an exception thrown with an invalid type of the provider
    */
-  private static void verifyInvalidTypeThrowsException(String... options) {
-
-    String invalidUrl = composeURL(options)
-      .replace("@config-azure", "@config-azurex");
-
+  private static void verifyInvalidTypeThrowsException(String invalidUrl) {
     Exception exception = assertThrows(Exception.class,
       () -> {
         OracleDataSource ds = new OracleDataSource();
@@ -181,7 +201,7 @@ public class AzureAppConfigurationProviderURLParserTest {
    * Verifies an invalid key value in App configuration throws Exception
    */
   private static void verifyInvalidKeyThrowsException(
-    ConfigurationClient client, String... options) {
+    ConfigurationClient client, String url) {
     // Name of the invalid key to add to the configuration service.
     String key = TestProperties.getOrAbort(
       AzureTestProperty.AZURE_APP_CONFIG_KEY) + "jdbc/invalidKey";
@@ -196,7 +216,7 @@ public class AzureAppConfigurationProviderURLParserTest {
       SQLException exception = assertThrows(SQLException.class,
         () -> {
           OracleDataSource ds = new OracleDataSource();
-          ds.setURL(composeURL(options));
+          ds.setURL(url);
           ds.getConnection();},
         "Should throw an SQLException");
       // Expected exception:
@@ -212,7 +232,7 @@ public class AzureAppConfigurationProviderURLParserTest {
    * Verifies a non-whitelisted key value in App configuration throws Exception
    */
   private static void verifyNonWhitelistedKeyThrowsException(
-    ConfigurationClient client, String... options) {
+    ConfigurationClient client, String url) {
     // Name of the non-whitelisted key to add to the configuration service.
     String key = TestProperties.getOrAbort(
       AzureTestProperty.AZURE_APP_CONFIG_KEY) + "jdbc/oracle.jdbc.newPassword";
@@ -227,7 +247,7 @@ public class AzureAppConfigurationProviderURLParserTest {
       SQLException exception = assertThrows(SQLException.class,
         () -> {
           OracleDataSource ds = new OracleDataSource();
-          ds.setURL(composeURL(options));
+          ds.setURL(url);
           ds.getConnection();},
         "Should throw an SQLException");
       // Expected exception:
@@ -268,4 +288,14 @@ public class AzureAppConfigurationProviderURLParserTest {
       optionsString);
   }
 
+  /**
+   * Remove configuration from the cache in
+   * {@link AzureAppConfigurationProvider} to ensure the tests are independent.
+   * @param url to be used in the test
+   */
+  private static void removeCacheEntry(String url) {
+    String location =
+        url.replaceFirst("jdbc:oracle:thin:@config-azure://", "");
+    CACHE.remove(location);
+  }
 }

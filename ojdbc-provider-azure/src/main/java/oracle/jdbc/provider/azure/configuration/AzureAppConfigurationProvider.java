@@ -156,6 +156,15 @@ public class AzureAppConfigurationProvider
     return "azure";
   }
 
+  /**
+   * {@inheritDoc}
+   * @return cache of this provider which is used to store configuration
+   */
+  @Override
+  public OracleConfigurationCache getCache() {
+    return CACHE;
+  }
+
   private Properties getRemoteProperties(String location) {
     AzureAppConfigurationURLParser appConfig =
       new AzureAppConfigurationURLParser(location);
@@ -270,15 +279,6 @@ public class AzureAppConfigurationProvider
       } catch (AzureException e) {
         throw new OracleConfigurationProviderNetworkError(e);
       }
-  }
-
-  /**
-   * {@inheritDoc}
-   * @return cache of this provider which is used to store configuration
-   */
-  @Override
-  public OracleConfigurationCache getCache() {
-    return CACHE;
   }
 }
 

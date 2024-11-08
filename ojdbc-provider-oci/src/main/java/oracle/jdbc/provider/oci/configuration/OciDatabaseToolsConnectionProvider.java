@@ -98,6 +98,15 @@ public class OciDatabaseToolsConnectionProvider
     return "ocidbtools";
   }
 
+  /**
+   * {@inheritDoc}
+   * @return cache of this provider which is used to store configuration
+   */
+  @Override
+  public OracleConfigurationCache getCache() {
+    return CACHE;
+  }
+
   private Properties getRemoteProperties(String location) {
     // Split connection ocid from options
     Map<String, String> options = null;
@@ -312,15 +321,6 @@ public class OciDatabaseToolsConnectionProvider
     } catch (BmcException bmcException) {
       throw new OracleConfigurationProviderNetworkError(bmcException);
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   * @return cache of this provider which is used to store configuration
-   */
-  @Override
-  public OracleConfigurationCache getCache() {
-    return CACHE;
   }
 }
 
