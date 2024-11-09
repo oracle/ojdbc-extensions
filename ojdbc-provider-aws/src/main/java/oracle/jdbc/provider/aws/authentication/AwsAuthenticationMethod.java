@@ -41,6 +41,8 @@ package oracle.jdbc.provider.aws.authentication;
 /**
  * A method of authentication using the AWS SDK.
  */
-public enum AWSAuthenticationMethod {
-  DEFAULT
+public enum AwsAuthenticationMethod {
+
+  /** Authentication using {@link software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider} */
+  DEFAULT,
 }

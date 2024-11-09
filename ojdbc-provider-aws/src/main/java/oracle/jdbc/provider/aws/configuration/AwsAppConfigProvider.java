@@ -1,7 +1,7 @@
 package oracle.jdbc.provider.aws.configuration;
 
 import oracle.jdbc.driver.OracleConfigurationJsonProvider;
-import oracle.jdbc.provider.aws.authentication.AWSCredentialsFactory;
+import oracle.jdbc.provider.aws.authentication.AwsCredentialsFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.spi.OracleConfigurationCachableProvider;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
@@ -18,20 +18,30 @@ import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.Properties;
 
-public class AWSAppConfigProvider extends OracleConfigurationJsonProvider
+import static oracle.jdbc.provider.aws.configuration.AwsConfigurationParameters.REGION;
+
+/**
+ * <p>
+ *   A provider of App Configuration values from AWS.
+ * </p>
+ */
+public class AwsAppConfigProvider extends OracleConfigurationJsonProvider
     implements OracleConfigurationCachableProvider {
-  private AWSAppConfigurationURLParser urlParser;
+  private AwsAppConfigurationURLParser urlParser;
 
   @Override
   public InputStream getJson(String location) throws SQLException {
     // TODO: make sure the parameters thread safe
-    // Get basic credentials
     ParameterSet parameters = urlParser.getParameters();
-    AwsCredentials credentials = AWSCredentialsFactory.getInstance()
+
+    // Get credentials
+    AwsCredentials credentials = AwsCredentialsFactory.getInstance()
         .request(parameters)
         .getContent();
+
     // Get region
-    String region = parameters.getRequired(AWSAppConfigurationURLParser.REGION);
+    String region = parameters.getOptional(REGION);
+
     // Get the identifiers of app config
     String applicationIdentifier = urlParser.applicationIdentifier();
     String environmentIdentifier = urlParser.environmentIdentifier();
@@ -67,34 +77,35 @@ public class AWSAppConfigProvider extends OracleConfigurationJsonProvider
 
   /**
    * {@inheritDoc}
-   * Overrides the method in parent class to determine the type of AppConfig in
-   * the first place. If the AppConfig is a Freeform, we assume it's a JSON
-   * payload and parse it by calling
-   * {@link OracleConfigurationJsonProvider#getConnectionProperties(String)}.
-   * If it's a Feature Flag, throws {@link UnsupportedOperationException}.
-   * @param location
-   * @return Properties retrieved from {@code location}
+   * <p>
+   * Returns the connection properties configured in Azure App Configuration.
+   * </p><p>
+   * Override the parent method to Determine if the AppConfig is a Flag type or
+   * a Freeform type in the first hand. Flags type is not supported yet.
+   * If it's a Freeform type, the config should be considered as a json payload
+   * and will be parsed by calling getConnectionProperties(String) in the parent
+   * class.
+   * </p>
+   * @param location the value used by this provider to retrieve configuration
+   *                 from AWS
+   * @return connection properties that are stored in AWS App Configuration
    * @throws SQLException
    */
   @Override
   public Properties getConnectionProperties(String location)
       throws SQLException {
-    // Parse parameters
     urlParser =
-        new AWSAppConfigurationURLParser(location);
+        new AwsAppConfigurationURLParser(location);
     ParameterSet parameters = urlParser.getParameters();
 
-    // Get basic credentials
+    // Get credentials
     AwsCredentials credentials =
-        AWSCredentialsFactory.getInstance()
+        AwsCredentialsFactory.getInstance()
             .request(parameters)
             .getContent();
+
     // Get region
-    String region = parameters.getOptional(AWSAppConfigurationURLParser.REGION);
-    // Get the identifiers of app config
-    String applicationIdentifier = urlParser.applicationIdentifier();
-    String configurationProfileIdentifier = urlParser
-        .configurationProfileIdentifier();
+    String region = parameters.getOptional(REGION);
 
     // Is Feature Flags or Freeform?
     AppConfigClient appConfigClient = AppConfigClient.builder()
@@ -103,11 +114,12 @@ public class AWSAppConfigProvider extends OracleConfigurationJsonProvider
         .build();
 
     String type = appConfigClient.getConfigurationProfile(
-        GetConfigurationProfileRequest
-            .builder()
-            .applicationId(applicationIdentifier)
-            .configurationProfileId(configurationProfileIdentifier)
-            .build())
+            GetConfigurationProfileRequest
+                .builder()
+                .applicationId(urlParser.applicationIdentifier())
+                .configurationProfileId(
+                    urlParser.configurationProfileIdentifier())
+                .build())
         .type();
 
     Properties properties;
@@ -129,6 +141,6 @@ public class AWSAppConfigProvider extends OracleConfigurationJsonProvider
 
   @Override
   public Properties removeProperties(String location) {
-    throw new UnsupportedOperationException("Not yet implemented");
+    throw new UnsupportedOperationException("To be removed");
   }
 }
