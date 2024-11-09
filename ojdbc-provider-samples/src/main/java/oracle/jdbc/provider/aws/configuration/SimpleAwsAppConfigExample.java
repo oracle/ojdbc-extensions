@@ -44,7 +44,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class SimpleAWSAppConfigExample {
+public class SimpleAwsAppConfigExample {
   private static String url;
 
   /**

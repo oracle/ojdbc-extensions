@@ -44,6 +44,7 @@ import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.services.appconfigdata.AppConfigDataClient;
 
 import static java.lang.String.format;
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
@@ -63,27 +64,27 @@ import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.SENSITIVE
  * properties and URL parameters.
  * </p>
  */
-public final class AWSCredentialsFactory
+public final class AwsCredentialsFactory
     implements ResourceFactory<AwsCredentials> {
 
   /** Method of authentication supported by the Azure SDK */
-  public static final Parameter<AWSAuthenticationMethod>
-    AUTHENTICATION_METHOD = Parameter.create(REQUIRED);
+  public static final Parameter<AwsAuthenticationMethod>
+      AUTHENTICATION_METHOD = Parameter.create(REQUIRED);
 
   public static final Parameter<String> ACCESS_KEY_ID = Parameter.create(REQUIRED);
 
   public static final Parameter<String> SECRET_ACCESS_KEY = Parameter.create(SENSITIVE, REQUIRED);
 
-  private static final AWSCredentialsFactory INSTANCE
-      = new AWSCredentialsFactory();
+  private static final AwsCredentialsFactory INSTANCE
+      = new AwsCredentialsFactory();
 
-  private AWSCredentialsFactory() { }
+  private AwsCredentialsFactory() { }
 
   /**
    * Returns a singleton of {@code TokenCredentialFactory}.
    * @return a singleton of {@code TokenCredentialFactory}
    */
-  public static AWSCredentialsFactory getInstance() {
+  public static AwsCredentialsFactory getInstance() {
     return INSTANCE;
   }
 
@@ -99,26 +100,26 @@ public final class AWSCredentialsFactory
    * Returns credentials for requesting an access token. The type of credentials
    * used are configured by the parameters of the given {@code parameters}.
    * Supported parameters are defined by the class variables in
-   * {@link AWSCredentialsFactory}.
+   * {@link AwsCredentialsFactory}.
    * @param parameterSet parameters that configure credentials. Not null.
    * @return Credentials configured by parameters
    */
   private static AwsCredentials getCredential(ParameterSet parameterSet) {
 
-    AWSAuthenticationMethod authenticationMethod =
-      parameterSet.getRequired(AUTHENTICATION_METHOD);
+    AwsAuthenticationMethod authenticationMethod =
+        parameterSet.getRequired(AUTHENTICATION_METHOD);
 
     switch (authenticationMethod) {
       case DEFAULT:
         return defaultCredentials(parameterSet);
       default :
         throw new IllegalArgumentException(
-          "Unrecognized authentication method: " + authenticationMethod);
+            "Unrecognized authentication method: " + authenticationMethod);
     }
   }
 
   /**
-   * Returns credentials resolved by {@link DefaultCredentialsProvider}.
+   * Returns credentials resolved by {@link AppConfigDataClient}.
    * @param parameterSet
    * @return
    */
@@ -140,15 +141,15 @@ public final class AWSCredentialsFactory
    * provider or the SDK.
    */
   private static String requireParameter(
-    ParameterSet parameters, Parameter<String> parameter, String sdkName) {
+      ParameterSet parameters, Parameter<String> parameter, String sdkName) {
     try {
       return parameters.getRequired(parameter);
     }
     catch (IllegalStateException parameterNotConfigured) {
       throw new IllegalArgumentException(format(
-        "No value is configured for parameter \"%s\"," +
-          " or SDK variable \"%s\"",
-        parameters.getName(parameter), sdkName), parameterNotConfigured);
+          "No value is configured for parameter \"%s\"," +
+              " or SDK variable \"%s\"",
+          parameters.getName(parameter), sdkName), parameterNotConfigured);
     }
   }
 
@@ -162,7 +163,7 @@ public final class AWSCredentialsFactory
    * @return The configured value of the parameter, or null if not configured.
    */
   private static String optionalParameter(
-    ParameterSet parameters, Parameter<String> parameter, String sdkName) {
+      ParameterSet parameters, Parameter<String> parameter, String sdkName) {
     String value = parameters.getOptional(parameter);
 
     return value != null ? value : null;

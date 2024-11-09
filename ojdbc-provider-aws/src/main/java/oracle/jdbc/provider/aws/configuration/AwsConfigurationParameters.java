@@ -38,42 +38,58 @@
 
 package oracle.jdbc.provider.aws.configuration;
 
-import oracle.jdbc.provider.aws.authentication.AWSAuthenticationMethod;
-import oracle.jdbc.provider.aws.authentication.AWSCredentialsFactory;
+import oracle.jdbc.provider.aws.authentication.AwsAuthenticationMethod;
+import oracle.jdbc.provider.aws.authentication.AwsCredentialsFactory;
+import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 
-public final class AWSConfigurationParameters {
+import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
+
+public final class AwsConfigurationParameters {
+
+  /**
+   * Parameter representing the "REGION=..." name-value pair which may appear in
+   * the query section of a URL.
+   */
+  public static final Parameter<String> REGION = Parameter.create(REQUIRED);
 
   /**
    * Private constructor that should never be called: This class is a singleton.
    */
-  private AWSConfigurationParameters() {}
+  private AwsConfigurationParameters() {}
 
+  /**
+   * Configures a {@code builder} to build a parser that recognizes the common
+   * set of parameters accepted by {@link AwsAppConfigProvider} and
+   * {@link AwsSecretJsonProvider}.
+   * @param builder Builder to configure. Not null.
+   * @return The {@code builder}, with configuration added. Not null.
+   */
   static ParameterSetParser.Builder configureBuilder(
-    ParameterSetParser.Builder builder) {
+      ParameterSetParser.Builder builder) {
 
     return builder.addParameter(
         "AUTHENTICATION",
-        AWSCredentialsFactory.AUTHENTICATION_METHOD,
-        AWSAuthenticationMethod.DEFAULT,
-        AWSConfigurationParameters::parseAuthentication);
+        AwsCredentialsFactory.AUTHENTICATION_METHOD,
+        AwsAuthenticationMethod.DEFAULT,
+        AwsConfigurationParameters::parseAuthentication);
   }
 
   /**
    * Parses the value of the AUTHENTICATION parameter as an
-   * {@link AWSAuthenticationMethod}.
+   * {@link AwsAuthenticationMethod}.
    * @param authentication Parameter value to parse. Not null.
    * @return Authentication method parsed from the {@code value}. Not null.
    * @throws IllegalArgumentException If the {@code value} is not recognized.
    */
-  private static AWSAuthenticationMethod parseAuthentication(
-    String authentication) {
+  private static AwsAuthenticationMethod parseAuthentication(
+      String authentication) {
     switch (authentication) {
       case "AWS_DEFAULT":
-        return AWSAuthenticationMethod.DEFAULT;
+        return AwsAuthenticationMethod.DEFAULT;
       default:
         throw new IllegalArgumentException(
-          "Unrecognized value: " + authentication);
+            "Unrecognized value: " + authentication);
     }
   }
 }

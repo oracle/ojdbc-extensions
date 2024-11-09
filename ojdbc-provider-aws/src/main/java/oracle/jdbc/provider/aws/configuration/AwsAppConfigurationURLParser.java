@@ -46,53 +46,48 @@ import oracle.jdbc.provider.parameter.UriParameters;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
+import static oracle.jdbc.provider.aws.configuration.AwsConfigurationParameters.REGION;
 
 /**
- * A URL parser used by {@link AWSAppConfigProvider}.
+ * A URL parser used by {@link AwsAppConfigurationURLParser}.
  */
-public class AWSAppConfigurationURLParser {
+public class AwsAppConfigurationURLParser {
   /**
-   * According to the documentation of AWS SDK, the IDs are consist of
-   * alphanumeric characters.
+   * According to the documentation of Azure SDK, configuration store names must
+   * contain only alpha-numeric ASCII characters or '-', and be between 5 and 50
+   * characters. Names must not contain the sequence '---'.
    */
-  private static final String NAME = "(\\w*)";
+  private static final String NAME = "([-\\w]*)";
 
   private static final Pattern CONFIG_URL = Pattern
-      .compile("a\\/" + NAME + "\\/c\\/" + NAME + "\\/e\\/" + NAME
-              + "(\\?(.*))?", // parameters to the provider
+      .compile("a/" + NAME + "/c/" + NAME + "/e/" + NAME
+              + "("
+              + "\\?(.*)"
+              + ")?", // parameters to the provider
           Pattern.CASE_INSENSITIVE);
 
   /**
    * Parameter representing the "KEY=..." name-value pair which may appear in
-   * the query section of a URL. This is a reserved value for Feature Flag.
+   * the query section of a URL.
    */
   public static final Parameter<String> KEY = Parameter.create();
 
   /**
-   * Parameter representing the "REGION=..." name-value pair which may appear in
-   * the query section of a URL.
-   */
-  public static final Parameter<String> REGION = Parameter.create(REQUIRED);
-
-  /**
    * Parser that recognizes the named parameters which appear in the query
-   * section of a URL. Parameter related to authentication are configured by
-   * {@link AWSConfigurationParameters#configureBuilder(ParameterSetParser.Builder)}
+   * section of a URL.
    */
   private static final ParameterSetParser PARAMETER_SET_PARSER =
-    AWSConfigurationParameters.configureBuilder(
-      ParameterSetParser.builder()
-          .addParameter("KEY", KEY)
-          .addParameter("REGION", REGION))
-      .build();
+      AwsConfigurationParameters.configureBuilder(
+              ParameterSetParser.builder()
+                  .addParameter("key", KEY))
+          .build();
 
   /** Parameters parsed from the query section of a URL */
   private final ParameterSet parameters;
 
   /**
    * <p>
-   * Construct a URL parser used by {@link AWSAppConfigProvider}. The
+   * Construct a URL parser used by {@link AwsAppConfigProvider}. The
    * {@code url} is a fragment section of the URL processed by the JDBC driver,
    * which has a format of:
    * </p><pre>{@code
@@ -101,7 +96,7 @@ public class AWSAppConfigurationURLParser {
    *
    * @param url url to be parsed
    */
-  public AWSAppConfigurationURLParser(String url) {
+  public AwsAppConfigurationURLParser(String url) {
     Matcher urlMatcher = CONFIG_URL.matcher(url);
 
     if (urlMatcher.matches()) {
@@ -109,46 +104,34 @@ public class AWSAppConfigurationURLParser {
       configurationProfileIdentifier = urlMatcher.group(2);
       environmentIdentifier = urlMatcher.group(3);
 
-      if (urlMatcher.groupCount() >= 4)
+      if (urlMatcher.groupCount() > 3) {
+        // Options exist in the URL
         parameters =
             PARAMETER_SET_PARSER.parseNamedValues(UriParameters.parse(url));
-      else
+        prefix = parameters.getOptional(KEY);
+      } else {
         parameters = ParameterSet.empty();
-    } else {
-      throw new IllegalArgumentException("URL doesn't match the format \"a/" +
-          "<application-id>/c/<configuration-profile-id>/e/<environment-id>" +
-          "[?options]\": " + url);
+      }
+    }
+    else {
+      throw new IllegalArgumentException("URL doesn't match");
     }
   }
 
-  /**
-   * Returns the application Identifier of the AppConfig.
-   * @return the application Identifier of the AppConfig
-   */
   public String applicationIdentifier() {
     return applicationIdentifier;
   }
-
-  /**
-   * Returns the configuration Profile Identifier of the AppConfig.
-   * @return the configuration Profile Identifier of the AppConfig
-   */
   public String configurationProfileIdentifier() {
     return configurationProfileIdentifier;
   }
-
-  /**
-   * Returns the environment Identifier of the AppConfig.
-   * @return the environment Identifier of the AppConfig
-   */
   public String environmentIdentifier() {
     return environmentIdentifier;
   }
 
   /**
-   * Returns the set of parameters parsed from a URL. The set may contain
-   * any parameter defined by {@link AWSConfigurationParameters}, along with
-   * the {@link #KEY} parameter defined by this class.
+   * Returns the set of parameters parsed from a URL. The set contain
+   * {@link #KEY} and parameters defined by
+   * {@link AwsConfigurationParameters}.
    *
    * @return Set of parsed parameters. Not null. May be empty.
    */
@@ -159,4 +142,6 @@ public class AWSAppConfigurationURLParser {
   private final String applicationIdentifier;
   private final String configurationProfileIdentifier;
   private final String environmentIdentifier;
+  private String prefix;
+
 }

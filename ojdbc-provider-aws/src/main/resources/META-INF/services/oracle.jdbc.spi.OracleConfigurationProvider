@@ -1,2 +1,3 @@
 oracle.jdbc.provider.aws.configuration.AWSS3ConfigurationProvider
-oracle.jdbc.provider.aws.configuration.AWSAppConfigProvider
+oracle.jdbc.provider.aws.configuration.AwsAppConfigProvider
+oracle.jdbc.provider.aws.configuration.AwsSecretJsonProvider
