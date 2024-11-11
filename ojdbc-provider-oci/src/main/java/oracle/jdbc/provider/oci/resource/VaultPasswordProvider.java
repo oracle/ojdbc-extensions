@@ -38,8 +38,6 @@
 
 package oracle.jdbc.provider.oci.resource;
 
-import oracle.jdbc.provider.oci.vault.SecretFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
 import oracle.jdbc.spi.PasswordProvider;
 
@@ -74,13 +72,8 @@ public final class VaultPasswordProvider
 
   @Override
   public char[] getPassword(Map<Parameter, CharSequence> parameterValues) {
-
-    ParameterSet parameterSet = parseParameterValues(parameterValues);
-
-    return SecretFactory.getInstance()
-        .request(parameterSet)
-        .getContent()
-        .toCharArray();
+    return retrieveSecret(parameterValues)
+            .toCharArray();
   }
 
 }

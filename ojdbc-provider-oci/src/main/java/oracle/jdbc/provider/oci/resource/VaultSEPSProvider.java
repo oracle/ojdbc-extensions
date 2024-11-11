@@ -39,7 +39,6 @@
 package oracle.jdbc.provider.oci.resource;
 
 import oracle.jdbc.provider.oci.vault.Secret;
-import oracle.jdbc.provider.oci.vault.SecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
 import oracle.jdbc.provider.util.WalletUtils;
@@ -112,9 +111,7 @@ public class VaultSEPSProvider
     Map<OracleResourceProvider.Parameter, CharSequence> parameterValues) {
 
     ParameterSet parameterSet = parseParameterValues(parameterValues);
-    Secret secret = SecretFactory.getInstance()
-      .request(parameterSet)
-      .getContent();
+    Secret secret = retrieveSecret(parameterValues);
 
     char[] walletPassword = parameterSet.getOptional(PASSWORD) != null
       ? parameterSet.getOptional(PASSWORD).toCharArray()

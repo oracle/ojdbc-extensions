@@ -41,9 +41,13 @@ package oracle.jdbc.provider.oci.resource;
 import com.oracle.bmc.Region;
 import oracle.jdbc.provider.oci.authentication.AuthenticationDetailsFactory;
 import oracle.jdbc.provider.oci.authentication.AuthenticationMethod;
+import oracle.jdbc.provider.oci.vault.Secret;
+import oracle.jdbc.provider.oci.vault.SecretFactory;
+import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.AbstractResourceProvider;
 import oracle.jdbc.provider.resource.ResourceParameter;
 
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static oracle.jdbc.provider.oci.authentication.AuthenticationMethod.*;
@@ -125,6 +129,34 @@ public abstract class OciResourceProvider
       default:
         throw new IllegalArgumentException(authenticationMethod);
     }
+  }
+
+  /**
+   * <p>
+   * Retrieves a secret from OCI Vault identified by a set of parameters
+   * provided in {@code parameterValues}. This method is intended to centralize
+   * secret retrieval logic and can be called by subclasses implementing
+   * {@link oracle.jdbc.spi.OracleResourceProvider} SPI.
+   * </p><p>
+   * This method parses parameters from {@code parameterValues} to configure
+   * the {@link SecretFactory} instance, which is then used to request the secret
+   * from OCI Vault.
+   * </p>
+   *
+   * @param parameterValues The map of parameter names and their corresponding
+   * text values required for secret retrieval. Must not be null.
+   * @return The {@link Secret} object containing the retrieved secret data.
+   * Not null.
+   */
+  protected Secret retrieveSecret(
+    Map<Parameter, CharSequence> parameterValues) {
+
+    ParameterSet parameterSet = parseParameterValues(parameterValues);
+
+    return SecretFactory
+            .getInstance()
+            .request(parameterSet)
+            .getContent();
   }
 
 }

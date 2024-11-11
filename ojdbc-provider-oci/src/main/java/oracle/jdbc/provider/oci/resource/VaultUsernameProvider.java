@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2023 Oracle and/or its affiliates.
+ ** Copyright (c) 2024 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -37,8 +37,7 @@
  */
 package oracle.jdbc.provider.oci.resource;
 
-import oracle.jdbc.provider.oci.vault.SecretFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.provider.oci.vault.Secret;
 import oracle.jdbc.provider.resource.ResourceParameter;
 import oracle.jdbc.spi.UsernameProvider;
 
@@ -75,14 +74,9 @@ public class VaultUsernameProvider
   @Override
   public String getUsername(Map<Parameter, CharSequence> parameterValues) {
 
-    ParameterSet parameterSet = parseParameterValues(parameterValues);
+    Secret secret = retrieveSecret(parameterValues);
 
-    char[] username = SecretFactory.getInstance()
-      .request(parameterSet)
-      .getContent()
-      .toCharArray();
-
-    return new String(username);
+    return new String(secret.toCharArray());
   }
 
 }
