@@ -71,7 +71,6 @@ public class VaultUsernameProviderTest {
       createParameterValues(PROVIDER, testParameters);
 
     String username = PROVIDER.getUsername(parameterValues);
-    System.out.println(username);
     assertNotNull(username);
   }
 }
