@@ -41,11 +41,13 @@ package oracle.jdbc.provider.oci.resource;
 import com.oracle.bmc.Region;
 import oracle.jdbc.provider.oci.authentication.AuthenticationDetailsFactory;
 import oracle.jdbc.provider.oci.authentication.AuthenticationMethod;
+import oracle.jdbc.provider.oci.database.WalletFactory;
 import oracle.jdbc.provider.oci.vault.Secret;
 import oracle.jdbc.provider.oci.vault.SecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.AbstractResourceProvider;
 import oracle.jdbc.provider.resource.ResourceParameter;
+import oracle.jdbc.provider.util.Wallet;
 
 import java.util.Map;
 import java.util.stream.Stream;
@@ -154,6 +156,32 @@ public abstract class OciResourceProvider
     ParameterSet parameterSet = parseParameterValues(parameterValues);
 
     return SecretFactory
+            .getInstance()
+            .request(parameterSet)
+            .getContent();
+  }
+
+  /**
+   * <p>
+   * Retrieves a wallet from the Autonomous Database (ADB) service using
+   * a set of parameters provided in {@code parameterValues}. This method
+   * centralizes wallet retrieval logic for use by subclasses implementing the
+   * {@link oracle.jdbc.spi.OracleResourceProvider} SPI.
+   * </p><p>
+   * This method parses parameters from {@code parameterValues} to configure
+   * the {@link WalletFactory} instance, which is then used to request the wallet
+   * from the ADB service. Wallets contain connection strings and TLS key and trust
+   * material for establishing secure connections with the database.
+   * </p>
+   *
+   * @param parameterValues The map of parameter names and their corresponding
+   * text values required for wallet retrieval. Must not be null.
+   * @return The {@link Wallet} object containing connection strings and
+   * TLS material. Not null.
+   */
+  protected Wallet getWallet(Map<Parameter, CharSequence> parameterValues) {
+    ParameterSet parameterSet = parseParameterValues(parameterValues);
+    return WalletFactory
             .getInstance()
             .request(parameterSet)
             .getContent();

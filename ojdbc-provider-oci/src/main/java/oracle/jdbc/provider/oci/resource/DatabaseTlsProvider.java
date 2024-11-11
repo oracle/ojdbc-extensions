@@ -83,13 +83,8 @@ public final class DatabaseTlsProvider
   @Override
   public SSLContext getSSLContext(
     Map<Parameter, CharSequence> parameterValues) {
-
-    ParameterSet parameterSet = parseParameterValues(parameterValues);
-
-    return WalletFactory.getInstance()
-        .request(parameterSet)
-        .getContent()
-        .getSSLContext();
+    return getWallet(parameterValues)
+            .getSSLContext();
   }
 
 }
