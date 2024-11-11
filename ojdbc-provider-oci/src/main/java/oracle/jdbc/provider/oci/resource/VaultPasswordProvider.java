@@ -72,7 +72,7 @@ public final class VaultPasswordProvider
 
   @Override
   public char[] getPassword(Map<Parameter, CharSequence> parameterValues) {
-    return retrieveSecret(parameterValues)
+    return getSecret(parameterValues)
             .toCharArray();
   }
 

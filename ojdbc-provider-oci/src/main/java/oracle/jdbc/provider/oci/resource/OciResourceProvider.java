@@ -148,7 +148,7 @@ public abstract class OciResourceProvider
    * @return The {@link Secret} object containing the retrieved secret data.
    * Not null.
    */
-  protected Secret retrieveSecret(
+  protected Secret getSecret(
     Map<Parameter, CharSequence> parameterValues) {
 
     ParameterSet parameterSet = parseParameterValues(parameterValues);

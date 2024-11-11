@@ -114,7 +114,7 @@ public class VaultTCPSProvider
     try {
       ParameterSet parameterSet = parseParameterValues(parameterValues);
 
-      Secret secret = retrieveSecret(parameterValues);
+      Secret secret = getSecret(parameterValues);
 
       byte[] fileBytes = Base64
               .getDecoder()

@@ -111,7 +111,7 @@ public class VaultSEPSProvider
     Map<OracleResourceProvider.Parameter, CharSequence> parameterValues) {
 
     ParameterSet parameterSet = parseParameterValues(parameterValues);
-    Secret secret = retrieveSecret(parameterValues);
+    Secret secret = getSecret(parameterValues);
 
     char[] walletPassword = parameterSet.getOptional(PASSWORD) != null
       ? parameterSet.getOptional(PASSWORD).toCharArray()
