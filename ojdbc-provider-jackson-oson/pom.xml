@@ -8,22 +8,18 @@
     <parent>
         <groupId>com.oracle.database.jdbc</groupId>
         <artifactId>ojdbc-extensions</artifactId>
-        <version>1.0.1</version>
+        <version>${extensions-version}</version>
     </parent>
 
     <artifactId>ojdbc-provider-jackson-oson</artifactId>
     <properties>
-        <jackson-version>2.18.0</jackson-version>
-        <maven-model>3.6.3</maven-model>
-        <maven-surefire-plugin>2.22.0</maven-surefire-plugin>
-        <junit-jupiter>5.9.2</junit-jupiter>
+        <jackson-version>2.18.1</jackson-version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.oracle.database.jdbc</groupId>
             <artifactId>ojdbc-provider-common</artifactId>
-            <version>1.0.1</version>
         </dependency>
         <dependency>
             <groupId>com.oracle.database.jdbc</groupId>
@@ -45,15 +41,14 @@
             <version>${jackson-version}</version>
         </dependency>
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>5.9.2</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
             <version>${jackson-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.oracle.database.jdbc</groupId>
@@ -68,7 +63,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven-surefire-plugin}</version>
                 <configuration>
                     <systemPropertyVariables>
                         <groupId>${project.groupId}</groupId>
