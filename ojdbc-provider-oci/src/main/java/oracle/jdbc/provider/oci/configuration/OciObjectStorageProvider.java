@@ -41,8 +41,9 @@ package oracle.jdbc.provider.oci.configuration;
 import oracle.jdbc.driver.OracleConfigurationJsonProvider;
 import oracle.jdbc.provider.oci.objectstorage.ObjectFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.util.OracleConfigurationCache;
 
-import java.io.*;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -98,5 +99,14 @@ public class OciObjectStorageProvider
   @Override
   public String getType() {
     return "ociobject";
+  }
+
+  /**
+   * {@inheritDoc}
+   * @return cache of this provider which is used to store configuration
+   */
+  @Override
+  public OracleConfigurationCache getCache() {
+    return CACHE;
   }
 }

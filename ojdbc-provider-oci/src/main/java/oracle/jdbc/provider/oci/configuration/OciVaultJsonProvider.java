@@ -3,10 +3,10 @@ package oracle.jdbc.provider.oci.configuration;
 import oracle.jdbc.driver.OracleConfigurationJsonProvider;
 import oracle.jdbc.provider.oci.vault.SecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.util.OracleConfigurationCache;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.sql.SQLException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +44,8 @@ public class OciVaultJsonProvider extends OracleConfigurationJsonProvider {
       .getContent()
       .getBase64Secret();
 
-    InputStream inputStream = new ByteArrayInputStream(Base64.getDecoder().decode(secretContent));
+    InputStream inputStream = new ByteArrayInputStream(
+        Base64.getDecoder().decode(secretContent));
     return inputStream;
   }
 
@@ -58,5 +59,14 @@ public class OciVaultJsonProvider extends OracleConfigurationJsonProvider {
   @Override
   public String getType() {
     return "ocivault";
+  }
+
+  /**
+   * {@inheritDoc}
+   * @return cache of this provider which is used to store configuration
+   */
+  @Override
+  public OracleConfigurationCache getCache() {
+    return CACHE;
   }
 }
