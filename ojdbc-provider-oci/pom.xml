@@ -5,13 +5,12 @@
   <name>Oracle JDBC OCI Providers</name>
 
   <artifactId>ojdbc-provider-oci</artifactId>
-  <version>1.0.1</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>com.oracle.database.jdbc</groupId>
     <artifactId>ojdbc-extensions</artifactId>
-    <version>1.0.1</version>
+    <version>${extensions-version}</version>
   </parent>
 
   <dependencyManagement>
@@ -30,7 +29,6 @@
     <dependency>
       <groupId>com.oracle.database.jdbc</groupId>
       <artifactId>ojdbc-provider-common</artifactId>
-      <version>1.0.1</version>
     </dependency>
     <dependency>
       <groupId>com.oracle.database.jdbc</groupId>
@@ -64,11 +62,6 @@
       <groupId>com.oracle.oci.sdk</groupId>
       <artifactId>oci-java-sdk-common-httpclient-jersey</artifactId>
       <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.oracle.database.security</groupId>
-      <artifactId>oraclepki</artifactId>
-      <scope>test</scope>
     </dependency>
 
     <!--

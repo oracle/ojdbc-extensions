@@ -51,7 +51,8 @@ import oracle.jdbc.util.OracleConfigurationCache;
  * A provider for JSON payload which contains configuration from GCP Cloud
  * Storage. See {@link #getJson(String)} for the spec of the JSON payload.
  */
-public class GcpCloudStorageConfigurationProvider extends OracleConfigurationJsonProvider {
+public class GcpCloudStorageConfigurationProvider
+    extends OracleConfigurationJsonProvider {
 
   public static final String PROJECT_PARAMETER = "project";
   public static final String BUCKET_PARAMETER = "bucket";
@@ -93,8 +94,12 @@ public class GcpCloudStorageConfigurationProvider extends OracleConfigurationJso
     return GcpCloudStorageFactory.getInstance().request(parameterSet).getContent();
   }
 
+  /**
+   * {@inheritDoc}
+   * @return cache of this provider which is used to store configuration
+   */
   @Override
   public OracleConfigurationCache getCache() {
-    return null;
+    return CACHE;
   }
 }

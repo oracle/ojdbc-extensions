@@ -53,7 +53,8 @@ import oracle.jdbc.util.OracleConfigurationCache;
  * Manager.
  * See {@link #getJson(String)} for the spec of the JSON payload.
  **/
-public class GcpSecretManagerConfigurationProvider extends OracleConfigurationJsonProvider {
+public class GcpSecretManagerConfigurationProvider
+    extends OracleConfigurationJsonProvider {
 
   @Override
   public String getType() {
@@ -79,8 +80,12 @@ public class GcpSecretManagerConfigurationProvider extends OracleConfigurationJs
         GcpSecretManagerFactory.getInstance().request(parameterSet).getContent().getData().toByteArray());
   }
 
+  /**
+   * {@inheritDoc}
+   * @return cache of this provider which is used to store configuration
+   */
   @Override
   public OracleConfigurationCache getCache() {
-    return null;
+    return CACHE;
   }
 }

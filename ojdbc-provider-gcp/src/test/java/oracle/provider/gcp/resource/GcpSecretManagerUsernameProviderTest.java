@@ -48,21 +48,16 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.jupiter.api.Disabled;
+import oracle.provider.gcp.GcpTestProperty;
 import org.junit.jupiter.api.Test;
 
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.spi.OracleResourceProvider.Parameter;
 import oracle.jdbc.spi.UsernameProvider;
 
-@Disabled
 public class GcpSecretManagerUsernameProviderTest {
   private static final UsernameProvider PROVIDER = findProvider(
       UsernameProvider.class, "ojdbc-provider-gcp-secretmanager-username");
-
-  private enum GcpTestProperties {
-    SECRET_VERSION_NAME
-  }
 
   /**
    * Verifies that {@link UsernameProvider#getParameters()} includes parameters
@@ -92,7 +87,7 @@ public class GcpSecretManagerUsernameProviderTest {
 
     Map<String, String> testParameters = new HashMap<>();
     testParameters.put(
-        "secretVersionName", TestProperties.getOrAbort(GcpTestProperties.SECRET_VERSION_NAME));
+        "secretVersionName", TestProperties.getOrAbort(GcpTestProperty.GCP_SECRET_MANAGER_USERNAME_SECRET_VERSION));
 
     Map<Parameter, CharSequence> parameterValues = createParameterValues(PROVIDER,
         testParameters);

@@ -7,7 +7,6 @@ import oracle.jdbc.util.OracleConfigurationCache;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.sql.SQLException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,7 +44,8 @@ public class OciVaultJsonProvider extends OracleConfigurationJsonProvider {
       .getContent()
       .getBase64Secret();
 
-    InputStream inputStream = new ByteArrayInputStream(Base64.getDecoder().decode(secretContent));
+    InputStream inputStream = new ByteArrayInputStream(
+        Base64.getDecoder().decode(secretContent));
     return inputStream;
   }
 
@@ -61,8 +61,12 @@ public class OciVaultJsonProvider extends OracleConfigurationJsonProvider {
     return "ocivault";
   }
 
+  /**
+   * {@inheritDoc}
+   * @return cache of this provider which is used to store configuration
+   */
   @Override
   public OracleConfigurationCache getCache() {
-    return null;
+    return CACHE;
   }
 }

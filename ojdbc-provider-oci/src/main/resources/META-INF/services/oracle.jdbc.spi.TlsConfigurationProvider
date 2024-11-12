@@ -1,1 +1,2 @@
 oracle.jdbc.provider.oci.resource.DatabaseTlsProvider
+oracle.jdbc.provider.oci.resource.VaultTCPSProvider

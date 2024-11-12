@@ -52,7 +52,7 @@ public class OciDatabaseToolsConnectionProvider
    */
   private static final long MS_RETRY_INTERVAL = 60_000L;
 
-  private static final OracleConfigurationCache cache = OracleConfigurationCache
+  private static final OracleConfigurationCache CACHE = OracleConfigurationCache
     .create(100);
 
   private ParameterSet commonParameters;
@@ -61,7 +61,7 @@ public class OciDatabaseToolsConnectionProvider
   public Properties getConnectionProperties(String location)
       throws SQLException {
 
-    Properties cachedProp = cache.get(location);
+    Properties cachedProp = CACHE.get(location);
     if (Objects.nonNull(cachedProp)) {
       return cachedProp;
     }
@@ -75,7 +75,7 @@ public class OciDatabaseToolsConnectionProvider
 
       // properties stored in the cache should not contain information of TTL
       properties.remove(CONFIG_TIME_TO_LIVE);
-      cache.put(
+      CACHE.put(
         location,
         properties,
         configTimeToLive,
@@ -83,7 +83,7 @@ public class OciDatabaseToolsConnectionProvider
         MS_REFRESH_TIMEOUT,
         MS_RETRY_INTERVAL);
     } else {
-      cache.put(location,
+      CACHE.put(location,
         properties,
         () -> this.refreshProperties(location),
         MS_REFRESH_TIMEOUT,
@@ -96,6 +96,15 @@ public class OciDatabaseToolsConnectionProvider
   @Override
   public String getType() {
     return "ocidbtools";
+  }
+
+  /**
+   * {@inheritDoc}
+   * @return cache of this provider which is used to store configuration
+   */
+  @Override
+  public OracleConfigurationCache getCache() {
+    return CACHE;
   }
 
   private Properties getRemoteProperties(String location) {
@@ -303,11 +312,6 @@ public class OciDatabaseToolsConnectionProvider
     return SecretFactory.getInstance()
       .request(walletParameters)
       .getContent();
-  }
-
-  public Properties removeProperties(String location) {
-    Properties deletedProp = cache.remove(location);
-    return deletedProp;
   }
 
   private Properties refreshProperties(String location)

@@ -41,23 +41,11 @@ package oracle.jdbc.provider.azure.configuration;
 import com.azure.core.util.UrlBuilder;
 import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSetBuilder;
-import oracle.jdbc.provider.parameter.ParameterSetParser;
 
 /**
  * A URL parser used by {@link AzureVaultSecretProvider} and {@link AzureVaultJsonProvider}.
  */
 public class AzureVaultURLParser {
-  /**
-   * Parser that recognizes the "value" field and parses it as a Key Vault
-   * secret URL.
-   * {@link AzureConfigurationParameters#configureBuilder(ParameterSetParser.Builder)}
-   * configures the parser to recognize fields of the nested JSON object named
-   * "authentication".
-   */
-  public static final ParameterSetParser PARAMETER_SET_PARSER =
-    AzureConfigurationParameters.configureBuilder(ParameterSetParser.builder()
-        .addParameter("value", AzureVaultURLParser::parseVaultSecretUri))
-      .build();
 
   /**
    * Parses the "value" field of a JSON object as a vault URI with the path
@@ -72,7 +60,7 @@ public class AzureVaultURLParser {
    *                      Not null.
    * @param builder Builder to configure with parsed parameters. Not null.
    */
-  private static void parseVaultSecretUri(
+  static void parseVaultSecretUri(
     String vaultSecretUri, ParameterSetBuilder builder) {
 
     UrlBuilder urlBuilder = UrlBuilder.parse(vaultSecretUri);

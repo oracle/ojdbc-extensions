@@ -26,11 +26,16 @@ jobs:
 
       - name: Install dependencies
         run: mvn install -DskipTests
+      
+      - name: Set GCP environment variables
+        run : |
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/.gcp/config.json" >> $GITHUB_ENV
 
       - name: Prepare certificate and properties files
         run: |
           mkdir -p $HOME/.azure
           mkdir -p $HOME/.oci
+          mkdir -p $HOME/.gcp
           
           # Prepare certificate
           echo "${{ secrets.TEST_AZURE_CERTIFICATE }}" > $HOME/.azure/ojdbc-plugin-test-app.pem
@@ -59,6 +64,8 @@ jobs:
           AZURE_KEY_VAULT_URL=${{ secrets.TEST_AZURE_KEY_VAULT_URL }}\n
           AZURE_KEY_VAULT_SECRET_NAME=${{ secrets.TEST_AZURE_KEY_VAULT_SECRET_NAME }}\n
           AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME=${{ secrets.TEST_AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME }}\n
+          AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME_MULTIPLE_KEYS=${{ secrets.TEST_AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME_MULTIPLE_KEYS }}\n
+          AZURE_KEY_VAULT_SECRET_PAYLOAD_KEY=${{ secrets.TEST_AZURE_KEY_VAULT_SECRET_PAYLOAD_KEY }}\n
           " >> ojdbc-provider-azure/test.properties
           
           # Generate ojdbc-provider-oci/test.properties
@@ -75,8 +82,16 @@ jobs:
           OCI_DB_TOOLS_CONNECTION_OCID_PKCS12=${{ secrets.TEST_OCI_DB_TOOLS_CONNECTION_OCID_PKCS12 }}\n
           OCI_DB_TOOLS_CONNECTION_OCID_SSO=${{ secrets.TEST_OCI_DB_TOOLS_CONNECTION_OCID_SSO }}\n
           OCI_OBJECT_STORAGE_URL=${{ secrets.TEST_OCI_OBJECT_STORAGE_URL }}\n
+          OCI_OBJECT_STORAGE_URL_MULTIPLE_KEYS=${{ secrets.TEST_OCI_OBJECT_STORAGE_URL_MULTIPLE_KEYS }}\n
+          OCI_OBJECT_STORAGE_URL_KEY=${{ secrets.TEST_OCI_OBJECT_STORAGE_URL_KEY }}\n
           OCI_PASSWORD_PAYLOAD_OCID=${{ secrets.TEST_OCI_PASSWORD_PAYLOAD_OCID }}\n
+          OCI_PASSWORD_PAYLOAD_OCID_MULTIPLE_KEYS=${{ secrets.TEST_OCI_PASSWORD_PAYLOAD_OCID_MULTIPLE_KEYS }}\n
+          OCI_PASSWORD_PAYLOAD_OCID_KEY=${{ secrets.TEST_OCI_PASSWORD_PAYLOAD_OCID_KEY }}\n
           " >> ojdbc-provider-oci/test.properties
+
+          # Generate GCP config
+          echo "${{ secrets.TEST_GCP_CONFIG }}" > $HOME/.gcp/config.json
+          echo "${{ secrets.GCP_TEST_PROPERTIES }}" > ojdbc-provider-gcp/test.properties
 
       - name: Run tests with Maven
         run: mvn -B test --file pom.xml
@@ -90,3 +105,6 @@ jobs:
           rm $HOME/.azure/ojdbc-plugin-test-app.pem
           rm ojdbc-provider-azure/ojdbc-provider-test-app.pfx
           rm ojdbc-provider-azure/test.properties
+          
+          rm $HOME/.gcp/config.json
+          rm ojdbc-provider-gcp/test.properties

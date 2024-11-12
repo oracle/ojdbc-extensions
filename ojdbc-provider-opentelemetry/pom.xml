@@ -6,17 +6,16 @@
 
     <groupId>com.oracle.database.jdbc</groupId>
     <artifactId>ojdbc-provider-opentelemetry</artifactId>
-    <version>1.0.1</version>
     <packaging>jar</packaging>
 
     <parent>
       <groupId>com.oracle.database.jdbc</groupId>
       <artifactId>ojdbc-extensions</artifactId>
-      <version>1.0.1</version>
+      <version>${extensions-version}</version>
     </parent>
 
     <properties>
-        <opentelemetry.version>1.40.0</opentelemetry.version>
+        <opentelemetry.version>1.42.1</opentelemetry.version>
     </properties>
 
     <dependencies>

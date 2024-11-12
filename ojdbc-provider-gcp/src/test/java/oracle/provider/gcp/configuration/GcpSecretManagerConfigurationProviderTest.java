@@ -42,17 +42,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.junit.jupiter.api.Disabled;
+import oracle.provider.gcp.GcpTestProperty;
 import org.junit.jupiter.api.Test;
 
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.spi.OracleConfigurationProvider;
 
-@Disabled
 public class GcpSecretManagerConfigurationProviderTest {
-  private enum GcpTestProperties {
-    SECRET_VERSION_NAME_CONFIG
-  }
 
   static {
     OracleConfigurationProvider.allowedProviders.add("gcpsecretmanager");
@@ -62,7 +58,8 @@ public class GcpSecretManagerConfigurationProviderTest {
 
   @Test
   public void testGetProperties() throws SQLException {
-    String secretVersionName = TestProperties.getOrAbort(GcpTestProperties.SECRET_VERSION_NAME_CONFIG);
+    String secretVersionName =
+            TestProperties.getOrAbort(GcpTestProperty.SECRET_VERSION_NAME_CONFIG);
     Properties properties = PROVIDER
         .getConnectionProperties(secretVersionName);
     assertTrue(properties.containsKey("URL"), "Contains property URL");

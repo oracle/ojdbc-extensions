@@ -67,9 +67,38 @@ public class AzureVaultJsonProviderTest {
    * Verifies AUTHENTICATION=AZURE_SERVICE_PRINCIPAL parameter setting.
    * This test uses {@link AzureAuthenticationMethod#SERVICE_PRINCIPLE} as its
    * authentication method.
-   **/
+   */
   @Test
   public void testServicePrincipleAuthentication() throws SQLException {
+    String baseUrl = String.format("%s/secrets/%s",
+      TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL),
+      TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME));
+
+    String[] options = new String[] {
+      "AUTHENTICATION=AZURE_SERVICE_PRINCIPAL",
+      "AZURE_CLIENT_ID=" + TestProperties.getOrAbort(
+        AzureTestProperty.AZURE_CLIENT_ID),
+      "AZURE_CLIENT_SECRET=" + TestProperties.getOrAbort(
+        AzureTestProperty.AZURE_CLIENT_SECRET),
+      "AZURE_TENANT_ID=" + TestProperties.getOrAbort(
+        AzureTestProperty.AZURE_TENANT_ID)};
+
+    String url = composeUrl(baseUrl, options);
+    verifyProperties(url);
+  }
+
+  /**
+   * <p>
+   * Verifies AUTHENTICATION=AZURE_SERVICE_PRINCIPAL parameter setting with
+   * key option.
+   */
+  @Test
+  public void testServicePrincipleAuthenticationWithKeyOption()
+      throws SQLException {
+    String baseUrl = String.format("%s/secrets/%s",
+      TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL),
+      TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME_MULTIPLE_KEYS));
+
     String[] options = new String[] {
             "AUTHENTICATION=AZURE_SERVICE_PRINCIPAL",
             "AZURE_CLIENT_ID=" + TestProperties.getOrAbort(
@@ -77,23 +106,22 @@ public class AzureVaultJsonProviderTest {
             "AZURE_CLIENT_SECRET=" + TestProperties.getOrAbort(
                     AzureTestProperty.AZURE_CLIENT_SECRET),
             "AZURE_TENANT_ID=" + TestProperties.getOrAbort(
-                    AzureTestProperty.AZURE_TENANT_ID)};
+                    AzureTestProperty.AZURE_TENANT_ID),
+            "key=" + TestProperties.getOrAbort(
+                    AzureTestProperty.AZURE_KEY_VAULT_SECRET_PAYLOAD_KEY)};
 
-    verifyProperties(options);
+    String url = composeUrl(baseUrl, options);
+    verifyProperties(url);
   }
 
-  /** verifies a properties object returned with a URL with the given options **/
-  private static void verifyProperties(String... options) throws SQLException {
-    Properties properties = PROVIDER
-      .getConnectionProperties(composeUrl(options));
+  /** Verifies a properties object returned with a given URL. */
+  private static void verifyProperties(String url) throws SQLException {
+    Properties properties = PROVIDER.getConnectionProperties(url);
 
     assertNotNull(properties);
   }
 
-  private static String composeUrl(String... options) {
-    return String.format("%s/secrets/%s?%s",
-      TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL),
-      TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME),
-      String.join("&", options));
+  private static String composeUrl(String baseUrl, String... options) {
+    return String.format("%s?%s", baseUrl, String.join("&", options));
   }
 }

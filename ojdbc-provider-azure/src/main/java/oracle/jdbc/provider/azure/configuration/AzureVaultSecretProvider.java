@@ -38,24 +38,32 @@
 
 package oracle.jdbc.provider.azure.configuration;
 
-import com.azure.core.util.UrlBuilder;
 import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
 import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
 import oracle.jdbc.provider.configuration.JsonSecretUtil;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.provider.parameter.ParameterSetBuilder;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 import oracle.sql.json.OracleJsonObject;
 
 import java.util.Base64;
-
-import static oracle.jdbc.provider.azure.configuration.AzureVaultURLParser.PARAMETER_SET_PARSER;
 
 /**
  * A provider of Secret values from Azure Key Vault.
  */
 public final class AzureVaultSecretProvider
     implements OracleConfigurationJsonSecretProvider {
+  /**
+   * Parser that recognizes the "value" field and parses it as a Key Vault
+   * secret URL.
+   * {@link AzureConfigurationParameters#configureBuilder(ParameterSetParser.Builder)}
+   * configures the parser to recognize fields of the nested JSON object named
+   * "authentication".
+   */
+  public static final ParameterSetParser PARAMETER_SET_PARSER =
+    AzureConfigurationParameters.configureBuilder(
+      ParameterSetParser.builder()
+        .addParameter("value", AzureVaultURLParser::parseVaultSecretUri))
+        .build();
 
   /**
    * {@inheritDoc}

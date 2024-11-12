@@ -31,20 +31,35 @@ public class OciVaultJsonProviderTest {
    */
   @Test
   public void testDefaultAuthentication() throws SQLException {
-    verifyProperties("AUTHENTICATION=OCI_DEFAULT");
+    String baseUrl =
+      TestProperties.getOrAbort(OciTestProperty.OCI_PASSWORD_PAYLOAD_OCID);
+    String[] options = new String[] {"AUTHENTICATION=OCI_DEFAULT"};
+    String url = composeUrl(baseUrl, options);
+    verifyProperties(url);
   }
 
-  /** verifies a properties object returned with a URL with the given options **/
-  private static void verifyProperties(String... options) throws SQLException {
-    Properties properties = PROVIDER
-      .getConnectionProperties(composeUrl(options));
+  /**
+   * Verifies the AUTHENTICATION=OCI_DEFAULT parameter setting with key option.
+   */
+  @Test
+  public void testDefaultAuthenticationWithKeyOption() throws SQLException {
+    String baseUrl =
+      TestProperties.getOrAbort(OciTestProperty.OCI_PASSWORD_PAYLOAD_OCID_MULTIPLE_KEYS);
+    String[] options = new String[] {
+      "AUTHENTICATION=OCI_DEFAULT",
+      "key=" + TestProperties.getOrAbort(OciTestProperty.OCI_PASSWORD_PAYLOAD_OCID_KEY)};
+    String url = composeUrl(baseUrl, options);
+    verifyProperties(url);
+  }
+
+  /** Verifies a properties object returned with a given URL. */
+  private static void verifyProperties(String url) throws SQLException {
+    Properties properties = PROVIDER.getConnectionProperties(url);
 
     assertNotNull(properties);
   }
 
-  private static String composeUrl(String... options) {
-    return String.format("%s?%s",
-      TestProperties.getOrAbort(OciTestProperty.OCI_PASSWORD_PAYLOAD_OCID),
-      String.join("&", options));
+  private static String composeUrl(String baseUrl, String... options) {
+    return String.format("%s?%s", baseUrl, String.join("&", options));
   }
 }

@@ -36,14 +36,10 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.oci.database;
+package oracle.jdbc.provider.util;
 
-import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManagerFactory;
 import java.io.IOException;
-import java.io.InputStream;
-import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -169,7 +165,7 @@ public final class Wallet {
    * @throws IllegalStateException If the files are not found or can not be
    * decoded.
    */
-  static Wallet unzip(ZipInputStream zipStream, char[] password) {
+  public static Wallet unzip(ZipInputStream zipStream, char[] password) {
 
     TNSNames tnsNames = null;
     KeyStore keyStore = null;
@@ -182,10 +178,12 @@ public final class Wallet {
             tnsNames = TNSNames.read(zipStream);
             break;
           case KEY_STORE_FILE:
-            keyStore = loadKeyStore(zipStream, password);
+            keyStore =
+              TlsUtils.loadKeyStore(zipStream, password, KEY_STORE_TYPE, null);
             break;
           case TRUST_STORE_FILE:
-            trustStore = loadKeyStore(zipStream, null);
+            trustStore =
+              TlsUtils.loadKeyStore(zipStream, null, KEY_STORE_TYPE, null);
             break;
           default:
             // Ignore other files
@@ -207,7 +205,7 @@ public final class Wallet {
 
     return new Wallet(
       tnsNames,
-      createSSLContext(keyStore, trustStore, password));
+      TlsUtils.createSSLContext(keyStore, trustStore, password));
   }
 
   /** Returns an exception for a missing file in the wallet ZIP */
@@ -215,43 +213,4 @@ public final class Wallet {
     return new IllegalStateException("Wallet ZIP did not contain: " + fileName);
   }
 
-  /** Returns an {@code SSLContext} initialized with key and trust material */
-  private static SSLContext createSSLContext(
-    KeyStore keyStore, KeyStore trustStore, char[] password) {
-    try {
-      KeyManagerFactory keyManagerFactory =
-        KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-      keyManagerFactory.init(keyStore, password);
-
-      TrustManagerFactory trustManagerFactory =
-        TrustManagerFactory.getInstance(
-          TrustManagerFactory.getDefaultAlgorithm());
-      trustManagerFactory.init(trustStore);
-
-      // Use TLS 1.2 or newer. Older versions are less secure.
-      SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
-      sslContext.init(
-        keyManagerFactory.getKeyManagers(),
-        trustManagerFactory.getTrustManagers(),
-        null/*Use default SecureRandom*/);
-      return sslContext;
-    }
-    catch (GeneralSecurityException generalSecurityException) {
-      throw new IllegalStateException(
-        "Failed initialize SSLContext", generalSecurityException);
-    }
-  }
-
-  /** Loads a {@code KeyStore} from a given stream, with an optional password */
-  private static KeyStore loadKeyStore(
-    InputStream inputStream, char[] password) {
-    try {
-      KeyStore keyStore = KeyStore.getInstance(KEY_STORE_TYPE);
-      keyStore.load(inputStream, password);
-      return keyStore;
-    }
-    catch (IOException | GeneralSecurityException exception) {
-      throw new IllegalStateException("Failed to load KeyStore", exception);
-    }
-  }
 }

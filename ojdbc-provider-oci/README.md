@@ -34,6 +34,10 @@ Provider</a></dt>
 <dd>Provides usernames managed by the Vault service</dd>
 <dt><a href="#access-token-provider">Access Token Provider</a></dt>
 <dd>Provides access tokens issued by the Dataplane service</dd>
+<dt><a href="#tcps-wallet-provider">TCPS Wallet Provider</a></dt>
+<dd>Provides TCPS/TLS wallets for secure connections to an Autonomous Database</dd>
+<dt><a href="#seps-wallet-provider">SEPS Wallet Provider</a></dt>
+<dd>Provides SEPS (Secure External Password Store) wallets for secure username and password retrieval</dd>
 <dt><a href="#common-parameters-for-resource-providers">Common Parameters for Resource Providers</a></dt>
 <dd>Common parameters supported by the resource providers</dd>
 </dl>
@@ -56,7 +60,7 @@ JDK versions. The coordinates for the latest release are:
 
 ## OCI Database Tools Connections Config Provider
 
-The OCI Database Tools Connections is a managed service that can be used to configure connections to a database. 
+The OCI Database Tools Connections is a managed service that can be used to configure connections to a database.
 The created resource stores connection properties, including user, password and wallets (these last two optionally as references to a secret in OCI Vault).
 Each configuration has an identifier (OCID) that is used to identify which connection is requested by the driver.
 
@@ -163,7 +167,7 @@ share the same sets of parameters for authentication configuration.
 
 ### Configuring Authentication
 
-The Centralized Config Providers in this module use the 
+The Centralized Config Providers in this module use the
 [OCI SDK Authentication Methods](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdk_authentication_methods.htm) to provide authorization and authentication to the Object Storage, Database Tools Connection and Vault services.
 The user can provide an optional parameter `AUTHENTICATION` (case-ignored) which is mapped with the following Credential Class.
 
@@ -219,7 +223,7 @@ in Optional Parameters</td>
 
 Config providers in this module store the configuration in caches to minimize
 the number of RPC requests to remote location. See
-[Caching configuration](../ojdbc-provider-azure/README.md#caching-configuration) for more 
+[Caching configuration](../ojdbc-provider-azure/README.md#caching-configuration) for more
 details of the caching mechanism.
 
 ## Database Connection String Provider
@@ -227,7 +231,7 @@ The Database Connection String Provider provides Oracle JDBC with the connection
 Autonomous Database. This is a Resource Provider identified by the name
 `ojdbc-provider-oci-database-connection-string`.
 
-For databases that require mutual TLS (mTLS) authentication, it is recommended 
+For databases that require mutual TLS (mTLS) authentication, it is recommended
 to use the <a href="#database-tls-provider">
 Database TLS Provider</a>
 in conjunction with this provider.
@@ -279,7 +283,7 @@ that configures this provider can be found in
 
 
 ## Database TLS Provider
-The Database TLS Provider provides Oracle JDBC with keys and certificates for 
+The Database TLS Provider provides Oracle JDBC with keys and certificates for
 [mutual TLS authentication](https://docs.oracle.com/en/cloud/paas/autonomous-database/adbsa/connect-introduction.html#GUID-9A472E49-3B2B-4D9F-9DC2-D3E6E4454285)
 (mTLS)
 with an Autonomous Database. This is a Resource Provider identified by the name
@@ -319,7 +323,7 @@ The Vault Password Provider provides Oracle JDBC with a password that is managed
 by the OCI Vault service. This is a Resource Provider identified by the
 name `ojdbc-provider-oci-vault-password`.
 
-In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider 
+In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider
 also supports the parameters listed below.
 <table>
 <thead><tr>
@@ -382,8 +386,135 @@ An example of a
 that configures this provider can be found in
 [example-vault.properties](example-vault.properties).
 
+## TCPS Wallet Provider
+
+The TCPS Wallet Provider provides Oracle JDBC with keys and certificates managed by the OCI Vault service
+to establish secure TLS connections with an Autonomous Database. This is a Resource Provider identified by the name
+`ojdbc-provider-oci-vault-tls`.
+
+For example, when connecting to Autonomous Database Serverless with mutual TLS (mTLS), you need to configure the JDBC-thin
+driver with its client certificate. If this certificate is stored in a wallet file (e.g., `cwallet.sso`, `ewallet.p12`, `ewallet.pem`),
+you may store it in a vault secret in OCI for additional security.
+You can then use this provider that will retrieve the wallet content using the OCI SDK and pass it to the JDBC thin driver.
+
+- The type parameter must be specified to indicate the wallet format: SSO, PKCS12, or PEM.
+- The password must be provided for wallets that require a password (e.g., PKCS12 or password-protected PEM files).
+
+In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider also supports the parameters listed below.
+
+<table>
+<thead><tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Accepted Values</th>
+<th>Default Value</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>ocid</td>
+<td>Identifies the secret containing the TCPS file.</td>
+<td>
+The <a href="https://docs.oracle.com/en-us/iaas/Content/General/Concepts/identifiers.htm">OCID</a> of an OCI Vault secret
+</td>
+<td>
+<i>No default value. A value must be configured for this parameter.</i>
+</td>
+</tr>
+<tr>
+<td>walletPassword</td>
+<td>
+Optional password for PKCS12 or protected PEM files. If omitted, the file is assumed to be SSO or an non-protected PEM file.
+</td>
+<td>Any valid password for the wallet</td>
+<td>
+<i>No default value. PKCS12 and password-protected PEM files require a password.</i>
+</td>
+</tr>
+<tr>
+<td>type</td>
+<td>
+Specifies the type of the file being used.
+</td>
+<td>SSO, PKCS12, PEM</td>
+<td>
+<i>No default value. The file type must be specified..</i>
+</td>
+</tr>
+</tbody>
+</table>
+
+An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault-wallet.properties](example-vault-wallet.properties).
+
+## SEPS Wallet Provider
+
+The SEPS Wallet Provider provides Oracle JDBC with a username and password managed by the OCI Vault service,
+stored in a Secure External Password Store (SEPS) wallet. This is a Resource Provider identified by the name
+`ojdbc-provider-oci-vault-seps`.
+
+- The SEPS wallet securely stores encrypted database credentials, including the username, password, and connection strings.
+These credentials can be stored as default values, such as **oracle.security.client.default_username** and **oracle.security.client.default_password**,
+or as indexed credentials, for example, **oracle.security.client.username1**, **oracle.security.client.password1**,
+and **oracle.security.client.connect_string1**.
+
+
+- The provider retrieves credentials based on the following logic: If connectionStringIndex is not specified,
+it first attempts to retrieve the default credentials (`oracle.security.client.default_username` and `oracle.security.client.default_password`). 
+If default credentials are not found, it checks for a single set of credentials associated with a connection string.
+If exactly one connection string is found, it uses the associated credentials. However, if multiple connection strings
+are found, an error is thrown, prompting you to specify a `connectionStringIndex`. If `connectionStringIndex` is specified,
+the provider attempts to retrieve the credentials associated with the specified connection string index
+(e.g., **oracle.security.client.username{idx}**, **oracle.security.client.password{idx}**,
+**oracle.security.client.connect_string{idx}**). If credentials for the specified index are not found,
+an error is thrown indicating that no connection string was found with that index.
+
+In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider also supports the parameters listed below.
+
+<table>
+<thead><tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Accepted Values</th>
+<th>Default Value</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>ocid</td>
+<td>Identifies the secret containing the SEPS wallet.</td>
+<td>
+The <a href="https://docs.oracle.com/en-us/iaas/Content/General/Concepts/identifiers.htm">OCID</a> of an OCI Vault secret
+</td>
+<td>
+<i>No default value. A value must be configured for this parameter.</i>
+</td>
+</tr>
+<tr>
+<td>walletPassword</td>
+<td>
+Optional password for wallets stored as PKCS12 keystores. If omitted, the wallet is assumed to be an SSO wallet.
+</td>
+<td>Any valid password for the SEPS wallet</td>
+<td>
+<i>No default value. PKCS12 wallets require a password.</i>
+</td>
+</tr>
+<tr>
+<td>connectionStringIndex</td>
+<td>
+Optional parameter to specify the index of the connection string to use when retrieving credentials from the wallet
+</td>
+<td>A positive integer representing the index of the desired credential set (e.g., 1, 2, 3, etc.). </td>
+<td>
+<i>No default value. If not specified, the provider follows the default behavior as described above</i>
+</td>
+</tr>
+</tbody>
+</table>
+
+An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault-wallet.properties](example-vault-wallet.properties).
+
+
 ## Access Token Provider
-The Access Token Provider provides Oracle JDBC with an access token that authorizes logins to an Autonomous Database. This is a Resource Provider identified by 
+The Access Token Provider provides Oracle JDBC with an access token that authorizes logins to an Autonomous Database. This is a Resource Provider identified by
 the name `ojdbc-provider-oci-token`.
 
 This provider must be configured to <a href="#configuring-authentication">authenticate</a> as
@@ -429,6 +560,8 @@ An example of a
 that configures this provider can be found in
 [example-token.properties](example-token.properties).
 
+
+
 ### Configuring a Scope
 
 The "scope" parameter may be configured as a URN that identifies a database
@@ -443,14 +576,14 @@ compartment that contains the database.
 urn:oracle:db::id::<i>comparment-ocid</i>::<i>database-ocid</i>
 </pre>
 A more privileged scope is one that authorizes logins to all databases within a
-compartment. This scope is expressed as a URN in the form shown below, where 
+compartment. This scope is expressed as a URN in the form shown below, where
 <i>compartment-ocid</i> is the OCID of the compartment that contains the
 databases.
 <pre>
 urn:oracle:db::id::<i>comparment-ocid</i>
 </pre>
 The most privileged scope is one that authorizes logins to all databases within
-a tenancy. This scope is expressed as the URN shown below, which contains the 
+a tenancy. This scope is expressed as the URN shown below, which contains the
 `*` symbol.
 <pre>
 urn:oracle:db::id::*
@@ -458,7 +591,7 @@ urn:oracle:db::id::*
 
 ## Common Parameters for Resource Providers
 
-Providers classified as Resource Providers in this module all support a 
+Providers classified as Resource Providers in this module all support a
 common set of parameters.
 <table>
   <thead><tr>

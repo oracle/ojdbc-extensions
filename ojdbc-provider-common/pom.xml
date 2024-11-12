@@ -6,19 +6,22 @@
   <name>Oracle JDBC Providers Common Module</name>
 
   <artifactId>ojdbc-provider-common</artifactId>
-  <version>1.0.1</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>com.oracle.database.jdbc</groupId>
     <artifactId>ojdbc-extensions</artifactId>
-    <version>1.0.1</version>
+    <version>${extensions-version}</version>
   </parent>
 
   <dependencies>
     <dependency>
       <groupId>com.oracle.database.jdbc</groupId>
       <artifactId>ojdbc8</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.oracle.database.security</groupId>
+      <artifactId>oraclepki</artifactId>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>

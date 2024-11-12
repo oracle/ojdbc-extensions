@@ -45,6 +45,7 @@ import oracle.jdbc.provider.gcp.secrets.GcpSecretManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.AbstractResourceProvider;
 import oracle.jdbc.provider.resource.ResourceParameter;
+import oracle.jdbc.provider.util.ResourceParameterUtils;
 
 /**
  * Internal class to be inherited by other resource providers using secrets.
@@ -57,6 +58,11 @@ class GcpSecretManagerProvider extends AbstractResourceProvider {
 
   protected GcpSecretManagerProvider(String valueType) {
     super("gcp", valueType, PARAMETERS);
+  }
+
+  public GcpSecretManagerProvider(String valueType, ResourceParameter[] additionalParameters) {
+    super("gcp", valueType, ResourceParameterUtils
+            .combineParameters(PARAMETERS, additionalParameters));
   }
 
   /**
