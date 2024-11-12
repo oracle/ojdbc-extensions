@@ -43,6 +43,7 @@ import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
+import oracle.jdbc.util.OracleConfigurationCache;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -89,7 +90,8 @@ public class AzureVaultJsonProvider extends OracleConfigurationJsonProvider {
     Map<String, String> optionsWithSecret = new HashMap<>(options);
     optionsWithSecret.put(valueFieldName, secretIdentifier);
 
-    ParameterSet parameters = PARAMETER_SET_PARSER.parseNamedValues(optionsWithSecret);
+    ParameterSet parameters = PARAMETER_SET_PARSER
+        .parseNamedValues(optionsWithSecret);
 
     String secretContent = KeyVaultSecretFactory.getInstance()
       .request(parameters)
@@ -112,5 +114,14 @@ public class AzureVaultJsonProvider extends OracleConfigurationJsonProvider {
   @Override
   public String getType() {
     return "azurevault";
+  }
+
+  /**
+   * {@inheritDoc}
+   * @return cache of this provider which is used to store configuration
+   */
+  @Override
+  public OracleConfigurationCache getCache() {
+    return CACHE;
   }
 }

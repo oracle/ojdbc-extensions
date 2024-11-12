@@ -49,6 +49,7 @@ import oracle.jdbc.provider.oci.OciResourceFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.factory.Resource;
+import oracle.jdbc.provider.util.Wallet;
 
 import java.io.IOException;
 import java.io.InputStream;
