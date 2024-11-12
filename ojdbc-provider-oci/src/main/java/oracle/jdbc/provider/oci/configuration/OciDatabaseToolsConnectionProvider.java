@@ -323,9 +323,5 @@ public class OciDatabaseToolsConnectionProvider
     }
   }
 
-  @Override
-  public OracleConfigurationCache getCache() {
-    return null;
-  }
 }
 
