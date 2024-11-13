@@ -82,7 +82,7 @@ public final class DatabaseTlsProvider
   @Override
   public SSLContext getSSLContext(
     Map<Parameter, CharSequence> parameterValues) {
-    return getWallet(parameterValues)
+    return getAutonomousDatabaseWallet(parameterValues)
             .getSSLContext();
   }
 

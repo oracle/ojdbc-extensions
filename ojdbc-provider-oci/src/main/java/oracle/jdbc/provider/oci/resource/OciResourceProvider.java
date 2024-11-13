@@ -44,7 +44,6 @@ import oracle.jdbc.provider.oci.authentication.AuthenticationMethod;
 import oracle.jdbc.provider.oci.database.WalletFactory;
 import oracle.jdbc.provider.oci.vault.Secret;
 import oracle.jdbc.provider.oci.vault.SecretFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.AbstractResourceProvider;
 import oracle.jdbc.provider.resource.ResourceParameter;
 import oracle.jdbc.provider.util.Wallet;
@@ -140,9 +139,9 @@ public abstract class OciResourceProvider
    * secret retrieval logic and can be called by subclasses implementing
    * {@link oracle.jdbc.spi.OracleResourceProvider} SPI.
    * </p><p>
-   * This method parses parameters from {@code parameterValues} to configure
-   * the {@link SecretFactory} instance, which is then used to request the secret
-   * from OCI Vault.
+   * This method uses the {@code getResource} method to parse parameters
+   * from {@code parameterValues} and retrieve the secret from OCI Vault
+   * through the {@link SecretFactory} instance.
    * </p>
    *
    * @param parameterValues The map of parameter names and their corresponding
@@ -150,15 +149,9 @@ public abstract class OciResourceProvider
    * @return The {@link Secret} object containing the retrieved secret data.
    * Not null.
    */
-  protected Secret getSecret(
-    Map<Parameter, CharSequence> parameterValues) {
-
-    ParameterSet parameterSet = parseParameterValues(parameterValues);
-
-    return SecretFactory
-            .getInstance()
-            .request(parameterSet)
-            .getContent();
+  protected Secret getVaultSecret(
+          Map<Parameter, CharSequence> parameterValues) {
+    return getResource(SecretFactory.getInstance(),parameterValues);
   }
 
   /**
@@ -168,10 +161,11 @@ public abstract class OciResourceProvider
    * centralizes wallet retrieval logic for use by subclasses implementing the
    * {@link oracle.jdbc.spi.OracleResourceProvider} SPI.
    * </p><p>
-   * This method parses parameters from {@code parameterValues} to configure
-   * the {@link WalletFactory} instance, which is then used to request the wallet
-   * from the ADB service. Wallets contain connection strings and TLS key and trust
-   * material for establishing secure connections with the database.
+   * This method uses the {@code getResource} method to parse parameters
+   * from {@code parameterValues} and retrieve the wallet from the ADB
+   * service through the {@link WalletFactory} instance. Wallets contain
+   * connection strings and TLS key and trust material for establishing secure
+   * connections with the database.
    * </p>
    *
    * @param parameterValues The map of parameter names and their corresponding
@@ -179,12 +173,9 @@ public abstract class OciResourceProvider
    * @return The {@link Wallet} object containing connection strings and
    * TLS material. Not null.
    */
-  protected Wallet getWallet(Map<Parameter, CharSequence> parameterValues) {
-    ParameterSet parameterSet = parseParameterValues(parameterValues);
-    return WalletFactory
-            .getInstance()
-            .request(parameterSet)
-            .getContent();
+  protected Wallet getAutonomousDatabaseWallet(
+          Map<Parameter, CharSequence> parameterValues) {
+    return getResource(WalletFactory.getInstance(), parameterValues);
   }
 
 }

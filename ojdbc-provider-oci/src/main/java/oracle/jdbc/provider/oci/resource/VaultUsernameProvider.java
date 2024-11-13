@@ -74,7 +74,7 @@ public class VaultUsernameProvider
   @Override
   public String getUsername(Map<Parameter, CharSequence> parameterValues) {
 
-    Secret secret = getSecret(parameterValues);
+    Secret secret = getVaultSecret(parameterValues);
 
     return new String(secret.toCharArray());
   }
