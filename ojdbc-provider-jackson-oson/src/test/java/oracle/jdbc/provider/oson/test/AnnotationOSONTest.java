@@ -109,7 +109,7 @@ public class AnnotationOSONTest {
       //setup db tables
       try(Statement stmt = conn.createStatement()) {
         stmt.execute("drop table if exists emp_json");
-        stmt.execute("create table emp_json(c1 number, c2 JSON) tablespace tbs1");
+        stmt.execute("create table emp_json(c1 number, c2 JSON)");
       }
 
 

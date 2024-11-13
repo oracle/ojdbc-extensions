@@ -88,6 +88,12 @@ jobs:
           OCI_PASSWORD_PAYLOAD_OCID_MULTIPLE_KEYS=${{ secrets.TEST_OCI_PASSWORD_PAYLOAD_OCID_MULTIPLE_KEYS }}\n
           OCI_PASSWORD_PAYLOAD_OCID_KEY=${{ secrets.TEST_OCI_PASSWORD_PAYLOAD_OCID_KEY }}\n
           " >> ojdbc-provider-oci/test.properties
+          
+          # Generate ojdbc-provider-jackson-oson/test.properties
+          echo -e "JACKSON_OSON_URL=${{ secrets.TEST_JACKSON_OSON_URL }}\n
+          JACKSON_OSON_USERNAME=${{ secrets.TEST_JACKSON_OSON_USERNAME }}\n
+          JACKSON_OSON_PASSWORD=${{ secrets.TEST_JACKSON_OSON_PASSWORD }}\n
+          " >> ojdbc-provider-jackson-oson/test.properties
 
           # Generate GCP config
           echo "${{ secrets.TEST_GCP_CONFIG }}" > $HOME/.gcp/config.json
@@ -108,3 +114,5 @@ jobs:
           
           rm $HOME/.gcp/config.json
           rm ojdbc-provider-gcp/test.properties
+          
+          rm ojdbc-provider-jackson-oson/test.properties

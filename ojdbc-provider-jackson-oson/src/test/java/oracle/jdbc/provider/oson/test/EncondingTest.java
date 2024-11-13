@@ -110,7 +110,7 @@ public class EncondingTest {
     //setup db tables
     try (Statement stmt = conn.createStatement()) {
       stmt.addBatch("drop table if exists all_types_json");
-      stmt.addBatch("create table all_types_json(c1 number, c2 JSON) tablespace tbs1");
+      stmt.addBatch("create table all_types_json(c1 number, c2 JSON)");
       stmt.executeBatch();
     }
   }
