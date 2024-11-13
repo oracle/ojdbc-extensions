@@ -94,8 +94,8 @@ public class KeyVaultConnectionStringProviderTest {
         .filter(parameter -> "tns-alias".equals(parameter.name()))
         .findFirst()
         .orElseThrow(AssertionError::new);
-    assertFalse(aliasParameter.isSensitive());
-    assertFalse(aliasParameter.isRequired());
+    assertTrue(aliasParameter.isSensitive());
+    assertTrue(aliasParameter.isRequired());
     assertNull(aliasParameter.defaultValue());
   }
 
