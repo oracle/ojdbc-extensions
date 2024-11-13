@@ -81,12 +81,6 @@ public class EncondingTest {
    */
   private static final ObjectMapper om = new ObjectMapper(osonFactory);
 
-  /**
-   * The connection to the Oracle database.
-   */
-  Connection conn = null;
-  PreparedStatement insertStatement = null;
-
   private static final Employee employee = EmployeeInstances.getEmployee();
 
   private static final ObjectNode objectNode;
@@ -97,22 +91,17 @@ public class EncondingTest {
     objectNode = om.valueToTree(employee);
   }
 
-  @BeforeEach
+  @BeforeAll
   public void setup() throws Exception {
-    final String URL = TestProperties.getOrAbort(OsonTestProperty.JACKSON_OSON_URL);
-    final String USER_NAME = TestProperties.getOrAbort(OsonTestProperty.JACKSON_OSON_USERNAME);
-    final String PASSWORD = TestProperties.getOrAbort(OsonTestProperty.JACKSON_OSON_PASSWORD);
-    OracleDataSource ods = new OracleDataSource();
-    ods.setURL(URL);
-    ods.setUser(USER_NAME);
-    ods.setPassword(PASSWORD);
-    conn = ods.getConnection();
-    //setup db tables
-    try (Statement stmt = conn.createStatement()) {
-      stmt.addBatch("drop table if exists all_types_json");
-      stmt.addBatch("create table all_types_json(c1 number, c2 JSON)");
-      stmt.executeBatch();
+    try (Connection conn = getConnection()){
+      //setup db tables
+      try (Statement stmt = conn.createStatement()) {
+        stmt.addBatch("drop table if exists all_types_json");
+        stmt.addBatch("create table all_types_json(c1 number, c2 JSON)");
+        stmt.executeBatch();
+      }
     }
+
   }
 
   /**
@@ -126,18 +115,23 @@ public class EncondingTest {
   @ParameterizedTest()
   @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
   public void convertToOsonUsingStream(String encoding) throws Exception {
-    Assumptions.assumeTrue(conn != null);
+    try(Connection conn = getConnection()) {
+      Assumptions.assumeTrue(conn != null);
 
-    JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
-    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-      try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
-        om.writeValue(osonGen, employee);
+      try(Statement stmt = conn.createStatement()) {
+        stmt.execute("truncate table all_types_json");
       }
-      // Insert the converted bytes
-      InsertBytes(out.toByteArray());
-      // Retrieve the converted bytes
-      Employee employeeAfterConvert =  ReadObject();
-      verifyEquals(employee, employeeAfterConvert);
+      JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
+      try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+        try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
+          om.writeValue(osonGen, employee);
+        }
+        // Insert the converted bytes
+        InsertBytes(out.toByteArray(),conn);
+        // Retrieve the converted bytes
+        Employee employeeAfterConvert =  ReadObject(conn);
+        verifyEquals(employee, employeeAfterConvert);
+      }
     }
   }
 
@@ -146,39 +140,47 @@ public class EncondingTest {
   @ParameterizedTest()
   @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
   public void convertToOsonUsingFile(String encoding) throws Exception {
-    Assumptions.assumeTrue(conn != null);
-
-    JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
-    File out = new File("file.json");
-    try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
-      om.writeValue(osonGen, employee);
+    try (Connection conn = getConnection()) {
+      Assumptions.assumeTrue(conn != null);
+      try(Statement stmt = conn.createStatement()) {
+        stmt.execute("truncate table all_types_json");
+      }
+      JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
+      File out = new File("file.json");
+      try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
+        om.writeValue(osonGen, employee);
+      }
+      // Insert the converted bytes
+      InsertBytes(Files.readAllBytes(Paths.get(out.getPath())),conn);
+      // Retrieve the converted bytes
+      Employee employeeAfterConvert =  ReadObject(conn);
+      verifyEquals(employee, employeeAfterConvert);
     }
-    // Insert the converted bytes
-    InsertBytes(Files.readAllBytes(Paths.get(out.getPath())));
-    // Retrieve the converted bytes
-    Employee employeeAfterConvert =  ReadObject();
-    verifyEquals(employee, employeeAfterConvert);
-
   }
 
   @Order(3)
   @ParameterizedTest()
   @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
   public void convertToOsonUsingDataOutput(String encoding) throws Exception {
-    Assumptions.assumeTrue(conn != null);
 
-    JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
-    try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-      DataOutputStream out = new DataOutputStream(byteArrayOutputStream)) {
-      try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator((DataOutput) out, jsonEncoding)) {
-        om.writeValue(osonGen, employee);
+    try (Connection conn = getConnection()) {
+      Assumptions.assumeTrue(conn != null);
+      try(Statement stmt = conn.createStatement()) {
+        stmt.execute("truncate table all_types_json");
       }
-      // Insert the converted bytes
-      InsertBytes(byteArrayOutputStream.toByteArray());
+      JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
+      try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+           DataOutputStream out = new DataOutputStream(byteArrayOutputStream)) {
+        try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator((DataOutput) out, jsonEncoding)) {
+          om.writeValue(osonGen, employee);
+        }
+        // Insert the converted bytes
+        InsertBytes(byteArrayOutputStream.toByteArray(),conn);
+      }
+      // Retrieve the converted bytes
+      Employee employeeAfterConvert =  ReadObject(conn);
+      verifyEquals(employee, employeeAfterConvert);
     }
-    // Retrieve the converted bytes
-    Employee employeeAfterConvert =  ReadObject();
-    verifyEquals(employee, employeeAfterConvert);
   }
 
 
@@ -190,63 +192,93 @@ public class EncondingTest {
   @ParameterizedTest()
   @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
   public void convertToOsonUsingStreamAndObjectNode(String encoding) throws Exception {
-    Assumptions.assumeTrue(conn != null);
 
-    JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
-    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-      try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
-         om.writeValue(osonGen, objectNode);
+    try(Connection conn = getConnection()) {
+      Assumptions.assumeTrue(conn != null);
+      try(Statement stmt = conn.createStatement()) {
+        stmt.execute("truncate table all_types_json");
       }
-      // Insert the converted bytes
-      InsertBytes(out.toByteArray());
-      ObjectNode intermediateNode = om.readValue(out.toByteArray(), ObjectNode.class);
-      verifyEquals(objectNode, intermediateNode);
-    // Retrieve the converted bytes
-    ObjectNode objectNodeAfterConvert =  ReadObjectNode();
-    verifyEquals(objectNode, objectNodeAfterConvert);
-  }
+      JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
+      try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+        try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
+          om.writeValue(osonGen, objectNode);
+        }
+        // Insert the converted bytes
+        InsertBytes(out.toByteArray(),conn);
+        ObjectNode intermediateNode = om.readValue(out.toByteArray(), ObjectNode.class);
+        verifyEquals(objectNode, intermediateNode);
+        // Retrieve the converted bytes
+        ObjectNode objectNodeAfterConvert =  ReadObjectNode(conn);
+        verifyEquals(objectNode, objectNodeAfterConvert);
+     }
+    }
   }
 
   @Order(6)
   @ParameterizedTest()
   @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
   public void convertToOsonUsingFileAndObjectNode(String encoding) throws Exception {
-    Assumptions.assumeTrue(conn != null);
 
-    JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
-    File out = new File("file.json");
-    try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
-      om.writeValue(osonGen, objectNode);
+    try(Connection conn = getConnection()) {
+      Assumptions.assumeTrue(conn != null);
+      try(Statement stmt = conn.createStatement()) {
+        stmt.execute("truncate table all_types_json");
+      }
+      JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
+      File out = new File("file.json");
+      try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator(out, jsonEncoding)) {
+        om.writeValue(osonGen, objectNode);
+      }
+      // Insert the converted bytes
+      InsertBytes(Files.readAllBytes(Paths.get(out.getPath())),conn);
+      // Retrieve the converted bytes
+      ObjectNode objectNodeAfterConvert =  ReadObjectNode(conn);
+      verifyEquals(objectNode, objectNodeAfterConvert);
     }
-    // Insert the converted bytes
-    InsertBytes(Files.readAllBytes(Paths.get(out.getPath())));
-    // Retrieve the converted bytes
-    ObjectNode objectNodeAfterConvert =  ReadObjectNode();
-    verifyEquals(objectNode, objectNodeAfterConvert);
   }
 
   @Order(7)
   @ParameterizedTest()
   @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
   public void convertToOsonUsingDataOutputAndObjectNode(String encoding) throws Exception {
-    Assumptions.assumeTrue(conn != null);
-
-    JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
-    try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-      DataOutputStream out = new DataOutputStream(byteArrayOutputStream)) {
-      try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator((DataOutput) out, jsonEncoding)) {
-        om.writeValue(osonGen, objectNode);
+    try (Connection conn = getConnection()) {
+      Assumptions.assumeTrue(conn != null);
+      try(Statement stmt = conn.createStatement()) {
+        stmt.execute("truncate table all_types_json");
       }
-      // Insert the converted bytes
-      InsertBytes(byteArrayOutputStream.toByteArray());
+      JsonEncoding jsonEncoding = JsonEncoding.valueOf(encoding);
+      try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+           DataOutputStream out = new DataOutputStream(byteArrayOutputStream)) {
+        try (OsonGenerator osonGen = (OsonGenerator) osonFactory.createGenerator((DataOutput) out, jsonEncoding)) {
+          om.writeValue(osonGen, objectNode);
+        }
+        // Insert the converted bytes
+        InsertBytes(byteArrayOutputStream.toByteArray(),conn);
 
+      }
+      // Retrieve the converted bytes
+      ObjectNode objectNodeAfterConvert =  ReadObjectNode(conn);
+      verifyEquals(objectNode, objectNodeAfterConvert);
     }
-    // Retrieve the converted bytes
-    ObjectNode objectNodeAfterConvert =  ReadObjectNode();
-    verifyEquals(objectNode, objectNodeAfterConvert);
   }
 
-  private void InsertBytes(byte[] bytes) throws SQLException {
+  /**
+   * Create an Oracle Connection and return the instance.
+   * @return
+   * @throws SQLException
+   */
+  private Connection getConnection() throws SQLException {
+    final String URL = TestProperties.getOrAbort(OsonTestProperty.JACKSON_OSON_URL);
+    final String USER_NAME = TestProperties.getOrAbort(OsonTestProperty.JACKSON_OSON_USERNAME);
+    final String PASSWORD = TestProperties.getOrAbort(OsonTestProperty.JACKSON_OSON_PASSWORD);
+    OracleDataSource ods = new OracleDataSource();
+    ods.setURL(URL);
+    ods.setUser(USER_NAME);
+    ods.setPassword(PASSWORD);
+    return ods.getConnection();
+  }
+
+  private void InsertBytes(byte[] bytes, Connection conn) throws SQLException {
     try (PreparedStatement pstmt = conn.prepareStatement("insert into all_types_json (c1,c2) values(?,?)")) {
       pstmt.setInt(1, 1);
       pstmt.setBytes(2, bytes);
@@ -254,7 +286,7 @@ public class EncondingTest {
     }
   }
 
-  private Employee ReadObject() throws SQLException, IOException {
+  private Employee ReadObject(Connection conn) throws SQLException, IOException {
     try (Statement stmt = conn.createStatement();
       ResultSet rs = stmt.executeQuery("select c1, c2 from all_types_json order by c1")) {
       assertTrue(rs.next());
@@ -262,7 +294,7 @@ public class EncondingTest {
     }
   }
 
-  private ObjectNode ReadObjectNode() throws SQLException, IOException {
+  private ObjectNode ReadObjectNode(Connection conn) throws SQLException, IOException {
     try (Statement stmt = conn.createStatement();
       ResultSet rs = stmt.executeQuery("select c1, c2 from all_types_json order by c1")) {
       assertTrue(rs.next());
