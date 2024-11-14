@@ -27,6 +27,9 @@ Provider</a></dt>
 <dd>Provides TCPS/TLS wallet for secure connections to an Autonomous Database from the Secret Manager service</dd>
 <dt><a href="#secret-manager-seps-wallet-provider">Secret Manager SEPS Wallet Provider</a></dt>
 <dd>Provides SEPS (Secure External Password Store) wallets for secure username and password retrieval from the Secret Manager service</dd>
+<dt><a href="#secret-manager-connection-string-provider">Secret Manager Connection String Provider</a></dt>
+<dd>Provides connection strings for secure database connectivity based on aliases, retrieved from the `tnsnames.ora`
+file stored in GCP Secret Manager.</dd> 
 </dl>
 
 Visit any of the links above to find information and usage examples for a
@@ -329,3 +332,40 @@ An example of a [connection properties file](https://docs.oracle.com/en/database
 
 This provider supports wallets stored in GCP Secret Manager as both base64-encoded strings and imported files. It automatically detects the storage format and processes the wallet accordingly, ensuring flexibility in managing your SEPS credentials.
 
+## Secret Manager Connection String Provider
+
+The Connection String Provider provides Oracle JDBC with a connection string managed by the GCP Secret Manager service.
+This is a Resource Provider identified by the name `ojdbc-provider-gcp-secretmanager-tnsnames`.
+
+This provider retrieves a `tnsnames.ora` file stored in GCP Secret Manager, allowing selection of connection strings
+based on specified aliases. The `tnsnames.ora` file can be stored as a base64-encoded string or as a raw file,
+and the provider automatically detects the format.
+
+This enables flexible configuration for secure database connections using the alias names defined in your `tnsnames.ora` file.
+
+<table>
+  <thead>
+    <tr>
+      <th>Parameter Name</th>
+      <th>Description</th>
+      <th>Accepted Values</th>
+      <th>Default Value</th>
+    </tr> 
+  </thead> 
+  <tbody>
+    <tr> 
+      <td><code>secretVersionName</code></td>
+      <td>The version name of the secret in GCP Secret Manager that contains the <code>tnsnames.ora</code> file.</td>
+      <td>The <a href="https://cloud.google.com/secret-manager/docs/creating-and-accessing-secrets">GCP Secret Manager Secret Version</a>, typically in the form:<br><pre>projects/{project-id}/secrets/{secret-id}/versions/{version-id}</pre></td>
+      <td><i>No default value. A value must be configured for this parameter.</i></td>
+    </tr>
+    <tr>
+      <td><code>tns-alias</code></td>
+      <td>Specifies the alias to retrieve the appropriate connection string from the <code>tnsnames.ora</code> file.</td>
+      <td>Any valid alias present in your <code>tnsnames.ora</code> file.</td>
+      <td><i>No default value. A value must be configured for this parameter.</i></td> 
+    </tr>
+  </tbody>
+</table>
+
+An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault.properties](example-vault.properties).
