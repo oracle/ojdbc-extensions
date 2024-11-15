@@ -38,52 +38,39 @@
 
 package oracle.jdbc.provider.oci.resource;
 
-import oracle.jdbc.provider.oci.database.WalletFactory;
-import oracle.jdbc.provider.resource.ResourceParameter;
-import oracle.jdbc.spi.TlsConfigurationProvider;
+import oracle.jdbc.provider.TestProperties;
+import oracle.jdbc.provider.oci.OciTestProperty;
+import oracle.jdbc.spi.OracleResourceProvider.Parameter;
+import oracle.jdbc.spi.UsernameProvider;
+import org.junit.jupiter.api.Test;
 
-import javax.net.ssl.SSLContext;
+import java.util.HashMap;
 import java.util.Map;
 
-/**
- * <p>
- * A provider of keys and certificates for mTLS communication with an
- * Autonomous Database. The certificates are extracted from a wallet zip
- * that is requested from OCI.
- * </p><p>
- * This class implements the {@link TlsConfigurationProvider} SPI defined by
- * Oracle JDBC. It is designed to be located and instantiated by
- * {@link java.util.ServiceLoader}.
- * </p>
- */
-public final class DatabaseTlsProvider
-  extends OciResourceProvider
-  implements TlsConfigurationProvider {
+import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.createParameterValues;
+import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.findProvider;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-  private static final ResourceParameter[] PARAMETERS = {
-    new ResourceParameter("ocid", WalletFactory.OCID)
-  };
+public class VaultUsernameProviderTest {
 
-  /**
-   * Public no-arg constructor called by {@link java.util.ServiceLoader}
-   */
-  public DatabaseTlsProvider() {
-    super("database-tls", PARAMETERS);
+  private static final UsernameProvider PROVIDER =
+    findProvider(UsernameProvider.class, "ojdbc-provider-oci-vault-username");
+
+  @Test
+  public void test() {
+    Map<String, CharSequence> testParameters = new HashMap<>();
+    testParameters.put("authenticationMethod", "config-file");
+    testParameters.put("configFile", TestProperties.getOrAbort(
+      OciTestProperty.OCI_CONFIG_FILE));
+    testParameters.put("profile", TestProperties.getOrAbort(
+      OciTestProperty.OCI_CONFIG_PROFILE));
+    testParameters.put("ocid", TestProperties.getOrAbort(
+      OciTestProperty.OCI_USERNAME_OCID));
+
+    Map<Parameter, CharSequence> parameterValues =
+      createParameterValues(PROVIDER, testParameters);
+
+    String username = PROVIDER.getUsername(parameterValues);
+    assertNotNull(username);
   }
-
-  /**
-   * {@inheritDoc}
-   * <p>
-   * Returns trust and key material used to establish a TLS connection with
-   * an Autonomous Database. The {@code configUri} is required to have an
-   * "{@code ocid}" parameter that identifies the wallet.
-   * </p>
-   */
-  @Override
-  public SSLContext getSSLContext(
-    Map<Parameter, CharSequence> parameterValues) {
-    return getAutonomousDatabaseWallet(parameterValues)
-            .getSSLContext();
-  }
-
 }

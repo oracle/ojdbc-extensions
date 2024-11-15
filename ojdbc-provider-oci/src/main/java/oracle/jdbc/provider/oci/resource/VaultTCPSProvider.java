@@ -39,7 +39,6 @@
 package oracle.jdbc.provider.oci.resource;
 
 import oracle.jdbc.provider.oci.vault.Secret;
-import oracle.jdbc.provider.oci.vault.SecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
 import oracle.jdbc.provider.util.TlsUtils;
@@ -114,10 +113,8 @@ public class VaultTCPSProvider
   public SSLContext getSSLContext(Map<Parameter, CharSequence> parameterValues) {
     try {
       ParameterSet parameterSet = parseParameterValues(parameterValues);
-      Secret secret = SecretFactory
-              .getInstance()
-              .request(parameterSet)
-              .getContent();
+
+      Secret secret = getVaultSecret(parameterValues);
 
       byte[] fileBytes = Base64
               .getDecoder()

@@ -60,6 +60,8 @@ public enum OciTestProperty {
 
   OCI_PASSWORD_OCID,
 
+  OCI_USERNAME_OCID,
+
   OCI_DATABASE_OCID,
 
   OCI_OBJECT_STORAGE_URL,

@@ -38,6 +38,7 @@
 
 package  oracle.jdbc.provider.resource;
 
+import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 import oracle.jdbc.spi.OracleResourceProvider;
@@ -127,6 +128,39 @@ public abstract class AbstractResourceProvider
         .collect(Collectors.toMap(
           entry -> entry.getKey().name(),
           entry -> entry.getValue().toString())));
+  }
+
+  /**
+   * Requests a resource from a factory using the given parameterValues. This
+   * method implements the common operations of parsing parameterValues,
+   * requesting a resource from a factory, and then extracting the content from
+   * the resource object. Concrete implementations of AbstractResourceProvider
+   * should use this method whenever possible to avoid duplications of the same
+   * code pattern.
+   *
+   * @param factory Factory to request resources from. Not null.
+   *
+   * @param parameterValues Parameters for the request. Not null.
+   *
+   * @return The content of the requested resource.
+   *
+   * @param <T> The type of resource content.
+   *
+   * @throws IllegalArgumentException If {@code parameterValues} includes an
+   *   unrecognized parameter or a value that can not be parsed. Or if the
+   *   {@code parameterValues} does not include a required parameter, or does
+   *   not represent a valid configuration.
+   *
+   * @throws IllegalStateException If the request fails to return a resource.
+   */
+  protected <T> T getResource(
+          ResourceFactory<T> factory, Map<Parameter, CharSequence> parameterValues) {
+
+    ParameterSet parameterSet = parseParameterValues(parameterValues);
+
+    return factory
+            .request(parameterSet)
+            .getContent();
   }
 
 }
