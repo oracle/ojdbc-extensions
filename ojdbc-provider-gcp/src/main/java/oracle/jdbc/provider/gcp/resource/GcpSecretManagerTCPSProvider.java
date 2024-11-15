@@ -40,8 +40,8 @@ package oracle.jdbc.provider.gcp.resource;
 
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
+import oracle.jdbc.provider.util.FileUtils;
 import oracle.jdbc.provider.util.TlsUtils;
-import oracle.jdbc.provider.util.WalletUtils;
 import oracle.jdbc.spi.TlsConfigurationProvider;
 
 import javax.net.ssl.SSLContext;
@@ -113,7 +113,7 @@ public class GcpSecretManagerTCPSProvider
 
       byte[] fileBytes = getSecret(parameterValues).toByteArray();
 
-      if (WalletUtils.isBase64Encoded(fileBytes)) {
+      if (FileUtils.isBase64Encoded(fileBytes)) {
         fileBytes = Base64.getDecoder().decode(fileBytes);
       }
 

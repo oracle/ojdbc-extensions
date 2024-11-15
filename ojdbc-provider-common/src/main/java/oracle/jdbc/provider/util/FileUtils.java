@@ -36,48 +36,24 @@
  ** SOFTWARE.
  */
 
-package oracle.provider.gcp;
+package oracle.jdbc.provider.util;
+
+import java.util.Base64;
 
 /**
- * Names of properties that configure GCP tests. Descriptions and examples of
- * each property can be found in the "example-test.properties" file within the
- * root directory of the project.
+ * Utility class for common file handling operations.
  */
-public enum GcpTestProperty {
+public final class FileUtils {
 
-  GCP_OBJECT_STORAGE_URL,
-
-  SECRET_VERSION_NAME_CONFIG,
-
-  GCP_SECRET_MANAGER_USERNAME_SECRET_VERSION,
-
-  GCP_SECRET_MANAGER_PASSWORD_SECRET_VERSION,
-
-  GCP_PKCS12_TLS_WALLET_SECRET_VERSION_NAME,
-
-  GCP_PKCS12_TLS_WALLET_PASSWORD,
-
-  GCP_SSO_TLS_WALLET_SECRET_VERSION_NAME,
-
-  GCP_PEM_TLS_WALLET_SECRET_VERSION_NAME,
-
-  GCP_PEM_TLS_WALLET_PASSWORD,
-
-  GCP_CORRUPTED_TLS_WALLET_SECRET_VERSION_NAME,
-
-  GCP_PKCS12_SEPS_SECRET_VERSION_NAME,
-
-  GCP_PKCS12_SEPS_WALLET_PASSWORD,
-
-  GCP_SEPS_CONNECTION_STRING_INDEX,
-
-  GCP_SSO_SEPS_SECRET_VERSION_NAME,
-
-  GCP_CORRUPTED_SEPS_WALLET_SECRET_VERSION_NAME,
-
-  GCP_SECRET_MANAGER_TNS_NAMES_SECRET_VERSION,
-
-  GCP_SECRET_MANAGER_TNS_ALIAS_SECRET_NAME,
-
-  GCP_NON_BASE64_TNS_NAMES_SECRET_VERSION;
+  /**
+   * Checks if the given byte array is Base64-encoded.
+   */
+  public static boolean isBase64Encoded(byte[] secretBytes) {
+    try {
+      Base64.getDecoder().decode(secretBytes);
+      return true;
+    } catch (IllegalArgumentException e) {
+      return false;
+    }
+  }
 }

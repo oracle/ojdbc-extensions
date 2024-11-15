@@ -40,6 +40,7 @@ package oracle.jdbc.provider.gcp.resource;
 
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
+import oracle.jdbc.provider.util.FileUtils;
 import oracle.jdbc.provider.util.WalletUtils;
 import oracle.jdbc.spi.PasswordProvider;
 import oracle.jdbc.spi.UsernameProvider;
@@ -114,7 +115,7 @@ public class GcpSecretManagerSEPSProvider
 
     byte[] walletBytes = getSecret(parameterValues).toByteArray();
 
-    if (WalletUtils.isBase64Encoded(walletBytes)) {
+    if (FileUtils.isBase64Encoded(walletBytes)) {
       walletBytes = Base64.getDecoder().decode(walletBytes);
     }
 

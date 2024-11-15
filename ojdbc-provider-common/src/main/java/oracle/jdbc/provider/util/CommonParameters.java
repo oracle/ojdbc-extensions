@@ -146,7 +146,9 @@ public final class CommonParameters {
    * <p><b>Note:</b> The alias should exactly match one of the aliases defined
    * in your tnsnames.ora file.</p>
    */
-  public static final Parameter<String> TNS_ALIAS = Parameter.create();
+  public static final Parameter<String> TNS_ALIAS = Parameter.create(
+          REQUIRED, SENSITIVE
+  );
 
 
 }

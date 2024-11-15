@@ -36,12 +36,13 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.azure.resource;
+package oracle.provider.gcp.resource;
 
 import oracle.jdbc.provider.TestProperties;
-import oracle.jdbc.provider.azure.AzureTestProperty;
 import oracle.jdbc.spi.ConnectionStringProvider;
+import oracle.jdbc.spi.OracleResourceProvider;
 import oracle.jdbc.spi.OracleResourceProvider.Parameter;
+import oracle.provider.gcp.GcpTestProperty;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
@@ -50,17 +51,14 @@ import java.util.Map;
 
 import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.createParameterValues;
 import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.findProvider;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class KeyVaultConnectionStringProviderTest {
+public class GcpSecretManagerConnectionStringProviderTest {
 
   private static final ConnectionStringProvider PROVIDER =
     findProvider(
-      ConnectionStringProvider.class, "ojdbc-provider-azure-key-vault-tnsnames");
+      ConnectionStringProvider.class,
+        "ojdbc-provider-gcp-secretmanager-tnsnames");
 
   /**
    * Verifies that {@link ConnectionStringProvider#getParameters()} includes parameters
@@ -71,27 +69,18 @@ public class KeyVaultConnectionStringProviderTest {
     Collection<? extends Parameter> parameters = PROVIDER.getParameters();
     assertNotNull(parameters);
 
-    Parameter vaultUrlParameter =
-      parameters.stream()
-        .filter(parameter -> "vaultUrl".equals(parameter.name()))
-        .findFirst()
-        .orElseThrow(AssertionError::new);
+    OracleResourceProvider.Parameter vaultUrlParameter =
+            parameters.stream()
+                    .filter(parameter -> "secretVersionName".equals(parameter.name()))
+                    .findFirst()
+                    .orElseThrow(AssertionError::new);
     assertFalse(vaultUrlParameter.isSensitive());
     assertTrue(vaultUrlParameter.isRequired());
     assertNull(vaultUrlParameter.defaultValue());
 
-    Parameter secretNameParameter =
-      parameters.stream()
-        .filter(parameter -> "secretName".equals(parameter.name()))
-        .findFirst()
-        .orElseThrow(AssertionError::new);
-    assertFalse(secretNameParameter.isSensitive());
-    assertTrue(secretNameParameter.isRequired());
-    assertNull(secretNameParameter.defaultValue());
-
     Parameter aliasParameter =
       parameters.stream()
-        .filter(parameter -> "tns-alias".equals(parameter.name()))
+        .filter(parameter -> "tnsAlias".equals(parameter.name()))
         .findFirst()
         .orElseThrow(AssertionError::new);
     assertTrue(aliasParameter.isSensitive());
@@ -102,16 +91,15 @@ public class KeyVaultConnectionStringProviderTest {
   @Test
   public void testValidAlias() {
     Map<String, String> testParameters = new HashMap<>();
-    testParameters.put("vaultUrl",
-      TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
+    testParameters.put("secretVersionName",
+      TestProperties.getOrAbort(
+              GcpTestProperty
+                .GCP_SECRET_MANAGER_TNS_NAMES_SECRET_VERSION)
+    );
 
-    testParameters.put("secretName",
-      TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_SECRET_NAME));
+    testParameters.put("tnsAlias",
+      TestProperties.getOrAbort(GcpTestProperty.GCP_SECRET_MANAGER_TNS_ALIAS_SECRET_NAME));
 
-    testParameters.put("tns-alias",
-      TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_ALIAS_SECRET_NAME));
-
-    AzureResourceProviderTestUtil.configureAuthentication(testParameters);
     Map<Parameter, CharSequence> parameterValues =
       createParameterValues(PROVIDER, testParameters);
 
@@ -122,17 +110,16 @@ public class KeyVaultConnectionStringProviderTest {
   @Test
   public void testInvalidOrNonExistentAlias() {
     Map<String, String> testParameters = new HashMap<>();
-    testParameters.put("vaultUrl",
-      TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
+    testParameters.put("secretVersionName",
+            TestProperties.getOrAbort(
+                    GcpTestProperty
+                      .GCP_SECRET_MANAGER_TNS_NAMES_SECRET_VERSION)
+    );
 
-    testParameters.put("secretName",
-      TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_SECRET_NAME));
+    testParameters.put("tnsAlias", "INVALID_ALIAS");
 
-    testParameters.put("tns-alias", "INVALID_ALIAS");
-
-    AzureResourceProviderTestUtil.configureAuthentication(testParameters);
     Map<Parameter, CharSequence> parameterValues =
-      createParameterValues(PROVIDER, testParameters);
+            createParameterValues(PROVIDER, testParameters);
 
     assertThrows(IllegalArgumentException.class,
             () -> PROVIDER.getConnectionString(parameterValues),
@@ -143,40 +130,31 @@ public class KeyVaultConnectionStringProviderTest {
   @Test
   public void testMissingAliasParameter() {
     Map<String, String> testParameters = new HashMap<>();
-    testParameters.put("vaultUrl",
-            TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
+    testParameters.put("secretVersionName",
+            TestProperties.getOrAbort(GcpTestProperty.GCP_SECRET_MANAGER_TNS_NAMES_SECRET_VERSION));
 
-    testParameters.put("secretName",
-            TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_SECRET_NAME));
-
-    AzureResourceProviderTestUtil.configureAuthentication(testParameters);
     Map<Parameter, CharSequence> parameterValues =
             createParameterValues(PROVIDER, testParameters);
 
     assertThrows(IllegalArgumentException.class,
             () -> PROVIDER.getConnectionString(parameterValues),
-            "Expected IllegalArgumentException when tns-alias parameter is missing"
+            "Expected IllegalArgumentException when tnsAlias parameter is missing"
     );
   }
 
   @Test
   public void testNonBase64EncodedTnsnamesContent() {
     Map<String, String> testParameters = new HashMap<>();
-    testParameters.put("vaultUrl",
-            TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
+    testParameters.put("secretVersionName",
+            TestProperties.getOrAbort(GcpTestProperty.GCP_NON_BASE64_TNS_NAMES_SECRET_VERSION));
 
-    testParameters.put("secretName",
-            TestProperties.getOrAbort(AzureTestProperty.AZURE_NON_BASE64_TNS_NAMES_SECRET_NAME));
-    testParameters.put("tns-alias",
-            TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_SECRET_NAME));
+    testParameters.put("tnsAlias",
+            TestProperties.getOrAbort(GcpTestProperty.GCP_SECRET_MANAGER_TNS_ALIAS_SECRET_NAME));
 
-    AzureResourceProviderTestUtil.configureAuthentication(testParameters);
     Map<Parameter, CharSequence> parameterValues = createParameterValues(PROVIDER, testParameters);
 
-    assertThrows(IllegalArgumentException.class,
-            () -> PROVIDER.getConnectionString(parameterValues),
-            "Expected IllegalStateException for non-base64-encoded tnsnames.ora content"
-    );
+    String connectionString = PROVIDER.getConnectionString(parameterValues);
+    assertNotNull(connectionString);
   }
 
 }
