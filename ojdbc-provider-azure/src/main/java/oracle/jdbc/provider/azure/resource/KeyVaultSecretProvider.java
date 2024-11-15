@@ -88,7 +88,7 @@ class KeyVaultSecretProvider extends AzureResourceProvider {
    * @return The secret value as a {@code String}. Not null.
    */
   protected final String getSecret(
-          Map<Parameter, CharSequence> parameterValues) {
+    Map<Parameter, CharSequence> parameterValues) {
     return getResource(KeyVaultSecretFactory.getInstance(), parameterValues)
             .getValue();
   }
