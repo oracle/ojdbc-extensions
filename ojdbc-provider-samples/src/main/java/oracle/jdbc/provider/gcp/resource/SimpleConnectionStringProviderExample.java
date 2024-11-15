@@ -69,7 +69,7 @@ public class SimpleConnectionStringProviderExample {
               "projects/your-project-id/secrets/your-tnsnames-secret/versions/1");
 
       // Specify the tns-alias to retrieve the corresponding connection string
-      connectionProps.put("oracle.jdbc.provider.connectionString.tns-alias",
+      connectionProps.put("oracle.jdbc.provider.connectionString.tnsAlias",
               "YOUR_TNS_ALIAS");
 
       // TLS Configuration for secure connection

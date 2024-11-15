@@ -71,7 +71,7 @@ public class GcpSecretManagerConnectionStringProvider
         implements ConnectionStringProvider {
 
   private static final ResourceParameter[] TNS_NAMES_PARAMETERS = {
-          new ResourceParameter("tns-alias", TNS_ALIAS)
+          new ResourceParameter("tnsAlias", TNS_ALIAS)
   };
 
   /**
@@ -122,7 +122,7 @@ public class GcpSecretManagerConnectionStringProvider
       alias = parseParameterValues(parameterValues).getRequired(TNS_ALIAS);
     } catch (IllegalStateException e) {
       throw new IllegalArgumentException(
-              "Required parameter 'tns-alias' is missing", e
+              "Required parameter 'tnsAlias' is missing", e
       );
     }
 

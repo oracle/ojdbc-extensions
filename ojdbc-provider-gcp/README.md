@@ -360,7 +360,7 @@ This enables flexible configuration for secure database connections using the al
       <td><i>No default value. A value must be configured for this parameter.</i></td>
     </tr>
     <tr>
-      <td><code>tns-alias</code></td>
+      <td><code>tnsAlias</code></td>
       <td>Specifies the alias to retrieve the appropriate connection string from the <code>tnsnames.ora</code> file.</td>
       <td>Any valid alias present in your <code>tnsnames.ora</code> file.</td>
       <td><i>No default value. A value must be configured for this parameter.</i></td> 

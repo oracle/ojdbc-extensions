@@ -80,7 +80,7 @@ public class GcpSecretManagerConnectionStringProviderTest {
 
     Parameter aliasParameter =
       parameters.stream()
-        .filter(parameter -> "tns-alias".equals(parameter.name()))
+        .filter(parameter -> "tnsAlias".equals(parameter.name()))
         .findFirst()
         .orElseThrow(AssertionError::new);
     assertTrue(aliasParameter.isSensitive());
@@ -97,7 +97,7 @@ public class GcpSecretManagerConnectionStringProviderTest {
                 .GCP_SECRET_MANAGER_TNS_NAMES_SECRET_VERSION)
     );
 
-    testParameters.put("tns-alias",
+    testParameters.put("tnsAlias",
       TestProperties.getOrAbort(GcpTestProperty.GCP_SECRET_MANAGER_TNS_ALIAS_SECRET_NAME));
 
     Map<Parameter, CharSequence> parameterValues =
@@ -116,7 +116,7 @@ public class GcpSecretManagerConnectionStringProviderTest {
                       .GCP_SECRET_MANAGER_TNS_NAMES_SECRET_VERSION)
     );
 
-    testParameters.put("tns-alias", "INVALID_ALIAS");
+    testParameters.put("tnsAlias", "INVALID_ALIAS");
 
     Map<Parameter, CharSequence> parameterValues =
             createParameterValues(PROVIDER, testParameters);
@@ -138,7 +138,7 @@ public class GcpSecretManagerConnectionStringProviderTest {
 
     assertThrows(IllegalArgumentException.class,
             () -> PROVIDER.getConnectionString(parameterValues),
-            "Expected IllegalArgumentException when tns-alias parameter is missing"
+            "Expected IllegalArgumentException when tnsAlias parameter is missing"
     );
   }
 
@@ -148,7 +148,7 @@ public class GcpSecretManagerConnectionStringProviderTest {
     testParameters.put("secretVersionName",
             TestProperties.getOrAbort(GcpTestProperty.GCP_NON_BASE64_TNS_NAMES_SECRET_VERSION));
 
-    testParameters.put("tns-alias",
+    testParameters.put("tnsAlias",
             TestProperties.getOrAbort(GcpTestProperty.GCP_SECRET_MANAGER_TNS_ALIAS_SECRET_NAME));
 
     Map<Parameter, CharSequence> parameterValues = createParameterValues(PROVIDER, testParameters);
