@@ -55,7 +55,8 @@ import static oracle.jdbc.provider.util.CommonParameters.TNS_ALIAS;
  * A provider for securely retrieving the connection string from a tnsnames.ora
  * file stored in Azure Key Vault for use with an Oracle Autonomous Database.
  * The tnsnames.ora file is stored as a base64-encoded secret in Azure Key Vault,
- * and is decoded and parsed to select connection strings based on specified aliases.
+ * and is decoded and parsed to select connection strings based on specified
+ * aliases.
  * </p>
  * <p>
  * This class implements the {@link ConnectionStringProvider} SPI defined by
@@ -68,7 +69,7 @@ public class KeyVaultConnectionStringProvider
         implements ConnectionStringProvider {
 
   private static final ResourceParameter[] TNS_NAMES_PARAMETERS = {
-          new ResourceParameter("tns-alias", TNS_ALIAS)
+          new ResourceParameter("tnsAlias", TNS_ALIAS)
   };
 
   /**
@@ -90,7 +91,7 @@ public class KeyVaultConnectionStringProvider
    *
    * @param parameterValues The parameters required to access the tnsnames.ora
    * file in Azure Key Vault, including the vault URL, the secret name, and
-   * the tns-alias.
+   * the tnsAlias.
    * @return The connection string associated with the specified alias
    * in the tnsnames.ora file.
    * @throws IllegalStateException If there is an error reading the tnsnames.ora
@@ -119,7 +120,7 @@ public class KeyVaultConnectionStringProvider
       alias = parseParameterValues(parameterValues).getRequired(TNS_ALIAS);
     } catch (IllegalStateException e) {
       throw new IllegalArgumentException(
-              "Required parameter 'tns-alias' is missing", e
+              "Required parameter 'tnsAlias' is missing", e
       );
     }
 

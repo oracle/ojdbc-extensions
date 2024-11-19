@@ -543,7 +543,7 @@ In addition to the set of [common parameters](#common-parameters-for-resource-pr
     <td><i>No default value. A value must be configured for this parameter.</i></td>
   </tr>
   <tr>
-    <td><code>tns-alias</code></td>
+    <td><code>tnsAlias</code></td>
     <td>Specifies the alias to retrieve the appropriate connection string from the <code>tnsnames.ora</code> file.</td> 
     <td>Any valid alias present in your <code>tnsnames.ora</code> file.</td>
     <td><i>No default value. A value must be configured for this parameter.</i></td> 

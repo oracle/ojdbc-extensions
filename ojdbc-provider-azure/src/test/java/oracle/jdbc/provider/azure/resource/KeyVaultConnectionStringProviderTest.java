@@ -91,7 +91,7 @@ public class KeyVaultConnectionStringProviderTest {
 
     Parameter aliasParameter =
       parameters.stream()
-        .filter(parameter -> "tns-alias".equals(parameter.name()))
+        .filter(parameter -> "tnsAlias".equals(parameter.name()))
         .findFirst()
         .orElseThrow(AssertionError::new);
     assertTrue(aliasParameter.isSensitive());
@@ -108,7 +108,7 @@ public class KeyVaultConnectionStringProviderTest {
     testParameters.put("secretName",
       TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_SECRET_NAME));
 
-    testParameters.put("tns-alias",
+    testParameters.put("tnsAlias",
       TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_ALIAS_SECRET_NAME));
 
     AzureResourceProviderTestUtil.configureAuthentication(testParameters);
@@ -128,7 +128,7 @@ public class KeyVaultConnectionStringProviderTest {
     testParameters.put("secretName",
       TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_SECRET_NAME));
 
-    testParameters.put("tns-alias", "INVALID_ALIAS");
+    testParameters.put("tnsAlias", "INVALID_ALIAS");
 
     AzureResourceProviderTestUtil.configureAuthentication(testParameters);
     Map<Parameter, CharSequence> parameterValues =
@@ -155,7 +155,7 @@ public class KeyVaultConnectionStringProviderTest {
 
     assertThrows(IllegalArgumentException.class,
             () -> PROVIDER.getConnectionString(parameterValues),
-            "Expected IllegalArgumentException when tns-alias parameter is missing"
+            "Expected IllegalArgumentException when tnsAlias parameter is missing"
     );
   }
 
@@ -167,7 +167,7 @@ public class KeyVaultConnectionStringProviderTest {
 
     testParameters.put("secretName",
             TestProperties.getOrAbort(AzureTestProperty.AZURE_NON_BASE64_TNS_NAMES_SECRET_NAME));
-    testParameters.put("tns-alias",
+    testParameters.put("tnsAlias",
             TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_SECRET_NAME));
 
     AzureResourceProviderTestUtil.configureAuthentication(testParameters);
