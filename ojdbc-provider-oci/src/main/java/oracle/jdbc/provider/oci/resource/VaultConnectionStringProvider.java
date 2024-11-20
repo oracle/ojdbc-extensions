@@ -106,6 +106,15 @@ public class VaultConnectionStringProvider
   @Override
   public String getConnectionString(Map<Parameter, CharSequence> parameterValues) {
 
+    String alias;
+    try {
+      alias = parseParameterValues(parameterValues).getRequired(TNS_ALIAS);
+    } catch (IllegalStateException e) {
+      throw new IllegalArgumentException(
+              "Required parameter 'tnAlias' is missing", e
+      );
+    }
+
     // Retrieve the secret containing tnsnames.ora content from OCI Vault
     String secretValue = getVaultSecret(parameterValues)
                            .getBase64Secret();
@@ -117,15 +126,6 @@ public class VaultConnectionStringProvider
       tnsNames = TNSNames.read(inputStream);
     } catch (IOException e) {
       throw new IllegalStateException("Failed to read tnsnames.ora content", e);
-    }
-
-    String alias;
-    try {
-      alias = parseParameterValues(parameterValues).getRequired(TNS_ALIAS);
-    } catch (IllegalStateException e) {
-      throw new IllegalArgumentException(
-              "Required parameter 'tnAlias' is missing", e
-      );
     }
 
     String connectionString = tnsNames.getConnectionStringByAlias(alias);

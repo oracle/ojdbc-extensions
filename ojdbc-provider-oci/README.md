@@ -525,7 +525,7 @@ It supports both plain text and Base64-encoded `tnsnames.ora` files.
 
 This enables flexible and secure configuration for database connections using the alias names defined in your `tnsnames.ora` file.
 
-In addition to the set of common parameters, this provider also supports the parameters listed below:
+In addition to the set of common parameters, this provider also requires the parameters listed below:
 
 <table>
 <thead>
