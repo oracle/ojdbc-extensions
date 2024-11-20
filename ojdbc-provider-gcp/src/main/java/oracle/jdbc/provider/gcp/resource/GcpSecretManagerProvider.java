@@ -67,9 +67,14 @@ class GcpSecretManagerProvider extends AbstractResourceProvider {
 
   /**
    * <p>
-   * Returns a secret identified by a parameter named "secretVersionName" which
-   * configures {@link GcpSecretManagerFactory#SECRET_VERSION_NAME}. This method
-   * parses these parameters from text values.
+   * Retrieves a secret from GCP Secret Manager based on parameters provided
+   * in {@code parameterValues}. This method centralizes secret retrieval logic
+   * </p>
+   * <p>
+   * The method uses the {@code getResource} method to parse the
+   * {@code parameterValues} and request the secret from GCP Secret Manager
+   * via the {@link GcpSecretManagerFactory} instance.
+   * The secret is returned as a {@code ByteString}.
    * </p>
    * <p>
    * This method is designed to be called from subclasses which implement an
@@ -82,12 +87,8 @@ class GcpSecretManagerProvider extends AbstractResourceProvider {
   protected final ByteString getSecret(
       Map<Parameter, CharSequence> parameterValues) {
 
-    ParameterSet parameterSet = parseParameterValues(parameterValues);
-
-    return GcpSecretManagerFactory.getInstance()
-        .request(parameterSet)
-        .getContent()
-        .getData();
+    return getResource(GcpSecretManagerFactory.getInstance(), parameterValues)
+            .getData();
   }
 
 }

@@ -72,27 +72,25 @@ class KeyVaultSecretProvider extends AzureResourceProvider {
 
   /**
    * <p>
-   * Returns a secret identified by a parameter named "vaultUrl" which
-   * configures {@link KeyVaultSecretFactory#VAULT_URL}, and "secretName" which
-   * configure {@link KeyVaultSecretFactory#SECRET_NAME}. This method parses
-   * these parameters from text values.
+   * Retrieves a secret from Azure Key Vault based on parameters provided
+   * in {@code parameterValues}. This method centralizes secret retrieval
+   * logic and can be used by subclasses implementing
+   * the {@link oracle.jdbc.spi.OracleResourceProvider} SPI.
    * </p><p>
-   * This method is designed to be called from subclasses which implement an
-   * {@link oracle.jdbc.spi.OracleResourceProvider} SPI.
+   * The method uses the {@code getResource} method to parse the
+   * {@code parameterValues} and request the secret from Azure Key Vault via
+   * the {@link KeyVaultSecretFactory} instance.
+   * The secret value is returned as a {@code String}.
    * </p>
    *
-   * @param parameterValues Text values of parameters. Not null.
-   * @return The identified secret. Not null.
+   * @param parameterValues A map of parameter names and their corresponding
+   * values required for secret retrieval. Must not be null.
+   * @return The secret value as a {@code String}. Not null.
    */
   protected final String getSecret(
     Map<Parameter, CharSequence> parameterValues) {
-
-    ParameterSet parameterSet = parseParameterValues(parameterValues);
-
-    return KeyVaultSecretFactory.getInstance()
-      .request(parameterSet)
-      .getContent()
-      .getValue();
+    return getResource(KeyVaultSecretFactory.getInstance(), parameterValues)
+            .getValue();
   }
 
 }
