@@ -102,6 +102,15 @@ public class KeyVaultConnectionStringProvider
   @Override
   public String getConnectionString(Map<Parameter, CharSequence> parameterValues) {
 
+    String alias;
+    try {
+      alias = parseParameterValues(parameterValues).getRequired(TNS_ALIAS);
+    } catch (IllegalStateException e) {
+      throw new IllegalArgumentException(
+              "Required parameter 'tnsAlias' is missing", e
+      );
+    }
+
     // Retrieve the secret containing tnsnames.ora content from Azure Key Vault
     String secretValue = getSecret(parameterValues);
 
@@ -113,15 +122,6 @@ public class KeyVaultConnectionStringProvider
       tnsNames = TNSNames.read(inputStream);
     } catch (IOException e) {
       throw new IllegalStateException("Failed to read tnsnames.ora content", e);
-    }
-
-    String alias;
-    try {
-      alias = parseParameterValues(parameterValues).getRequired(TNS_ALIAS);
-    } catch (IllegalStateException e) {
-      throw new IllegalArgumentException(
-              "Required parameter 'tnsAlias' is missing", e
-      );
     }
 
     String connectionString = tnsNames.getConnectionStringByAlias(alias);
