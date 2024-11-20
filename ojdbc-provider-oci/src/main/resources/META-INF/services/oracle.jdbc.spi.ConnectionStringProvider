@@ -1,1 +1,2 @@
 oracle.jdbc.provider.oci.resource.DatabaseConnectionStringProvider
+oracle.jdbc.provider.oci.resource.VaultConnectionStringProvider
