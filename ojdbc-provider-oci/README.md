@@ -38,6 +38,8 @@ Provider</a></dt>
 <dd>Provides TCPS/TLS wallets for secure connections to an Autonomous Database</dd>
 <dt><a href="#seps-wallet-provider">SEPS Wallet Provider</a></dt>
 <dd>Provides SEPS (Secure External Password Store) wallets for secure username and password retrieval</dd>
+<dt><a href="#vault-connection-string-provider">Vault Connection String Provider</a></dt>
+<dd>Provides connection strings for secure database connectivity based on aliases, retrieved from the tnsnames.ora file stored in OCI Vault.</dd>
 <dt><a href="#common-parameters-for-resource-providers">Common Parameters for Resource Providers</a></dt>
 <dd>Common parameters supported by the resource providers</dd>
 </dl>
@@ -511,6 +513,46 @@ Optional parameter to specify the index of the connection string to use when ret
 </table>
 
 An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault-wallet.properties](example-vault-wallet.properties).
+
+## Vault Connection String Provider
+
+The OCI Vault Connection String Provider provides Oracle JDBC with a connection string managed by the OCI Vault service.
+This is a Resource Provider identified by the name `ojdbc-provider-oci-vault-tnsnames`.
+
+This provider retrieves and decodes a `tnsnames.ora` file stored as a secret in OCI Vault, allowing selection of
+connection strings based on specified aliases.
+It supports both plain text and Base64-encoded `tnsnames.ora` files.
+
+This enables flexible and secure configuration for database connections using the alias names defined in your `tnsnames.ora` file.
+
+In addition to the set of common parameters, this provider also supports the parameters listed below:
+
+<table>
+<thead>
+<tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Accepted Values</th> 
+<th>Default Value</th> 
+</tr> 
+</thead>
+<tbody>
+<tr> 
+<td><code>ocid</code></td> 
+<td>The OCID of the OCI Vault secret containing the <code>tnsnames.ora</code> file.</td>
+<td>The <a href="https://docs.oracle.com/en-us/iaas/Content/General/Concepts/identifiers.htm">OCID</a> of the secret</td>
+<td><i>No default value. A value must be configured for this parameter.</i></td>
+</tr>
+<tr>
+<td><code>tnsAlias</code></td>
+<td>Specifies the alias to retrieve the appropriate connection string from the <code>tnsnames.ora</code> file.</td>
+<td>Any valid alias present in your <code>tnsnames.ora</code> file.</td>
+<td><i>No default value. A value must be configured for this parameter.</i></td>
+</tr>
+</tbody>
+</table>
+
+An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault.properties](example-vault.properties).
 
 
 ## Access Token Provider
