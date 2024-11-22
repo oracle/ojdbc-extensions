@@ -51,6 +51,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public class JacksonOsonSampleUtil {
 
@@ -66,10 +67,19 @@ public class JacksonOsonSampleUtil {
     return ods.getConnection();
   }
 
+  public static Connection createConnectionWithProperties(Properties properties) throws SQLException {
+    OracleDataSource ods = new OracleDataSource();
+    ods.setURL(URL);
+    ods.setUser(USER);
+    ods.setPassword(PASSWORD);
+    ods.setConnectionProperties(properties);
+    return ods.getConnection();
+  }
+
   public static void createTable(Connection conn) throws SQLException {
     try (Statement stmt = conn.createStatement()) {
       stmt.addBatch("drop table if exists jackson_oson_sample");
-      stmt.addBatch("create table jackson_oson_sample(id number, json_value JSON) tablespace tbs1");
+      stmt.addBatch("create table jackson_oson_sample(id number, json_value JSON)");
       stmt.executeBatch();
     }
   }
