@@ -9,7 +9,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
 
-public class AWSS3ConfigurationProvider extends OracleConfigurationJsonProvider {
+public class AwsS3ConfigurationProvider extends OracleConfigurationJsonProvider {
 
     @Override
     public InputStream getJson(String s3Url) throws SQLException {
