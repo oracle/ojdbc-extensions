@@ -13,7 +13,7 @@ public class SimpleAwsSecretExample {
 
     // Sample default URL if non present
     if (args.length == 0) {
-      url = "jdbc:oracle:thin:@config-awssecret://payload_ojdbc_base64_adb";
+      url = "jdbc:oracle:thin:@config-awssecret://{secret-name}";
     } else {
       url = args[0];
     }

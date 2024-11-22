@@ -44,17 +44,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class SimpleAwsAppConfigExample {
+public class SimpleAwsS3Example {
   private static String url;
-
-  /**
-   * @param args the command line arguments
-   * @throws SQLException if an error occurs during the database calls
-   */
   public static void main(String[] args) throws SQLException {
+
     // Sample default URL if non present
     if (args.length == 0) {
-      url = "jdbc:oracle:thin:@config-awsappconfig://a/{application-id}/c/{configuration-profile-id}/e/{environment-id}?REGION={region}";
+      url = "jdbc:oracle:thin:@config-awss3://s3://{bucket-name}/{key-name}";
     } else {
       url = args[0];
     }
@@ -69,6 +65,5 @@ public class SimpleAwsAppConfigExample {
     ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
     if (rs.next())
       System.out.println(rs.getString(1));
-
   }
 }
