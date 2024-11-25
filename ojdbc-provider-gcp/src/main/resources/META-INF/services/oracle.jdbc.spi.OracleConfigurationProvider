@@ -1,2 +1,0 @@
-oracle.jdbc.provider.gcp.configuration.GcpCloudStorageConfigurationProvider
-oracle.jdbc.provider.gcp.configuration.GcpSecretManagerConfigurationProvider
