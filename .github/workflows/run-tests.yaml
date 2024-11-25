@@ -113,9 +113,9 @@ jobs:
           OCI_CORRUPTED_TLS_WALLET_OCID=${{ secrets.TEST_OCI_CORRUPTED_TLS_WALLET_OCID }}\n
           OCI_PKCS12_SEPS_WALLET_PASSWORD=${{ secrets.TEST_OCI_PKCS12_SEPS_WALLET_PASSWORD }}\n
           OCI_SEPS_CONNECTION_STRING_INDEX=${{ secrets.TEST_OCI_SEPS_CONNECTION_STRING_INDEX }}\n
-          #OCI_TNS_NAMES_OCID=${{ secrets.OCI_TNS_NAMES_OCID }}\n
-          #OCI_TNS_NAMES_ALIAS=${{ secrets.OCI_TNS_NAMES_ALIAS }}\n
-          #OCI_NON_BASE64_TNS_NAMES_OCID=${{ secrets.OCI_NON_BASE64_TNS_NAMES_OCID }}\n
+          OCI_TNS_NAMES_OCID=${{ secrets.OCI_TNS_NAMES_OCID }}\n
+          OCI_TNS_NAMES_ALIAS=${{ secrets.OCI_TNS_NAMES_ALIAS }}\n
+          OCI_NON_BASE64_TNS_NAMES_OCID=${{ secrets.OCI_NON_BASE64_TNS_NAMES_OCID }}\n
           " >> ojdbc-provider-oci/test.properties
 
           # Generate GCP config
