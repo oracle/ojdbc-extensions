@@ -102,6 +102,15 @@ public class OsonGenerator extends GeneratorBase {
   }
 
   /**
+   * Used to Enable Fields such as UUID to be written as byte[].
+   * @return boolean to support writing Binary Natively
+   */
+  @Override
+  public boolean canWriteBinaryNatively() {
+    return true;
+  }
+
+  /**
    * Flushes the generator and writes any buffered output to the underlying stream.
    *
    * @throws IOException If an I/O error occurs.

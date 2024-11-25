@@ -41,12 +41,16 @@ package oracle.jdbc.provider.oson;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.core.util.VersionUtil;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ser.std.SqlTimeSerializer;
 import oracle.jdbc.provider.oson.deser.*;
 import oracle.jdbc.provider.oson.ser.*;
 
 import java.io.InputStream;
 import java.math.BigInteger;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.time.*;
+import java.util.Date;
 import java.util.Properties;
 
 
@@ -122,6 +126,9 @@ public class OsonModule extends SimpleModule {
 
     addDeserializer(byte[].class, OsonByteDeserializer.INSTANCE);
     addSerializer(byte[].class, OsonByteSerializer.INSTANCE);
+
+    addDeserializer(Date.class, OsonDateDeserializer.INSTANCE);
+    addSerializer(Date.class, OsonDateSerializer.INSTANCE);
     
   }
 }
