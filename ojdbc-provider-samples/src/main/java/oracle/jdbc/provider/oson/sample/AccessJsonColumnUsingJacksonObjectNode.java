@@ -54,7 +54,9 @@ import java.sql.*;
 /**
  * <p>
  * A standalone example that inserts and retrieves JSON data to the Oracle database
- * using an {@link OsonFactory} and {@link ObjectNode}.
+ * using an {@link OsonFactory} and {@link ObjectNode}. Recommended for applications
+ * that already consume {@link ObjectNode}, for other application it is recommended
+ * to use a POJO instead.
  * </p><p>
  * The JSON object is created using Jackson API's {@link ObjectNode}. The {@link OsonFactory}
  * and {@link OsonGenerator} are used to write the JSON Object to an OutputStream. The data

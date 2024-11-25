@@ -39,10 +39,10 @@ package oracle.jdbc.provider.oson.sample;
 
 import oracle.jdbc.OracleConnection;
 import oracle.jdbc.OracleType;
-import oracle.jdbc.provider.oson.JacksonOsonProvider;
 import oracle.jdbc.provider.oson.sample.model.Emp;
 
 import java.sql.*;
+import java.util.Properties;
 
 /**
  * <p>
@@ -86,10 +86,10 @@ public class AccessJsonColumnUsingPOJOAndJsonProvider {
 
   public static void main(String[] args) {
     try {
-      // set the system property to the class implementing the "oracle.jdbc.spi.JsonProvider interface"
-      System.setProperty(OracleConnection.CONNECTION_PROPERTY_PROVIDER_JSON, JacksonOsonProvider.PROVIDER_NAME);
+      Properties properties = new Properties();
+      properties.setProperty(OracleConnection.CONNECTION_PROPERTY_PROVIDER_JSON, "jackson-json-provider");
 
-      Connection conn = JacksonOsonSampleUtil.createConnection();
+      Connection conn = JacksonOsonSampleUtil.createConnectionWithProperties(properties);
       JacksonOsonSampleUtil.createTable(conn);
       insertIntoDatabase(conn);
       retrieveFromDatabase(conn);

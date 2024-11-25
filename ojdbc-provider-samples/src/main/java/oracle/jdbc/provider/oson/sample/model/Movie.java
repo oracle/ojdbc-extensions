@@ -37,58 +37,49 @@
  */
 package oracle.jdbc.provider.oson.sample.model;
 
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Objects;
 
-public class Phone {
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-  public enum Type {MOBILE, HOME, WORK}
+public class Movie {
+  @JsonProperty("_id")
+  public int id;
+  public String title;
+  public String genre;
+  public BigDecimal gross;
+  public OffsetDateTime released;
+  public List<Image> image;
 
-  String number;
-
-  Type type;
-
-  public Phone() {
-  }
-
-  public Phone(String number, Type type) {
-    this.number = number;
-    this.type = type;
-  }
-
-  public String getNumber() {
-    return number;
-  }
-
-  public void setNumber(String number) {
-    this.number = number;
-  }
-
-  public Type getType() {
-    return type;
-  }
-
-  public void setType(Type type) {
-    this.type = type;
-  }
-
-  @Override
-  public String toString() {
-    return "Phone {" +
-        "number='" + number + '\'' +
-        ", type=" + type +
-        '}';
+  public Movie() {}
+  public Movie(int id, String title, String genre, BigDecimal gross, OffsetDateTime released, List<Image> image) {
+    this.id = id;
+    this.title = title;
+    this.genre = genre;
+    this.gross = gross;
+    this.released = released;
+    this.image = image;
   }
 
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    Phone phone = (Phone) o;
-    return Objects.equals(number, phone.number) && type == phone.type;
+    Movie movie = (Movie) o;
+    return id == movie.id
+        && title.equals(movie.title)
+        && genre.equals(movie.genre)
+        && gross.compareTo(movie.gross) == 0
+        && released.isEqual(movie.released)
+        && image.equals(movie.image);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(number, type);
+    return Objects.hash(id, title, genre, gross, released, image);
   }
 }
+
+
