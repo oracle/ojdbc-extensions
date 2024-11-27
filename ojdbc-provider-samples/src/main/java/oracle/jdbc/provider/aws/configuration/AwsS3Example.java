@@ -44,7 +44,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class SimpleAwsS3Example {
+public class AwsS3Example {
   private static String url;
   public static void main(String[] args) throws SQLException {
 

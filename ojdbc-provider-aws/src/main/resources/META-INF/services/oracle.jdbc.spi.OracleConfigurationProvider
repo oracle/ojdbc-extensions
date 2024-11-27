@@ -1,2 +1,2 @@
 oracle.jdbc.provider.aws.configuration.AwsS3ConfigurationProvider
-oracle.jdbc.provider.aws.configuration.AwsSecretJsonProvider
+oracle.jdbc.provider.aws.configuration.AwsSecretsManagerConfigurationProvider
