@@ -68,7 +68,7 @@ public final class JsonSecretUtil {
    *   }
    * </pre>
    * If an attribute named 'method' is present, the value is keyed to the
-   * name 'AUTHENTICATION' in the returned map. This is done to match the
+   * name 'AUTHENTICATION' in the returned map.  This is done to match the
    * "AUTHENTICATION" parameter name used by the {@code ojdbc-azure-common}
    * module.
    * @param secretJsonObject JSON that may contain a 'value' field or/and an
@@ -79,41 +79,44 @@ public final class JsonSecretUtil {
   public static Map<String, String> toNamedValues(
     OracleJsonObject secretJsonObject) {
 
-    final String valueFieldName = "value";
     Map<String, String> options = new HashMap<>();
 
-    if (secretJsonObject.containsKey(valueFieldName)) {
-      OracleJsonValue secretUri = secretJsonObject.get(valueFieldName);
-      if (secretUri.getOracleJsonType()
-        .equals(OracleJsonValue.OracleJsonType.STRING)) {
-        options.put(valueFieldName, secretUri.asJsonString().getString());
-      } else {
-        options.put(valueFieldName, secretUri.toString());
+    secretJsonObject.forEach((key, value) -> {
+      if (key.equals("type")) {
+        // Skipped
       }
-    }
-
-    if (secretJsonObject.containsKey("authentication")) {
-      OracleJsonObject authenticationJsonObject = secretJsonObject
-        .get("authentication")
-        .asJsonObject();
-
-      // Rename "method" to "AUTHENTICATION" to match the parameter names
-      if (authenticationJsonObject.containsKey("method")) {
-        OracleJsonValue authentication = authenticationJsonObject.get("method");
-        authenticationJsonObject.remove("method");
-        authenticationJsonObject.put("AUTHENTICATION", authentication);
+      else if (key.equals("value")) {
+        // Handle the "value" object
+        options.put("value", getValueAsString(value));
       }
+      else if (key.equals("authentication")) {
+        // Handle the "authentication" object
+        OracleJsonObject authenticationJsonObject = value.asJsonObject();
 
-      authenticationJsonObject.forEach((key, value) -> {
-        if (value.getOracleJsonType()
-          .equals(OracleJsonValue.OracleJsonType.STRING)) {
-          options.put(key, value.asJsonString().getString());
-        } else {
-          options.put(key, value.toString());
+        // Rename "method" to "AUTHENTICATION" to match the parameter names
+        if (authenticationJsonObject.containsKey("method")) {
+          OracleJsonValue authentication = authenticationJsonObject.get("method");
+          authenticationJsonObject.remove("method");
+          authenticationJsonObject.put("AUTHENTICATION", authentication);
         }
-      });
-    }
+
+        authenticationJsonObject.forEach((authKey, authValue) -> {
+          options.put(authKey, getValueAsString(authValue));
+        });
+      }
+      else {
+        // For the rest of the cases, directly add to the options
+        options.put(key, getValueAsString(value));
+      }
+    });
 
     return options;
+  }
+
+  private static String getValueAsString(OracleJsonValue value) {
+    if (value.getOracleJsonType().equals(OracleJsonValue.OracleJsonType.STRING))
+      return value.asJsonString().getString();
+    else
+      return value.toString();
   }
 }

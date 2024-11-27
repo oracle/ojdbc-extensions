@@ -1,9 +1,8 @@
 package oracle.jdbc.provider.aws.configuration;
 
 import oracle.jdbc.driver.OracleConfigurationJsonProvider;
-import oracle.jdbc.provider.aws.secret.SecretFactory;
+import oracle.jdbc.provider.aws.secrets.SecretsManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.provider.parameter.ParameterSetBuilder;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 
 import java.io.ByteArrayInputStream;
@@ -11,30 +10,19 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AwsSecretJsonProvider extends OracleConfigurationJsonProvider {
+public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationJsonProvider {
 
   /**
    * Parser that recognizes the named parameters which appear in the query
    * section of a URL.
    */
-  private static final ParameterSetParser PARAMETER_SET_PARSER =
+  static final ParameterSetParser PARAMETER_SET_PARSER =
       AwsConfigurationParameters.configureBuilder(
               ParameterSetParser.builder()
-                  .addParameter("value", AwsSecretJsonProvider::parseSecretId))
+                  .addParameter("value", SecretsManagerFactory.SECRET_NAME)
+                  .addParameter("REGION", SecretsManagerFactory.REGION)
+                  .addParameter("key", SecretsManagerFactory.KEY))
           .build();
-
-  /**
-   * Parses the "value" field of a JSON object as a Secret ID.
-   * This parser configures the given {@code builder} with two distinct
-   * parameters accepted by {@link SecretFactory}: One parameter for the
-   * Secret ID, and another for the secret name.
-   * @param secretId Secret Identifier. Not null.
-   * @param builder Builder to configure with parsed parameters. Not null.
-   */
-  private static void parseSecretId(
-      String secretId, ParameterSetBuilder builder) {
-    builder.add("value", SecretFactory.SECRET_ID, secretId);
-  }
 
   @Override
   public InputStream getJson(String secretId) {
@@ -44,7 +32,7 @@ public class AwsSecretJsonProvider extends OracleConfigurationJsonProvider {
 
     ParameterSet parameters = PARAMETER_SET_PARSER.parseNamedValues(optionsWithSecret);
 
-    String secretString = SecretFactory.getInstance()
+    String secretString = SecretsManagerFactory.getInstance()
         .request(parameters)
         .getContent();
 

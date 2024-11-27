@@ -48,20 +48,14 @@ import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
 public final class AwsConfigurationParameters {
 
   /**
-   * Parameter representing the "REGION=..." name-value pair which may appear in
-   * the query section of a URL.
-   */
-  public static final Parameter<String> REGION = Parameter.create(REQUIRED);
-
-  /**
    * Private constructor that should never be called: This class is a singleton.
    */
   private AwsConfigurationParameters() {}
 
   /**
    * Configures a {@code builder} to build a parser that recognizes the common
-   * set of parameters accepted by {@link AwsAppConfigProvider} and
-   * {@link AwsSecretJsonProvider}.
+   * set of parameters accepted by {@link AwsS3ConfigurationProvider} and
+   * {@link AwsSecretsManagerConfigurationProvider}.
    * @param builder Builder to configure. Not null.
    * @return The {@code builder}, with configuration added. Not null.
    */
