@@ -132,7 +132,6 @@ public final class WalletFactory extends OciResourceFactory<Wallet> {
       }
 
       OffsetDateTime expiry = wallet.getExpirationDate();
-      System.out.println(expiry);
       if (expiry == null) {
         // If expiry could not be determined, treat as permanent
         return Resource.createPermanentResource(wallet, false);
