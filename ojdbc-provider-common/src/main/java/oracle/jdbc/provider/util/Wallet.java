@@ -45,7 +45,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.KeyStore;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
@@ -230,7 +229,6 @@ public final class Wallet {
             break;
           case README_FILE:
             readmeContent = readStreamToString(zipStream);
-            System.out.println(readmeContent);
             break;
           default:
             // Ignore other files
@@ -300,20 +298,17 @@ public final class Wallet {
     if (matcher.find()) {
       String expiryDateString = matcher.group(1).trim();
       expiryDateString = expiryDateString.replace(" UTC", "Z");
-      System.out.println("expiryDateString: " + expiryDateString);
+
+      try {
       DateTimeFormatter formatter = new DateTimeFormatterBuilder()
               .appendPattern("yyyy-MM-dd HH:mm:ss")
               .optionalStart()
               .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
               .optionalEnd()
               .appendPattern("X") // Accept 'Z' as offset
-              .toFormatter(Locale.ENGLISH); // Specify locale explicitly
-      System.out.println("formatter: " + formatter);
+              .toFormatter(Locale.ENGLISH);
 
-      try {
-        OffsetDateTime expirationDate = OffsetDateTime.parse(expiryDateString, formatter);
-        System.out.println("Parsed Expiration Date: " + expirationDate);
-        return expirationDate;
+        return OffsetDateTime.parse(expiryDateString, formatter);
       } catch (DateTimeParseException e) {
         throw new IllegalStateException("Failed to parse expiration date from README", e);
       }
