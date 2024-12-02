@@ -300,7 +300,7 @@ public final class Wallet {
       DateTimeFormatter formatter = new DateTimeFormatterBuilder()
               .appendPattern("yyyy-MM-dd HH:mm:ss")
               .optionalStart()
-              .appendFraction(ChronoField.NANO_OF_SECOND, 0, 6, true)
+              .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
               .optionalEnd()
               .appendLiteral(" UTC")
               .toFormatter()
