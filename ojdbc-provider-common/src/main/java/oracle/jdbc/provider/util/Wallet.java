@@ -43,7 +43,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -312,7 +311,6 @@ public final class Wallet {
         throw new IllegalStateException("Failed to parse expiration date from README", e);
       }
     } else {
-      // If the pattern is not found, return null or handle accordingly
       return null;
     }
   }

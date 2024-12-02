@@ -76,8 +76,6 @@ public final class WalletFactory extends OciResourceFactory<Wallet> {
 
   /**
    * A cache of wallet configurations requested from the OCI database service.
-   * TODO: The cache should invalidate entries after TLS certificates have
-   *   expired.
    */
   private static final ResourceFactory<Wallet> INSTANCE =
     CachedResourceFactory.create(new WalletFactory());
@@ -141,10 +139,6 @@ public final class WalletFactory extends OciResourceFactory<Wallet> {
       } else {
         return Resource.createExpiringResource(wallet, expiry, false);
       }
-
-      // TODO: It may be possible to parse an expiration time from the wallet
-      //  README, and return an expiring resource here.
-      //return Resource.createPermanentResource(wallet, false);
     }
     finally {
       Arrays.fill(password, (char)0);
