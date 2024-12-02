@@ -53,6 +53,7 @@ import oracle.jdbc.provider.util.Wallet;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.zip.ZipInputStream;
 
@@ -132,9 +133,18 @@ public final class WalletFactory extends OciResourceFactory<Wallet> {
           "Failed to close ZIP stream", ioException);
       }
 
+      OffsetDateTime expiry = wallet.getExpirationDate();
+      System.out.println(expiry);
+      if (expiry == null) {
+        // If expiry could not be determined, treat as permanent
+        return Resource.createPermanentResource(wallet, false);
+      } else {
+        return Resource.createExpiringResource(wallet, expiry, false);
+      }
+
       // TODO: It may be possible to parse an expiration time from the wallet
       //  README, and return an expiring resource here.
-      return Resource.createPermanentResource(wallet, false);
+      //return Resource.createPermanentResource(wallet, false);
     }
     finally {
       Arrays.fill(password, (char)0);
