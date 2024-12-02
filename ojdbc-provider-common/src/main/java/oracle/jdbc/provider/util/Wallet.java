@@ -229,6 +229,7 @@ public final class Wallet {
             break;
           case README_FILE:
             readmeContent = readStreamToString(zipStream);
+            System.out.println(readmeContent);
             break;
           default:
             // Ignore other files
