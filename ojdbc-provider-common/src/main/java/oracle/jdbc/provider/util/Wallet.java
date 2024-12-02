@@ -298,6 +298,7 @@ public final class Wallet {
     Matcher matcher = EXPIRY_PATTERN.matcher(readmeContent);
     if (matcher.find()) {
       String expiryDateString = matcher.group(1).trim();
+      System.out.println("expiryDateString: " + expiryDateString);
       DateTimeFormatter formatter = new DateTimeFormatterBuilder()
               .appendPattern("yyyy-MM-dd HH:mm:ss")
               .optionalStart()
@@ -306,6 +307,7 @@ public final class Wallet {
               .appendLiteral(" UTC")
               .toFormatter()
               .withZone(ZoneOffset.UTC);
+      System.out.println("formatter: " + formatter);
       try {
         return OffsetDateTime.parse(expiryDateString, formatter);
       } catch (DateTimeParseException e) {
