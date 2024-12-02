@@ -308,8 +308,12 @@ public final class Wallet {
               .toFormatter()
               .withZone(ZoneOffset.UTC);
       System.out.println("formatter: " + formatter);
+
       try {
-        return OffsetDateTime.parse(expiryDateString, formatter);
+           OffsetDateTime res = OffsetDateTime.parse(expiryDateString,
+                formatter);
+        System.out.println("res: " + res);
+        return res;
       } catch (DateTimeParseException e) {
         throw new IllegalStateException("Failed to parse expiration date from README", e);
       }
