@@ -21,7 +21,7 @@ public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationJ
               ParameterSetParser.builder()
                   .addParameter("value", SecretsManagerFactory.SECRET_NAME)
                   .addParameter("REGION", SecretsManagerFactory.REGION)
-                  .addParameter("key", SecretsManagerFactory.KEY))
+                  .addParameter("key_name", SecretsManagerFactory.KEY_NAME))
           .build();
 
   @Override
@@ -41,6 +41,6 @@ public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationJ
 
   @Override
   public String getType() {
-    return "awssecret";
+    return "awssecretsmanager";
   }
 }

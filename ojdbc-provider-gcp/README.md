@@ -133,6 +133,7 @@ For the JSON type of provider (GCP Object Storage, HTTP/HTTPS, File) the passwor
     - azurevault
     - base64
     - gcpsecretmanager
+    - awssecretsmanager
 - value
   - Mandatory
   - Possible values
@@ -140,6 +141,7 @@ For the JSON type of provider (GCP Object Storage, HTTP/HTTPS, File) the passwor
     - Azure Key Vault URI (if azurevault)
     - Base64 Encoded password (if base64)
     - GCP resource name (if gcpsecretmanager)
+    - AWS Secret name (if awssecretsmanager)
     - Text
 - authentication
   - Optional

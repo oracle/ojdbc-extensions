@@ -37,7 +37,7 @@ public final class SecretsManagerFactory
    * The name of the key if the secret contains key-value pairs.
    * This is an optional parameter.
    * */
-  public static final Parameter<String> KEY =
+  public static final Parameter<String> KEY_NAME =
       Parameter.create();
 
   private static final OracleJsonFactory JSON_FACTORY = new OracleJsonFactory();
@@ -65,7 +65,7 @@ public final class SecretsManagerFactory
 
     String secretName = parameterSet.getRequired(SECRET_NAME);
     String region = parameterSet.getOptional(REGION);
-    String key = parameterSet.getOptional(KEY);
+    String key = parameterSet.getOptional(KEY_NAME);
 
     SecretsManagerClientBuilder builder = SecretsManagerClient.builder()
         .credentialsProvider(() -> awsCredentials);
