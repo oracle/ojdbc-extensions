@@ -47,6 +47,7 @@ import jdk.jfr.Label;
 import jdk.jfr.Name;
 import jdk.jfr.Category;
 import jdk.jfr.ValueDescriptor;
+import oracle.jdbc.DatabaseFunction;
 
 /**
  * Factory class for creating Java Flight Recorder events.
@@ -66,12 +67,12 @@ public class OracleEventFactory {
    *  <li>User</li>
    * </ul>
    */
-  public static Event createEvent(String databaseOperation) {
-    String eventName = "oracle.jdbc.provider.jfr.roundtrip." + toCamelCase(databaseOperation);
+  public static Event createEvent(DatabaseFunction databaseFunction) {
+    String eventName = "oracle.jdbc.provider.jfr.roundtrip." + databaseFunction.toString();
     List<AnnotationElement> eventAnnotations = new ArrayList<AnnotationElement>();
     eventAnnotations
         .add(new AnnotationElement(Name.class, eventName));
-    eventAnnotations.add(new AnnotationElement(Label.class, databaseOperation));
+    eventAnnotations.add(new AnnotationElement(Label.class, databaseFunction.getDescription()));
     eventAnnotations.add(new AnnotationElement(Category.class,  new String[] { "Oracle JDBC", "Round trips" }));
 
     List<ValueDescriptor> fields = new ArrayList<ValueDescriptor>();

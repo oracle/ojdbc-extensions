@@ -31,9 +31,9 @@ The coordinates for the latest release are:
 
 ## Usage 
 
-To use the Oracle JDBC provider for Open Telemetry just add the artifact to the
+To use the Oracle JDBC provider for Java Flight Recorder just add the artifact to the
 application's classpath and set the following connection property :
 
 ```java
-oracle.jdbc.provider.traceEventListener=java-flight-recorder-trace-event-listener-providerr
+oracle.jdbc.provider.traceEventListener=java-flight-recorder-trace-event-listener-provider
 ```

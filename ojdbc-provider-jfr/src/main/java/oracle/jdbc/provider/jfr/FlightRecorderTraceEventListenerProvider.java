@@ -40,6 +40,7 @@ package oracle.jdbc.provider.jfr;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -48,19 +49,12 @@ import oracle.jdbc.spi.TraceEventListenerProvider;
 
 /**
  * Implements a TraceEventListenerProvider for FlightRecorderTraceEventListener. 
- * Two parameters can be used to configure the trace event listener:
- * <ul>
- * <li>
- *  <b>enable</b>: if true, the trace event listener will create events for 
- *  each round trip otherwise no events will be created.
- * </li>
- * <li>
- *  <b>enableSensitiveData</b>: if true, sensitive attributes like SQL statements
- *  and database used will be added to the event, otherwise sensitive attributes
- *  will not be added.
- * </li>
- * </ul>
- */
+ * By default sensitive attributes like SQL statements and database used will 
+ * be added to the event, the configureation property "enableSensitiveData" can
+ * be used to enable sensitive attributes to be added to the event.
+ * To enable sensitive data set the connection property 
+ * oracle.jdbc.provider.traceEventListener.enableSensitiveData to true.
+*/
 public class FlightRecorderTraceEventListenerProvider implements TraceEventListenerProvider {
 
   /**
@@ -80,17 +74,6 @@ public class FlightRecorderTraceEventListenerProvider implements TraceEventListe
     }
   };
 
-  private static final Parameter ENABLE = new Parameter() {
-    @Override
-    public boolean isSensitive() {
-      return false;
-    }
-    @Override
-    public String name() {
-      return "enable";
-    }
-  };
-
   @Override
   public String getName() {
     return TRACE_EVENT_LISTENER_NAME;
@@ -99,15 +82,14 @@ public class FlightRecorderTraceEventListenerProvider implements TraceEventListe
   @Override
   public Collection<? extends Parameter> getParameters() {
 
-    List<Parameter> parameters = Arrays.asList(ENABLE_SENSITIVE_DATA, ENABLE);
+    List<Parameter> parameters = Collections.singletonList(ENABLE_SENSITIVE_DATA);
     return parameters;
   }
 
   @Override
   public TraceEventListener getTraceEventListener(Map<Parameter, CharSequence> parametersMap) {
-    boolean enable = getBooleanParameterValue(ENABLE, parametersMap);
     boolean enableSensitiveData = getBooleanParameterValue(ENABLE_SENSITIVE_DATA, parametersMap);
-    return new FlightRecorderTraceEventListener(enable, enableSensitiveData);
+    return new FlightRecorderTraceEventListener(enableSensitiveData);
   }
 
   private boolean getBooleanParameterValue(Parameter parameter, Map<Parameter, CharSequence> parametersMap) {

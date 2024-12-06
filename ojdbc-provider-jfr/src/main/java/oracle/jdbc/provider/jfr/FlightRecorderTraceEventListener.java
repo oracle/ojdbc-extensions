@@ -50,21 +50,18 @@ import jdk.jfr.Event;
  */
 public class FlightRecorderTraceEventListener implements TraceEventListener {
 
-  private final boolean enabled;
   private final boolean enableSensitiveData;
 
   private static Logger logger = Logger.getLogger(FlightRecorderTraceEventListener.class.getName());
 
   /**
    * Constructor
-   * @param enable if false, no events are created.
    * @param enableSensitiveData if true, events will contain sensitive information like
    * SQL statements and usernames.
    */
-  public FlightRecorderTraceEventListener(boolean enable, boolean enableSensitiveData) {
-    this.enabled = enable;
+  public FlightRecorderTraceEventListener(boolean enableSensitiveData) {
     this.enableSensitiveData = enableSensitiveData;
-    logger.log(Level.INFO, "FlightRecorderTraceEventListener started enabled " + this.enabled + " sensitive data enabled " + this.enableSensitiveData);
+    logger.log(Level.INFO, "FlightRecorderTraceEventListener started: sensitive data enabled " + this.enableSensitiveData);
   }
 
   /**
@@ -73,20 +70,13 @@ public class FlightRecorderTraceEventListener implements TraceEventListener {
    */
   @Override
   public Object roundTrip(Sequence sequence, TraceContext traceContext, Object userContext) {
-    if (!enabled) {
-      logger.log(Level.FINE, "FlightRecorderTraceEventListener is disabled");
-      return null;
-    }
     if (sequence.equals(Sequence.BEFORE)) {
-      logger.log(Level.FINE, "Received before event");
       Event event = OracleEventFactory.createEvent(
-        traceContext.databaseOperation());
+        traceContext.databaseFunction());
       event.begin();
       return event;
     } else {
-      logger.log(Level.FINE, "Received after event");
       if (userContext != null) {
-        logger.log(Level.FINE, "Received after event not empty");
         Event event = (Event) userContext;
         event.set(0, traceContext.getConnectionId());
         event.set(1, traceContext.databaseOperation());

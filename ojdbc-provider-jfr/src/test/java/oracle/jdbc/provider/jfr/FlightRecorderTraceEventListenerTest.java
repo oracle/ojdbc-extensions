@@ -43,6 +43,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import jdk.jfr.Event;
+import oracle.jdbc.DatabaseFunction;
 import oracle.jdbc.TraceEventListener.Sequence;
 import oracle.jdbc.TraceEventListener.TraceContext;
 
@@ -63,6 +64,7 @@ public class FlightRecorderTraceEventListenerTest {
     Mockito.when(traceContext.originalSqlText()).thenReturn("Original SQL");
     Mockito.when(traceContext.tenant()).thenReturn("tenant");
     Mockito.when(traceContext.user()).thenReturn("user");
+    Mockito.when(traceContext.databaseFunction()).thenReturn(DatabaseFunction.EXECUTE_QUERY);
   }
 
   @BeforeEach
@@ -70,55 +72,23 @@ public class FlightRecorderTraceEventListenerTest {
     eventFactory.reset();
     Mockito.reset(event);
     eventFactory.when(() -> 
-      OracleEventFactory.createEvent(Mockito.anyString())
+      OracleEventFactory.createEvent(DatabaseFunction.EXECUTE_QUERY)
     ).thenReturn(event);    
   }
 
   @Test
-  void testPropertiesDisabled() throws Exception {
+  public void roundTripSensitiveSuccessTest() throws Exception {
     FlightRecorderTraceEventListener traceEventListener = 
-      new FlightRecorderTraceEventListener(false, false);
+    new FlightRecorderTraceEventListener(true);
     traceEventListener.roundTrip(Sequence.BEFORE, traceContext, traceEventListener);
     // check
     eventFactory.verify(
-      () -> OracleEventFactory.createEvent(Mockito.anyString()), 
-      Mockito.times(0));
-    traceEventListener.roundTrip(Sequence.AFTER, traceContext, event);
-    eventFactory.verify(
-      () -> OracleEventFactory.createEvent(Mockito.anyString()), 
-      Mockito.times(0));
-    }
-
-  @Test
-  void testPropertiesEnabled() throws Exception {
-    FlightRecorderTraceEventListener traceEventListener = 
-      new FlightRecorderTraceEventListener(true, true);
-    traceEventListener.roundTrip(Sequence.BEFORE, traceContext, traceEventListener);
-    // check
-    eventFactory.verify(
-      () -> OracleEventFactory.createEvent(Mockito.anyString()), 
-      Mockito.times(1));
-    
-    traceEventListener.roundTrip(Sequence.AFTER, traceContext, event);
-    eventFactory.verify(
-      () -> OracleEventFactory.createEvent(Mockito.anyString()), 
-      Mockito.times(1));
-  
-  }
-
-  @Test
-  public void roundTripEnabledSensitiveSuccessTest() throws Exception {
-    FlightRecorderTraceEventListener traceEventListener = 
-    new FlightRecorderTraceEventListener(true, true);
-    traceEventListener.roundTrip(Sequence.BEFORE, traceContext, traceEventListener);
-    // check
-    eventFactory.verify(
-      () -> OracleEventFactory.createEvent(Mockito.anyString()), 
+      () -> OracleEventFactory.createEvent(DatabaseFunction.EXECUTE_QUERY), 
       Mockito.times(1));
    
     traceEventListener.roundTrip(Sequence.AFTER, traceContext, event);
     eventFactory.verify(
-      () -> OracleEventFactory.createEvent(Mockito.anyString()), 
+      () -> OracleEventFactory.createEvent(DatabaseFunction.EXECUTE_QUERY), 
       Mockito.times(1));
       Mockito.verify(event,Mockito.times(1)).set(0, traceContext.getConnectionId());
       Mockito.verify(event,Mockito.times(1)).set(1, traceContext.databaseOperation());
@@ -130,26 +100,13 @@ public class FlightRecorderTraceEventListenerTest {
     }
 
   @Test
-  public void roundTripNotEnabledSensitiveSuccessTest() throws Exception {
+  public void roundTripNotSensitiveSuccessTest() throws Exception {
     FlightRecorderTraceEventListener traceEventListener = 
-    new FlightRecorderTraceEventListener(false, false);
-    traceEventListener.roundTrip(Sequence.BEFORE, traceContext, traceEventListener);
-    // check
-    eventFactory.verify(
-      () -> OracleEventFactory.createEvent(Mockito.anyString()), 
-      Mockito.times(0));
-    traceEventListener.roundTrip(Sequence.AFTER, traceContext, event);
-
-  }
-
-  @Test
-  public void roundTripEnabledNotSensitiveSuccessTest() throws Exception {
-    FlightRecorderTraceEventListener traceEventListener = 
-    new FlightRecorderTraceEventListener(true, false);
+    new FlightRecorderTraceEventListener(false);
     traceEventListener.roundTrip(Sequence.BEFORE, traceContext, null);
     // check
     eventFactory.verify(
-      () -> OracleEventFactory.createEvent(Mockito.anyString()), 
+      () -> OracleEventFactory.createEvent(DatabaseFunction.EXECUTE_QUERY), 
       Mockito.times(1));
   
     traceEventListener.roundTrip(Sequence.AFTER, traceContext, event);
@@ -161,21 +118,5 @@ public class FlightRecorderTraceEventListenerTest {
     Mockito.verify(event,Mockito.times(0)).set(5, traceContext.actualSqlText());
     Mockito.verify(event,Mockito.times(0)).set(6, traceContext.user());
   }
-
-  @Test
-  public void roundTripNotEnabledNotSensitiveSuccessTest() throws Exception {
-    FlightRecorderTraceEventListener traceEventListener = 
-    new FlightRecorderTraceEventListener(false, false);
-    traceEventListener.roundTrip(Sequence.BEFORE, traceContext, traceEventListener);
-    // check
-    eventFactory.verify(
-      () -> OracleEventFactory.createEvent(Mockito.anyString()), 
-      Mockito.times(0));
-    traceEventListener.roundTrip(Sequence.AFTER, traceContext, event);
-    eventFactory.verify(
-      () -> OracleEventFactory.createEvent(Mockito.anyString()), 
-      Mockito.times(0));
-  }
-
 
 }
