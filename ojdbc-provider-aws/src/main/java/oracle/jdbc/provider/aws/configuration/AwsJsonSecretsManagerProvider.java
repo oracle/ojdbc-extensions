@@ -15,8 +15,9 @@ public class AwsJsonSecretsManagerProvider
   @Override
   public char[] getSecret(OracleJsonObject jsonObject) {
     ParameterSet parameterSet =
-        PARAMETER_SET_PARSER.parseNamedValues(
-            JsonSecretUtil.toNamedValues(jsonObject));
+        PARAMETER_SET_PARSER
+            .parseNamedValues(
+                JsonSecretUtil.toNamedValues(jsonObject));
 
     String secretString = SecretsManagerFactory.getInstance()
         .request(parameterSet)

@@ -55,6 +55,13 @@
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>secretsmanager</artifactId>
     </dependency>
+    <!-- TEST DEPENDENCIES -->
+    <dependency>
+    <groupId>com.oracle.database.jdbc</groupId>
+    <artifactId>ojdbc-provider-common</artifactId>
+    <classifier>tests</classifier>
+    <type>test-jar</type>
+  </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
@@ -62,11 +69,6 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.oracle.database.security</groupId>
-      <artifactId>oraclepki</artifactId>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>

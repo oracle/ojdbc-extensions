@@ -50,7 +50,9 @@ public class AwsS3Example {
 
     // Sample default URL if non present
     if (args.length == 0) {
-      url = "jdbc:oracle:thin:@config-awss3://s3://{bucket-name}/{key-name}";
+//      url = "jdbc:oracle:thin:@config-awss3://s3://{bucket-name}/{key-name}";
+      url = "jdbc:oracle:thin:@config-awss3://s3://tinglwan-general-bucket/folder1/payload_ojdbc_adb_aws_secret.json";
+//      url = "jdbc:oracle:thin:@config-file:///Users/tinglwang/Notes/ojdbc-plugins/ociobject/payload_ojdbc_wallet_location_base64_sso.json";
     } else {
       url = args[0];
     }
