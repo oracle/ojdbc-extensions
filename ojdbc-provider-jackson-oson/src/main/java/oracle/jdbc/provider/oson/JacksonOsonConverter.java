@@ -40,6 +40,8 @@ package oracle.jdbc.provider.oson;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import oracle.jdbc.spi.OsonConverter;
 import oracle.sql.json.OracleJsonGenerator;
 import oracle.sql.json.OracleJsonParser;
@@ -70,6 +72,8 @@ public class JacksonOsonConverter implements OsonConverter{
   static {
     om.findAndRegisterModules();
     om.registerModule(new OsonModule());
+    om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    om.setAnnotationIntrospector(new AnnotationIntrospector());
   }
 
   /**

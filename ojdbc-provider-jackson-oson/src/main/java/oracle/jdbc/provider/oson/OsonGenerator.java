@@ -43,7 +43,14 @@ import com.fasterxml.jackson.core.Base64Variant;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.core.base.GeneratorBase;
 import com.fasterxml.jackson.core.json.JsonWriteContext;
+import oracle.jdbc.driver.json.tree.OracleJsonDateImpl;
+import oracle.jdbc.driver.json.tree.OracleJsonTimestampImpl;
+import oracle.sql.DATE;
+import oracle.sql.TIMESTAMP;
+import oracle.sql.json.OracleJsonDate;
+import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonGenerator;
+import oracle.sql.json.OracleJsonTimestamp;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -51,11 +58,11 @@ import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.Period;
+import java.sql.Timestamp;
+import java.time.*;
 import java.util.Arrays;
+import java.util.Base64;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -99,6 +106,7 @@ public class OsonGenerator extends GeneratorBase {
   protected OsonGenerator(int features, ObjectCodec codec, OracleJsonGenerator gen) {
     super(features, codec);
     this.gen = gen;
+
   }
 
   /**
@@ -339,7 +347,7 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeBinary(Base64Variant bv, byte[] data, int offset, int len) throws IOException {
     _verifyValueWrite("writeBinary");
-//    gen.write(Base64.getEncoder().encode(Arrays.copyOfRange(data, offset, offset+len)));
+//    gen.write(bv.encode(Arrays.copyOfRange(data, offset, offset+len)));
     gen.write(Arrays.copyOfRange(data, offset, offset+len));
   }
 
@@ -514,5 +522,26 @@ public class OsonGenerator extends GeneratorBase {
     gen.close();
     closed = true;
   }
-  
+
+  public void writeDate(Date value) throws IOException {
+    _verifyValueWrite("write date");
+
+    if(value instanceof java.sql.Date) {
+      DATE dd = new DATE((java.sql.Date)value);
+      OracleJsonDate jsonDate = new OracleJsonDateImpl(dd.shareBytes());
+      gen.write(jsonDate);
+    }else {
+      // java.util.Date
+      DATE dd = new DATE(new java.sql.Date(value.getTime()));
+      OracleJsonDate jsonDate = new OracleJsonDateImpl(dd.shareBytes());
+      gen.write(jsonDate);
+    }
+  }
+
+  public void writeTimeStamp(Timestamp value) throws IOException {
+    _verifyValueWrite("write TimeStamp");
+    TIMESTAMP timestamp = new TIMESTAMP(value);
+    OracleJsonTimestamp writeTimeStamp = new OracleJsonTimestampImpl(timestamp.shareBytes());
+    gen.write(writeTimeStamp);
+  }
 }

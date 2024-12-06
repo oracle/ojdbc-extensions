@@ -100,7 +100,7 @@ public class OsonYearSerializer extends YearSerializer {
    */
   @Override
   public void serialize(Year value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-    if (useTimestamp(provider) && gen instanceof OsonGenerator) {
+    if (gen instanceof OsonGenerator) {
       final OsonGenerator _gen = (OsonGenerator)gen;
 
       _gen.writeNumber(value.getValue());

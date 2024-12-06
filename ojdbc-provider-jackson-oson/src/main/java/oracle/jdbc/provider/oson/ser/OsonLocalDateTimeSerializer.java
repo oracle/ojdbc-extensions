@@ -107,7 +107,7 @@ public class OsonLocalDateTimeSerializer extends LocalDateTimeSerializer {
   @Override
   public void serialize(LocalDateTime value, JsonGenerator gen, SerializerProvider provider) throws IOException {
 
-    if (useTimestamp(provider) && gen instanceof OsonGenerator) {
+    if (gen instanceof OsonGenerator) {
       ((OsonGenerator) gen).writeLocalDateTime(value);
     }
     else {

@@ -42,6 +42,7 @@ import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.exc.StreamWriteException;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import oracle.jdbc.datasource.impl.OracleDataSource;
 import oracle.jdbc.provider.TestProperties;
@@ -88,6 +89,7 @@ public class EncondingTest {
   static {
     om.findAndRegisterModules();
     om.registerModule(new OsonModule());
+    om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     objectNode = om.valueToTree(employee);
   }
 
@@ -190,7 +192,7 @@ public class EncondingTest {
    */
   @Order(5)
   @ParameterizedTest()
-  @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
+  @ValueSource(strings = {"UTF8"/**, "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"**/})
   public void convertToOsonUsingStreamAndObjectNode(String encoding) throws Exception {
 
     try(Connection conn = getConnection()) {

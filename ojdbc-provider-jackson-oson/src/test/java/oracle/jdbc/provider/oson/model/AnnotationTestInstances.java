@@ -93,7 +93,7 @@ public class AnnotationTestInstances {
             LocalDate localDate = LocalDate.of(2000 + i, i, i % 28 + 1); // example LocalDate
             LocalTime localTime = LocalTime.of(i % 24, i % 60, i % 60); // example LocalTime
             LocalDateTime localDateTime = LocalDateTime.of(localDate, localTime); // example LocalDateTime
-            ZonedDateTime zonedDateTime = ZonedDateTime.of(localDateTime, ZoneId.systemDefault()); // ZonedDateTime
+            ZonedDateTime zonedDateTime = ZonedDateTime.of(localDateTime, ZoneId.of("UTC")); // ZonedDateTime
             OffsetDateTime offsetDateTime = OffsetDateTime.of(localDateTime, ZoneOffset.ofHours(i % 12 - 6)); // OffsetDateTime
             OffsetTime offsetTime = OffsetTime.of(localTime, ZoneOffset.ofHours(i % 12 - 6)); // OffsetTime
             YearMonth yearMonth = YearMonth.of(2000 + i, i); // YearMonth

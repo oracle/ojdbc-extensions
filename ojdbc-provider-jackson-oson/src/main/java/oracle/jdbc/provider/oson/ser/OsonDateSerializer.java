@@ -47,6 +47,11 @@ import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 import com.fasterxml.jackson.databind.ser.std.DateSerializer;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import oracle.jdbc.driver.json.binary.OsonGeneratorImpl;
+import oracle.jdbc.provider.oson.OsonGenerator;
+import oracle.sql.json.OracleJsonDate;
+import oracle.sql.json.OracleJsonFactory;
+import oracle.sql.json.OracleJsonGenerator;
 
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -81,6 +86,11 @@ public class OsonDateSerializer extends DateSerializer {
 
     private boolean isTemporalTime = false;
 
+    @Override
+    public OsonDateSerializer withFormat(Boolean timestamp, DateFormat customFormat) {
+        return new OsonDateSerializer(timestamp,customFormat);
+    }
+
     /**
      * Constructs a serializer with specific handling for temporal timestamps or time objects.
      *
@@ -113,16 +123,20 @@ public class OsonDateSerializer extends DateSerializer {
      */
     @Override
     public void serialize(Date value, JsonGenerator g, SerializerProvider provider) throws IOException {
-        if (isTemporalTimeStamp) {
-            if (_asTimestamp(provider) && value instanceof Timestamp) {
-                double tsWithNanos = ((Timestamp) value).getTime()+(((Timestamp) value).getNanos()/1000000.0);
-                g.writeNumber(tsWithNanos);
+        if(_customFormat != null) {
+            super.serialize(value, g, provider);
+            return;
+        }
+        if( value instanceof java.sql.Time) {
+            g.writeString(value.toString());
+            return;
+        }
+        if (g instanceof OsonGenerator) {
+            if(value instanceof Timestamp) {
+                ((OsonGenerator)g).writeTimeStamp((Timestamp) value);
                 return;
             }
-            super.serialize(value, g, provider);
-        }
-        if (value instanceof java.sql.Time) {
-            g.writeString(value.toString());
+            ((OsonGenerator)g).writeDate(value);
             return;
         }
         super.serialize(value, g, provider);
@@ -152,6 +166,6 @@ public class OsonDateSerializer extends DateSerializer {
                 }
             }
         }
-        return new OsonDateSerializer(false,false);
+        return super.createContextual(serializers, property);
     }
 }

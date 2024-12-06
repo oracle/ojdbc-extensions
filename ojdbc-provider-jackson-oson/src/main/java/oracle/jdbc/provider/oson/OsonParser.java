@@ -227,6 +227,7 @@ public class OsonParser extends ParserBase {
     if(currentEvent == Event.START_OBJECT) {
       parser.skipObject();
     }
+
     return this;
   }
   @Override
@@ -303,6 +304,10 @@ public class OsonParser extends ParserBase {
     }
 
     return JsonTokenId.ID_NO_TOKEN;
+  }
+
+  public OracleJsonParser.Event currentOsonEvent() {
+    return currentEvent;
   }
 
   /**
@@ -583,5 +588,10 @@ public class OsonParser extends ParserBase {
     } else {
       return parser.getPeriod();
     }
+  }
+
+  public LocalDateTime getLocalDateTime() {
+    if(DEBUG) logger.log(Level.FINEST, "getLocalDateTime");
+    return parser.getLocalDateTime();
   }
 }

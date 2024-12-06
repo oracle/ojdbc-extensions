@@ -52,10 +52,15 @@ import java.math.BigDecimal;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.regex.Pattern;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import oracle.jdbc.provider.oson.OsonParser;
+import oracle.sql.json.OracleJsonParser;
 
 /**
  * Custom deserializer for handling date and time deserialization in JSON.
@@ -141,31 +146,34 @@ public class OsonDateDeserializer extends DateDeserializers.DateDeserializer {
      */
     @Override
     public java.util.Date deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-        switch (p.getCurrentTokenId()) {
-            case JsonTokenId.ID_STRING: {
-                if (isTemporalTime) {
-                    return Time.valueOf(p.getText().trim());
-                }
-                return super.deserialize(p, ctxt);
-            }
-            case JsonTokenId.ID_NUMBER_FLOAT: {
-                if (isTemporalTimeStamp) {
-                    double r = p.getDoubleValue();
-                    String res = Double.toString(r);
-                    BigDecimal bd = new BigDecimal(res);
-
-                    BigDecimal fractionalPart = bd.remainder( BigDecimal.ONE );
-                    BigDecimal ns = fractionalPart.multiply(new BigDecimal(1000000));
-
-                    Timestamp ts = new Timestamp(bd.longValue());
-                    ts.setNanos(ns.intValue());
-                    return ts;
-
-                }
-                return super.deserialize(p, ctxt);
-            }
-            default: return super.deserialize(p, ctxt);
+        if(_customFormat != null) {
+            return super.deserialize(p, ctxt);
         }
+        if( p instanceof OsonParser) {
+            OsonParser parser = (OsonParser) p;
+
+            if(parser.currentOsonEvent().equals(OracleJsonParser.Event.VALUE_DATE)) {
+                LocalDateTime dateTime = parser.getLocalDateTime();
+                return Date.from(dateTime.atZone(ZoneId.of("UTC")).toInstant());
+            }
+            if(parser.currentOsonEvent().equals(OracleJsonParser.Event.VALUE_TIMESTAMP)) {
+                LocalDateTime dateTime = parser.getLocalDateTime();
+                return Timestamp.valueOf(dateTime);
+            }
+            switch (p.getCurrentTokenId()) {
+                case JsonTokenId.ID_STRING: {
+                    if (isTemporalTime) {
+                        return Time.valueOf(p.getText().trim());
+                    }
+                    String dateTimeString = p.getText().trim();
+                    LocalDateTime localDateTime = LocalDateTime.parse(dateTimeString, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                    return Date.from(localDateTime.atZone(ZoneId.of("UTC")).toInstant());
+                }
+                default: return super.deserialize(p, ctxt);
+            }
+        }
+        return super.deserialize(p, ctxt);
+
     }
 
     /**
@@ -192,7 +200,7 @@ public class OsonDateDeserializer extends DateDeserializers.DateDeserializer {
                 }
             }
         }
-        return new OsonDateDeserializer(false,false);
+        return super.createContextual(ctxt, property);
     }
 
 }

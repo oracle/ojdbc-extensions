@@ -131,7 +131,7 @@ public class OsonYearDeserializer extends YearDeserializer {
   @Override
   public Year deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
 
-    if(!p.hasTokenId(JsonTokenId.ID_STRING) && p instanceof OsonParser) {
+    if(p instanceof OsonParser) {
       final OsonParser _parser = (OsonParser)p;
 
       return Year.of(_parser.getIntValue());

@@ -111,7 +111,7 @@ public class OsonDurationSerializer extends DurationSerializer {
    */
   @Override
   public void serialize(Duration value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-    if (useTimestamp(provider) && gen instanceof OsonGenerator) {
+    if (gen instanceof OsonGenerator) {
       ((OsonGenerator) gen).writeDuration(value);
     }
     else {
