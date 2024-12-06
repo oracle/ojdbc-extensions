@@ -10,6 +10,11 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * A provider for JSON payload which contains configuration from AWS Secrets
+ * Manager.
+ * See {@link #getJson(String)} for the spec of the JSON payload.
+ **/
 public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationJsonProvider {
 
   /**
@@ -24,11 +29,20 @@ public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationJ
                   .addParameter("key_name", SecretsManagerFactory.KEY_NAME))
           .build();
 
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Returns the JSON payload stored in AWS Secrets Manager secret.
+   * </p>
+   *
+   * @param secretName name of the secret
+   * @return JSON payload
+   */
   @Override
-  public InputStream getJson(String secretId) {
+  public InputStream getJson(String secretName) {
     final String valueFieldName = "value";
     Map<String, String> optionsWithSecret = new HashMap<>(options);
-    optionsWithSecret.put(valueFieldName, secretId);
+    optionsWithSecret.put(valueFieldName, secretName);
 
     ParameterSet parameters = PARAMETER_SET_PARSER.parseNamedValues(optionsWithSecret);
 

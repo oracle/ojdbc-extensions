@@ -67,13 +67,9 @@ import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.SENSITIVE
 public final class AwsCredentialsFactory
     implements ResourceFactory<AwsCredentials> {
 
-  /** Method of authentication supported by the Azure SDK */
+  /** Method of authentication supported by the AWS SDK */
   public static final Parameter<AwsAuthenticationMethod>
       AUTHENTICATION_METHOD = Parameter.create(REQUIRED);
-
-  public static final Parameter<String> ACCESS_KEY_ID = Parameter.create(REQUIRED);
-
-  public static final Parameter<String> SECRET_ACCESS_KEY = Parameter.create(SENSITIVE, REQUIRED);
 
   private static final AwsCredentialsFactory INSTANCE
       = new AwsCredentialsFactory();
@@ -81,8 +77,8 @@ public final class AwsCredentialsFactory
   private AwsCredentialsFactory() { }
 
   /**
-   * Returns a singleton of {@code TokenCredentialFactory}.
-   * @return a singleton of {@code TokenCredentialFactory}
+   * Returns a singleton of {@code AwsCredentialsFactory}.
+   * @return a singleton of {@code AwsCredentialsFactory}
    */
   public static AwsCredentialsFactory getInstance() {
     return INSTANCE;
@@ -98,7 +94,7 @@ public final class AwsCredentialsFactory
 
   /**
    * Returns credentials for requesting an access token. The type of credentials
-   * used are configured by the parameters of the given {@code parameters}.
+   * used are configured by the parameters of the given {@code parameterSet}.
    * Supported parameters are defined by the class variables in
    * {@link AwsCredentialsFactory}.
    * @param parameterSet parameters that configure credentials. Not null.
@@ -111,7 +107,7 @@ public final class AwsCredentialsFactory
 
     switch (authenticationMethod) {
       case DEFAULT:
-        return defaultCredentials(parameterSet);
+        return defaultCredentials();
       default :
         throw new IllegalArgumentException(
             "Unrecognized authentication method: " + authenticationMethod);
@@ -120,53 +116,11 @@ public final class AwsCredentialsFactory
 
   /**
    * Returns credentials resolved by {@link AppConfigDataClient}.
-   * @param parameterSet
    * @return
    */
-  private static AwsCredentials defaultCredentials(ParameterSet parameterSet) {
+  private static AwsCredentials defaultCredentials() {
     return DefaultCredentialsProvider
         .builder()
         .build().resolveCredentials();
   }
-
-  /**
-   * Returns the value of a required parameter that may be configured by a
-   * provider or an SDK environment variable.
-   * @param parameters Parameters provided by the provider. Not null
-   * @param parameter Parameter that may be configured by the provider. Not null
-   * @param sdkName Name of the SDK environment variable, or null if there is
-   * none.
-   * @return The configured value of the parameter. Not null.
-   * @throws IllegalStateException If the parameter is not configured by the
-   * provider or the SDK.
-   */
-  private static String requireParameter(
-      ParameterSet parameters, Parameter<String> parameter, String sdkName) {
-    try {
-      return parameters.getRequired(parameter);
-    }
-    catch (IllegalStateException parameterNotConfigured) {
-      throw new IllegalArgumentException(format(
-          "No value is configured for parameter \"%s\"," +
-              " or SDK variable \"%s\"",
-          parameters.getName(parameter), sdkName), parameterNotConfigured);
-    }
-  }
-
-  /**
-   * Returns the value of an optional parameter which may be configured by a
-   * provider or an SDK environment variable.
-   * @param parameters Parameters provided by the provider. Not null
-   * @param parameter Parameter that may be configured by the provider. Not null
-   * @param sdkName Name of the SDK environment variable, or null if there is
-   * none.
-   * @return The configured value of the parameter, or null if not configured.
-   */
-  private static String optionalParameter(
-      ParameterSet parameters, Parameter<String> parameter, String sdkName) {
-    String value = parameters.getOptional(parameter);
-
-    return value != null ? value : null;
-  }
-
 }
