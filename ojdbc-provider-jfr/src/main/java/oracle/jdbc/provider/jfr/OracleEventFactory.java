@@ -56,7 +56,7 @@ public class OracleEventFactory {
 
   /**
    * Creates an event for a given database operation.
-   * @param databaseOperation The database operation.
+   * @param databaseFunction The database function originating the round trip.
    * @return returns a Java Flight Recorder Event containing the following 
    * fields:
    * <ul>
