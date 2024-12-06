@@ -12,6 +12,27 @@ import static oracle.jdbc.provider.aws.configuration.AwsSecretsManagerConfigurat
 
 public class AwsJsonSecretsManagerProvider
     implements OracleConfigurationJsonSecretProvider {
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Returns the password of the Secret that is retrieved from AWS Secrets
+   * Manager secret.
+   * </p>
+   * <p>
+   * The {@code jsonObject} has the following form:
+   * </p>
+   *
+   * <pre>{@code
+   *   "password": {
+   *       "type": "awssecretsmanager",
+   *       "value": "<secret-name>"
+   *   }
+   * }</pre>
+   *
+   * @param jsonObject json object to be parsed
+   * @return encoded char array in base64 format that represents the retrieved
+   *         Secret.
+   */
   @Override
   public char[] getSecret(OracleJsonObject jsonObject) {
     ParameterSet parameterSet =

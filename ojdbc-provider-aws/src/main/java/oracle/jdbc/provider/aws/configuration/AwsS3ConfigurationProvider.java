@@ -9,8 +9,21 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
 
+/**
+ * A provider for JSON payload which contains configuration from AWS S3.
+ * See {@link #getJson(String)} for the spec of the JSON payload.
+ **/
 public class AwsS3ConfigurationProvider extends OracleConfigurationJsonProvider {
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Returns the JSON payload stored in AWS S3.
+     * </p>
+     *
+     * @param s3Url URI of the object stored in AWS S3
+     * @return JSON payload
+     */
     @Override
     public InputStream getJson(String s3Url) throws SQLException {
 
