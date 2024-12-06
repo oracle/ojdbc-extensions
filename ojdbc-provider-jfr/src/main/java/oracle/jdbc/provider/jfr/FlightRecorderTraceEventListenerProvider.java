@@ -48,8 +48,8 @@ import oracle.jdbc.spi.TraceEventListenerProvider;
 
 /**
  * Implements a TraceEventListenerProvider for FlightRecorderTraceEventListener. 
- * <ul>
  * Two parameters can be used to configure the trace event listener:
+ * <ul>
  * <li>
  *  <b>enable</b>: if true, the trace event listener will create events for 
  *  each round trip otherwise no events will be created.

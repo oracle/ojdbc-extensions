@@ -69,7 +69,7 @@ public class FlightRecorderTraceEventListener implements TraceEventListener {
 
   /**
    * Implements TraceEventListener.roundTrip and creates Java Flight Recorder events.
-   * @inheritDoc
+   * {@inheritDoc}
    */
   @Override
   public Object roundTrip(Sequence sequence, TraceContext traceContext, Object userContext) {

@@ -56,15 +56,14 @@ public class OracleEventFactory {
   /**
    * Creates an event for a given database operation.
    * @param databaseOperation The database operation.
-   * @param isSensitive Indicates if sensitive fields should be created.
    * @return returns a Java Flight Recorder Event containing the following 
    * fields:
    * <ul>
    *  <li>ConnectionID</li>
    *  <li>DatabaseOperation</li>
-   *  <li>OriginalSqlText: create if sensitive is enabled</li>
-   *  <li>ActualSqlText: create if sensitive is enabled</li>
-   *  <li>User: create if sensitive is enabled</li>
+   *  <li>OriginalSqlText</li>
+   *  <li>ActualSqlText</li>
+   *  <li>User</li>
    * </ul>
    */
   public static Event createEvent(String databaseOperation) {
