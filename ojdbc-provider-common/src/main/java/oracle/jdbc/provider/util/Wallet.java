@@ -97,8 +97,7 @@ public final class Wallet {
 
   /** Pattern to match the expiration date line in the README file */
   private static final Pattern EXPIRY_PATTERN = Pattern.compile(
-    "The SSL certificates provided in this wallet will expire on ([\\d\\-\\.: ]+ UTC)\\.",
-    Pattern.MULTILINE);
+    "The SSL certificates provided in this wallet will expire on ([\\d\\-\\.: ]+ UTC)\\.");
 
   /** Contents of the tnsnames.ora file */
   private final TNSNames tnsNames;
@@ -211,7 +210,7 @@ public final class Wallet {
     TNSNames tnsNames = null;
     KeyStore keyStore = null;
     KeyStore trustStore = null;
-    String readmeContent = null;
+    OffsetDateTime expirationDate = null;
 
     try {
       for (ZipEntry entry = zipStream.getNextEntry(); entry != null; entry = zipStream.getNextEntry()) {
@@ -228,7 +227,7 @@ public final class Wallet {
               TlsUtils.loadKeyStore(zipStream, null, KEY_STORE_TYPE, null);
             break;
           case README_FILE:
-            readmeContent = readStreamToString(zipStream);
+            expirationDate = parseExpirationDateFromReadme(zipStream);
             break;
           default:
             // Ignore other files
@@ -248,12 +247,6 @@ public final class Wallet {
     if (trustStore == null)
       throw missingFile(TRUST_STORE_FILE);
 
-    // Parse the expiration date from the README content
-    OffsetDateTime expirationDate = null;
-    if (readmeContent != null) {
-      expirationDate = parseExpirationDateFromReadme(readmeContent);
-    }
-
     return new Wallet(
       tnsNames,
       TlsUtils.createSSLContext(keyStore, trustStore, password),
@@ -266,55 +259,63 @@ public final class Wallet {
   }
 
   /**
-   * Reads the content of an {@code InputStream} into a {@code String}.
+   * Reads an {@code InputStream} line by line to find and extract the expiration
+   * date of the wallet's certificates using a predefined pattern.
+   * Stops reading as soon as the expiration date is found.
    *
    * @param inputStream The input stream to read from. Not null.
-   * @return The content of the input stream as a {@code String}. Not null.
+   * @return The extracted expiration date string, or {@code null}
+   * if no match is found.
    * @throws IOException If an I/O error occurs while reading the stream.
    */
-  private static String readStreamToString(InputStream inputStream)
+  private static String findExpirationDateInStream(InputStream inputStream)
     throws IOException {
+
+    if (inputStream == null) {
+      return null;
+    }
     BufferedReader reader = new BufferedReader(
             new InputStreamReader(inputStream, UTF_8));
-    StringBuilder builder = new StringBuilder();
     String line;
     while ((line = reader.readLine()) != null) {
-      builder.append(line).append(System.lineSeparator());
+      Matcher matcher = EXPIRY_PATTERN.matcher(line);
+      if (matcher.find()) {
+        return matcher.group(1).trim().replace(" UTC", "Z");
+      }
     }
-    return builder.toString();
+    return null;
   }
 
   /**
    * Parses the expiration date of the wallet's certificates from the
-   * README content.
+   * content of a {@code README} file provided as an {@code InputStream}.
+   * The method stops reading the stream as soon as the expiration date
+   * is found and attempts to parse it into an {@code OffsetDateTime}.
    *
-   * @param readmeContent The content of the README file as a {@code String}.
-   * @return The parsed expiration date as an {@code OffsetDateTime}, or null
-   * if not found.
-   * @throws IllegalStateException If the expiration date cannot be parsed.
+   * @param inputStream The input stream of the {@code README} file.
+   * @return The parsed expiration date as an {@code OffsetDateTime},
+   * or {@code null} if no expiration date is found or if parsing fails.
+   * @throws IOException If an I/O error occurs while reading the stream.
    */
-  public static OffsetDateTime parseExpirationDateFromReadme(String readmeContent) {
-    Matcher matcher = EXPIRY_PATTERN.matcher(readmeContent);
-    if (matcher.find()) {
-      String expiryDateString = matcher.group(1).trim();
-      expiryDateString = expiryDateString.replace(" UTC", "Z");
+  public static OffsetDateTime parseExpirationDateFromReadme(InputStream inputStream)
+          throws IOException {
+      String expiryDateString = findExpirationDateInStream(inputStream);
+      if (expiryDateString != null) {
+        try {
+          DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+            .appendPattern("yyyy-MM-dd HH:mm:ss")
+            .optionalStart()
+            .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
+            .optionalEnd()
+            .appendPattern("X") // Accept 'Z' as offset
+            .toFormatter(Locale.ENGLISH);
 
-      try {
-      DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-              .appendPattern("yyyy-MM-dd HH:mm:ss")
-              .optionalStart()
-              .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
-              .optionalEnd()
-              .appendPattern("X") // Accept 'Z' as offset
-              .toFormatter(Locale.ENGLISH);
-
-        return OffsetDateTime.parse(expiryDateString, formatter);
-      } catch (DateTimeParseException e) {
-        throw new IllegalStateException("Failed to parse expiration date from README", e);
+          return OffsetDateTime.parse(expiryDateString, formatter);
+        } catch (DateTimeParseException e) {
+          return null;
+        }
       }
-    } else {
-      return null;
-    }
+    return null;
   }
 
 }
