@@ -53,6 +53,7 @@ import oracle.jdbc.provider.util.Wallet;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.zip.ZipInputStream;
 
@@ -75,8 +76,6 @@ public final class WalletFactory extends OciResourceFactory<Wallet> {
 
   /**
    * A cache of wallet configurations requested from the OCI database service.
-   * TODO: The cache should invalidate entries after TLS certificates have
-   *   expired.
    */
   private static final ResourceFactory<Wallet> INSTANCE =
     CachedResourceFactory.create(new WalletFactory());
@@ -132,9 +131,13 @@ public final class WalletFactory extends OciResourceFactory<Wallet> {
           "Failed to close ZIP stream", ioException);
       }
 
-      // TODO: It may be possible to parse an expiration time from the wallet
-      //  README, and return an expiring resource here.
-      return Resource.createPermanentResource(wallet, false);
+      OffsetDateTime expiry = wallet.getExpirationDate();
+      if (expiry == null) {
+        // If expiry could not be determined, treat as permanent
+        return Resource.createPermanentResource(wallet, false);
+      } else {
+        return Resource.createExpiringResource(wallet, expiry, false);
+      }
     }
     finally {
       Arrays.fill(password, (char)0);
