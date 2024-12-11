@@ -112,6 +112,18 @@ public final class Wallet {
    */
   private final SSLContext sslContext;
 
+  /**
+   * A static DateTimeFormatter used to parse expiration dates in the README.
+   */
+  private static final DateTimeFormatter EXPIRATION_DATE_FORMATTER =
+    new DateTimeFormatterBuilder()
+      .appendPattern("yyyy-MM-dd HH:mm:ss")
+      .optionalStart()
+      .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
+      .optionalEnd()
+      .appendPattern("X") // Accept 'Z' as offset
+      .toFormatter(Locale.ENGLISH);
+
   private Wallet(TNSNames tnsNames, SSLContext sslContext, OffsetDateTime expirationDate) {
     this.tnsNames = tnsNames;
     this.sslContext = sslContext;
@@ -270,10 +282,6 @@ public final class Wallet {
    */
   private static String findExpirationDateInStream(InputStream inputStream)
     throws IOException {
-
-    if (inputStream == null) {
-      return null;
-    }
     BufferedReader reader = new BufferedReader(
             new InputStreamReader(inputStream, UTF_8));
     String line;
@@ -299,23 +307,30 @@ public final class Wallet {
    */
   public static OffsetDateTime parseExpirationDateFromReadme(InputStream inputStream)
           throws IOException {
-      String expiryDateString = findExpirationDateInStream(inputStream);
-      if (expiryDateString != null) {
-        try {
-          DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-            .appendPattern("yyyy-MM-dd HH:mm:ss")
-            .optionalStart()
-            .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
-            .optionalEnd()
-            .appendPattern("X") // Accept 'Z' as offset
-            .toFormatter(Locale.ENGLISH);
-
-          return OffsetDateTime.parse(expiryDateString, formatter);
-        } catch (DateTimeParseException e) {
-          return null;
-        }
-      }
-    return null;
+    if (inputStream == null) {
+      return null;
+    }
+    String expiryDateString = findExpirationDateInStream(inputStream);
+    if (expiryDateString == null) {
+      return null;
+    }
+    return parseOffsetDateTime(expiryDateString);
   }
 
+  /**
+   * Parses a date-time string into an OffsetDateTime.
+   * The method uses the predefined {@code EXPIRATION_DATE_FORMATTER} to parse
+   * the given string. If parsing fails due to an invalid format or other reasons,
+   * the method returns {@code null}.
+   *
+   * @param dateTimeString The date-time string to parse.
+   * @return The parsed OffsetDateTime, or null if parsing fails.
+   */
+  private static OffsetDateTime parseOffsetDateTime(String dateTimeString) {
+    try {
+      return OffsetDateTime.parse(dateTimeString, EXPIRATION_DATE_FORMATTER);
+    } catch (DateTimeParseException e) {
+      return null;
+    }
+  }
 }
