@@ -192,7 +192,7 @@ public class EncondingTest {
    */
   @Order(5)
   @ParameterizedTest()
-  @ValueSource(strings = {"UTF8"/**, "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"**/})
+  @ValueSource(strings = {"UTF8", "UTF16_BE", "UTF16_LE", "UTF32_BE", "UTF32_LE"})
   public void convertToOsonUsingStreamAndObjectNode(String encoding) throws Exception {
 
     try(Connection conn = getConnection()) {
