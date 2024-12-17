@@ -42,28 +42,21 @@ import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.core.util.VersionUtil;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.deser.BeanDeserializer;
-import com.fasterxml.jackson.databind.deser.BeanDeserializerBuilder;
 import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
 import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
-import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.BeanPropertyWriter;
 import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 import com.fasterxml.jackson.databind.ser.PropertyWriter;
 import jakarta.persistence.Convert;
-import jakarta.persistence.OneToMany;
 import oracle.jdbc.provider.oson.deser.*;
 import oracle.jdbc.provider.oson.ser.*;
 
 import java.io.InputStream;
-import java.io.Serializable;
 import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.time.*;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
 
 
 /**
@@ -161,6 +154,10 @@ public class OsonModule extends SimpleModule {
         Iterator<PropertyWriter> properties = serializer.properties();
         while (properties.hasNext()) {
           BeanPropertyWriter writer = (BeanPropertyWriter) properties.next();
+          if (Util.implementsSerializable(writer.getType().getInterfaces())
+                  && !Util.isJavaWrapperSerializable(writer)){
+            writer.assignSerializer(OsonSerializableSerializer.INSTANCE);
+          }
           if (writer.getMember().hasAnnotation(Convert.class)) {
             Convert annotation = writer.getMember().getAnnotation(Convert.class);
             Class<? extends jakarta.persistence.AttributeConverter> converterClass = annotation.converter();
@@ -171,8 +168,6 @@ public class OsonModule extends SimpleModule {
               JsonSerializer<Object> mySerializer = new OsonConverterSerialiser(converterClass);
               writer.assignSerializer(mySerializer);
             }
-
-
           }
         }
         return serializer;
@@ -192,6 +187,11 @@ public class OsonModule extends SimpleModule {
           Iterator<SettableBeanProperty> properties = ((BeanDeserializer) deserializer).properties();
           while (properties.hasNext()) {
             SettableBeanProperty property = properties.next();
+            if (Util.implementsSerializable(property.getType().getInterfaces()) && !Util.isJavaWrapperSerializable(property.getType())){
+              JsonDeserializer<Object> deser = OsosnSerializableDeserializer.INSTANCE;
+              ((BeanDeserializer) deserializer).replaceProperty(property,property.withValueDeserializer(deser));
+            }
+
             if (property.getMember().hasAnnotation(Convert.class)) {
               Convert annotation = property.getMember().getAnnotation(Convert.class);
               Class<? extends jakarta.persistence.AttributeConverter> converterClass = annotation.converter();

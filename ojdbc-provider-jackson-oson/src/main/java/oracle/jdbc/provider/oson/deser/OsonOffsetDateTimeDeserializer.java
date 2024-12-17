@@ -44,6 +44,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.deser.InstantDeserializer;
 import oracle.jdbc.provider.oson.OsonParser;
+import oracle.sql.json.OracleJsonParser;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -129,8 +130,10 @@ public class OsonOffsetDateTimeDeserializer extends InstantDeserializer<OffsetDa
   public OffsetDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
     if(p instanceof OsonParser) {
       final OsonParser _parser = (OsonParser)p;
-
-      return _parser.readOffsetDateTime();
+      if(_parser.currentOsonEvent().equals(OracleJsonParser.Event.VALUE_TIMESTAMPTZ))
+        return _parser.readOffsetDateTime();
+      else
+        return super.deserialize(p, ctxt);
     } else {
       return super.deserialize(p, ctxt);
     }

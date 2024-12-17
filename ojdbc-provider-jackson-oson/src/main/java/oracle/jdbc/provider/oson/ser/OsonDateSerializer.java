@@ -47,11 +47,7 @@ import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 import com.fasterxml.jackson.databind.ser.std.DateSerializer;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-import oracle.jdbc.driver.json.binary.OsonGeneratorImpl;
 import oracle.jdbc.provider.oson.OsonGenerator;
-import oracle.sql.json.OracleJsonDate;
-import oracle.sql.json.OracleJsonFactory;
-import oracle.sql.json.OracleJsonGenerator;
 
 import java.io.IOException;
 import java.sql.Timestamp;

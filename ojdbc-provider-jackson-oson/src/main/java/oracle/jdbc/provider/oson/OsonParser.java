@@ -167,7 +167,8 @@ public class OsonParser extends ParserBase {
     if(DEBUG) logger.log(Level.FINEST, "nextToken");
     if (parser.hasNext()) {
       currentEvent = parser.next();
-      return fromOsonEvent(currentEvent);
+      _currToken = fromOsonEvent(currentEvent);
+      return _currToken;
     }
 
     return null;
@@ -270,7 +271,8 @@ public class OsonParser extends ParserBase {
     if (currentEvent == null && parser.hasNext()) {
       currentEvent = parser.next();
     }
-    return fromOsonEvent(currentEvent);
+    _currToken = fromOsonEvent(currentEvent);
+    return _currToken;
   }
 
   /**
@@ -517,7 +519,9 @@ public class OsonParser extends ParserBase {
   @Override
   public byte[] getBinaryValue(Base64Variant base64Variant) throws IOException {
     if(DEBUG) logger.log(Level.FINEST, "getBinaryValue");
-    return parser.getBytes();
+    byte[] result = currentEvent == Event.VALUE_BINARY ? parser.getBytes(): super.getBinaryValue(base64Variant);
+    _binaryValue = null;
+    return result;
   }
 
   /**

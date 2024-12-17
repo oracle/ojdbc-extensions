@@ -44,6 +44,7 @@ import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.deser.DurationDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.util.DurationUnitConverter;
 import oracle.jdbc.provider.oson.OsonParser;
+import oracle.sql.json.OracleJsonParser;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -121,8 +122,10 @@ public class OsonDurationDeserializer extends DurationDeserializer {
   public Duration deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
     if(p instanceof OsonParser) {
       final OsonParser _parser = (OsonParser)p;
-
-      return _parser.readDuration();
+      if(_parser.currentOsonEvent().equals(OracleJsonParser.Event.VALUE_INTERVALDS))
+        return _parser.readDuration();
+      else
+        return super.deserialize(p, ctxt);
     } else {
       return super.deserialize(p, ctxt);
     }

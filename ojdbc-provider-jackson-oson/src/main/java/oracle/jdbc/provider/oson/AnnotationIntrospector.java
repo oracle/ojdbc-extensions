@@ -40,8 +40,13 @@ package oracle.jdbc.provider.oson;
 
 import com.fasterxml.jackson.databind.PropertyName;
 import com.fasterxml.jackson.databind.introspect.Annotated;
+import com.fasterxml.jackson.databind.introspect.AnnotatedField;
+import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.databind.util.NameTransformer;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import org.hibernate.annotations.JdbcTypeCode;
 
 
 public class AnnotationIntrospector extends JacksonAnnotationIntrospector {
@@ -62,4 +67,20 @@ public class AnnotationIntrospector extends JacksonAnnotationIntrospector {
         }
         return super.findNameForDeserialization(a);
     }
+
+    @Override
+    public NameTransformer findUnwrappingNameTransformer(AnnotatedMember member) {
+        if(member instanceof AnnotatedField) {
+            Embeddable embeddable = member.getType().getRawClass().getAnnotation(Embeddable.class);
+            if (embeddable != null) {
+                JdbcTypeCode jdbcTypeCode = _findAnnotation(member, JdbcTypeCode.class);
+                if(jdbcTypeCode == null ) {
+                    return NameTransformer.simpleTransformer("", "");
+                }
+            }
+        }
+        return super.findUnwrappingNameTransformer(member);
+    }
+
+
 }

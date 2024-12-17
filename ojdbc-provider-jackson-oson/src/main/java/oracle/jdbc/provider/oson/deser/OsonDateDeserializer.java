@@ -154,7 +154,7 @@ public class OsonDateDeserializer extends DateDeserializers.DateDeserializer {
 
             if(parser.currentOsonEvent().equals(OracleJsonParser.Event.VALUE_DATE)) {
                 LocalDateTime dateTime = parser.getLocalDateTime();
-                return Date.from(dateTime.atZone(ZoneId.of("UTC")).toInstant());
+                return java.sql.Date.valueOf(dateTime.toLocalDate());
             }
             if(parser.currentOsonEvent().equals(OracleJsonParser.Event.VALUE_TIMESTAMP)) {
                 LocalDateTime dateTime = parser.getLocalDateTime();

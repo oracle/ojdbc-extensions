@@ -45,6 +45,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import oracle.jdbc.provider.oson.OsonParser;
+import oracle.sql.json.OracleJsonParser;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -127,8 +128,11 @@ public class OsonLocalDateTimeDeserializer extends LocalDateTimeDeserializer {
   public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
     if(p instanceof OsonParser) {
       final OsonParser _parser = (OsonParser)p;
+      if(_parser.currentOsonEvent().equals(OracleJsonParser.Event.VALUE_TIMESTAMP))
+        return _parser.readLocalDateTime();
+      else
+        return super.deserialize(p, ctxt);
 
-      return _parser.readLocalDateTime();
     } else {
       return super.deserialize(p, ctxt);
     }

@@ -73,7 +73,7 @@ public class JacksonOsonConverter implements OsonConverter{
     om.findAndRegisterModules();
     om.registerModule(new OsonModule());
     om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-    om.setAnnotationIntrospector(new AnnotationIntrospector());
+//    om.setAnnotationIntrospector(new AnnotationIntrospector());
   }
 
   /**
@@ -134,5 +134,9 @@ public class JacksonOsonConverter implements OsonConverter{
    */
   public static ObjectMapper getObjectMapper() {
     return om;
+  }
+
+  public static OsonFactory getOsonFactory() {
+    return osonFactory;
   }
 }
