@@ -23,9 +23,13 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-jackson-oson</artifactId>
-  <version>1.0.1</version>
+  <version>1.0.2</version>
 </dependency>
 ```
+### Note
+The extention uses ojdbc8 as it's dependency. If the application env. has other ojdbc jar
+in the dependency, be sure to exclude the ojdbc8 jar from the extention.
+
 ## Building the provider module
 1. Clone the repository:
    ```bash

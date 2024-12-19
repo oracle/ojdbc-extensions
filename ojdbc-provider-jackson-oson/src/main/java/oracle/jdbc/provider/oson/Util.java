@@ -4,20 +4,9 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ser.BeanPropertyWriter;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class Util {
-    public static final ArrayList<String> ignoreList = new ArrayList<>();
-    static {
-        ignoreList.add("java.lang");
-        ignoreList.add("java.util");
-        ignoreList.add("java.sql");
-
-    }
     public static boolean isJavaSerializableType(Class<?> clazz) {
         String packageName = clazz.getPackage().getName();
 

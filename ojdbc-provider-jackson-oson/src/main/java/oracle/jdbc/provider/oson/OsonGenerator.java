@@ -58,6 +58,7 @@ import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.*;
 import java.util.Arrays;
@@ -536,6 +537,18 @@ public class OsonGenerator extends GeneratorBase {
       OracleJsonDate jsonDate = new OracleJsonDateImpl(dd.shareBytes());
       gen.write(jsonDate);
     }
+  }
+
+  public void writeLocalDate(LocalDate value) throws IOException {
+    _verifyValueWrite("write LocalDate");
+    DATE dd = null;
+    try {
+        dd = new DATE(value);
+    } catch (SQLException e) {
+        throw new RuntimeException(e);
+    }
+      OracleJsonDate jsonDate = new OracleJsonDateImpl(dd.shareBytes());
+    gen.write(jsonDate);
   }
 
   public void writeTimeStamp(Timestamp value) throws IOException {

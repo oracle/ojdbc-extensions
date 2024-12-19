@@ -141,6 +141,9 @@ public class OsonModule extends SimpleModule {
     addDeserializer(UUID.class, OsonUUIDDeserializer.INSTANCE);
     addDeserializer(Boolean.class, OsonBooleanDeserializer.INSTANCE);
 
+    addSerializer(LocalDate.class, OsonLocalDateSerializer.INSTANCE);
+    addDeserializer(LocalDate.class, OsonLocalDateDeserializer.INSTANCE);
+
 
   }
 
@@ -153,14 +156,12 @@ public class OsonModule extends SimpleModule {
       public JsonSerializer<?> modifySerializer(SerializationConfig config, BeanDescription beanDesc, JsonSerializer<?> serializer) {
         Iterator<PropertyWriter> properties = serializer.properties();
         while (properties.hasNext()) {
+          boolean serializerAssigned = false;
           BeanPropertyWriter writer = (BeanPropertyWriter) properties.next();
-          if (Util.implementsSerializable(writer.getType().getInterfaces())
-                  && !Util.isJavaWrapperSerializable(writer)){
-            writer.assignSerializer(OsonSerializableSerializer.INSTANCE);
-          }
           if (writer.getMember().hasAnnotation(Convert.class)) {
             Convert annotation = writer.getMember().getAnnotation(Convert.class);
             Class<? extends jakarta.persistence.AttributeConverter> converterClass = annotation.converter();
+            serializerAssigned = true;
             if (writer.getType().isArrayType()) {
               JsonSerializer<?> mySerializer = new OsonConverterArraySerializer(converterClass);
               writer.assignSerializer((JsonSerializer<Object>) mySerializer);
@@ -168,6 +169,11 @@ public class OsonModule extends SimpleModule {
               JsonSerializer<Object> mySerializer = new OsonConverterSerialiser(converterClass);
               writer.assignSerializer(mySerializer);
             }
+          }
+          if (Util.implementsSerializable(writer.getType().getInterfaces())
+                  && !Util.isJavaWrapperSerializable(writer)
+                  && !serializerAssigned){
+            writer.assignSerializer(OsonSerializableSerializer.INSTANCE);
           }
         }
         return serializer;
@@ -187,15 +193,11 @@ public class OsonModule extends SimpleModule {
           Iterator<SettableBeanProperty> properties = ((BeanDeserializer) deserializer).properties();
           while (properties.hasNext()) {
             SettableBeanProperty property = properties.next();
-            if (Util.implementsSerializable(property.getType().getInterfaces()) && !Util.isJavaWrapperSerializable(property.getType())){
-              JsonDeserializer<Object> deser = OsosnSerializableDeserializer.INSTANCE;
-              ((BeanDeserializer) deserializer).replaceProperty(property,property.withValueDeserializer(deser));
-            }
-
+            boolean deserializerAssigned = false;
             if (property.getMember().hasAnnotation(Convert.class)) {
               Convert annotation = property.getMember().getAnnotation(Convert.class);
               Class<? extends jakarta.persistence.AttributeConverter> converterClass = annotation.converter();
-
+              deserializerAssigned = true;
               if(property.getType().isArrayType()){
                 JsonDeserializer<Object[]> deser = new OsonConverterArrayDeserializer(converterClass);
                 ((BeanDeserializer) deserializer).replaceProperty(property,property.withValueDeserializer(deser));
@@ -203,6 +205,12 @@ public class OsonModule extends SimpleModule {
                 JsonDeserializer<Object> deser = new OsonConverterDeserializer(converterClass);
                 ((BeanDeserializer) deserializer).replaceProperty(property,property.withValueDeserializer(deser));
               }
+            }
+            if (Util.implementsSerializable(property.getType().getInterfaces())
+                    && !Util.isJavaWrapperSerializable(property.getType())
+                    && !deserializerAssigned){
+              JsonDeserializer<Object> deser = OsosnSerializableDeserializer.INSTANCE;
+              ((BeanDeserializer) deserializer).replaceProperty(property,property.withValueDeserializer(deser));
             }
           }
           return deserializer;
