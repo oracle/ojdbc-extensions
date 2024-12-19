@@ -16,6 +16,7 @@ public class Util {
         || packageName.startsWith("java.time")
         || packageName.startsWith("java.math")
         || packageName.startsWith("java.security")
+        || packageName.startsWith("java.net")
         || clazz.isArray()) {
             return true;
         }
