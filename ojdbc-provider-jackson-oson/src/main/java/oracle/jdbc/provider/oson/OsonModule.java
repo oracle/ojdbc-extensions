@@ -72,7 +72,16 @@ import java.util.*;
  *   <li>{@link Duration} - {@link OsonDurationDeserializer} and {@link OsonDurationSerializer}</li>
  *   <li>{@link BigInteger} - {@link OsonBigIntegerDeserializer} and {@link OsonBigIntegerSerializer}</li>
  *   <li>{@link Year} - {@link OsonYearDeserializer} and {@link OsonYearSerializer}</li>
- *   <li>{@code byte[]} - {@link OsonByteDeserializer} and {@link OsonByteSerializer}</li>
+ *   <li>{@link byte[]} - {@link OsonByteDeserializer} and {@link OsonByteSerializer}</li>
+ *   <li>{@link java.util.Date}- {@link OsonDateSerializer} and {@link OsonDateDeserializer} </li>
+ *   <li>{@link java.sql.Date}- {@link OsonDateSerializer} and {@link OsonSqlDateDeserializer} </li>
+ *   <li>{@link Timestamp}- {@link OsonDateSerializer} and {@link OsonTimeStampDeserializer} </li>
+ *   <li>{@link LocalDate}- {@link OsonLocalDateSerializer} and {@link OsonLocalDateDeserializer} </li>
+ *   <li>{@link Enum}- {@link OsonEnumSerializer}</li>
+ *   <li>{@link jakarta.persistence.AttributeConverter} - {@link OsonConverterSerializer} and {@link OsonConverterDeserializer}</li>
+ *   <li>{@code jakarta.persistence.AttributeConverter[]} - {@link OsonConverterArraySerializer} and {@link OsonConverterArrayDeserializer}</li>
+ *   <li>{@link Boolean}- {@link OsonBooleanDeserializer}</li>
+ *   <li>{@link UUID}- {@link OsonUUIDDeserializer}</li>
  * </ul>
  *
  */
@@ -81,6 +90,8 @@ public class OsonModule extends SimpleModule {
   public static String groupId;
   public static String artifactId;
   public static Version VERSION;
+  public static final String PROPERTIES_FILE_PATH =
+          "/META-INF/maven/com.oracle.database.jdbc/ojdbc-provider-jackson-oson/pom.properties";
 
   static  {
     instantiateProviderVersionInfo();
@@ -88,15 +99,14 @@ public class OsonModule extends SimpleModule {
   }
 
   private static void instantiateProviderVersionInfo() {
-    String propertiesFilePath = "/META-INF/maven/com.oracle.database.jdbc/ojdbc-provider-jackson-oson/pom.properties";
     Properties properties = new Properties();
-    try (InputStream inputStream = OsonModule.class.getResourceAsStream(propertiesFilePath)) {
+    try (InputStream inputStream = OsonModule.class.getResourceAsStream(PROPERTIES_FILE_PATH)) {
       if (inputStream != null) {
         properties.load(inputStream);
 
         providerVersion  = properties.getProperty("version");
-        groupId = properties.getProperty("artifactId");
-        artifactId = properties.getProperty("groupId");
+        groupId = properties.getProperty("groupId");
+        artifactId = properties.getProperty("artifactId");
 
       } else {
         // when the tests are run locally using IDE.
@@ -158,7 +168,7 @@ public class OsonModule extends SimpleModule {
         while (properties.hasNext()) {
           boolean serializerAssigned = false;
           BeanPropertyWriter writer = (BeanPropertyWriter) properties.next();
-          if (writer.getMember().hasAnnotation(Convert.class)) {
+          if (writer.getMember() != null && writer.getMember().hasAnnotation(Convert.class)) {
             Convert annotation = writer.getMember().getAnnotation(Convert.class);
             Class<? extends jakarta.persistence.AttributeConverter> converterClass = annotation.converter();
             serializerAssigned = true;
@@ -166,7 +176,7 @@ public class OsonModule extends SimpleModule {
               JsonSerializer<?> mySerializer = new OsonConverterArraySerializer(converterClass);
               writer.assignSerializer((JsonSerializer<Object>) mySerializer);
             } else {
-              JsonSerializer<Object> mySerializer = new OsonConverterSerialiser(converterClass);
+              JsonSerializer<Object> mySerializer = new OsonConverterSerializer(converterClass);
               writer.assignSerializer(mySerializer);
             }
           }
@@ -194,7 +204,7 @@ public class OsonModule extends SimpleModule {
           while (properties.hasNext()) {
             SettableBeanProperty property = properties.next();
             boolean deserializerAssigned = false;
-            if (property.getMember().hasAnnotation(Convert.class)) {
+            if (property.getMember() != null && property.getMember().hasAnnotation(Convert.class)) {
               Convert annotation = property.getMember().getAnnotation(Convert.class);
               Class<? extends jakarta.persistence.AttributeConverter> converterClass = annotation.converter();
               deserializerAssigned = true;
@@ -209,7 +219,7 @@ public class OsonModule extends SimpleModule {
             if (Util.implementsSerializable(property.getType().getInterfaces())
                     && !Util.isJavaWrapperSerializable(property.getType())
                     && !deserializerAssigned){
-              JsonDeserializer<Object> deser = OsosnSerializableDeserializer.INSTANCE;
+              JsonDeserializer<Object> deser = OsonSerializableDeserializer.INSTANCE;
               ((BeanDeserializer) deserializer).replaceProperty(property,property.withValueDeserializer(deser));
             }
           }

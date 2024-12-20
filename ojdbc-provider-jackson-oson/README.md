@@ -27,8 +27,23 @@ JDK versions. The coordinates for the latest release are:
 </dependency>
 ```
 ### Note
-The extention uses ojdbc8 as it's dependency. If the application env. has other ojdbc jar
-in the dependency, be sure to exclude the ojdbc8 jar from the extention.
+The extension uses ojdbc8 as it's dependency. If the application environment has a different version of JDBC, 
+be sure to exclude ojdbc8 from the dependencies.
+It can be done in maven as:
+
+```xml
+<dependency>
+  <groupId>com.oracle.database.jdbc</groupId>
+  <artifactId>ojdbc-provider-jackson-oson</artifactId>
+  <version>1.0.2</version>
+    <exclusions>
+        <exclusion>
+            <groupId>com.oracle.database.jdbc</groupId> 
+            <artifactId>ojdbc8</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+```
 
 ## Building the provider module
 1. Clone the repository:
@@ -48,12 +63,12 @@ Usage Examples for Oracle Jackson OSON Provider Extensions can be found at [ojdb
 - **[AccessJsonColumnUsingPOJOAndJsonProvider](../ojdbc-provider-samples/src/main/java/oracle/jdbc/provider/oson/sample/AccessJsonColumnUsingPOJOAndJsonProvider.java)**: 
   Demonstrates the usage of the Jackson OSON provider to serialize a Plain Old Java Object (POJO) to OSON 
   bytes in order to save it in a JSON column in the database and deserialize OSON bytes to 
-  POJO during retrieval. In this case, the JDBC Thin Driver invokes the provider to serialize/deserialize.
+  a POJO during retrieval. In this case, the JDBC Thin Driver invokes the provider to serialize/deserialize.
 - **[AccessJsonColumnUsingHibernate](../ojdbc-provider-samples/src/main/java/oracle/jdbc/provider/oson/sample/AccessJsonColumnUsingHibernate.java)**: 
   Performs the same task as above using Hibernate. 
 - **[AccessJsonColumnUsingJacksonObjectNode](../ojdbc-provider-samples/src/main/java/oracle/jdbc/provider/oson/sample/AccessJsonColumnUsingJacksonObjectNode.java)**: 
   Demonstrates the usage of the Jackson OSON provider to serialize Jackson's ObjectNode 
-  to OSON bytes for insertion and vice-versa for retrieval.
+  to OSON bytes for insertion and retrieval.
 - **[AccessJsonColumnUsingPOJO](../ojdbc-provider-samples/src/main/java/oracle/jdbc/provider/oson/sample/AccessJsonColumnUsingPOJO.java)**: 
   Demonstrates how to use the Jackson OSON provider APIs to Serialize/Deserialize POJO and use JDBC
   to directly insert the OSON bytes.

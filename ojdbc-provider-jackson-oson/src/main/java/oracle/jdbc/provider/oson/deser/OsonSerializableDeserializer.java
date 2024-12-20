@@ -35,40 +35,56 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
+package oracle.jdbc.provider.oson.deser;
 
-package oracle.jdbc.provider.oson.ser;
+import com.fasterxml.jackson.core.JacksonException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import jakarta.persistence.AttributeConverter;
-
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
 
-public class OsonConverterSerialiser extends JsonSerializer<Object> {
+/**
+ * A custom deserializer for objects(Except from java.* package) implementing the `Serializable` interface.
+ * This deserializer reads binary data from the JSON input and reconstructs the object
+ * using Java's `ObjectInputStream`.
+ */
+public class OsonSerializableDeserializer extends JsonDeserializer<Object> {
+  /**
+   * Singleton instance for reuse.
+   */
+  public static final OsonSerializableDeserializer INSTANCE = new OsonSerializableDeserializer();
 
-    private AttributeConverter<Object, Object> attributeConverter;
+  /**
+   * Default constructor.
+   */
+  OsonSerializableDeserializer() {}
 
-    public OsonConverterSerialiser(Class<? extends AttributeConverter> converter) {
-        try {
-            this.attributeConverter = converter.getConstructor().newInstance();
-        } catch (InstantiationException
-                 | IllegalAccessException
-                 | InvocationTargetException
-                 | NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
+  /**
+   * Deserializes binary data from JSON input into a `Serializable` object.
+   *
+   * <p>The method reads binary data, interprets it as a serialized object, and reconstructs the
+   * object using an `ObjectInputStream`.</p>
+   *
+   * @param p      the JSON parser
+   * @param ctxt   the deserialization context
+   * @return the deserialized `Serializable` object, or `null` if no data is present
+   * @throws IOException if an I/O error occurs during deserialization
+   * @throws JacksonException if a JSON parsing error occurs
+   */
+  @Override
+  public Object deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
+    byte[] data = p.getBinaryValue();
+    if (data == null) {
+      return null;
     }
-
-    @Override
-    public void serialize(Object value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-        if (value == null) {
-            gen.writeNull();
-            return;
-        }
-
-        Object convertedValue = attributeConverter.convertToDatabaseColumn(value);
-        gen.writeObject(convertedValue);
+    try (ObjectInputStream objectStream = new ObjectInputStream(new ByteArrayInputStream(data))) {
+      return (Serializable) objectStream.readObject(); // Deserialize the object
+    } catch (ClassNotFoundException e) {
+      throw new IOException("Class not found during deserialization", e);
     }
+  }
 }

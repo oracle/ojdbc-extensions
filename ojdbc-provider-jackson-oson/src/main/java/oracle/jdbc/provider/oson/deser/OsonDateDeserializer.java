@@ -48,7 +48,6 @@ import com.fasterxml.jackson.databind.deser.std.DateDeserializers;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -56,7 +55,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.regex.Pattern;
+
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import oracle.jdbc.provider.oson.OsonParser;
@@ -74,133 +73,133 @@ import oracle.sql.json.OracleJsonParser;
  */
 public class OsonDateDeserializer extends DateDeserializers.DateDeserializer {
 
-    /**
-     * Singleton instance of the OsonDateDeserializer with default configuration.
-     */
-    public static final OsonDateDeserializer INSTANCE = new OsonDateDeserializer(false,false);
+  /**
+   * Singleton instance of the OsonDateDeserializer with default configuration.
+   */
+  public static final OsonDateDeserializer INSTANCE = new OsonDateDeserializer(false,false);
 
-    /**
-     * Indicates whether the deserializer should handle temporal timestamps.
-     */
-    private boolean isTemporalTimeStamp = false;
+  /**
+   * Indicates whether the deserializer should handle temporal timestamps.
+   */
+  private boolean isTemporalTimeStamp = false;
 
-    /**
-     * Indicates whether the deserializer should handle temporal time strings.
-     */
-    private boolean isTemporalTime = false;
+  /**
+   * Indicates whether the deserializer should handle temporal time strings.
+   */
+  private boolean isTemporalTime = false;
 
-    /**
-     * Default constructor. Initializes a standard OsonDateDeserializer.
-     */
-    public OsonDateDeserializer() {
-        super();
+  /**
+   * Default constructor. Initializes a standard OsonDateDeserializer.
+   */
+  public OsonDateDeserializer() {
+    super();
+  }
+
+  /**
+   * Constructs a deserializer with specific handling for temporal timestamps or time strings.
+   *
+   * @param isTemporalTimeStamp whether to handle temporal timestamps.
+   * @param isTemporalTime    whether to handle temporal time strings.
+   */
+  public OsonDateDeserializer(boolean isTemporalTimeStamp, boolean isTemporalTime) {
+    this();
+    this.isTemporalTimeStamp = isTemporalTimeStamp;
+    this.isTemporalTime = isTemporalTime;
+  }
+
+  /**
+   * Constructs a deserializer with a custom date format.
+   *
+   * @param base      the base deserializer.
+   * @param df      the custom date format.
+   * @param formatString  the format string used for deserialization.
+   */
+  public OsonDateDeserializer(DateDeserializers.DateDeserializer base, DateFormat df, String formatString) {
+    super(base, df, formatString);
+  }
+
+
+  @Override
+  protected OsonDateDeserializer withDateFormat(DateFormat df, String formatString) {
+    return new OsonDateDeserializer(this, df, formatString);
+  }
+
+  /**
+   * Overrides the default method to return an empty `Date` instance with epoch time.
+   *
+   * @param ctxt the deserialization context.
+   * @return a `Date` object representing epoch time (1970-01-01T00:00:00Z).
+   */
+  @Override
+  public Object getEmptyValue(DeserializationContext ctxt) {
+    return new Date(0L);
+  }
+
+  /**
+   * Deserializes a JSON token into a `Date`, `Time`, or `Timestamp` object.
+   *
+   * @param p   the JSON parser.
+   * @param ctxt  the deserialization context.
+   * @return the deserialized date object.
+   * @throws IOException if an I/O error occurs during deserialization.
+   */
+  @Override
+  public java.util.Date deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    if(_customFormat != null) {
+      return super.deserialize(p, ctxt);
     }
+    if( p instanceof OsonParser) {
+      OsonParser parser = (OsonParser) p;
 
-    /**
-     * Constructs a deserializer with specific handling for temporal timestamps or time strings.
-     *
-     * @param isTemporalTimeStamp whether to handle temporal timestamps.
-     * @param isTemporalTime      whether to handle temporal time strings.
-     */
-    public OsonDateDeserializer(boolean isTemporalTimeStamp, boolean isTemporalTime) {
-        this();
-        this.isTemporalTimeStamp = isTemporalTimeStamp;
-        this.isTemporalTime = isTemporalTime;
-    }
-
-    /**
-     * Constructs a deserializer with a custom date format.
-     *
-     * @param base          the base deserializer.
-     * @param df            the custom date format.
-     * @param formatString  the format string used for deserialization.
-     */
-    public OsonDateDeserializer(DateDeserializers.DateDeserializer base, DateFormat df, String formatString) {
-        super(base, df, formatString);
-    }
-
-
-    @Override
-    protected OsonDateDeserializer withDateFormat(DateFormat df, String formatString) {
-        return new OsonDateDeserializer(this, df, formatString);
-    }
-
-    /**
-     * Overrides the default method to return an empty `Date` instance with epoch time.
-     *
-     * @param ctxt the deserialization context.
-     * @return a `Date` object representing epoch time (1970-01-01T00:00:00Z).
-     */
-    @Override
-    public Object getEmptyValue(DeserializationContext ctxt) {
-        return new Date(0L);
-    }
-
-    /**
-     * Deserializes a JSON token into a `Date`, `Time`, or `Timestamp` object.
-     *
-     * @param p     the JSON parser.
-     * @param ctxt  the deserialization context.
-     * @return the deserialized date object.
-     * @throws IOException if an I/O error occurs during deserialization.
-     */
-    @Override
-    public java.util.Date deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-        if(_customFormat != null) {
-            return super.deserialize(p, ctxt);
+      if(parser.currentOsonEvent().equals(OracleJsonParser.Event.VALUE_DATE)) {
+        LocalDateTime dateTime = parser.readLocalDateTime();
+        return java.sql.Date.valueOf(dateTime.toLocalDate());
+      }
+      if(parser.currentOsonEvent().equals(OracleJsonParser.Event.VALUE_TIMESTAMP)) {
+        LocalDateTime dateTime = parser.readLocalDateTime();
+        return Timestamp.valueOf(dateTime);
+      }
+      switch (p.getCurrentTokenId()) {
+        case JsonTokenId.ID_STRING: {
+          if (isTemporalTime) {
+            return Time.valueOf(p.getText().trim());
+          }
+          String dateTimeString = p.getText().trim();
+          LocalDateTime localDateTime = LocalDateTime.parse(dateTimeString, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+          return Date.from(localDateTime.atZone(ZoneId.of("UTC")).toInstant());
         }
-        if( p instanceof OsonParser) {
-            OsonParser parser = (OsonParser) p;
-
-            if(parser.currentOsonEvent().equals(OracleJsonParser.Event.VALUE_DATE)) {
-                LocalDateTime dateTime = parser.getLocalDateTime();
-                return java.sql.Date.valueOf(dateTime.toLocalDate());
-            }
-            if(parser.currentOsonEvent().equals(OracleJsonParser.Event.VALUE_TIMESTAMP)) {
-                LocalDateTime dateTime = parser.getLocalDateTime();
-                return Timestamp.valueOf(dateTime);
-            }
-            switch (p.getCurrentTokenId()) {
-                case JsonTokenId.ID_STRING: {
-                    if (isTemporalTime) {
-                        return Time.valueOf(p.getText().trim());
-                    }
-                    String dateTimeString = p.getText().trim();
-                    LocalDateTime localDateTime = LocalDateTime.parse(dateTimeString, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-                    return Date.from(localDateTime.atZone(ZoneId.of("UTC")).toInstant());
-                }
-                default: return super.deserialize(p, ctxt);
-            }
-        }
-        return super.deserialize(p, ctxt);
-
+        default: return super.deserialize(p, ctxt);
+      }
     }
+    return super.deserialize(p, ctxt);
 
-    /**
-     * Creates a contextual deserializer based on the `@Temporal` annotation.
-     *
-     * @param ctxt     the deserialization context.
-     * @param property the bean property being deserialized.
-     * @return a contextual instance of `OsonDateDeserializer`.
-     * @throws JsonMappingException if contextual deserialization fails.
-     */
-    @Override
-    public JsonDeserializer<?> createContextual(DeserializationContext ctxt, BeanProperty property) throws JsonMappingException {
-        if (property != null) {
-            AnnotatedMember introspector = property.getMember();
-            if (introspector != null) {
-                Temporal temporal = introspector.getAnnotation(Temporal.class);
-                if (temporal != null) {
-                    if (temporal.value() == TemporalType.TIMESTAMP) {
-                        return new OsonDateDeserializer(true,false);
-                    }
-                    if (temporal.value() == TemporalType.TIME) {
-                        return new OsonDateDeserializer(false,true);
-                    }
-                }
-            }
+  }
+
+  /**
+   * Creates a contextual deserializer based on the `@Temporal` annotation.
+   *
+   * @param ctxt   the deserialization context.
+   * @param property the bean property being deserialized.
+   * @return a contextual instance of `OsonDateDeserializer`.
+   * @throws JsonMappingException if contextual deserialization fails.
+   */
+  @Override
+  public JsonDeserializer<?> createContextual(DeserializationContext ctxt, BeanProperty property) throws JsonMappingException {
+    if (property != null) {
+      AnnotatedMember introspector = property.getMember();
+      if (introspector != null) {
+        Temporal temporal = introspector.getAnnotation(Temporal.class);
+        if (temporal != null) {
+          if (temporal.value() == TemporalType.TIMESTAMP) {
+            return new OsonDateDeserializer(true,false);
+          }
+          if (temporal.value() == TemporalType.TIME) {
+            return new OsonDateDeserializer(false,true);
+          }
         }
-        return super.createContextual(ctxt, property);
+      }
     }
+    return super.createContextual(ctxt, property);
+  }
 
 }

@@ -49,41 +49,79 @@ import java.io.IOException;
 import java.lang.reflect.*;
 import java.util.ArrayList;
 
+/**
+ * A custom deserializer for arrays of elements that use a specified `AttributeConverter` to
+ * handle the deserialization of individual elements. This class integrates with the
+ * `OsonConverterDeserializer` to support complex or custom mappings for arrays.
+ *
+ * @param <T> the type of the array elements
+ */
 public class OsonConverterArrayDeserializer<T> extends JsonDeserializer<T[]> {
 
-    private final Class<?> elementType;
-    private final OsonConverterDeserializer<T> deserializer;
+  /**
+   * The type of the elements in the array.
+   */
+  private final Class<?> elementType;
 
-    public OsonConverterArrayDeserializer(Class<? extends AttributeConverter> converter) {
-        elementType = resolveType(converter);
-        deserializer = new OsonConverterDeserializer<>(converter);
-    }
+  /**
+   * The deserializer used to process individual elements of the array.
+   */
+  private final OsonConverterDeserializer<T> deserializer;
 
-    private Class<?> resolveType(Class<? extends AttributeConverter> converter) {
-        Class<?> iter = converter;
-        do{
-            Method[] methods = iter.getDeclaredMethods();
-            for(Method method : methods) {
-                if (method.getName().equals("convertToEntityAttribute")
-                        && method.getReturnType() != Object.class){
-                    return method.getReturnType();
-                }
-            }
-            iter = iter.getSuperclass();
-        }while(iter.getSuperclass() != null);
+  /**
+   * Constructs a deserializer for an array of elements with a given `AttributeConverter`.
+   *
+   * @param converter the class of the `AttributeConverter` to use for element deserialization
+   */
+  public OsonConverterArrayDeserializer(Class<? extends AttributeConverter> converter) {
+    elementType = resolveType(converter);
+    deserializer = new OsonConverterDeserializer<>(converter);
+  }
 
-        return Object.class;
-    }
-
-    @Override
-    public T[] deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
-        ArrayList<T> result = new ArrayList<>();
-        if (p.getCurrentToken() == JsonToken.START_ARRAY) {
-            while (p.nextToken() != JsonToken.END_ARRAY) {
-                result.add(deserializer.deserialize(p, ctxt));
-            }
+  /**
+   * Resolves the element type of the array by examining the `convertToEntityAttribute`
+   * method of the provided `AttributeConverter`.
+   *
+   * @param converter the class of the `AttributeConverter`
+   * @return the return type of the `convertToEntityAttribute` method, or `Object.class` if not resolvable
+   */
+  private Class<?> resolveType(Class<? extends AttributeConverter> converter) {
+    Class<?> iter = converter;
+    do{
+      Method[] methods = iter.getDeclaredMethods();
+      for(Method method : methods) {
+        if (method.getName().equals("convertToEntityAttribute")
+            && method.getReturnType() != Object.class){
+          return method.getReturnType();
         }
-        T[] array = (T[]) Array.newInstance(elementType, result.size());
-        return result.toArray(array);
+      }
+      iter = iter.getSuperclass();
+    }while(iter.getSuperclass() != null);
+
+    return Object.class;
+  }
+
+  /**
+   * Deserializes JSON input into an array of elements of type `T` using the custom converter.
+   *
+   * <p>The method processes JSON arrays and delegates the deserialization of individual
+   * elements to the `OsonConverterDeserializer`.</p>
+   *
+   * @param p     the JSON parser
+   * @param ctxt  the deserialization context
+   * @return the deserialized array of elements
+   * @throws IOException        if a low-level I/O problem occurs
+   * @throws JacksonException   if there is a problem with deserialization
+   */
+  @Override
+  public T[] deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
+    ArrayList<T> result = new ArrayList<>();
+    if (p.getCurrentToken() == JsonToken.START_ARRAY) {
+      while (p.nextToken() != JsonToken.END_ARRAY) {
+        result.add(deserializer.deserialize(p, ctxt));
+      }
     }
+    T[] array = (T[]) Array.newInstance(elementType, result.size());
+    return result.toArray(array);
+  }
 }

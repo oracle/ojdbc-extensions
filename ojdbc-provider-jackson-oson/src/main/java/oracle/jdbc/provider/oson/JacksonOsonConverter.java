@@ -73,7 +73,6 @@ public class JacksonOsonConverter implements OsonConverter{
     om.findAndRegisterModules();
     om.registerModule(new OsonModule());
     om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-//    om.setAnnotationIntrospector(new AnnotationIntrospector());
   }
 
   /**

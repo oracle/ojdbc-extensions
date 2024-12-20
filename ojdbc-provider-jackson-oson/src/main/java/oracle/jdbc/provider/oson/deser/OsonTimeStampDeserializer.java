@@ -45,44 +45,92 @@ import oracle.jdbc.provider.oson.OsonParser;
 import oracle.sql.json.OracleJsonParser;
 
 import java.io.IOException;
-import java.sql.Date;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.time.LocalDateTime;
 
+/**
+ * A custom deserializer for `Timestamp` objects that extends Jackson's `TimestampDeserializer`.
+ * This implementation is tailored to work with `OsonParser` and handle Oracle JSON-specific
+ * events such as `VALUE_TIMESTAMP`.
+ *
+ * <p>For standard JSON input, it delegates to the base `TimestampDeserializer`. When using
+ * `OsonParser` and encountering a `VALUE_TIMESTAMP` event, it converts the timestamp into a
+ * `Timestamp` object directly.</p>
+ */
 public class OsonTimeStampDeserializer extends DateDeserializers.TimestampDeserializer {
-    public final static OsonTimeStampDeserializer INSTANCE = new OsonTimeStampDeserializer();
+  /**
+   * Singleton instance for reuse.
+   */
+  public final static OsonTimeStampDeserializer INSTANCE = new OsonTimeStampDeserializer();
 
-    public OsonTimeStampDeserializer() {
-        super();
+  /**
+   * Default constructor using the base deserializer's behavior.
+   */
+  public OsonTimeStampDeserializer() {
+    super();
+  }
+
+  /**
+   * Constructor with a custom date format.
+   *
+   * @param src          the base `TimestampDeserializer` instance
+   * @param df           the `DateFormat` to use for deserialization
+   * @param formatString the format string for the timestamp
+   */
+  public OsonTimeStampDeserializer(DateDeserializers.TimestampDeserializer src,
+                                   DateFormat df, String formatString) {
+    super(src, df, formatString);
+  }
+
+  /**
+   * Creates a new deserializer with the specified date format.
+   *
+   * @param df           the `DateFormat` to use
+   * @param formatString the format string for the timestamp
+   * @return a new `TimestampDeserializer` with the given format
+   */
+  @Override
+  protected OsonTimeStampDeserializer withDateFormat(DateFormat df, String formatString) {
+    return new OsonTimeStampDeserializer(this, df, formatString);
+  }
+
+  /**
+   * Returns an empty value for the deserializer, delegating to the base implementation.
+   *
+   * @param ctxt the deserialization context
+   * @return the empty value
+   */
+  @Override
+  public Object getEmptyValue(DeserializationContext ctxt) {
+    return super.getEmptyValue(ctxt);
+  }
+
+  /**
+   * Deserializes a JSON input into a `Timestamp` object.
+   *
+   * <p>Handles `OsonParser`-specific `VALUE_TIMESTAMP` events to directly parse the timestamp
+   * into a `Timestamp` object. For all other scenarios, it falls back to the base deserialization
+   * behavior.</p>
+   *
+   * @param p      the JSON parser
+   * @param ctxt   the deserialization context
+   * @return the deserialized `Timestamp` object
+   * @throws IOException if an I/O error occurs during deserialization
+   */
+  @Override
+  public Timestamp deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    if (_customFormat != null){
+      return super.deserialize(p, ctxt);
     }
+    if( p instanceof OsonParser) {
+      OsonParser parser = (OsonParser) p;
+      if(parser.currentOsonEvent().equals(OracleJsonParser.Event.VALUE_TIMESTAMP)) {
+        LocalDateTime dateTime = parser.readLocalDateTime();
+        return Timestamp.valueOf(dateTime);
 
-    public OsonTimeStampDeserializer(DateDeserializers.TimestampDeserializer src, DateFormat df, String formatString) {
-        super(src, df, formatString);
+      }
     }
-
-    @Override
-    protected DateDeserializers.TimestampDeserializer withDateFormat(DateFormat df, String formatString) {
-        return super.withDateFormat(df, formatString);
-    }
-
-    @Override
-    public Object getEmptyValue(DeserializationContext ctxt) {
-        return super.getEmptyValue(ctxt);
-    }
-
-    @Override
-    public Timestamp deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-        // custom format
-        if( p instanceof OsonParser) {
-            OsonParser parser = (OsonParser) p;
-            if(parser.currentOsonEvent().equals(OracleJsonParser.Event.VALUE_TIMESTAMP)) {
-                LocalDateTime dateTime = parser.getLocalDateTime();
-                return Timestamp.valueOf(dateTime);
-
-            }
-        }
-
-        return super.deserialize(p, ctxt);
-    }
+    return super.deserialize(p, ctxt);
+  }
 }

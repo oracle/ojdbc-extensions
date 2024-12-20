@@ -36,62 +36,62 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.oson.deser;
+package oracle.jdbc.provider.oson.ser;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.deser.std.NumberDeserializers;
-import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
-
-import oracle.jdbc.provider.oson.OsonParser;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import jakarta.persistence.AttributeConverter;
 
 import java.io.IOException;
-import java.math.BigInteger;
+import java.lang.reflect.InvocationTargetException;
 
 /**
- * Deserializer class for handling BigInteger objects using {@link OsonParser}.
- * This class extends {@link StdScalarDeserializer} to enable the deserialization of BigInteger
- * values from JSON data.
- * <p>
- * It overrides the {@link #deserialize(JsonParser, DeserializationContext)} method to provide
- * a custom implementation that uses the Oson library's {@link OsonParser#getBigIntegerValue()} method
- * for extracting BigInteger values from the JSON content.
- * </p>
- *
- * @see StdScalarDeserializer
- * @see OsonParser
- * @see BigInteger
+ * A custom serializer for converting Java objects using an `AttributeConverter` during serialization.
+ * This serializer leverages JPA-style `AttributeConverter` to convert an object into its
+ * database-compatible representation before writing it to JSON.
  */
-public class OsonBigIntegerDeserializer extends StdScalarDeserializer<BigInteger> {
+public class OsonConverterSerializer extends JsonSerializer<Object> {
 
   /**
-   * A singleton instance of the deserializer.
+   * The attribute converter used to transform objects during serialization.
    */
-  public static final OsonBigIntegerDeserializer INSTANCE = new OsonBigIntegerDeserializer();
+  private AttributeConverter<Object, Object> attributeConverter;
 
   /**
-   * Default constructor that initializes the deserializer for the {@link BigInteger} class.
+   * Constructs an instance of `OsonConverterSerializer` with the provided `AttributeConverter` class.
+   *
+   * @param converter the class of the `AttributeConverter` to use
+   * @throws RuntimeException if the converter cannot be instantiated
    */
-  protected OsonBigIntegerDeserializer() {
-    super(BigInteger.class);
+  public OsonConverterSerializer(Class<? extends AttributeConverter> converter) {
+    try {
+      this.attributeConverter = converter.getConstructor().newInstance();
+    } catch (InstantiationException
+         | IllegalAccessException
+         | InvocationTargetException
+         | NoSuchMethodException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /**
-   * Deserializes a BigInteger from the JSON input using the {@link OsonParser}.
+   * Serializes a given value by converting it with the `AttributeConverter` and writing the result
+   * to the JSON generator.
    *
-   * @param p the {@link JsonParser} for reading the JSON content
-   * @param ctxt the deserialization context
-   * @return the deserialized {@link BigInteger} value
-   * @throws IOException if there is a problem with reading the input
+   * @param value       the object to serialize
+   * @param gen         the JSON generator used to write the JSON output
+   * @param serializers the serializer provider
+   * @throws IOException if an I/O error occurs during serialization
    */
   @Override
-  public BigInteger deserialize(JsonParser p, DeserializationContext ctxt) throws IOException{
-    if( p instanceof OsonParser) {
-      final OsonParser _parser = (OsonParser)p;
-      return _parser.getBigIntegerValue();
+  public void serialize(Object value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+    if (value == null) {
+      gen.writeNull();
+      return;
     }
-    else {
-      return NumberDeserializers.BigIntegerDeserializer.instance.deserialize(p, ctxt);
-    }
+
+    Object convertedValue = attributeConverter.convertToDatabaseColumn(value);
+    gen.writeObject(convertedValue);
   }
 }

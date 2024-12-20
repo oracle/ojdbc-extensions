@@ -396,11 +396,10 @@ public class OsonFactory extends JsonFactory {
    * @param input DataInput to use for reading content to parse
    * @param ctxt I/O context to use for parsing
    *
-   * @return
-   * @throws IOException
+   * @return the JsonParser from DataInput
    */
   @Override
-  protected JsonParser _createParser(DataInput input, IOContext ctxt) throws IOException {
+  protected JsonParser _createParser(DataInput input, IOContext ctxt) {
 
     InputStream stream = new InputStream() {
       @Override

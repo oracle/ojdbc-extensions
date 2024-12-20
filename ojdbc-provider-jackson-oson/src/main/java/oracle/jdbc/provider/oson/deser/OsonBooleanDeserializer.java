@@ -41,38 +41,72 @@ package oracle.jdbc.provider.oson.deser;
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.deser.std.NumberDeserializers;
 import com.fasterxml.jackson.databind.deser.std.NumberDeserializers.BooleanDeserializer;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 import oracle.jdbc.provider.oson.OsonParser;
 
 import java.io.IOException;
-
+/**
+ * Custom deserializer for Boolean values that supports additional formats for parsing.
+ * This class is designed to handle specific input values such as "Y" and "N" and map them
+ * to `Boolean.TRUE` and `Boolean.FALSE` respectively. For other values, it delegates
+ * deserialization to a wrapped Boolean deserializer.
+ *
+ * <p>This implementation is especially useful when working with JSON input that uses
+ * unconventional representations of Boolean values.</p>
+ *
+ *
+ * @see StdScalarDeserializer
+ */
 public class OsonBooleanDeserializer extends StdScalarDeserializer<Boolean> {
-    public static final OsonBooleanDeserializer INSTANCE = new OsonBooleanDeserializer();
-    public static final BooleanDeserializer WRAPPER_INSTAMCE = new BooleanDeserializer(Boolean.class,null);
+  /**
+   * Singleton instance of the deserializer for direct usage.
+   */
+  public static final OsonBooleanDeserializer INSTANCE = new OsonBooleanDeserializer();
 
-    protected OsonBooleanDeserializer() {
-        super(Boolean.class);
-    }
+  /**
+   * Wrapped Boolean deserializer instance for handling standard deserialization cases.
+   */
+  public static final BooleanDeserializer WRAPPER_INSTANCE = new BooleanDeserializer(Boolean.class,null);
 
-    @Override
-    public Boolean deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
-        if (p instanceof OsonParser) {
-            switch (p.getCurrentToken()) {
-                case VALUE_STRING:
-                {
-                    String str = p.getText();
-                    if (str.equalsIgnoreCase("Y")) {
-                        return Boolean.TRUE;
-                    } else if (str.equalsIgnoreCase("N")) {
-                        return Boolean.FALSE;
-                    }
-                }
-                default:
-                    return WRAPPER_INSTAMCE.deserialize(p, ctxt);
-            }
+  /**
+   * Protected constructor to enforce singleton pattern.
+   * Initializes the deserializer with the `Boolean` type.
+   */
+  protected OsonBooleanDeserializer() {
+    super(Boolean.class);
+  }
+
+  /**
+   * Deserializes a JSON token into a Boolean value.
+   *
+   * <p>If the token is a string and its value matches "Y" (case-insensitive), it returns
+   * `Boolean.TRUE`. If the value matches "N" (case-insensitive), it returns `Boolean.FALSE`.
+   * For all other cases, the method delegates the deserialization to `WRAPPER_INSTAMCE`.</p>
+   *
+   * @param p     the JSON parser
+   * @param ctxt  the deserialization context
+   * @return the deserialized Boolean value
+   * @throws IOException        if a low-level I/O problem occurs
+   * @throws JacksonException   if there is a problem with deserialization
+   */
+  @Override
+  public Boolean deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
+    if (p instanceof OsonParser) {
+      switch (p.getCurrentToken()) {
+        case VALUE_STRING:
+        {
+          String str = p.getText();
+          if (str.equalsIgnoreCase("Y")) {
+            return Boolean.TRUE;
+          } else if (str.equalsIgnoreCase("N")) {
+            return Boolean.FALSE;
+          }
         }
-        return WRAPPER_INSTAMCE.deserialize(p, ctxt);
+        default:
+          return WRAPPER_INSTANCE.deserialize(p, ctxt);
+      }
     }
+    return WRAPPER_INSTANCE.deserialize(p, ctxt);
+  }
 }

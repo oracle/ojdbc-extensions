@@ -66,102 +66,105 @@ import java.util.Date;
  */
 public class OsonDateSerializer extends DateSerializer {
 
-    /**
-     * Singleton instance of the OsonDateSerializer with default configuration.
-     */
-    public static final OsonDateSerializer INSTANCE = new OsonDateSerializer(false,false);
+  /**
+   * Singleton instance of the OsonDateSerializer with default configuration.
+   */
+  public static final OsonDateSerializer INSTANCE =
+          new OsonDateSerializer(false,false);
 
-    /**
-     * Indicates whether the serializer should handle temporal timestamps.
-     */
-    private boolean isTemporalTimeStamp = false;
+  /**
+   * Indicates whether the serializer should handle temporal timestamps.
+   */
+  private boolean isTemporalTimeStamp = false;
 
-    /**
-     * Indicates whether the serializer should handle temporal time objects.
-     */
+  /**
+   * Indicates whether the serializer should handle temporal time objects.
+   */
 
-    private boolean isTemporalTime = false;
+  private boolean isTemporalTime = false;
 
-    @Override
-    public OsonDateSerializer withFormat(Boolean timestamp, DateFormat customFormat) {
-        return new OsonDateSerializer(timestamp,customFormat);
+  @Override
+  public OsonDateSerializer withFormat(Boolean timestamp, DateFormat customFormat) {
+    return new OsonDateSerializer(timestamp,customFormat);
+  }
+
+  /**
+   * Constructs a serializer with specific handling for temporal timestamps or time objects.
+   *
+   * @param isTemporalTimeStamp whether to handle temporal timestamps.
+   * @param isTemporalTime    whether to handle temporal time objects.
+   */
+  public OsonDateSerializer(boolean isTemporalTimeStamp, boolean isTemporalTime) {
+    this(null,null);
+    this.isTemporalTimeStamp = isTemporalTimeStamp;
+    this.isTemporalTime = isTemporalTime;
+  }
+
+  /**
+   * Constructs a serializer with a custom timestamp usage and date format.
+   *
+   * @param useTimestamp  whether to use timestamps for serialization.
+   * @param customFormat  the custom date format for serialization.
+   */
+  public OsonDateSerializer(Boolean useTimestamp, DateFormat customFormat) {
+    super(useTimestamp, customFormat);
+  }
+
+  /**
+   * Serializes a `Date` object into JSON, handling special cases for timestamps and time objects.
+   *
+   * @param value  the date value to serialize.
+   * @param g    the JSON generator.
+   * @param provider the serializer provider.
+   * @throws IOException if an I/O error occurs during serialization.
+   */
+  @Override
+  public void serialize(Date value, JsonGenerator g, SerializerProvider provider)
+          throws IOException {
+    if(_customFormat != null) {
+      super.serialize(value, g, provider);
+      return;
     }
-
-    /**
-     * Constructs a serializer with specific handling for temporal timestamps or time objects.
-     *
-     * @param isTemporalTimeStamp whether to handle temporal timestamps.
-     * @param isTemporalTime      whether to handle temporal time objects.
-     */
-    public OsonDateSerializer(boolean isTemporalTimeStamp, boolean isTemporalTime) {
-        this(null,null);
-        this.isTemporalTimeStamp = isTemporalTimeStamp;
-        this.isTemporalTime = isTemporalTime;
+    if( value instanceof java.sql.Time) {
+      g.writeString(value.toString());
+      return;
     }
-
-    /**
-     * Constructs a serializer with a custom timestamp usage and date format.
-     *
-     * @param useTimestamp  whether to use timestamps for serialization.
-     * @param customFormat  the custom date format for serialization.
-     */
-    public OsonDateSerializer(Boolean useTimestamp, DateFormat customFormat) {
-        super(useTimestamp, customFormat);
+    if (g instanceof OsonGenerator) {
+      if(value instanceof Timestamp) {
+        ((OsonGenerator)g).writeTimeStamp((Timestamp) value);
+        return;
+      }
+      ((OsonGenerator)g).writeDate(value);
+      return;
     }
+    super.serialize(value, g, provider);
+  }
 
-    /**
-     * Serializes a `Date` object into JSON, handling special cases for timestamps and time objects.
-     *
-     * @param value    the date value to serialize.
-     * @param g        the JSON generator.
-     * @param provider the serializer provider.
-     * @throws IOException if an I/O error occurs during serialization.
-     */
-    @Override
-    public void serialize(Date value, JsonGenerator g, SerializerProvider provider) throws IOException {
-        if(_customFormat != null) {
-            super.serialize(value, g, provider);
-            return;
+  /**
+   * Creates a contextual serializer based on the `@Temporal` annotation.
+   *
+   * @param serializers the serializer provider.
+   * @param property  the bean property being serialized.
+   * @return a contextual instance of `OsonDateSerializer`.
+   * @throws JsonMappingException if contextual serialization fails.
+   */
+  @Override
+  public JsonSerializer<?> createContextual(SerializerProvider serializers,
+         BeanProperty property) throws JsonMappingException {
+    if (property != null) {
+      AnnotatedMember introspector = property.getMember();
+      if (introspector != null) {
+        Temporal temporal = introspector.getAnnotation(Temporal.class);
+        if (temporal != null) {
+          if (temporal.value() == TemporalType.TIMESTAMP) {
+            return new OsonDateSerializer(true,false);
+          }
+          if (temporal.value() == TemporalType.TIME) {
+            return new OsonDateSerializer(false,true);
+          }
         }
-        if( value instanceof java.sql.Time) {
-            g.writeString(value.toString());
-            return;
-        }
-        if (g instanceof OsonGenerator) {
-            if(value instanceof Timestamp) {
-                ((OsonGenerator)g).writeTimeStamp((Timestamp) value);
-                return;
-            }
-            ((OsonGenerator)g).writeDate(value);
-            return;
-        }
-        super.serialize(value, g, provider);
+      }
     }
-
-    /**
-     * Creates a contextual serializer based on the `@Temporal` annotation.
-     *
-     * @param serializers the serializer provider.
-     * @param property    the bean property being serialized.
-     * @return a contextual instance of `OsonDateSerializer`.
-     * @throws JsonMappingException if contextual serialization fails.
-     */
-    @Override
-    public JsonSerializer<?> createContextual(SerializerProvider serializers, BeanProperty property) throws JsonMappingException {
-        if (property != null) {
-            AnnotatedMember introspector = property.getMember();
-            if (introspector != null) {
-                Temporal temporal = introspector.getAnnotation(Temporal.class);
-                if (temporal != null) {
-                    if (temporal.value() == TemporalType.TIMESTAMP) {
-                        return new OsonDateSerializer(true,false);
-                    }
-                    if (temporal.value() == TemporalType.TIME) {
-                        return new OsonDateSerializer(false,true);
-                    }
-                }
-            }
-        }
-        return super.createContextual(serializers, property);
-    }
+    return super.createContextual(serializers, property);
+  }
 }

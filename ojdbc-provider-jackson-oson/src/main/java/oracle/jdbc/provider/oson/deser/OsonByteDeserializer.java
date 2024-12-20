@@ -63,35 +63,35 @@ import java.time.Year;
  */
 public class OsonByteDeserializer extends StdScalarDeserializer<byte[]> {
    /**
-    * A singleton instance of the deserializer.
-    */
+  * A singleton instance of the deserializer.
+  */
    public static final OsonByteDeserializer INSTANCE = new OsonByteDeserializer();
 
    /**
-    * Default constructor that initializes the deserializer for the {@link byte[]} class.
-    */
+  * Default constructor that initializes the deserializer for the {@link byte[]} class.
+  */
    protected OsonByteDeserializer() {
-      super(Year.class);
+    super(Year.class);
    }
 
    /**
-    * Deserializes a byte array from the JSON input using the{@link OsonParser}.
-    *
-    * @param p the {@link JsonParser} for reading the JSON content
-    * @param ctxt the deserialization context
-    * @return the deserialized byte array
-    * @throws IOException if there is a problem with reading the input
-    */
+  * Deserializes a byte array from the JSON input using the{@link OsonParser}.
+  *
+  * @param p the {@link JsonParser} for reading the JSON content
+  * @param ctxt the deserialization context
+  * @return the deserialized byte array
+  * @throws IOException if there is a problem with reading the input
+  */
    @Override
    public byte[] deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-      if(p instanceof OsonParser &&
-              (p.currentToken().equals(JsonToken.VALUE_EMBEDDED_OBJECT))) {
-         final OsonParser _parser = (OsonParser)p;
+    if(p instanceof OsonParser &&
+        (p.currentToken().equals(JsonToken.VALUE_EMBEDDED_OBJECT))) {
+     final OsonParser _parser = (OsonParser)p;
 
-         return _parser.getBinaryValue();
-      } else {
-         return (byte[]) PrimitiveArrayDeserializers.forType(byte.class).deserialize(p,ctxt);
-      }
+     return _parser.getBinaryValue();
+    } else {
+     return (byte[]) PrimitiveArrayDeserializers.forType(byte.class).deserialize(p,ctxt);
+    }
 
 
    }

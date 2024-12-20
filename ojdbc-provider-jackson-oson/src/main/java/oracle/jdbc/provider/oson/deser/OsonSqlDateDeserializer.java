@@ -39,7 +39,6 @@
 package oracle.jdbc.provider.oson.deser;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonTokenId;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.DateDeserializers;
 import oracle.jdbc.provider.oson.OsonParser;
@@ -49,33 +48,72 @@ import java.io.IOException;
 import java.sql.Date;
 import java.text.DateFormat;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
+/**
+ * A custom deserializer for SQL `Date` objects that extends Jackson's `SqlDateDeserializer`.
+ * This implementation is designed to handle Oracle JSON-specific events when using `OsonParser`,
+ * particularly the `VALUE_DATE` event.
+ *
+ * <p>If the parser is an instance of `OsonParser` and encounters a `VALUE_DATE` event, the
+ * deserializer reads the date and converts it into an SQL `Date` object. For all other cases,
+ * it delegates to the base `SqlDateDeserializer`.</p>
+ */
 public class OsonSqlDateDeserializer extends DateDeserializers.SqlDateDeserializer {
-    public static final OsonSqlDateDeserializer INSTANCE = new OsonSqlDateDeserializer();
+  /**
+   * Singleton instance for reuse.
+   */
+  public static final OsonSqlDateDeserializer INSTANCE = new OsonSqlDateDeserializer();
 
-    public OsonSqlDateDeserializer() {
-        super();
-    }
+  /**
+   * Default constructor using the base deserializer's behavior.
+   */
+  public OsonSqlDateDeserializer() {
+    super();
+  }
 
-    public OsonSqlDateDeserializer(DateDeserializers.SqlDateDeserializer src, DateFormat df, String formatString) {
-        super(src, df, formatString);
-    }
+  /**
+   * Constructor with a custom date format.
+   *
+   * @param src          the base `SqlDateDeserializer` instance
+   * @param df           the `DateFormat` to use for deserialization
+   * @param formatString the format string for the date
+   */
+  public OsonSqlDateDeserializer(DateDeserializers.SqlDateDeserializer src, DateFormat df, String formatString) {
+    super(src, df, formatString);
+  }
 
-    @Override
-    protected DateDeserializers.SqlDateDeserializer withDateFormat(DateFormat df, String formatString) {
-        return super.withDateFormat(df, formatString);
-    }
+  /**
+   * Creates a new deserializer with the specified date format.
+   *
+   * @param df           the `DateFormat` to use
+   * @param formatString the format string for the date
+   * @return a new `SqlDateDeserializer` with the given format
+   */
+  @Override
+  protected DateDeserializers.SqlDateDeserializer withDateFormat(DateFormat df, String formatString) {
+    return super.withDateFormat(df, formatString);
+  }
 
-    @Override
-    public Date deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-        if( p instanceof OsonParser) {
-            OsonParser parser = (OsonParser) p;
-            if(parser.currentOsonEvent().equals(OracleJsonParser.Event.VALUE_DATE)) {
-                LocalDateTime dateTime = parser.getLocalDateTime();
-                return Date.valueOf(dateTime.toLocalDate());
-            }
-        }
-        return super.deserialize(p, ctxt);
+  /**
+   * Deserializes a JSON input into an SQL `Date` object.
+   *
+   * <p>Handles `OsonParser`-specific `VALUE_DATE` events to directly parse the date into an
+   * SQL `Date` object. For all other scenarios, the base deserialization behavior is used.</p>
+   *
+   * @param p      the JSON parser
+   * @param ctxt   the deserialization context
+   * @return the deserialized SQL `Date` object
+   * @throws IOException if an I/O error occurs during deserialization
+   */
+  @Override
+  public Date deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    if( p instanceof OsonParser) {
+      OsonParser parser = (OsonParser) p;
+      if(parser.currentOsonEvent().equals(OracleJsonParser.Event.VALUE_DATE)) {
+        LocalDateTime dateTime = parser.readLocalDateTime();
+        return Date.valueOf(dateTime.toLocalDate());
+      }
     }
+    return super.deserialize(p, ctxt);
+  }
 }

@@ -52,47 +52,91 @@ import jakarta.persistence.EnumType;
 import java.io.IOException;
 import java.lang.reflect.Field;
 
+/**
+ * A custom serializer for Java `Enum` types, allowing them to be serialized as either their
+ * ordinal value or their name (as a string), based on annotations or provided flags.
+ * This serializer supports both the default ordinal-based serialization and string-based serialization
+ * for enumerated types.
+ */
 public class OsonEnumSerializer extends JsonSerializer<Enum<?>> implements ContextualSerializer {
+  /**
+   * Flag indicating if the enum should be serialized as its ordinal value or name.
+   * When true, the enum is serialized as a number (ordinal).
+   */
+  private final boolean isEnumerated;
 
-    private boolean isEnumerated;
-    private boolean isEnumeratedString;
-    public OsonEnumSerializer(boolean isEnumerated, boolean isEnumeratedString) {
-        this.isEnumerated = isEnumerated;
-        this.isEnumeratedString = isEnumeratedString;
-    }
-    public OsonEnumSerializer() {
-        this(false,false);
-    }
+  /**
+   * Flag indicating if the enum should be serialized as its name (string) instead of its ordinal.
+   */
+  private final boolean isEnumeratedString;
 
-    @Override
-    public void serialize(Enum<?> value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-        if (value == null) {
-            gen.writeNull();
-            return;
-        }
-        if (isEnumerated && isEnumeratedString) {
-            gen.writeString(value.name());
-            return;
-        }
-        gen.writeNumber(value.ordinal());
-    }
+  /**
+   * Constructs an `OsonEnumSerializer` with specific flags for enum serialization.
+   *
+   * @param isEnumerated whether the enum should be serialized as its ordinal (if true)
+   * @param isEnumeratedString whether the enum should be serialized as its name (if true)
+   */
+  public OsonEnumSerializer(boolean isEnumerated, boolean isEnumeratedString) {
+    this.isEnumerated = isEnumerated;
+    this.isEnumeratedString = isEnumeratedString;
+  }
 
-    @Override
-    public JsonSerializer<?> createContextual(SerializerProvider prov, BeanProperty property) throws JsonMappingException {
-        boolean isEnumeratedCT = false, isEnumeratedStringCT = false;
-        if(property != null) {
-            AnnotatedMember member = property.getMember();
-            if (member != null){
-                Enumerated enumerated = member.getAnnotation(Enumerated.class);
-                if (enumerated != null){
-                    isEnumeratedCT = true;
-                    if (enumerated.value() == EnumType.STRING) {
-                        isEnumeratedStringCT = true;
-                    }
-                    return new OsonEnumSerializer(isEnumeratedCT, isEnumeratedStringCT);
-                }
-            }
-        }
-        return new OsonEnumSerializer(false,false);
+  /**
+   * Default constructor, which assumes the enum should not be serialized as either ordinal or string.
+   */
+  public OsonEnumSerializer() {
+    this(false,false);
+  }
+
+  /**
+   * Serializes an enum based on the configured flags:
+   * - If both `isEnumerated` and `isEnumeratedString` are true, serialize the enum as a string (name).
+   * - If only `isEnumerated` is true, serialize the enum as its ordinal (number).
+   * - Otherwise, the enum is serialized by its ordinal value.
+   *
+   * @param value the enum value to serialize
+   * @param gen the JSON generator
+   * @param serializers the serializer provider
+   * @throws IOException if an I/O error occurs during serialization
+   */
+  @Override
+  public void serialize(Enum<?> value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+    if (value == null) {
+      gen.writeNull();
+      return;
     }
+    if (isEnumerated && isEnumeratedString) {
+      gen.writeString(value.name());
+      return;
+    }
+    gen.writeNumber(value.ordinal());
+  }
+
+  /**
+   * Contextually configures the enum serializer based on annotations present in the property.
+   * Specifically, it checks for the `@Enumerated` annotation to determine whether the enum should
+   * be serialized as a string (name) or as its ordinal.
+   *
+   * @param prov the serializer provider
+   * @param property the bean property being serialized
+   * @return a contextualized enum serializer
+   */
+  @Override
+  public JsonSerializer<?> createContextual(SerializerProvider prov, BeanProperty property) {
+    boolean isEnumeratedCT = false, isEnumeratedStringCT = false;
+    if(property != null) {
+      AnnotatedMember member = property.getMember();
+      if (member != null){
+        Enumerated enumerated = member.getAnnotation(Enumerated.class);
+        if (enumerated != null){
+          isEnumeratedCT = true;
+          if (enumerated.value() == EnumType.STRING) {
+            isEnumeratedStringCT = true;
+          }
+          return new OsonEnumSerializer(isEnumeratedCT, isEnumeratedStringCT);
+        }
+      }
+    }
+    return new OsonEnumSerializer(false,false);
+  }
 }

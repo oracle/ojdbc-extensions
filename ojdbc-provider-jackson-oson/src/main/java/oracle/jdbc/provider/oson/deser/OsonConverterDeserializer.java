@@ -55,116 +55,166 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+/**
+ * A generic deserializer that integrates with a custom `AttributeConverter` for deserializing
+ * JSON input into Java objects. This class is useful for handling complex or custom mappings
+ * of JSON data types to entity attributes in Java.
+ *
+ * @param <T> the type of the entity attribute to deserialize into
+ */
 public class OsonConverterDeserializer<T> extends JsonDeserializer<T> {
 
-    private final AttributeConverter converter;
-    private final Class<?> elementReturnType;
-    private final Class<?> elementInputType;
+  /**
+   * The attribute converter instance used for the deserialization process.
+   */
+  private final AttributeConverter converter;
 
-    public OsonConverterDeserializer(Class<? extends AttributeConverter> converter) {
-        try {
-            this.converter = converter.getConstructor().newInstance();
-            this.elementReturnType = resolveReturnType(converter);;
-            this.elementInputType = resolveInputType(converter);
-        } catch (InstantiationException 
-                 | IllegalAccessException 
-                 | InvocationTargetException 
-                 | NoSuchMethodException e) {
-            throw new RuntimeException(e);
+  /**
+   * The return type of the `convertToEntityAttribute` method in the converter.
+   */
+  private final Class<?> elementReturnType;
+
+  /**
+   * The return type of the `convertToEntityAttribute` method in the converter.
+   */
+  private final Class<?> elementInputType;
+
+  /**
+   * Constructs an instance of the deserializer for a given `AttributeConverter` class.
+   *
+   * @param converter the class of the `AttributeConverter` to use
+   * @throws RuntimeException if the converter cannot be instantiated or its methods cannot
+   *                          be resolved
+   */
+  public OsonConverterDeserializer(Class<? extends AttributeConverter> converter) {
+    try {
+      this.converter = converter.getConstructor().newInstance();
+      this.elementReturnType = resolveReturnType(converter);;
+      this.elementInputType = resolveInputType(converter);
+    } catch (InstantiationException 
+         | IllegalAccessException 
+         | InvocationTargetException 
+         | NoSuchMethodException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * Resolves the input type of the `convertToDatabaseColumn` method from the given converter class.
+   *
+   * @param converter the class of the `AttributeConverter`
+   * @return the input type of the method, or `Object.class` if not resolvable
+   */
+  private Class<?> resolveInputType(Class<? extends AttributeConverter> converter) {
+    Class<?> iter = converter;
+    do{
+      Method[] methods = iter.getDeclaredMethods();
+      for(Method method : methods) {
+        if (method.getName().equals("convertToDatabaseColumn")
+            && method.getReturnType() != Object.class){
+          Class<T> returnType = (Class<T>) method.getReturnType();
+          return returnType;
         }
-    }
+      }
+      iter = iter.getSuperclass();
+    }while(iter.getSuperclass() != null);
 
-    private Class<?> resolveInputType(Class<? extends AttributeConverter> converter) {
-        Class<?> iter = converter;
-        do{
-            Method[] methods = iter.getDeclaredMethods();
-            for(Method method : methods) {
-                if (method.getName().equals("convertToDatabaseColumn")
-                        && method.getReturnType() != Object.class){
-                    Class<T> returnType = (Class<T>) method.getReturnType();
-                    return returnType;
-                }
-            }
-            iter = iter.getSuperclass();
-        }while(iter.getSuperclass() != null);
+    return (Class<T>) Object.class;
+  }
 
-        return (Class<T>) Object.class;
-    }
-
-    private Class<T> resolveReturnType(Class<? extends AttributeConverter> converter) {
-        Class<?> iter = converter;
-        do{
-            Method[] methods = iter.getDeclaredMethods();
-            for(Method method : methods) {
-                if (method.getName().equals("convertToEntityAttribute")
-                        && method.getReturnType() != Object.class){
-                    Class<T> returnType = (Class<T>) method.getReturnType();
-                    return returnType;
-                }
-            }
-            iter = iter.getSuperclass();
-        }while(iter.getSuperclass() != null);
-
-        return (Class<T>) Object.class;
-    }
-    
-    @Override
-    public T deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
-        T result = null;
-        switch (p.getCurrentToken()) {
-
-            case VALUE_NUMBER_INT:
-                int pInt = p.getIntValue();
-                result = ((T) converter.convertToEntityAttribute(pInt));
-                break;
-            case VALUE_STRING:
-            {
-                OsonParser parser= (OsonParser)p;
-                switch (parser.currentOsonEvent()) {
-                    case VALUE_TIMESTAMP:
-                        LocalDateTime dateTime = parser.getLocalDateTime();
-                        Timestamp timestamp = Timestamp.valueOf(dateTime);
-                        result = (T) converter.convertToEntityAttribute(timestamp);
-                        break;
-                    case VALUE_DATE:
-                        LocalDate localDate = parser.getLocalDateTime().toLocalDate();
-                        Date date = Date.valueOf(localDate);
-                        result = (T) converter.convertToEntityAttribute(date);
-                        break;
-
-                    default:
-                        String pString = p.getText();
-                        if (elementInputType.equals(Time.class)) {
-                            result = (T) converter.convertToEntityAttribute(Time.valueOf(pString));
-                        }else if (elementInputType.equals(LocalTime.class)) {
-                            result = (T) converter.convertToEntityAttribute(LocalTime.parse(pString));
-                        }
-                        else {
-                            if (pString.length() == 1) {
-                                result = ((T) converter.convertToEntityAttribute(Character.valueOf(pString.charAt(0))));
-                                break;
-                            }
-                            result = ((T) converter.convertToEntityAttribute(pString));
-                        }
-                        break;
-                }
-                break;
-            }
-            case VALUE_EMBEDDED_OBJECT:
-                byte[] bytes = p.getBinaryValue();
-                result = (T) converter.convertToEntityAttribute(bytes);
-                break;
-
-            default:
-                String pDString = p.getText();
-                if (pDString.length() == 1) {
-                    result = ((T) converter.convertToEntityAttribute(Character.valueOf(pDString.charAt(0))));
-                    break;
-                }
-                result = ((T) converter.convertToEntityAttribute(pDString));
-
+  /**
+   * Resolves the return type of the `convertToEntityAttribute` method from the given converter class.
+   *
+   * @param converter the class of the `AttributeConverter`
+   * @return the return type of the method, or `Object.class` if not resolvable
+   */
+  private Class<T> resolveReturnType(Class<? extends AttributeConverter> converter) {
+    Class<?> iter = converter;
+    do{
+      Method[] methods = iter.getDeclaredMethods();
+      for(Method method : methods) {
+        if (method.getName().equals("convertToEntityAttribute")
+            && method.getReturnType() != Object.class){
+          Class<T> returnType = (Class<T>) method.getReturnType();
+          return returnType;
         }
-        return result;
+      }
+      iter = iter.getSuperclass();
+    }while(iter.getSuperclass() != null);
+
+    return (Class<T>) Object.class;
+  }
+
+  /**
+   * Deserializes JSON input into an entity attribute of type `T` using the custom converter.
+   *
+   * <p>The method handles various token types, including integers, strings, timestamps,
+   * dates, embedded objects, and more, mapping them to the appropriate attribute type
+   * using the `AttributeConverter`.</p>
+   *
+   * @param p     the JSON parser
+   * @param ctxt  the deserialization context
+   * @return the deserialized entity attribute
+   * @throws IOException        if a low-level I/O problem occurs
+   * @throws JacksonException   if there is a problem with deserialization
+   */
+  @Override
+  public T deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
+    T result = null;
+    switch (p.getCurrentToken()) {
+
+      case VALUE_NUMBER_INT:
+        int pInt = p.getIntValue();
+        result = ((T) converter.convertToEntityAttribute(pInt));
+        break;
+      case VALUE_STRING:
+      {
+        OsonParser parser= (OsonParser)p;
+        switch (parser.currentOsonEvent()) {
+          case VALUE_TIMESTAMP:
+            LocalDateTime dateTime = parser.readLocalDateTime();
+            Timestamp timestamp = Timestamp.valueOf(dateTime);
+            result = (T) converter.convertToEntityAttribute(timestamp);
+            break;
+          case VALUE_DATE:
+            LocalDate localDate = parser.readLocalDateTime().toLocalDate();
+            Date date = Date.valueOf(localDate);
+            result = (T) converter.convertToEntityAttribute(date);
+            break;
+
+          default:
+            String pString = p.getText();
+            if (elementInputType.equals(Time.class)) {
+              result = (T) converter.convertToEntityAttribute(Time.valueOf(pString));
+            }else if (elementInputType.equals(LocalTime.class)) {
+              result = (T) converter.convertToEntityAttribute(LocalTime.parse(pString));
+            }
+            else {
+              if (pString.length() == 1) {
+                result = ((T) converter.convertToEntityAttribute(Character.valueOf(pString.charAt(0))));
+                break;
+              }
+              result = ((T) converter.convertToEntityAttribute(pString));
+            }
+            break;
+        }
+        break;
+      }
+      case VALUE_EMBEDDED_OBJECT:
+        byte[] bytes = p.getBinaryValue();
+        result = (T) converter.convertToEntityAttribute(bytes);
+        break;
+
+      default:
+        String pDString = p.getText();
+        if (pDString.length() == 1) {
+          result = ((T) converter.convertToEntityAttribute(Character.valueOf(pDString.charAt(0))));
+          break;
+        }
+        result = ((T) converter.convertToEntityAttribute(pDString));
+
     }
+    return result;
+  }
 
 }

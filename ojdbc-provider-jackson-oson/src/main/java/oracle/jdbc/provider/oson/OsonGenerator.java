@@ -75,7 +75,7 @@ import java.util.logging.Logger;
 public class OsonGenerator extends GeneratorBase {
 
   private static final boolean DEBUG = false;
-  private Logger logger = Logger.getLogger("OsonLogger");
+  private Logger logger = Logger.getLogger(OsonGenerator.class.getName());
 
   private OutputStream out = null;
   private OracleJsonGenerator gen = null;
@@ -126,7 +126,7 @@ public class OsonGenerator extends GeneratorBase {
    */
   @Override
   public void flush() throws IOException {
-    if(DEBUG) logger.log(Level.FINEST, "flush");
+    logger.log(Level.FINEST, "flush");
     gen.flush();
   }
 
@@ -135,7 +135,7 @@ public class OsonGenerator extends GeneratorBase {
    */
   @Override
   protected void _releaseBuffers() {
-    if(DEBUG) logger.log(Level.FINEST, "_releaseBuffers");
+    logger.log(Level.FINEST, "_releaseBuffers");
     if(out instanceof ByteArrayOutputStream)
       ((ByteArrayOutputStream) out).reset();
   }
@@ -519,11 +519,18 @@ public class OsonGenerator extends GeneratorBase {
    */
   @Override
   public void close() throws IOException {
-    if(DEBUG) logger.log(Level.FINEST, "close");
+    logger.log(Level.FINEST, "close");
     gen.close();
     closed = true;
   }
 
+  /**
+   * Writes a `java.util.Date` object as an Oracle JSON `DATE`.
+   * If the input is a `java.sql.Date`, it is first converted to a `DATE` object.
+   *
+   * @param value the `Date` to write
+   * @throws IOException if an I/O error occurs during writing
+   */
   public void writeDate(Date value) throws IOException {
     _verifyValueWrite("write date");
 
@@ -539,18 +546,32 @@ public class OsonGenerator extends GeneratorBase {
     }
   }
 
+  /**
+   * Writes a `LocalDate` object as an Oracle JSON `DATE`.
+   * Converts the `LocalDate` to a `DATE` object and serializes it.
+   *
+   * @param value the `LocalDate` to write
+   * @throws IOException if an I/O error occurs during writing
+   */
   public void writeLocalDate(LocalDate value) throws IOException {
     _verifyValueWrite("write LocalDate");
-    DATE dd = null;
+
     try {
-        dd = new DATE(value);
+      DATE dd = new DATE(value);
+      OracleJsonDate jsonDate = new OracleJsonDateImpl(dd.shareBytes());
+      gen.write(jsonDate);
     } catch (SQLException e) {
         throw new RuntimeException(e);
     }
-      OracleJsonDate jsonDate = new OracleJsonDateImpl(dd.shareBytes());
-    gen.write(jsonDate);
   }
 
+  /**
+   * Writes a `Timestamp` object as an Oracle JSON `TIMESTAMP`.
+   * Converts the `Timestamp` to a `TIMESTAMP` object and serializes it.
+   *
+   * @param value the `Timestamp` to write
+   * @throws IOException if an I/O error occurs during writing
+   */
   public void writeTimeStamp(Timestamp value) throws IOException {
     _verifyValueWrite("write TimeStamp");
     TIMESTAMP timestamp = new TIMESTAMP(value);

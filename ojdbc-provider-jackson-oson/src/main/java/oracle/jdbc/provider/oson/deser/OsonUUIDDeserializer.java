@@ -40,6 +40,7 @@ package oracle.jdbc.provider.oson.deser;
 
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 import com.fasterxml.jackson.databind.deser.std.UUIDDeserializer;
@@ -49,24 +50,57 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
+/**
+ * A custom deserializer for `UUID` objects that extends Jackson's `StdScalarDeserializer`.
+ * This deserializer is designed to handle Oracle JSON-specific binary UUID representations
+ * when used with `OsonParser`.
+ *
+ * <p>When encountering an embedded object token (`JsonToken.VALUE_EMBEDDED_OBJECT`) in
+ * `OsonParser`, it reads the binary data, extracts the most significant and least significant
+ * bits, and constructs a `UUID` object. For other scenarios, it delegates to Jackson's
+ * `UUIDDeserializer`.</p>
+ */
 public class OsonUUIDDeserializer extends StdScalarDeserializer<UUID> {
-    public static final OsonUUIDDeserializer INSTANCE = new OsonUUIDDeserializer();
-    public static final UUIDDeserializer UUID_DESERIALIZER = new UUIDDeserializer();
+  /**
+   * Singleton instance for reuse.
+   */
+  public static final OsonUUIDDeserializer INSTANCE = new OsonUUIDDeserializer();
+  /**
+   * Fallback Jackson `UUIDDeserializer` for standard cases.
+   */
+  public static final UUIDDeserializer UUID_DESERIALIZER = new UUIDDeserializer();
 
-    public OsonUUIDDeserializer() {
-        super(UUID.class);
-    }
+  /**
+   * Default constructor.
+   */
+  public OsonUUIDDeserializer() {
+    super(UUID.class);
+  }
 
-    @Override
-    public UUID deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
-        if (p instanceof OsonParser) {
-            byte[] bytes = p.getBinaryValue();
-            ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
-            long mostSignificantBits = byteBuffer.getLong();
-            long leastSignificantBits = byteBuffer.getLong();
-            return new UUID(mostSignificantBits, leastSignificantBits);
-        } else {
-            return UUID_DESERIALIZER.deserialize(p,ctxt);
-        }
+  /**
+   * Deserializes a JSON input into a `UUID` object.
+   *
+   * <p>If the parser is an instance of `OsonParser` and the current token is an embedded
+   * object (`JsonToken.VALUE_EMBEDDED_OBJECT`), it interprets the binary data as a
+   * serialized UUID. For all other scenarios, it delegates to the standard
+   * `UUIDDeserializer`.</p>
+   *
+   * @param p      the JSON parser
+   * @param ctxt   the deserialization context
+   * @return the deserialized `UUID` object
+   * @throws IOException if an I/O error occurs during deserialization
+   */
+  @Override
+  public UUID deserialize(JsonParser p, DeserializationContext ctxt) throws IOException{
+    if (p instanceof OsonParser
+            && p.currentToken().equals(JsonToken.VALUE_EMBEDDED_OBJECT)) {
+      byte[] bytes = p.getBinaryValue();
+      ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+      long mostSignificantBits = byteBuffer.getLong();
+      long leastSignificantBits = byteBuffer.getLong();
+      return new UUID(mostSignificantBits, leastSignificantBits);
+    } else {
+      return UUID_DESERIALIZER.deserialize(p,ctxt);
     }
+  }
 }
