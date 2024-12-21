@@ -81,13 +81,13 @@ public class OsonParser extends ParserBase {
   
   private ObjectCodec _codec;
 
+  /**
+   * A static map to map OracleJsonParser events to Jackson's JsonToken values.
+   */
   private static final Map<OracleJsonParser.Event, JsonToken> 
           OSON_EVENT_TO_JSON_TOKEN = new HashMap<>();
 
   static {
-    /**
-     * A static map to map OracleJsonParser events to Jackson's JsonToken values.
-     */
     OSON_EVENT_TO_JSON_TOKEN.put(OracleJsonParser.Event.START_ARRAY, 
             JsonToken.START_ARRAY);
     OSON_EVENT_TO_JSON_TOKEN.put(OracleJsonParser.Event.END_ARRAY, 
