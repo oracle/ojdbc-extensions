@@ -13,7 +13,6 @@ import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
  */
 public final class HashicorpCredentialsFactory implements ResourceFactory<HashiCredentials> {
 
-  // Example parameter referencing the authentication method
   public static final Parameter<HashicorpAuthenticationMethod> AUTHENTICATION_METHOD =
           Parameter.create(REQUIRED);
 
@@ -33,7 +32,6 @@ public final class HashicorpCredentialsFactory implements ResourceFactory<HashiC
   }
 
   private static HashiCredentials getCredential(ParameterSet parameterSet) {
-    System.out.println("parameterSet = " + parameterSet);
     // Check which authentication method is requested
     HashicorpAuthenticationMethod method =
             parameterSet.getRequired(AUTHENTICATION_METHOD);
@@ -47,9 +45,6 @@ public final class HashicorpCredentialsFactory implements ResourceFactory<HashiC
     }
   }
 
-  /**
-   * Example: read Vault token from an environment variable "VAULT_TOKEN".
-   */
   private static HashiCredentials tokenCredentials(ParameterSet parameterSet) {
     // (1) Try parameter
     String paramToken = parameterSet.getOptional(HashiVaultSecretsManagerFactory.VAULT_TOKEN);

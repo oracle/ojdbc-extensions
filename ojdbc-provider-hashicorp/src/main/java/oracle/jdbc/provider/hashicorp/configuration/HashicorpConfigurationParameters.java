@@ -2,11 +2,10 @@ package oracle.jdbc.provider.hashicorp.configuration;
 
 import oracle.jdbc.provider.hashicorp.authentication.HashicorpAuthenticationMethod;
 import oracle.jdbc.provider.hashicorp.authentication.HashicorpCredentialsFactory;
-import oracle.jdbc.provider.hashicorp.secrets.HashiVaultSecretsManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 
 /**
- * Defines how we parse common Vault parameters (similar to AWS approach).
+ * Defines how we parse common Vault parameters.
  */
 public final class HashicorpConfigurationParameters {
 

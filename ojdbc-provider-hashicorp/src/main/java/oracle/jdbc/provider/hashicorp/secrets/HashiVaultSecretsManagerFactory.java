@@ -20,10 +20,6 @@ import java.net.URL;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
 
-/**
- * Analogous to AWS SecretsManagerFactory: fetches secrets from HashiCorp Vault.
- * Uses a REST call to the Vault HTTP API.
- */
 public final class HashiVaultSecretsManagerFactory extends HashiVaultResourceFactory<String> {
 
   /** The path of the secret in Vault. Required. */
@@ -38,13 +34,14 @@ public final class HashiVaultSecretsManagerFactory extends HashiVaultResourceFac
   /**
    * (Optional) The Vault address. If not specified, fallback to system property or environment var.
    */
-  public static final Parameter<String> VAULT_ADDRESS = Parameter.create();
+  public static final Parameter<String> VAULT_ADDR = Parameter.create();
 
   /**
    * (Optional) The Vault token. If not specified, fallback to system property or environment var.
    */
   public static final Parameter<String> VAULT_TOKEN = Parameter.create();
 
+  public static final Parameter<String> FIELD_NAME = Parameter.create();
 
   private static final OracleJsonFactory JSON_FACTORY = new OracleJsonFactory();
 
@@ -62,10 +59,9 @@ public final class HashiVaultSecretsManagerFactory extends HashiVaultResourceFac
 
   @Override
   public Resource<String> request(HashiCredentials credentials, ParameterSet parameterSet) {
-    System.out.println("parametrs in SecretManagerFactory" + parameterSet);
     String secretPath = parameterSet.getRequired(SECRET_PATH);
     String key = parameterSet.getOptional(KEY_NAME);
-    String vaultAddrParam = parameterSet.getOptional(VAULT_ADDRESS);
+    String vaultAddrParam = parameterSet.getOptional(VAULT_ADDR);
     String vaultTokenParam = parameterSet.getOptional(VAULT_TOKEN);
 
     String vaultAddr = (vaultAddrParam != null)
@@ -85,12 +81,10 @@ public final class HashiVaultSecretsManagerFactory extends HashiVaultResourceFac
               "Vault token not found in URL parameters, system properties, or environment variables");
     }
 
-    // Use vaultAddr + secretPath as your final endpoint:
     String vaultUrl = vaultAddr + secretPath;
 
     // Make the REST call
     String secretString = fetchSecretFromVault(vaultUrl, vaultToken);
-    System.out.println("Raw Vault Response: " + secretString);
 
     /*
      * If KEY_NAME is specified, we only want a single field from the nested JSON.
@@ -118,8 +112,6 @@ public final class HashiVaultSecretsManagerFactory extends HashiVaultResourceFac
         throw new IllegalStateException(
                 "Failed to fetch secret. HTTP error code: " + conn.getResponseCode());
       }
-
-      // Java 8-friendly read of InputStream
       try (InputStream in = conn.getInputStream()) {
         return readStream(in);
       }
@@ -133,9 +125,6 @@ public final class HashiVaultSecretsManagerFactory extends HashiVaultResourceFac
     }
   }
 
-  /**
-   * Utility method for reading all bytes from an InputStream in Java 8.
-   */
   private static String readStream(InputStream in) throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     byte[] buffer = new byte[1024];
@@ -190,7 +179,7 @@ public final class HashiVaultSecretsManagerFactory extends HashiVaultResourceFac
         // Return only that key's value
         if (!dataData.containsKey(key)) {
           throw new IllegalArgumentException(
-                  "Failed to find key \"" + key + "\" in secret: " + secretPath);
+                  "Failed to find key " + key + " in secret: " + secretPath);
         }
         return dataData.getString(key);
 
