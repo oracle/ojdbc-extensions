@@ -1,7 +1,7 @@
 # Oracle JDBC Java Flight Recorder Provider
 
 This module contains a provider for integration between Oracle JDBC and
-Java Flight Record.
+Java Flight Recorder.
 
 This provider implements the TraceEventListener interface provided by the JDBC
 driver which will be notified for every round trip and generate Java Flight 
@@ -17,7 +17,7 @@ Recorder events. The following attributes are added the the traces for each even
 
 ## Installation
 
-This provider is distributed as single jar on the Maven Central Repository. The 
+This provider is distributed as a single jar on the Maven Central Repository. The 
 jar is compiled for JDK 11, and is forward compatible with later JDK versions. 
 The coordinates for the latest release are:
 

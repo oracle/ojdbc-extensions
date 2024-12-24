@@ -36,7 +36,7 @@ The following attributes are added the the traces for each event:
 
 ## Installation
 
-This provider is distributed as single jar on the Maven Central Repository. The 
+This provider is distributed as a single jar on the Maven Central Repository. The 
 jar is compiled for JDK 8, and is forward compatible with later JDK versions. 
 The coordinates for the latest release are:
 
