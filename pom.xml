@@ -4,7 +4,7 @@
 
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-extensions</artifactId>
-  <version>${extensions-version}</version>
+  <version>1.0.2</version>
   <packaging>pom</packaging>
 
   <name>Extensions for the Oracle JDBC Driver</name>
@@ -73,6 +73,7 @@
     <module>ojdbc-provider-opentelemetry</module>
     <module>ojdbc-provider-gcp</module>
     <module>ojdbc-provider-jfr</module>
+    <module>ojdbc-provider-traceeventlisteners</module>
   </modules>
 
   <dependencyManagement>
@@ -80,7 +81,7 @@
       <dependency>
         <groupId>com.oracle.database.jdbc</groupId>
         <artifactId>ojdbc-provider-common</artifactId>
-        <version>${extensions-version}</version>
+        <version>1.0.2</version>
       </dependency>
       <dependency>
         <groupId>com.oracle.database.jdbc</groupId>
@@ -107,7 +108,7 @@
       <dependency>
         <groupId>com.oracle.database.jdbc</groupId>
         <artifactId>ojdbc-provider-common</artifactId>
-        <version>${extensions-version}</version>
+        <version>1.0.2</version>
         <classifier>tests</classifier>
         <type>test-jar</type>
         <scope>test</scope>
@@ -204,9 +205,9 @@
       <!-- Add META-INF/services -->
       <resource>
         <directory>${project.basedir}/src/main/resources/META-INF/services/</directory>
-        <includes>
+        <!-- <includes>
           <include>oracle.jdbc.spi.*</include>
-        </includes>
+        </includes> -->
         <targetPath>META-INF/services/</targetPath>
       </resource>
     </resources>

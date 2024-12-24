@@ -76,13 +76,13 @@ public class OracleEventFactory {
     eventAnnotations.add(new AnnotationElement(Category.class,  new String[] { "Oracle JDBC", "Round trips" }));
 
     List<ValueDescriptor> fields = new ArrayList<ValueDescriptor>();
-    fields.add(new ValueDescriptor(String.class, "Connection ID"));
-    fields.add(new ValueDescriptor(String.class, "Database operation"));
-    fields.add(new ValueDescriptor(String.class, "Original SQL text"));
-    fields.add(new ValueDescriptor(String.class, "Actual SQL text"));
-    fields.add(new ValueDescriptor(String.class, "Database user"));
-    fields.add(new ValueDescriptor(String.class, "Database tenant"));
-    fields.add(new ValueDescriptor(String.class, "SQL ID"));
+    fields.add(new ValueDescriptor(String.class, "Connection_ID"));
+    fields.add(new ValueDescriptor(String.class, "Database_operation"));
+    fields.add(new ValueDescriptor(String.class, "Database_tenant"));
+    fields.add(new ValueDescriptor(String.class, "SQL_ID"));
+    fields.add(new ValueDescriptor(String.class, "Original_SQL_text"));
+    fields.add(new ValueDescriptor(String.class, "Actual_SQL_text"));
+    fields.add(new ValueDescriptor(String.class, "Database_user"));
 
     EventFactory f = EventFactory.create(eventAnnotations, fields);
     return f.newEvent();

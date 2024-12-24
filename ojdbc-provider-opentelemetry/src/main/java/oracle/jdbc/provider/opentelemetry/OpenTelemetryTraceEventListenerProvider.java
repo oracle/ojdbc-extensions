@@ -39,23 +39,9 @@
 package oracle.jdbc.provider.opentelemetry;
 
 import oracle.jdbc.TraceEventListener;
-import oracle.jdbc.spi.TraceEventListenerProvider;
 
-import java.lang.management.ManagementFactory;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.management.InstanceAlreadyExistsException;
-import javax.management.MBeanException;
-import javax.management.MBeanRegistrationException;
-import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
-import javax.management.NotCompliantMBeanException;
-import javax.management.ObjectName;
-import javax.management.ReflectionException;
+import oracle.jdbc.provider.traceeventlisteners.spi.AbstractDiagnosticTraceEventListenerProvider;
+import oracle.jdbc.provider.traceeventlisteners.spi.DiagnosticTraceEventListenerProvider;
 
 /**
  * <p>
@@ -84,52 +70,23 @@ import javax.management.ReflectionException;
  * to Open Telemetry<em>(false by default)</em></li>
  * </ul>
  */
-public class OpenTelemetryTraceEventListenerProvider implements TraceEventListenerProvider {
+public class OpenTelemetryTraceEventListenerProvider extends AbstractDiagnosticTraceEventListenerProvider implements DiagnosticTraceEventListenerProvider {
 
   private static final String PROVIDER_NAME = "open-telemetry-trace-event-listener-provider";
-  private static final String MBEAN_OBJECT_NAME = "com.oracle.jdbc.extension.opentelemetry:type=OpenTelemetryTraceEventListener";
-
-  private static final MBeanServer server = ManagementFactory.getPlatformMBeanServer();;
-  private static ObjectName objectName;
-
-  Logger logger = Logger.getLogger(OpenTelemetryTraceEventListenerProvider.class.getName());
-
-  static {
-    try {
-      objectName = new ObjectName(MBEAN_OBJECT_NAME);
-    } catch (MalformedObjectNameException e) {
-      objectName = null;
-    }
-  }
 
   @Override
-  public TraceEventListener getTraceEventListener(Map<Parameter, CharSequence> map) {
-    OpenTelemetryTraceEventListener openTelemetryBean;
-    try {
-      if (objectName != null && server.isRegistered(objectName)) {
-        openTelemetryBean = (OpenTelemetryTraceEventListener) server
-            .instantiate(OpenTelemetryTraceEventListener.class.getName());
-        return openTelemetryBean;
-      }
-    } catch (ReflectionException | MBeanException e) {
-      logger.log(Level.WARNING, "Could not retrieve MBean from server", e);
-    }
-    openTelemetryBean = new OpenTelemetryTraceEventListener();
-    try {
-      server.registerMBean(openTelemetryBean, objectName);
-    } catch (InstanceAlreadyExistsException | MBeanRegistrationException | NotCompliantMBeanException e) {
-      logger.log(Level.WARNING, "Could not register MBean", e);
-    }
-    return openTelemetryBean;
-  }
-
-  @Override
-  public String getName() {
+  protected String getProviderName() {
     return PROVIDER_NAME;
   }
 
   @Override
-  public Collection<? extends Parameter> getParameters() {
-    return Collections.emptyList();
+  protected TraceEventListener getTraceEventListener(boolean enabled, boolean enableSensitiveData) {
+    return new OpenTelemetryTraceEventListener(enabled, enableSensitiveData);
   }
+
+  @Override
+  public TraceEventListener getTraceEventListener(boolean enableSensitiveData) {
+    return getTraceEventListenerFromMBean(true, enableSensitiveData);
+  }
+
 }

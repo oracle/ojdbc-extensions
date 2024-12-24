@@ -71,7 +71,7 @@ public class OpenTelemetryTraceEventListenerTest {
   private SpanBuilder spanBuilder = Mockito.mock(SpanBuilder.class);
   private Tracer tracer = Mockito.mock(Tracer.class);
   private TraceContext traceContext = Mockito.mock(TraceContext.class);
-  private OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
+  private OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(true, false, tracer);
 
   @BeforeEach
   public void setupMocks() throws Exception {
@@ -97,18 +97,14 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @Test
   void testPropertiesDisabled() throws Exception {
-    System.setProperty(OpenTelemetryTraceEventListener.OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_ENABLED, "false");
-    System.setProperty(OpenTelemetryTraceEventListener.OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED, "false");
-    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(false, false, tracer);
     Assertions.assertFalse(traceEventListener.isEnabled(), "Set to false using system property");
     Assertions.assertFalse(traceEventListener.isSensitiveDataEnabled(), "Set to false using system property");
   }
 
   @Test
   void testPropertiesEnabled() throws Exception {
-    System.setProperty(OpenTelemetryTraceEventListener.OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_ENABLED, "true");
-    System.setProperty(OpenTelemetryTraceEventListener.OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED, "true");
-    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
+    OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(true, true, tracer);
     Assertions.assertTrue(traceEventListener.isEnabled(), "Set to false using system property");
     Assertions.assertTrue(traceEventListener.isSensitiveDataEnabled(), "Set to false using system property");
   }

@@ -38,30 +38,40 @@
 
 package oracle.jdbc.provider.jfr;
 
+import oracle.jdbc.provider.traceeventlisteners.spi.AbstractDiagnosticTraceEventListener;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import oracle.jdbc.TraceEventListener;
 import jdk.jfr.Event;
 
 /**
  * TraceEventListener that creates Java Flight Recorder events for each
  * round trip.
  */
-public class FlightRecorderTraceEventListener implements TraceEventListener {
+public class FlightRecorderTraceEventListener extends AbstractDiagnosticTraceEventListener implements FlightRecorderTraceEventListenerMBean {
 
-  private final boolean enableSensitiveData;
+  /**
+   * Name of the property used to enable or disable this listener.
+   */
+  public static final String FLIGHT_RECORDER_TRACE_EVENT_LISTENER_ENABLED = "oracle.jdbc.provider.jfr.enabled";
+  /**
+   * Name of the property used to enable or disable sensitive data for this
+   * listener.
+   */
+  public static final String FLIGHT_RECORDER_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED = "oracle.jdbc.provider.jfr.sensitive-enabled";
 
   private static Logger logger = Logger.getLogger(FlightRecorderTraceEventListener.class.getName());
 
   /**
    * Constructor
-   * @param enableSensitiveData if true, events will contain sensitive information like
+   * @param enabled if true, JFR events will be created
+   * @param sensitiveDataEnabled if true, events will contain sensitive information like
    * SQL statements and usernames.
    */
-  public FlightRecorderTraceEventListener(boolean enableSensitiveData) {
-    this.enableSensitiveData = enableSensitiveData;
-    logger.log(Level.INFO, "FlightRecorderTraceEventListener started: sensitive data enabled " + this.enableSensitiveData);
+  public FlightRecorderTraceEventListener(boolean enabled, boolean sensitiveDataEnabled) {
+    super(enabled, sensitiveDataEnabled);
+    logger.log(Level.INFO, "FlightRecorderTraceEventListener started: sensitive data enabled " + this.sensitiveDataEnabled);
   }
 
   /**
@@ -82,7 +92,7 @@ public class FlightRecorderTraceEventListener implements TraceEventListener {
         event.set(1, traceContext.databaseOperation());
         event.set(2, traceContext.tenant());
         event.set(3, traceContext.getSqlId());
-        if (enableSensitiveData) {
+        if (sensitiveDataEnabled) {
           event.set(4, traceContext.originalSqlText());
           event.set(5, traceContext.actualSqlText());
           event.set(6, traceContext.user());
@@ -92,6 +102,16 @@ public class FlightRecorderTraceEventListener implements TraceEventListener {
       }
     }
     return null;
+  }
+
+  @Override
+  protected String getEnabledSystemProperty() {
+    return FLIGHT_RECORDER_TRACE_EVENT_LISTENER_ENABLED;
+  }
+
+  @Override
+  protected String getEnableSensitiveDataSystemProperty() {
+    return FLIGHT_RECORDER_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED;
   }
 
 }

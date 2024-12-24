@@ -35,51 +35,42 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-
-package oracle.jdbc.provider.jfr;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import oracle.jdbc.provider.traceeventlisteners.spi.AbstractDiagnosticTraceEventListenerProvider;
-import oracle.jdbc.provider.traceeventlisteners.spi.DiagnosticTraceEventListenerProvider;
-import oracle.jdbc.TraceEventListener;
-import oracle.jdbc.spi.TraceEventListenerProvider;
+package oracle.jdbc.provider.traceeventlisteners.spi;
 
 /**
- * Implements a TraceEventListenerProvider for FlightRecorderTraceEventListener. 
- * By default sensitive attributes like SQL statements and database used will 
- * be added to the event, the configureation property "enableSensitiveData" can
- * be used to enable sensitive attributes to be added to the event.
- * To enable sensitive data set the connection property 
- * oracle.jdbc.provider.traceEventListener.enableSensitiveData to true.
-*/
-public class FlightRecorderTraceEventListenerProvider extends AbstractDiagnosticTraceEventListenerProvider implements DiagnosticTraceEventListenerProvider {
+ * <p>
+ * MBean interface for a DiagnosticTraceEventListenerMBean, it exposes two
+ * attributes: Enabled and SensitiveDataEnabled.
+ * </p>
+ * <p>
+ * <em>Enabled: </em> enables the diagnostic trace event listener.
+ * </p>
+ * <p>
+ * <em>Sensitive data enabled: </em> enables tracing sensitive data.
+ * </p>
+ * 
+ */
+public interface DiagnosticTraceEventListenerMBean {
+  /**
+   * Enables/disables the diagnostic trace event listener.
+   * @param enabled true to enable tracing, otherwise false.
+   */
+  void setEnabled(boolean enabled);
 
   /**
-   * Set this value to the connection property {@link oracle.jdbc.OracleConnection#CONNECTION_PROPERTY_PROVIDER_TRACE_EVENT_LISTENER}
-   * to  indicate that this provider should be used.
+   * 
+   * @param enabled
    */
-  public static final String TRACE_EVENT_LISTENER_NAME = "java-flight-recorder-trace-event-listener-provider";
+  void setSensitiveDataEnabled(boolean enabled);
 
-  @Override
-  public TraceEventListener getTraceEventListener(boolean enableSensitiveData) {
-    return getTraceEventListenerFromMBean(true, enableSensitiveData);
-  }
+  /**
+   * @return true if the diagnostic trace event listener is enabled, otherwise
+   * false.
+   */
+  boolean isEnabled();
 
-  @Override
-  protected String getProviderName() {
-    return TRACE_EVENT_LISTENER_NAME;
-  }
-
-  @Override
-  protected TraceEventListener getTraceEventListener(boolean enabled, boolean enableSensitiveData) {
-    return new FlightRecorderTraceEventListener(enabled, enableSensitiveData);
-  }
-
-
-
- 
+  /**
+   * @return true if tracing sensitive data is enabled, otherwise false.
+   */
+  boolean isSensitiveDataEnabled();
 }

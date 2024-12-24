@@ -39,12 +39,14 @@
 package oracle.jdbc.provider.opentelemetry;
 
 import oracle.jdbc.TraceEventListener;
+import oracle.jdbc.TraceEventListener.JdbcExecutionEvent;
+
+import oracle.jdbc.provider.traceeventlisteners.spi.AbstractDiagnosticTraceEventListener;
 
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -73,28 +75,28 @@ import io.opentelemetry.context.Scope;
  * </ul>
  *
  * The system properties
- * {@value #OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_ENABLED}
+ * {@value OpenTelemetryTraceEventListener#OPEN_TELEMETRY_TRACE_EVENT_LISTENER_ENABLED}
  * and
- * {@value #OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED}
+ * {@value OpenTelemetryTraceEventListener#OPEN_TELEMETRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED}
  * can be used
  * to enable/disable this listener and the use of sensitive data by this
  * listener. A MBean registered by the {@link
  * OpenTelemetryTraceEventListenerProvider} can be used to change these values
  * at runtime.
  */
-public class OpenTelemetryTraceEventListener
-    implements TraceEventListener, OpenTelemetryTraceEventListenerMBean {
+public class OpenTelemetryTraceEventListener extends AbstractDiagnosticTraceEventListener implements OpenTelemetryTraceEventListenerMBean {
 
   /**
    * Name of the property used to enable or disable this listener.
    */
-  public static final String OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_ENABLED = "oracle.jdbc.provider.opentelemetry.enabled";
+  public static final String OPEN_TELEMETRY_TRACE_EVENT_LISTENER_ENABLED = "oracle.jdbc.provider.opentelemetry.enabled";
   /**
    * Name of the property used to enable or disable sensitive data for this
    * listener.
    */
-  public static final String OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED = "oracle.jdbc.provider.opentelemetry.sensitive-enabled";
+  public static final String OPEN_TELEMETRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED = "oracle.jdbc.provider.opentelemetry.sensitive-enabled";
 
+  
   private static final String TRACE_KEY = "clientcontext.ora$opentelem$tracectx";
 
   // Number of parameters expected for each execution event
@@ -111,96 +113,30 @@ public class OpenTelemetryTraceEventListener
 
   private Tracer tracer;
 
-  /**
-   * <p>
-   * Singleton enumeration containing the TraceEventListener's configuration. Two
-   * configuration parameters are available:
-   * <ul>
-   * <li><b>enabled</b> - enables/disables the traces,</li>
-   * <li><b>sensitive data enabled</b> - enables/disables sensitive data like SQL
-   * statements in the traces.</li>
-   * </ul>
-   * </p>
-   * <p>
-   * By default traces are enabled and sensitive data is disabled.
-   * </p>
-   */
-  private enum Configuration {
-    INSTANCE(true, false);
-
-    private AtomicBoolean enabled;
-    private AtomicBoolean sensitiveDataEnabled;
-
-    private Configuration(boolean enabled, boolean sensitiveDataEnabled) {
-      String enabledStr = System.getProperty(OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_ENABLED);
-      String sensitiveStr = System.getProperty(OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED);
-      this.enabled = new AtomicBoolean(enabledStr == null ? enabled : Boolean.parseBoolean(enabledStr));
-      this.sensitiveDataEnabled = new AtomicBoolean(
-          sensitiveStr == null ? sensitiveDataEnabled : Boolean.parseBoolean(sensitiveStr));
-    }
-
-    private boolean isEnabled() {
-      return enabled.get();
-    }
-
-    private void setEnabled(boolean enabled) {
-      this.enabled.set(enabled);
-    }
-
-    private boolean isSensitiveDataEnabled() {
-      return sensitiveDataEnabled.get();
-    }
-
-    private void setSensitiveDataEnabled(boolean enabled) {
-      this.sensitiveDataEnabled.set(enabled);
-    }
-  }
-
-  public OpenTelemetryTraceEventListener() {
-    this(GlobalOpenTelemetry.get().getTracer(OpenTelemetryTraceEventListener.class.getName()));
-  }
-
-  public OpenTelemetryTraceEventListener(Tracer tracer) {
+  protected OpenTelemetryTraceEventListener(boolean enabled, boolean sensitiveDataEnabled, Tracer tracer) {
+    super(enabled, sensitiveDataEnabled);
     this.tracer = tracer;
   }
 
-  @Override
-  /**
-   * Indicates whether traces will be exported by the TraceEventListener.
-   */
-  public boolean isEnabled() {
-    return Configuration.INSTANCE.isEnabled();
+  public OpenTelemetryTraceEventListener(boolean enabled, boolean sensitiveDataEnabled) {
+    this(enabled, sensitiveDataEnabled, GlobalOpenTelemetry.get().getTracer(OpenTelemetryTraceEventListener.class.getName()));
   }
 
   @Override
-  /**
-   * Sets whether the TraceEventListener should export traces
-   */
-  public void setEnabled(boolean enabled) {
-    Configuration.INSTANCE.setEnabled(enabled);
+  protected String getEnabledSystemProperty() {
+    return OPEN_TELEMETRY_TRACE_EVENT_LISTENER_ENABLED;
   }
 
   @Override
-  /**
-   * Indicates whether the traces should contain sensitive data.
-   */
-  public boolean isSensitiveDataEnabled() {
-    return Configuration.INSTANCE.isSensitiveDataEnabled();
+  protected String getEnableSensitiveDataSystemProperty() {
+    return OPEN_TELEMETRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED;
   }
 
-  @Override
-  /**
-   * Sets whether the traces should contain sensitive data.
-   */
-  public void setSensitiveDataEnabled(boolean enabled) {
-    Configuration.INSTANCE.setSensitiveDataEnabled(enabled);
-  }
-
-  @Override
   /**
    * If traces are enabled, exports traces to Open Telemetry for every round
    * trip.
    */
+  @Override
   public Object roundTrip(Sequence sequence, TraceContext traceContext, Object userContext) {
     if (!isEnabled())
       return null;
@@ -228,10 +164,10 @@ public class OpenTelemetryTraceEventListener
 
   }
 
-  @Override
   /**
    * If traces are enabled, exports execution event to Open Telemetry
    */
+  @Override
   public Object onExecutionEventReceived(JdbcExecutionEvent event, Object userContext, Object... params) {
     // Noop if not enabled or parameter count is not correct
     if (!isEnabled())
@@ -243,7 +179,7 @@ public class OpenTelemetryTraceEventListener
             .setAttribute("Error message", params[0].toString())
             .setAttribute("VIP Address", params[7].toString());
         // Add sensitive information (URL and SQL) if it is enabled
-        if (Configuration.INSTANCE.isSensitiveDataEnabled()) {
+        if (isSensitiveDataEnabled()) {
           logger.log(Level.FINEST, "Sensitive information on");
           spanBuilder.setAttribute("Protocol", params[1].toString())
               .setAttribute("Host", params[2].toString())
@@ -295,7 +231,7 @@ public class OpenTelemetryTraceEventListener
         .setAttribute("SQL ID", traceContext.getSqlId());
 
     // Add sensitive information (URL and SQL) if it is enabled
-    if (this.isSensitiveDataEnabled()) {
+    if (sensitiveDataEnabled) {
       logger.log(Level.FINEST, "Sensitive information on");
       spanBuilder.setAttribute("Original SQL Text", traceContext.originalSqlText())
           .setAttribute("Actual SQL Text", traceContext.actualSqlText());

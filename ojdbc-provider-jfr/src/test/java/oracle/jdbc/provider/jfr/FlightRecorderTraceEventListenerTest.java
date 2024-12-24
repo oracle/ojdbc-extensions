@@ -79,7 +79,7 @@ public class FlightRecorderTraceEventListenerTest {
   @Test
   public void roundTripSensitiveSuccessTest() throws Exception {
     FlightRecorderTraceEventListener traceEventListener = 
-    new FlightRecorderTraceEventListener(true);
+    new FlightRecorderTraceEventListener(true, true);
     traceEventListener.roundTrip(Sequence.BEFORE, traceContext, traceEventListener);
     // check
     eventFactory.verify(
@@ -102,7 +102,7 @@ public class FlightRecorderTraceEventListenerTest {
   @Test
   public void roundTripNotSensitiveSuccessTest() throws Exception {
     FlightRecorderTraceEventListener traceEventListener = 
-    new FlightRecorderTraceEventListener(false);
+    new FlightRecorderTraceEventListener(true, false);
     traceEventListener.roundTrip(Sequence.BEFORE, traceContext, null);
     // check
     eventFactory.verify(
