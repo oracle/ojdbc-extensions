@@ -17,7 +17,7 @@ public class HashiVaultSecretsManagerConfigurationProvider extends OracleConfigu
           HashicorpConfigurationParameters.configureBuilder(
                   ParameterSetParser.builder()
                           .addParameter("value", HashiVaultSecretsManagerFactory.SECRET_PATH)
-                          .addParameter("key_name", HashiVaultSecretsManagerFactory.KEY_NAME)
+                          .addParameter("key", HashiVaultSecretsManagerFactory.KEY)
                           .addParameter(
                                   "VAULT_ADDR",
                                   HashiVaultSecretsManagerFactory.VAULT_ADDR
@@ -47,7 +47,6 @@ public class HashiVaultSecretsManagerConfigurationProvider extends OracleConfigu
             .request(parameters)
             .getContent();
 
-    // Return the JSON as an InputStream
     return new ByteArrayInputStream(secretString.getBytes());
   }
 

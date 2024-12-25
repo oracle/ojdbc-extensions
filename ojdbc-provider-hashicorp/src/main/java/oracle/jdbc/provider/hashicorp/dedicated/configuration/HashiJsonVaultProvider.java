@@ -4,6 +4,7 @@ import oracle.jdbc.provider.configuration.JsonSecretUtil;
 import oracle.jdbc.provider.hashicorp.dedicated.secrets.HashiVaultSecretsManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
+import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonObject;
 
 import java.io.ByteArrayInputStream;
@@ -31,18 +32,17 @@ public class HashiJsonVaultProvider implements OracleConfigurationJsonSecretProv
 
     ByteArrayInputStream inputStream = new ByteArrayInputStream(secretString.getBytes(StandardCharsets.UTF_8));
 
-
     OracleJsonObject secretJsonObj =
-            new oracle.sql.json.OracleJsonFactory()
+            new OracleJsonFactory()
                     .createJsonTextValue(inputStream)
                     .asJsonObject();
 
-    String  myPasswordValue = parameterSet.getOptional(FIELD_NAME);
-    String a = String.valueOf(secretJsonObj.get(myPasswordValue));
+    String fieldName = parameterSet.getOptional(FIELD_NAME);
+    String extractedPassword = String.valueOf(secretJsonObj.get(fieldName));
 
     // 5) Base64-encode just that field
     return Base64.getEncoder()
-            .encodeToString(a.getBytes())
+            .encodeToString(extractedPassword.getBytes())
             .toCharArray();
   }
 

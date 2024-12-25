@@ -9,6 +9,7 @@ import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonObject;
+import oracle.sql.json.OracleJsonValue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -16,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Optional;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
@@ -29,7 +31,7 @@ public final class HashiVaultSecretsManagerFactory extends HashiVaultResourceFac
    * The name of the key if the secret is a JSON with multiple fields.
    * This is optional.
    */
-  public static final Parameter<String> KEY_NAME = Parameter.create();
+  public static final Parameter<String> KEY = Parameter.create();
 
   /**
    * (Optional) The Vault address. If not specified, fallback to system property or environment var.
@@ -44,6 +46,10 @@ public final class HashiVaultSecretsManagerFactory extends HashiVaultResourceFac
   public static final Parameter<String> FIELD_NAME = Parameter.create();
 
   private static final OracleJsonFactory JSON_FACTORY = new OracleJsonFactory();
+
+  private static final String ERROR_VAULT_ADDR = "Vault address not found in parameters, system properties, or environment variables";
+  private static final String ERROR_VAULT_TOKEN = "Vault token not found in parameters, system properties, or environment variables";
+
 
   /**
    * The single instance of this factory, cached for performance.
@@ -60,26 +66,21 @@ public final class HashiVaultSecretsManagerFactory extends HashiVaultResourceFac
   @Override
   public Resource<String> request(HashiCredentials credentials, ParameterSet parameterSet) {
     String secretPath = parameterSet.getRequired(SECRET_PATH);
-    String key = parameterSet.getOptional(KEY_NAME);
-    String vaultAddrParam = parameterSet.getOptional(VAULT_ADDR);
-    String vaultTokenParam = parameterSet.getOptional(VAULT_TOKEN);
+    // Get required parameters with fallback
+    String vaultAddr = getRequiredOrFallback(parameterSet, VAULT_ADDR, "VAULT_ADDR");
+    String vaultToken = getRequiredOrFallback(parameterSet, VAULT_TOKEN, "VAULT_TOKEN");
+    String key = parameterSet.getOptional(KEY);
 
-    String vaultAddr = (vaultAddrParam != null)
-            ? vaultAddrParam
-            : System.getProperty("VAULT_ADDR", System.getenv("VAULT_ADDR"));
+    System.out.println("secretPath: " + secretPath + ", vaultAddr: " + vaultAddr + ", vaultToken: " + vaultToken + ", key: " + key);
 
-    String vaultToken = (vaultTokenParam != null)
-            ? vaultTokenParam
-            : System.getProperty("VAULT_TOKEN", System.getenv("VAULT_TOKEN"));
 
     if (vaultAddr == null || vaultAddr.isEmpty()) {
-      throw new IllegalStateException(
-              "Vault address not found in URL parameters, system properties, or environment variables");
+      throw new IllegalStateException(ERROR_VAULT_ADDR);
     }
     if (vaultToken == null || vaultToken.isEmpty()) {
-      throw new IllegalStateException(
-              "Vault token not found in URL parameters, system properties, or environment variables");
+      throw new IllegalStateException(ERROR_VAULT_TOKEN);
     }
+
 
     String vaultUrl = vaultAddr + secretPath;
 
@@ -87,8 +88,8 @@ public final class HashiVaultSecretsManagerFactory extends HashiVaultResourceFac
     String secretString = fetchSecretFromVault(vaultUrl, vaultToken);
 
     /*
-     * If KEY_NAME is specified, we only want a single field from the nested JSON.
-     * If KEY_NAME is not specified, we return the entire
+     * If KEY is specified, we only want a single field from the nested JSON.
+     * If KEY is not specified, we return the entire
      * {
      *   "data": { ...all fields... }
      * }
@@ -100,28 +101,28 @@ public final class HashiVaultSecretsManagerFactory extends HashiVaultResourceFac
   }
 
   private static String fetchSecretFromVault(String vaultUrl, String token) {
-    HttpURLConnection conn = null;
     try {
       URL url = new URL(vaultUrl);
-      conn = (HttpURLConnection) url.openConnection();
+      HttpURLConnection conn = (HttpURLConnection) url.openConnection();
       conn.setRequestMethod("GET");
       conn.setRequestProperty("X-Vault-Token", token);
       conn.setRequestProperty("Accept", "application/json");
 
-      if (conn.getResponseCode() != 200) {
+      if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
         throw new IllegalStateException(
                 "Failed to fetch secret. HTTP error code: " + conn.getResponseCode());
       }
+
+      // Use try-with-resources for the InputStream
       try (InputStream in = conn.getInputStream()) {
         return readStream(in);
+      } finally {
+        // Explicitly disconnect the connection
+        conn.disconnect();
       }
     } catch (IOException e) {
       throw new IllegalArgumentException(
               "Failed to read secret from Vault at " + vaultUrl, e);
-    } finally {
-      if (conn != null) {
-        conn.disconnect();
-      }
     }
   }
 
@@ -134,6 +135,7 @@ public final class HashiVaultSecretsManagerFactory extends HashiVaultResourceFac
     }
     return new String(baos.toByteArray(), UTF_8);
   }
+
 
   /**
    * If {@code key} is non-null, parse the JSON from Vault and return only that key's value.
@@ -149,61 +151,43 @@ public final class HashiVaultSecretsManagerFactory extends HashiVaultResourceFac
    * }
    */
   private static String extractValueFromJson(String secretJson, String key, String secretPath) {
-    InputStream is = null;
-    try {
-      is = new ByteArrayInputStream(secretJson.getBytes(UTF_8));
+    try (InputStream is = new ByteArrayInputStream(secretJson.getBytes(UTF_8))) {
       OracleJsonObject rootObject = JSON_FACTORY.createJsonTextValue(is).asJsonObject();
+      OracleJsonObject dataNode = rootObject.getObject("data");
+      OracleJsonObject nestedData = dataNode.getObject("data");
 
-      // Navigate to the second-level "data" object: rootObject.data.data
-      // Example root:
-      // {
-      //   "request_id": "...",
-      //   "data": {
-      //       "data": {
-      //           "connect_descriptor": "...",
-      //           "jdbc": {...},
-      //           "password": {...},
-      //           "user": "ADMIN"
-      //       },
-      //       "metadata": {...}
-      //   },
-      //   ...
-      // }
-
-      OracleJsonObject dataNode = rootObject.getObject("data");  // top-level "data"
-
-      OracleJsonObject dataData = dataNode.getObject("data");    // nested "data"
-
-
-      if (key != null) {
-        // Return only that key's value
-        if (!dataData.containsKey(key)) {
-          throw new IllegalArgumentException(
-                  "Failed to find key " + key + " in secret: " + secretPath);
-        }
-        return dataData.getString(key);
-
-      } else {
-        // Return just the nested data as:
-        // {
-        //   "data": {
-        //     "connect_descriptor": "...",
-        //     "jdbc": {...},
-        //     "password": {...},
-        //     "user": "ADMIN"
-        //   }
-        // }
-
-        return dataData.toString();
+      if (key == null) {
+        return nestedData.toString();
       }
-    } finally {
-      if (is != null) {
-        try {
-          is.close();
-        } catch (IOException ignore) {
-          // ignore
-        }
+
+      OracleJsonValue value = nestedData.get(key);
+      if (value == null) {
+        throw new IllegalArgumentException(
+                "Key \"" + key + "\" not found in secret at path: " + secretPath);
       }
+
+      return value.toString();
+    } catch (IOException e) {
+      throw new IllegalArgumentException(
+              "Failed to parse JSON for secret at path: " + secretPath, e);
     }
   }
+
+  private static String getEnvOrProperty(String key) {
+    return System.getProperty(key, System.getenv(key));
+  }
+
+  private static String getRequiredOrFallback(ParameterSet parameterSet, Parameter<String> parameter, String envKey) {
+    // Try to get the required parameter value
+    String value = parameterSet.getOptional(parameter);
+    if (value != null) {
+      return value;
+    }
+
+    // Fallback to environment variables or system properties
+    return getEnvOrProperty(envKey);
+  }
+
+
+
 }
