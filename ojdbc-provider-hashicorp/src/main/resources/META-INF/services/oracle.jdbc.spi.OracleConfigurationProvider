@@ -1,1 +1,1 @@
-oracle.jdbc.provider.hashicorp.configuration.HashiVaultSecretsManagerConfigurationProvider
+oracle.jdbc.provider.hashicorp.dedicated.configuration.HashiVaultSecretsManagerConfigurationProvider
