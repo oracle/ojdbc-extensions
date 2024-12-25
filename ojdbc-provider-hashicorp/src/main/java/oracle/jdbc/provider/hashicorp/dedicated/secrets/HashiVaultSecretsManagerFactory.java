@@ -1,10 +1,10 @@
-package oracle.jdbc.provider.hashicorp.secrets;
+package oracle.jdbc.provider.hashicorp.dedicated.secrets;
 
 import oracle.jdbc.provider.cache.CachedResourceFactory;
 import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
-import oracle.jdbc.provider.hashicorp.HashiVaultResourceFactory;
-import oracle.jdbc.provider.hashicorp.authentication.HashiCredentials;
+import oracle.jdbc.provider.hashicorp.dedicated.HashiVaultResourceFactory;
+import oracle.jdbc.provider.hashicorp.dedicated.authentication.HashiCredentials;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.sql.json.OracleJsonFactory;

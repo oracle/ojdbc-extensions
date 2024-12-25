@@ -1,4 +1,4 @@
-package oracle.jdbc.provider.hashicorp.authentication;
+package oracle.jdbc.provider.hashicorp.dedicated.authentication;
 
 /**
  * Simple credentials object for HashiCorp Vault that holds a token.

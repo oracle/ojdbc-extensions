@@ -1,7 +1,7 @@
-package oracle.jdbc.provider.hashicorp.configuration;
+package oracle.jdbc.provider.hashicorp.dedicated.configuration;
 
 import oracle.jdbc.driver.OracleConfigurationJsonProvider;
-import oracle.jdbc.provider.hashicorp.secrets.HashiVaultSecretsManagerFactory;
+import oracle.jdbc.provider.hashicorp.dedicated.secrets.HashiVaultSecretsManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 import oracle.jdbc.util.OracleConfigurationCache;

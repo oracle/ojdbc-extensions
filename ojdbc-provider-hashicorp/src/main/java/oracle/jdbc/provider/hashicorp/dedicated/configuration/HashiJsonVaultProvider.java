@@ -1,7 +1,7 @@
-package oracle.jdbc.provider.hashicorp.configuration;
+package oracle.jdbc.provider.hashicorp.dedicated.configuration;
 
 import oracle.jdbc.provider.configuration.JsonSecretUtil;
-import oracle.jdbc.provider.hashicorp.secrets.HashiVaultSecretsManagerFactory;
+import oracle.jdbc.provider.hashicorp.dedicated.secrets.HashiVaultSecretsManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
 import oracle.sql.json.OracleJsonObject;
@@ -10,8 +10,8 @@ import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-import static oracle.jdbc.provider.hashicorp.configuration.HashiVaultSecretsManagerConfigurationProvider.PARAMETER_SET_PARSER;
-import static oracle.jdbc.provider.hashicorp.secrets.HashiVaultSecretsManagerFactory.FIELD_NAME;
+import static oracle.jdbc.provider.hashicorp.dedicated.configuration.HashiVaultSecretsManagerConfigurationProvider.PARAMETER_SET_PARSER;
+import static oracle.jdbc.provider.hashicorp.dedicated.secrets.HashiVaultSecretsManagerFactory.FIELD_NAME;
 
 public class HashiJsonVaultProvider implements OracleConfigurationJsonSecretProvider {
 

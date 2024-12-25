@@ -1,4 +1,4 @@
-package oracle.jdbc.provider.hashicorp.authentication;
+package oracle.jdbc.provider.hashicorp.dedicated.authentication;
 
 /**
  * A method of authentication using HashiCorp Vault.

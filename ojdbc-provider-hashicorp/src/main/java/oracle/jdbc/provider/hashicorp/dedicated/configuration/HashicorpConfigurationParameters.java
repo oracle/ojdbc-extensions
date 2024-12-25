@@ -1,7 +1,7 @@
-package oracle.jdbc.provider.hashicorp.configuration;
+package oracle.jdbc.provider.hashicorp.dedicated.configuration;
 
-import oracle.jdbc.provider.hashicorp.authentication.HashicorpAuthenticationMethod;
-import oracle.jdbc.provider.hashicorp.authentication.HashicorpCredentialsFactory;
+import oracle.jdbc.provider.hashicorp.dedicated.authentication.HashicorpAuthenticationMethod;
+import oracle.jdbc.provider.hashicorp.dedicated.authentication.HashicorpCredentialsFactory;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 
 /**
