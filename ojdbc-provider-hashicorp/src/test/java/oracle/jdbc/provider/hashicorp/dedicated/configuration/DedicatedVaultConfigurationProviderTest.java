@@ -18,16 +18,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class DedicatedVaultConfigurationProviderTest {
 
   static {
-    OracleConfigurationProvider.allowedProviders.add("hashicorpvault");
+    OracleConfigurationProvider.allowedProviders.add("hcpdedicatedvault");
   }
 
 
   private static final OracleConfigurationProvider PROVIDER =
-          OracleConfigurationProvider.find("hashicorpvault");
+          OracleConfigurationProvider.find("hcpdedicatedvault");
 
 
   /**
-   * Verifies if Dedicated Vault Configuration Provider works with TOKEN-based authentication and a specific secret name.
+   * Verifies if Dedicated Vault Configuration Provider works with TOKEN-based authentication
    *
    * @throws SQLException if the provider encounters an error
    */

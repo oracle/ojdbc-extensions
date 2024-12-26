@@ -47,6 +47,6 @@ public class DedicatedVaultJsonSecretProvider implements OracleConfigurationJson
 
   @Override
   public String getSecretType() {
-    return "hashicorpvault";
+    return "hcpdedicatedvault";
   }
 }

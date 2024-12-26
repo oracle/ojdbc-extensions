@@ -53,7 +53,7 @@ public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleCon
 
   @Override
   public String getType() {
-    return "hashicorpvault";
+    return "hcpdedicatedvault";
   }
 
   @Override
