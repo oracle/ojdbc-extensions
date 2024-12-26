@@ -2,20 +2,21 @@ package oracle.jdbc.provider.hashicorp.dedicated;
 
 import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
-import oracle.jdbc.provider.hashicorp.dedicated.authentication.HashiCredentials;
-import oracle.jdbc.provider.hashicorp.dedicated.authentication.HashicorpCredentialsFactory;
+import oracle.jdbc.provider.hashicorp.dedicated.authentication.DedicatedVaultCredentials;
+import oracle.jdbc.provider.hashicorp.dedicated.authentication.DedicatedVaultCredentialsFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 
 /**
  * Common super class for ResourceFactory implementations that request
  * a resource from Vault using HashiCredentials (Vault token).
  */
-public abstract class HashiVaultResourceFactory<T> implements ResourceFactory<T> {
+public abstract class DedicatedVaultResourceFactory<T> implements ResourceFactory<T> {
 
   @Override
   public final Resource<T> request(ParameterSet parameterSet) {
     // Retrieve the Vault credentials (token) from the credentials factory
-    HashiCredentials credentials = HashicorpCredentialsFactory.getInstance()
+    DedicatedVaultCredentials credentials = DedicatedVaultCredentialsFactory
+            .getInstance()
             .request(parameterSet)
             .getContent();
 
@@ -32,5 +33,5 @@ public abstract class HashiVaultResourceFactory<T> implements ResourceFactory<T>
    * the given credentials and parameters.
    */
   public abstract Resource<T> request(
-          HashiCredentials credentials, ParameterSet parameterSet);
+          DedicatedVaultCredentials credentials, ParameterSet parameterSet);
 }

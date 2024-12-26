@@ -1,12 +1,12 @@
 package oracle.jdbc.provider.hashicorp.dedicated.authentication;
 
 /**
- * Simple credentials object for HashiCorp Vault that holds a token.
+ * Holds a Vault token for Dedicated Vault usage.
  */
-public final class HashiCredentials {
+public final class DedicatedVaultCredentials {
   private final String vaultToken;
 
-  public HashiCredentials(String vaultToken) {
+  public DedicatedVaultCredentials(String vaultToken) {
     this.vaultToken = vaultToken;
   }
 

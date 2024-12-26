@@ -1,7 +1,7 @@
 package oracle.jdbc.provider.hashicorp.dedicated.configuration;
 
 import oracle.jdbc.driver.OracleConfigurationJsonProvider;
-import oracle.jdbc.provider.hashicorp.dedicated.secrets.HashiVaultSecretsManagerFactory;
+import oracle.jdbc.provider.hashicorp.dedicated.secrets.DedicatedVaultSecretsManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 import oracle.jdbc.util.OracleConfigurationCache;
@@ -11,23 +11,23 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-public class HashiVaultSecretsManagerConfigurationProvider extends OracleConfigurationJsonProvider {
+public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleConfigurationJsonProvider {
 
   static final ParameterSetParser PARAMETER_SET_PARSER =
-          HashicorpConfigurationParameters.configureBuilder(
+          DedicatedVaultConfigurationParameters.configureBuilder(
                   ParameterSetParser.builder()
-                          .addParameter("value", HashiVaultSecretsManagerFactory.SECRET_PATH)
-                          .addParameter("key", HashiVaultSecretsManagerFactory.KEY)
+                          .addParameter("value", DedicatedVaultSecretsManagerFactory.SECRET_PATH)
+                          .addParameter("key", DedicatedVaultSecretsManagerFactory.KEY)
                           .addParameter(
                                   "VAULT_ADDR",
-                                  HashiVaultSecretsManagerFactory.VAULT_ADDR
+                                  DedicatedVaultSecretsManagerFactory.VAULT_ADDR
                           )
                           .addParameter(
                                   "VAULT_TOKEN",
-                                  HashiVaultSecretsManagerFactory.VAULT_TOKEN
+                                  DedicatedVaultSecretsManagerFactory.VAULT_TOKEN
                           )
                           .addParameter("FILED_NAME",
-                                  HashiVaultSecretsManagerFactory.FIELD_NAME)
+                                  DedicatedVaultSecretsManagerFactory.FIELD_NAME)
           ).build();
 
   @Override
@@ -42,7 +42,7 @@ public class HashiVaultSecretsManagerConfigurationProvider extends OracleConfigu
     ParameterSet parameters = PARAMETER_SET_PARSER.parseNamedValues(optionsWithSecret);
 
     // Fetch the secret from Vault
-    String secretString = HashiVaultSecretsManagerFactory
+    String secretString = DedicatedVaultSecretsManagerFactory
             .getInstance()
             .request(parameters)
             .getContent();
@@ -52,8 +52,8 @@ public class HashiVaultSecretsManagerConfigurationProvider extends OracleConfigu
 
   @Override
   public String getType() {
-    // We'll reference this in our JDBC URL, e.g. "jdbc:oracle:thin:@config-hashicorpvault://..."
-    return "hashicorpvault";
+    // We'll reference this in our JDBC URL, e.g. "jdbc:oracle:thin:@config-dedicatedvault://..."
+    return "dedicatedvault";
   }
 
   @Override

@@ -3,8 +3,8 @@ package oracle.jdbc.provider.hashicorp.dedicated.secrets;
 import oracle.jdbc.provider.cache.CachedResourceFactory;
 import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
-import oracle.jdbc.provider.hashicorp.dedicated.HashiVaultResourceFactory;
-import oracle.jdbc.provider.hashicorp.dedicated.authentication.HashiCredentials;
+import oracle.jdbc.provider.hashicorp.dedicated.DedicatedVaultResourceFactory;
+import oracle.jdbc.provider.hashicorp.dedicated.authentication.DedicatedVaultCredentials;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.sql.json.OracleJsonFactory;
@@ -17,12 +17,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Optional;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
+import static oracle.jdbc.provider.util.ParameterUtil.getRequiredOrFallback;
 
-public final class HashiVaultSecretsManagerFactory extends HashiVaultResourceFactory<String> {
+public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultResourceFactory<String> {
 
   /** The path of the secret in Vault. Required. */
   public static final Parameter<String> SECRET_PATH = Parameter.create(REQUIRED);
@@ -36,56 +36,44 @@ public final class HashiVaultSecretsManagerFactory extends HashiVaultResourceFac
   /**
    * (Optional) The Vault address. If not specified, fallback to system property or environment var.
    */
-  public static final Parameter<String> VAULT_ADDR = Parameter.create();
+  public static final Parameter<String> VAULT_ADDR = Parameter.create(REQUIRED);
 
   /**
    * (Optional) The Vault token. If not specified, fallback to system property or environment var.
    */
-  public static final Parameter<String> VAULT_TOKEN = Parameter.create();
+  public static final Parameter<String> VAULT_TOKEN = Parameter.create(REQUIRED);
 
   public static final Parameter<String> FIELD_NAME = Parameter.create();
 
   private static final OracleJsonFactory JSON_FACTORY = new OracleJsonFactory();
 
-  private static final String ERROR_VAULT_ADDR = "Vault address not found in parameters, system properties, or environment variables";
-  private static final String ERROR_VAULT_TOKEN = "Vault token not found in parameters, system properties, or environment variables";
-
-
   /**
    * The single instance of this factory, cached for performance.
    */
   private static final ResourceFactory<String> INSTANCE =
-          CachedResourceFactory.create(new HashiVaultSecretsManagerFactory());
+          CachedResourceFactory.create(new DedicatedVaultSecretsManagerFactory());
 
-  private HashiVaultSecretsManagerFactory() {}
+  private DedicatedVaultSecretsManagerFactory() {}
 
   public static ResourceFactory<String> getInstance() {
     return INSTANCE;
   }
 
   @Override
-  public Resource<String> request(HashiCredentials credentials, ParameterSet parameterSet) {
+  public Resource<String> request(DedicatedVaultCredentials credentials, ParameterSet parameterSet) {
     String secretPath = parameterSet.getRequired(SECRET_PATH);
-    // Get required parameters with fallback
     String vaultAddr = getRequiredOrFallback(parameterSet, VAULT_ADDR, "VAULT_ADDR");
-    String vaultToken = getRequiredOrFallback(parameterSet, VAULT_TOKEN, "VAULT_TOKEN");
     String key = parameterSet.getOptional(KEY);
 
-    System.out.println("secretPath: " + secretPath + ", vaultAddr: " + vaultAddr + ", vaultToken: " + vaultToken + ", key: " + key);
-
-
     if (vaultAddr == null || vaultAddr.isEmpty()) {
-      throw new IllegalStateException(ERROR_VAULT_ADDR);
-    }
-    if (vaultToken == null || vaultToken.isEmpty()) {
-      throw new IllegalStateException(ERROR_VAULT_TOKEN);
+      throw new IllegalStateException("Vault address not found in parameters, system properties, or environment variables");
     }
 
 
     String vaultUrl = vaultAddr + secretPath;
 
     // Make the REST call
-    String secretString = fetchSecretFromVault(vaultUrl, vaultToken);
+    String secretString = fetchSecretFromVault(vaultUrl, credentials.getVaultToken());
 
     /*
      * If KEY is specified, we only want a single field from the nested JSON.
@@ -171,21 +159,6 @@ public final class HashiVaultSecretsManagerFactory extends HashiVaultResourceFac
       throw new IllegalArgumentException(
               "Failed to parse JSON for secret at path: " + secretPath, e);
     }
-  }
-
-  private static String getEnvOrProperty(String key) {
-    return System.getProperty(key, System.getenv(key));
-  }
-
-  private static String getRequiredOrFallback(ParameterSet parameterSet, Parameter<String> parameter, String envKey) {
-    // Try to get the required parameter value
-    String value = parameterSet.getOptional(parameter);
-    if (value != null) {
-      return value;
-    }
-
-    // Fallback to environment variables or system properties
-    return getEnvOrProperty(envKey);
   }
 
 
