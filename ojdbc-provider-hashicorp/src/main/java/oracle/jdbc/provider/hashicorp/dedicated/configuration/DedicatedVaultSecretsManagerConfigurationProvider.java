@@ -8,6 +8,7 @@ import oracle.jdbc.util.OracleConfigurationCache;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,8 +53,7 @@ public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleCon
 
   @Override
   public String getType() {
-    // We'll reference this in our JDBC URL, e.g. "jdbc:oracle:thin:@config-dedicatedvault://..."
-    return "dedicatedvault";
+    return "hashicorpvault";
   }
 
   @Override
