@@ -14,7 +14,7 @@ public final class HcpVaultConfigurationParameters {
   public static ParameterSetParser.Builder configureBuilder(ParameterSetParser.Builder builder) {
     return builder
             .addParameter(
-                    "AUTHENTICATION_METHOD",
+                    "AUTHENTICATION",
                     HcpVaultCredentialsFactory.AUTHENTICATION_METHOD,
                     HcpVaultAuthenticationMethod.CLIENT_CREDENTIALS,
                     HcpVaultConfigurationParameters::parseAuthMethod
