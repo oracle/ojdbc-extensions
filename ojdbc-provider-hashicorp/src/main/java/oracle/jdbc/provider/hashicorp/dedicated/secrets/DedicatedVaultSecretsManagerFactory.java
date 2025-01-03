@@ -1,3 +1,41 @@
+/*
+ ** Copyright (c) 2024 Oracle and/or its affiliates.
+ **
+ ** The Universal Permissive License (UPL), Version 1.0
+ **
+ ** Subject to the condition set forth below, permission is hereby granted to any
+ ** person obtaining a copy of this software, associated documentation and/or data
+ ** (collectively the "Software"), free of charge and under any and all copyright
+ ** rights in the Software, and any and all patent rights owned or freely
+ ** licensable by each licensor hereunder covering either (i) the unmodified
+ ** Software as contributed to or provided by such licensor, or (ii) the Larger
+ ** Works (as defined below), to deal in both
+ **
+ ** (a) the Software, and
+ ** (b) any piece of software and/or hardware listed in the lrgrwrks.txt file if
+ ** one is included with the Software (each a "Larger Work" to which the Software
+ ** is contributed by such licensors),
+ **
+ ** without restriction, including without limitation the rights to copy, create
+ ** derivative works of, display, perform, and distribute the Software and make,
+ ** use, sell, offer for sale, import, export, have made, and have sold the
+ ** Software and the Larger Work(s), and to sublicense the foregoing rights on
+ ** either these or other terms.
+ **
+ ** This license is subject to the following condition:
+ ** The above copyright notice and either this complete permission notice or at
+ ** a minimum a reference to the UPL must be included in all copies or
+ ** substantial portions of the Software.
+ **
+ ** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ ** IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ ** FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ ** AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ ** LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ ** SOFTWARE.
+ */
+
 package oracle.jdbc.provider.hashicorp.dedicated.secrets;
 
 import oracle.jdbc.provider.cache.CachedResourceFactory;
@@ -34,12 +72,12 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
   public static final Parameter<String> KEY = Parameter.create();
 
   /**
-   * (Optional) The Vault address. If not specified, fallback to system property or environment var.
+   * The Vault address. If not specified, fallback to system property or environment var.
    */
   public static final Parameter<String> VAULT_ADDR = Parameter.create(REQUIRED);
 
   /**
-   * (Optional) The Vault token. If not specified, fallback to system property or environment var.
+   * The Vault token. If not specified, fallback to system property or environment var.
    */
   public static final Parameter<String> VAULT_TOKEN = Parameter.create(REQUIRED);
 
@@ -69,10 +107,8 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
       throw new IllegalStateException("Vault address not found in parameters, system properties, or environment variables");
     }
 
-
     String vaultUrl = vaultAddr + secretPath;
 
-    // Make the REST call
     String secretString = fetchSecretFromVault(vaultUrl, credentials.getVaultToken());
 
     /*
@@ -88,6 +124,14 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
     return Resource.createPermanentResource(secretString, true);
   }
 
+  /**
+   * Fetches a secret from the Vault using the given Vault URL and authentication token.
+   *
+   * @param vaultUrl The complete Vault URL including the secret path.
+   * @param token    The Vault token for authentication.
+   * @return The raw secret as a JSON string.
+   * @throws IllegalArgumentException If there is an error during the Vault request.
+   */
   private static String fetchSecretFromVault(String vaultUrl, String token) {
     try {
       URL url = new URL(vaultUrl);
@@ -101,11 +145,9 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
                 "Failed to fetch secret. HTTP error code: " + conn.getResponseCode());
       }
 
-      // Use try-with-resources for the InputStream
       try (InputStream in = conn.getInputStream()) {
         return readStream(in);
       } finally {
-        // Explicitly disconnect the connection
         conn.disconnect();
       }
     } catch (IOException e) {
@@ -126,17 +168,12 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
 
 
   /**
-   * If {@code key} is non-null, parse the JSON from Vault and return only that key's value.
-   * Otherwise, return just the nested JSON:
+   * Extracts a specific key's value from a JSON-formatted secret.
    *
-   * {
-   *   "data": {
-   *       "connect_descriptor": "...",
-   *       "jdbc": {...},
-   *       "password": {"type":"base64","value":"SWN6ZzU5NDQ1OTQ0JA=="},
-   *       "user": "ADMIN"
-   *   }
-   * }
+   * @param secretJson The JSON string representing the secret.
+   * @param key The key to extract from the JSON.
+   * @return The value corresponding to the key.
+   * @throws IllegalArgumentException If the key is not found or the JSON is invalid.
    */
   private static String extractValueFromJson(String secretJson, String key, String secretPath) {
     try (InputStream is = new ByteArrayInputStream(secretJson.getBytes(UTF_8))) {
@@ -160,7 +197,4 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
               "Failed to parse JSON for secret at path: " + secretPath, e);
     }
   }
-
-
-
 }
