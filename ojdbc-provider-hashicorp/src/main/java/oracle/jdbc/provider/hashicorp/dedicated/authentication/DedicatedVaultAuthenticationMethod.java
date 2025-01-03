@@ -51,5 +51,5 @@ public enum DedicatedVaultAuthenticationMethod {
    * environment variables, or system properties.
    * </p>
    */
-  TOKEN
+  VAULT_TOKEN
 }

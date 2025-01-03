@@ -54,18 +54,18 @@ public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleCon
 
   static final ParameterSetParser PARAMETER_SET_PARSER =
           DedicatedVaultConfigurationParameters.configureBuilder(
-          ParameterSetParser.builder()
-            .addParameter("value",
-               DedicatedVaultSecretsManagerFactory.SECRET_PATH)
-            .addParameter("key",
-               DedicatedVaultSecretsManagerFactory.KEY)
-            .addParameter("VAULT_ADDR",
-               DedicatedVaultSecretsManagerFactory.VAULT_ADDR)
-            .addParameter("VAULT_TOKEN",
-               DedicatedVaultSecretsManagerFactory.VAULT_TOKEN)
-            .addParameter("FILED_NAME",
-               DedicatedVaultSecretsManagerFactory.FIELD_NAME))
-          .build();
+            ParameterSetParser.builder()
+              .addParameter("value",
+                 DedicatedVaultSecretsManagerFactory.SECRET_PATH)
+              .addParameter("key",
+                 DedicatedVaultSecretsManagerFactory.KEY)
+              .addParameter("VAULT_ADDR",
+                 DedicatedVaultSecretsManagerFactory.VAULT_ADDR)
+              .addParameter("VAULT_TOKEN",
+                 DedicatedVaultSecretsManagerFactory.VAULT_TOKEN)
+              .addParameter("FIELD_NAME",
+                 DedicatedVaultSecretsManagerFactory.FIELD_NAME))
+            .build();
 
   @Override
   public InputStream getJson(String secretPath) {

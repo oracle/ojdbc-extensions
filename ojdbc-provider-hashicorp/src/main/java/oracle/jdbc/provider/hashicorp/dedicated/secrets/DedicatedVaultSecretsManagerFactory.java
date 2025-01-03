@@ -50,11 +50,11 @@ import oracle.sql.json.OracleJsonObject;
 import oracle.sql.json.OracleJsonValue;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Scanner;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
@@ -145,8 +145,10 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
                 "Failed to fetch secret. HTTP error code: " + conn.getResponseCode());
       }
 
-      try (InputStream in = conn.getInputStream()) {
-        return readStream(in);
+      try (InputStream in = conn.getInputStream();
+        Scanner scanner = new Scanner(in, UTF_8.name())) {
+          scanner.useDelimiter("\\A");
+          return scanner.hasNext() ? scanner.next() : "";
       } finally {
         conn.disconnect();
       }
@@ -155,17 +157,6 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
               "Failed to read secret from Vault at " + vaultUrl, e);
     }
   }
-
-  private static String readStream(InputStream in) throws IOException {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    byte[] buffer = new byte[1024];
-    int bytesRead;
-    while ((bytesRead = in.read(buffer)) != -1) {
-      baos.write(buffer, 0, bytesRead);
-    }
-    return new String(baos.toByteArray(), UTF_8);
-  }
-
 
   /**
    * Extracts a specific key's value from a JSON-formatted secret.

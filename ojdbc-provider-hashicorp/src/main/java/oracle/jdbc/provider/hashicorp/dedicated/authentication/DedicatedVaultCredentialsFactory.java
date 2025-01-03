@@ -100,7 +100,7 @@ public final class DedicatedVaultCredentialsFactory implements ResourceFactory<D
             parameterSet.getRequired(AUTHENTICATION_METHOD);
 
     switch (method) {
-      case TOKEN:
+      case VAULT_TOKEN:
         return createTokenCredentials(parameterSet);
       default:
         throw new IllegalArgumentException(
@@ -117,15 +117,13 @@ public final class DedicatedVaultCredentialsFactory implements ResourceFactory<D
   private static DedicatedVaultCredentials createTokenCredentials(ParameterSet parameterSet) {
     String vaultToken = getRequiredOrFallback(
             parameterSet,
-            DedicatedVaultSecretsManagerFactory.VAULT_TOKEN,
-            "VAULT_TOKEN"
+            DedicatedVaultSecretsManagerFactory.VAULT_TOKEN, "VAULT_TOKEN"
     );
 
     if (vaultToken == null || vaultToken.isEmpty()) {
       throw new IllegalStateException("Vault Token not found in parameters, " +
               "system properties, or environment variables");
     }
-
     return new DedicatedVaultCredentials(vaultToken);
   }
 

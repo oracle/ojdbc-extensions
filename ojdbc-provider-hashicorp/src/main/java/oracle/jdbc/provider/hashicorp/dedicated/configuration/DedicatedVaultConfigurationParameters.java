@@ -73,7 +73,7 @@ public final class DedicatedVaultConfigurationParameters {
             // Tied to HashicorpCredentialsFactory.AUTHENTICATION_METHOD
             DedicatedVaultCredentialsFactory.AUTHENTICATION_METHOD,
             // Default value if none is specified:
-            DedicatedVaultAuthenticationMethod.TOKEN,
+            DedicatedVaultAuthenticationMethod.VAULT_TOKEN,
             DedicatedVaultConfigurationParameters::parseAuthentication)
             ;
   }
@@ -86,10 +86,12 @@ public final class DedicatedVaultConfigurationParameters {
    * @throws IllegalArgumentException if the value is unrecognized.
    */
   private static DedicatedVaultAuthenticationMethod parseAuthentication(String value) {
-    if ("TOKEN".equalsIgnoreCase(value) || "VAULT_TOKEN".equalsIgnoreCase(value)) {
-      return DedicatedVaultAuthenticationMethod.TOKEN;
+    switch (value.toUpperCase()) {
+      case "VAULT_TOKEN":
+        return DedicatedVaultAuthenticationMethod.VAULT_TOKEN;
+      default:
+        throw new IllegalArgumentException(
+                "Unrecognized Hashicorp authentication value: " + value);
     }
-    throw new IllegalArgumentException(
-            "Unrecognized Hashicorp authentication value: " + value);
   }
 }
