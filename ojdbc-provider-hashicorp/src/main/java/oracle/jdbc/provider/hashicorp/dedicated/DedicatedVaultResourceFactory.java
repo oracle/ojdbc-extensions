@@ -46,13 +46,13 @@ import oracle.jdbc.provider.parameter.ParameterSet;
 
 /**
  * Common super class for ResourceFactory implementations that request
- * a resource from Vault using HashiCredentials (Vault token).
+ * a resource from Vault using HashiCredentials.
  */
 public abstract class DedicatedVaultResourceFactory<T> implements ResourceFactory<T> {
 
   @Override
   public final Resource<T> request(ParameterSet parameterSet) {
-    // Retrieve the Vault credentials (token) from the credentials factory
+    // Retrieve the Vault credentials from the credentials factory
     DedicatedVaultCredentials credentials = DedicatedVaultCredentialsFactory
             .getInstance()
             .request(parameterSet)
@@ -66,10 +66,6 @@ public abstract class DedicatedVaultResourceFactory<T> implements ResourceFactor
     }
   }
 
-  /**
-   * Subclasses implement to request the resource from Vault using
-   * the given credentials and parameters.
-   */
   public abstract Resource<T> request(
           DedicatedVaultCredentials credentials, ParameterSet parameterSet);
 }
