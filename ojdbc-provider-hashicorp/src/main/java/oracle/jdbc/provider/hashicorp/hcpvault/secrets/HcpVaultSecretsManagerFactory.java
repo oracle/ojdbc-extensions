@@ -56,13 +56,17 @@ import static oracle.jdbc.provider.util.ParameterUtil.getRequiredOrFallback;
  * </p>
  * <p>
  * The secrets API URL structure follows the format:
- * <pre>{@code
+ * </p>
+ * <pre>
+ * {@code
  * https://api.cloud.hashicorp.com/secrets/2023-11-28/organizations/{ORG_ID}/projects/{PROJECT_ID}/apps/{APP_NAME}/secrets/{SECRET_NAME}:open
- *  }</pre>
- *  For more details, refer to the official HCP Vault Secrets API documentation:
+ * }
+ * </pre>
+ * <p>
+ * For more details, refer to the official HCP Vault Secrets API documentation:
  * <a href="https://developer.hashicorp.com/hcp/tutorials/get-started-hcp-vault-secrets/hcp-vault-secrets-retrieve-secret">
  * Retrieve a Secret from HCP Vault Secrets
- *  </a>
+ * </a>
  * </p>
  */
 public final class HcpVaultSecretsManagerFactory extends HcpVaultResourceFactory<String> {
