@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2023 Oracle and/or its affiliates.
+ ** Copyright (c) 2024 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -49,25 +49,45 @@ import java.util.Base64;
 
 import static oracle.jdbc.provider.hashicorp.hcpvault.configuration.HcpVaultSecretsManagerConfigurationProvider.PARAMETER_SET_PARSER;
 
+/**
+ * <p>
+ * Implementation of {@link OracleConfigurationJsonSecretProvider} for
+ * HCP Vault. This provider retrieves secrets stored in the HCP Vault using
+ * the specified {@code value} (application name) and {@code SECRET_NAME}.
+ * </p>
+ * <p>
+ * The {@code jsonObject} must adhere to the following structure:
+ * </p>
+ *
+ * <pre>{@code
+ *   "password": {
+ *       "type": "hcpvault",
+ *       "value": "<app-name>",
+ *       "SECRET_NAME": "<secret-name>"
+ *   }
+ * }</pre>
+ *
+ * <p>
+ * The {@code value} field specifies the application name in HCP Vault, while
+ * the {@code SECRET_NAME} identifies the specific secret to retrieve from that
+ * application. The secret's value is retrieved and returned as a Base64-encoded
+ * character array.
+ * </p>
+ */
 public class HcpVaultJsonVaultProvider implements OracleConfigurationJsonSecretProvider {
 
   @Override
   public char[] getSecret(OracleJsonObject jsonObject) {
-
-    // 1) Parse the top-level fields from the snippet.
-    //    e.g. "type" : "hcpvault", "value" : "my-hcp-app"
     ParameterSet parameterSet =
-            PARAMETER_SET_PARSER.parseNamedValues(
-                    JsonSecretUtil.toNamedValues(jsonObject)
+      PARAMETER_SET_PARSER.parseNamedValues(
+        JsonSecretUtil.toNamedValues(jsonObject)
             );
 
-    // 2) Call HcpSecretsManagerFactory to fetch the secret "value".
     String secretString = HcpVaultSecretsManagerFactory
-            .getInstance()
-            .request(parameterSet)
-            .getContent();
+      .getInstance()
+      .request(parameterSet)
+      .getContent();
 
-    // 3) Base64-encode the secret content to produce the final char[].
     String base64Encoded = Base64.getEncoder()
             .encodeToString(secretString.getBytes(StandardCharsets.UTF_8));
     return base64Encoded.toCharArray();
@@ -75,7 +95,6 @@ public class HcpVaultJsonVaultProvider implements OracleConfigurationJsonSecretP
 
   @Override
   public String getSecretType() {
-    // Must match the "type" field used in the JSON snippet (e.g. "hcpvault").
     return "hcpvault";
   }
 }
