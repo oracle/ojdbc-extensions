@@ -25,15 +25,25 @@ public final class ParameterUtil {
   }
 
   /**
-   * Fetches a parameter from the ParameterSet or falls back to environment/system properties.
+   * Fetches a parameter from the ParameterSet or falls back to
+   * environment/system properties.
    *
    * @param parameterSet the ParameterSet to search for the parameter
    * @param parameter    the Parameter to fetch from the ParameterSet
    * @param envKey       the environment/system property key to use as fallback
-   * @return the parameter value, or the environment/system property value if the parameter is not set
+   * @return the parameter value
+   * @throws IllegalStateException if neither the parameter nor
+   * the environment/system property is found
    */
-  public static String getRequiredOrFallback(ParameterSet parameterSet, Parameter<String> parameter, String envKey) {
-    return Optional.ofNullable(parameterSet.getOptional(parameter))
-            .orElse(getEnvOrProperty(envKey));
+  public static String getRequiredOrFallback(
+          ParameterSet parameterSet, Parameter<String> parameter, String envKey) {
+    String value = Optional.ofNullable(parameterSet.getOptional(parameter))
+                           .orElse(getEnvOrProperty(envKey));
+
+    if (value == null || value.isEmpty()) {
+      throw new IllegalStateException(
+              "Required configuration '" + envKey + "' not found in ParameterSet, system properties, or environment variables.");
+    }
+    return value;
   }
 }
