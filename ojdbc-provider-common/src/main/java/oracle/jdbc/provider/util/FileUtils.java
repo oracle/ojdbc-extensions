@@ -35,32 +35,25 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.gcp.resource;
 
-import java.nio.charset.Charset;
-import java.util.Map;
+package oracle.jdbc.provider.util;
 
-import oracle.jdbc.spi.UsernameProvider;
+import java.util.Base64;
 
 /**
- * <p>
- * A provider of usernames from the GCP Secret Manager service.
- * </p>
- * <p>
- * This class implements the {@link UsernameProvider} SPI defined by
- * Oracle JDBC. It is designed to be located and instantiated by
- * {@link java.util.ServiceLoader}.
- * </p>
+ * Utility class for common file handling operations.
  */
-public class GcpSecretManagerUsernameProvider extends GcpSecretManagerProvider implements UsernameProvider {
+public final class FileUtils {
 
-  public GcpSecretManagerUsernameProvider() {
-    super("secretmanager-username");
+  /**
+   * Checks if the given byte array is Base64-encoded.
+   */
+  public static boolean isBase64Encoded(byte[] secretBytes) {
+    try {
+      Base64.getDecoder().decode(secretBytes);
+      return true;
+    } catch (IllegalArgumentException e) {
+      return false;
+    }
   }
-
-  @Override
-  public String getUsername(Map<Parameter, CharSequence> parameterValues) {
-    return getSecret(parameterValues).toStringUtf8();
-  }
-
 }

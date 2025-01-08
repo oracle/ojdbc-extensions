@@ -39,7 +39,6 @@
 package oracle.jdbc.provider.oci.resource;
 
 import oracle.jdbc.provider.oci.database.WalletFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
 import oracle.jdbc.spi.TlsConfigurationProvider;
 
@@ -83,13 +82,8 @@ public final class DatabaseTlsProvider
   @Override
   public SSLContext getSSLContext(
     Map<Parameter, CharSequence> parameterValues) {
-
-    ParameterSet parameterSet = parseParameterValues(parameterValues);
-
-    return WalletFactory.getInstance()
-        .request(parameterSet)
-        .getContent()
-        .getSSLContext();
+    return getAutonomousDatabaseWallet(parameterValues)
+            .getSSLContext();
   }
 
 }

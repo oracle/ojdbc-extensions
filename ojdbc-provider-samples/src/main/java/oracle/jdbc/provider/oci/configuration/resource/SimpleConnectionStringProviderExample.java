@@ -35,8 +35,7 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-
-package oracle.jdbc.provider.gcp.resource;
+package oracle.jdbc.provider.oci.configuration.resource;
 
 import oracle.jdbc.datasource.impl.OracleDataSource;
 
@@ -47,46 +46,53 @@ import java.sql.Statement;
 import java.util.Properties;
 
 /**
- * Example demonstrating how to configure Oracle JDBC with the TCPS Wallet
- * Provider to establish a secure TLS connection to an Oracle Autonomous
- * Database.
- * <p>
- * The wallet is retrieved from GCP Secret Manager to enable secure TLS communication.
- * </p>
+ * Example demonstrating how to configure Oracle JDBC with the OCI Vault
+ * Connection String Provider to retrieve connection strings from a tnsnames.ora
+ * file stored in OCI Vault.
  */
-public class SimpleTCPSWalletProviderExample {
-  private static final String DB_URL = "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=your_db_host))(connect_data=(service_name=your_service_name))(security=(ssl_server_dn_match=yes)))";
-  private static final String JDBC_URL = "jdbc:oracle:thin:@" + DB_URL;
-  private static final String USERNAME = "DB_USER";
-  private static final String PASSWORD = "DB_PASSWORD";
-
-
+public class SimpleConnectionStringProviderExample {
   public static void main(String[] args) throws SQLException {
     try {
       OracleDataSource ds = new OracleDataSource();
-      ds.setURL(JDBC_URL);
-      ds.setUser(USERNAME);
-      ds.setPassword(PASSWORD);
+      ds.setURL("jdbc:oracle:thin:@");
+      ds.setUser("DB_USERNAME");
+      ds.setPassword("DB_PASSWORD");
 
       Properties connectionProps = new Properties();
+
+      // Connection String Provider for retrieving tnsnames.ora content
+      // from OCI Vault
+      connectionProps.put("oracle.jdbc.provider.connectionString",
+              "ojdbc-provider-oci-vault-tnsnames");
+
+      connectionProps.put("oracle.jdbc.provider.connectionString.ocid",
+              "ocid1.autonomousdatabase.oc1.phx.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+
+      // Specify the tnsAlias to retrieve the corresponding connection string
+      connectionProps.put("oracle.jdbc.provider.connectionString.tnsAlias",
+              "YOUR_TNS_ALIAS");
+
+      // TLS Configuration for secure connection
       connectionProps.put("oracle.jdbc.provider.tlsConfiguration",
-        "ojdbc-provider-gcp-secretmanager-tls");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.secretVersionName",
-        "projects/{your-project-id}/secrets/{your-secret-name}/versions/{version-number}");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.type","SSO");
+              "ojdbc-provider-oci-database-tls");
+      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.ocid",
+              "ocid1.autonomousdatabase.oc1.phx.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+
       ds.setConnectionProperties(connectionProps);
 
       try (Connection cn = ds.getConnection()) {
-        String connectionString = cn.getMetaData().getURL();
-        System.out.println("Connected to: " + connectionString);
 
-        Statement st = cn.createStatement();
-        ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
-        if (rs.next())
-          System.out.println(rs.getString(1));
+        String query = "SELECT 'Hello, db' FROM sys.dual";
+        try (Statement st = cn.createStatement();
+             ResultSet rs = st.executeQuery(query)) {
+
+          if (rs.next()) {
+            System.out.println(rs.getString(1));
+          }
+        }
       }
     } catch (SQLException e) {
-      throw new RuntimeException(e);
+      throw new RuntimeException("Connection failed: ", e);
     }
   }
 }

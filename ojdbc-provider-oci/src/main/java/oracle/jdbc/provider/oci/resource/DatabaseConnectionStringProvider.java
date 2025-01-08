@@ -83,9 +83,7 @@ public final class DatabaseConnectionStringProvider
 
     ParameterSet parameterSet = parseParameterValues(parameterValues);
 
-    Wallet wallet = WalletFactory.getInstance()
-        .request(parameterSet)
-        .getContent();
+    Wallet wallet = getAutonomousDatabaseWallet(parameterValues);
 
     String consumerGroup =
       parameterSet.getRequired(CONSUMER_GROUP)

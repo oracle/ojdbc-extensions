@@ -36,84 +36,45 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.azure.resource;
+package oracle.jdbc.provider.oci.resource;
 
 import oracle.jdbc.provider.TestProperties;
-import oracle.jdbc.provider.azure.AzureTestProperty;
+import oracle.jdbc.provider.oci.OciTestProperty;
 import oracle.jdbc.spi.ConnectionStringProvider;
 import oracle.jdbc.spi.OracleResourceProvider.Parameter;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.createParameterValues;
 import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.findProvider;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class KeyVaultConnectionStringProviderTest {
+/** Verifies {@link DatabaseConnectionStringProvider} */
+public class VaultConnectionStringProviderTest {
 
   private static final ConnectionStringProvider PROVIDER =
     findProvider(
-      ConnectionStringProvider.class, "ojdbc-provider-azure-key-vault-tnsnames");
-
-  /**
-   * Verifies that {@link ConnectionStringProvider#getParameters()} includes parameters
-   * to configure a vault URL and secret name.
-   */
-  @Test
-  public void testGetParameters() {
-    Collection<? extends Parameter> parameters = PROVIDER.getParameters();
-    assertNotNull(parameters);
-
-    Parameter vaultUrlParameter =
-      parameters.stream()
-        .filter(parameter -> "vaultUrl".equals(parameter.name()))
-        .findFirst()
-        .orElseThrow(AssertionError::new);
-    assertFalse(vaultUrlParameter.isSensitive());
-    assertTrue(vaultUrlParameter.isRequired());
-    assertNull(vaultUrlParameter.defaultValue());
-
-    Parameter secretNameParameter =
-      parameters.stream()
-        .filter(parameter -> "secretName".equals(parameter.name()))
-        .findFirst()
-        .orElseThrow(AssertionError::new);
-    assertFalse(secretNameParameter.isSensitive());
-    assertTrue(secretNameParameter.isRequired());
-    assertNull(secretNameParameter.defaultValue());
-
-    Parameter aliasParameter =
-      parameters.stream()
-        .filter(parameter -> "tnsAlias".equals(parameter.name()))
-        .findFirst()
-        .orElseThrow(AssertionError::new);
-    assertTrue(aliasParameter.isSensitive());
-    assertTrue(aliasParameter.isRequired());
-    assertNull(aliasParameter.defaultValue());
-  }
+      ConnectionStringProvider.class,
+      "ojdbc-provider-oci-vault-tnsnames");
 
   @Test
   public void testValidAlias() {
     Map<String, String> testParameters = new HashMap<>();
-    testParameters.put("vaultUrl",
-      TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
-
-    testParameters.put("secretName",
-      TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_SECRET_NAME));
-
+    testParameters.put("authenticationMethod", "config-file");
+    testParameters.put("configFile",
+            TestProperties.getOrAbort(OciTestProperty.OCI_CONFIG_FILE));
+    testParameters.put("profile",
+            TestProperties.getOrAbort(OciTestProperty.OCI_CONFIG_PROFILE));
+    testParameters.put("ocid",
+            TestProperties.getOrAbort(OciTestProperty.OCI_TNS_NAMES_OCID));
     testParameters.put("tnsAlias",
-      TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_ALIAS_SECRET_NAME));
+            TestProperties.getOrAbort(OciTestProperty.OCI_TNS_NAMES_ALIAS));
 
-    AzureResourceProviderTestUtil.configureAuthentication(testParameters);
     Map<Parameter, CharSequence> parameterValues =
-      createParameterValues(PROVIDER, testParameters);
+            createParameterValues(PROVIDER, testParameters);
 
     String connectionString = PROVIDER.getConnectionString(parameterValues);
     assertNotNull(connectionString);
@@ -122,17 +83,17 @@ public class KeyVaultConnectionStringProviderTest {
   @Test
   public void testInvalidOrNonExistentAlias() {
     Map<String, String> testParameters = new HashMap<>();
-    testParameters.put("vaultUrl",
-      TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
-
-    testParameters.put("secretName",
-      TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_SECRET_NAME));
-
+    testParameters.put("authenticationMethod", "config-file");
+    testParameters.put("configFile",
+            TestProperties.getOrAbort(OciTestProperty.OCI_CONFIG_FILE));
+    testParameters.put("profile",
+            TestProperties.getOrAbort(OciTestProperty.OCI_CONFIG_PROFILE));
+    testParameters.put("ocid",
+            TestProperties.getOrAbort(OciTestProperty.OCI_TNS_NAMES_OCID));
     testParameters.put("tnsAlias", "INVALID_ALIAS");
 
-    AzureResourceProviderTestUtil.configureAuthentication(testParameters);
     Map<Parameter, CharSequence> parameterValues =
-      createParameterValues(PROVIDER, testParameters);
+            createParameterValues(PROVIDER, testParameters);
 
     assertThrows(IllegalArgumentException.class,
             () -> PROVIDER.getConnectionString(parameterValues),
@@ -143,13 +104,14 @@ public class KeyVaultConnectionStringProviderTest {
   @Test
   public void testMissingAliasParameter() {
     Map<String, String> testParameters = new HashMap<>();
-    testParameters.put("vaultUrl",
-            TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
+    testParameters.put("authenticationMethod", "config-file");
+    testParameters.put("configFile",
+            TestProperties.getOrAbort(OciTestProperty.OCI_CONFIG_FILE));
+    testParameters.put("profile",
+            TestProperties.getOrAbort(OciTestProperty.OCI_CONFIG_PROFILE));
+    testParameters.put("ocid",
+            TestProperties.getOrAbort(OciTestProperty.OCI_TNS_NAMES_OCID));
 
-    testParameters.put("secretName",
-            TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_SECRET_NAME));
-
-    AzureResourceProviderTestUtil.configureAuthentication(testParameters);
     Map<Parameter, CharSequence> parameterValues =
             createParameterValues(PROVIDER, testParameters);
 
@@ -160,23 +122,22 @@ public class KeyVaultConnectionStringProviderTest {
   }
 
   @Test
-  public void testNonBase64EncodedTnsnamesContent() {
+  public void testPlainTextEncodedTnsnamesContent() {
     Map<String, String> testParameters = new HashMap<>();
-    testParameters.put("vaultUrl",
-            TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL));
-
-    testParameters.put("secretName",
-            TestProperties.getOrAbort(AzureTestProperty.AZURE_NON_BASE64_TNS_NAMES_SECRET_NAME));
+    testParameters.put("authenticationMethod", "config-file");
+    testParameters.put("configFile",
+            TestProperties.getOrAbort(OciTestProperty.OCI_CONFIG_FILE));
+    testParameters.put("profile",
+            TestProperties.getOrAbort(OciTestProperty.OCI_CONFIG_PROFILE));
+    testParameters.put("ocid",
+            TestProperties.getOrAbort(OciTestProperty.OCI_NON_BASE64_TNS_NAMES_OCID));
     testParameters.put("tnsAlias",
-            TestProperties.getOrAbort(AzureTestProperty.AZURE_TNS_NAMES_SECRET_NAME));
+            TestProperties.getOrAbort(OciTestProperty.OCI_TNS_NAMES_ALIAS));
 
-    AzureResourceProviderTestUtil.configureAuthentication(testParameters);
-    Map<Parameter, CharSequence> parameterValues = createParameterValues(PROVIDER, testParameters);
+    Map<Parameter, CharSequence> parameterValues =
+            createParameterValues(PROVIDER, testParameters);
 
-    assertThrows(IllegalArgumentException.class,
-            () -> PROVIDER.getConnectionString(parameterValues),
-            "Expected IllegalStateException for non-base64-encoded tnsnames.ora content"
-    );
+    String connectionString = PROVIDER.getConnectionString(parameterValues);
+    assertNotNull(connectionString);
   }
-
 }

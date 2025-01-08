@@ -518,7 +518,7 @@ This provider retrieves and decodes a `tnsnames.ora` file stored as a base64-enc
 
 This enables flexible configuration for secure database connections using the alias names defined in your `tnsnames.ora` file.
 
-In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider also supports the parameters listed below.
+In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider also requires the parameters listed below.
 
 <table>
 <thead>
@@ -543,7 +543,7 @@ In addition to the set of [common parameters](#common-parameters-for-resource-pr
     <td><i>No default value. A value must be configured for this parameter.</i></td>
   </tr>
   <tr>
-    <td><code>tns-alias</code></td>
+    <td><code>tnsAlias</code></td>
     <td>Specifies the alias to retrieve the appropriate connection string from the <code>tnsnames.ora</code> file.</td> 
     <td>Any valid alias present in your <code>tnsnames.ora</code> file.</td>
     <td><i>No default value. A value must be configured for this parameter.</i></td> 

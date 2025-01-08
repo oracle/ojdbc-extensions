@@ -26,16 +26,11 @@ jobs:
 
       - name: Install dependencies
         run: mvn install -DskipTests
-      
-      - name: Set GCP environment variables
-        run : |
-          echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/.gcp/config.json" >> $GITHUB_ENV
 
       - name: Prepare certificate and properties files
         run: |
           mkdir -p $HOME/.azure
           mkdir -p $HOME/.oci
-          mkdir -p $HOME/.gcp
           
           # Prepare certificate
           echo "${{ secrets.TEST_AZURE_CERTIFICATE }}" > $HOME/.azure/ojdbc-plugin-test-app.pem
@@ -66,6 +61,20 @@ jobs:
           AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME=${{ secrets.TEST_AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME }}\n
           AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME_MULTIPLE_KEYS=${{ secrets.TEST_AZURE_KEY_VAULT_SECRET_PAYLOAD_NAME_MULTIPLE_KEYS }}\n
           AZURE_KEY_VAULT_SECRET_PAYLOAD_KEY=${{ secrets.TEST_AZURE_KEY_VAULT_SECRET_PAYLOAD_KEY }}\n
+          AZURE_PKCS12_TLS_WALLET_SECRET_NAME=${{ secrets.TEST_AZURE_PKCS12_TLS_WALLET_SECRET_NAME }}\n
+          AZURE_PKCS12_TLS_WALLET_PASSWORD=${{ secrets.TEST_AZURE_PKCS12_TLS_WALLET_PASSWORD }}\n
+          AZURE_SSO_TLS_WALLET_SECRET_NAME=${{ secrets.TEST_AZURE_SSO_TLS_WALLET_SECRET_NAME }}\n
+          AZURE_PEM_TLS_WALLET_SECRET_NAME=${{ secrets.TEST_AZURE_PEM_TLS_WALLET_SECRET_NAME }}\n
+          AZURE_PEM_TLS_WALLET_PASSWORD=${{ secrets.TEST_AZURE_PEM_TLS_WALLET_PASSWORD }}\n
+          AZURE_CORRUPTED_TLS_WALLET_SECRET_NAME=${{ secrets.TEST_AZURE_CORRUPTED_TLS_WALLET_SECRET_NAME }}\n
+          AZURE_PKCS12_SEPS_WALLET_SECRET_NAME=${{ secrets.TEST_AZURE_PKCS12_SEPS_WALLET_SECRET_NAME }}\n
+          AZURE_PKCS12_SEPS_WALLET_PASSWORD=${{ secrets.TEST_AZURE_PKCS12_SEPS_WALLET_PASSWORD }}\n
+          AZURE_SSO_SEPS_WALLET_SECRET_NAME=${{ secrets.TEST_AZURE_SSO_SEPS_WALLET_SECRET_NAME }}\n
+          AZURE_CORRUPTED_SEPS_WALLET_SECRET_NAME=${{ secrets.TEST_AZURE_CORRUPTED_SEPS_WALLET_SECRET_NAME }}\n
+          AZURE_SEPS_CONNECTION_STRING_INDEX=${{ secrets.TEST_AZURE_SEPS_CONNECTION_STRING_INDEX }}\n
+          AZURE_TNS_NAMES_SECRET_NAME=${{ secrets.TEST_AZURE_TNS_NAMES_SECRET_NAME }}\n
+          AZURE_TNS_ALIAS_SECRET_NAME=${{ secrets.TEST_AZURE_TNS_ALIAS_SECRET_NAME }}\n
+          AZURE_NON_BASE64_TNS_NAMES_SECRET_NAME=${{ secrets.TEST_AZURE_NON_BASE64_TNS_NAMES_SECRET_NAME }}\n
           " >> ojdbc-provider-azure/test.properties
           
           # Generate ojdbc-provider-oci/test.properties
@@ -87,6 +96,21 @@ jobs:
           OCI_PASSWORD_PAYLOAD_OCID=${{ secrets.TEST_OCI_PASSWORD_PAYLOAD_OCID }}\n
           OCI_PASSWORD_PAYLOAD_OCID_MULTIPLE_KEYS=${{ secrets.TEST_OCI_PASSWORD_PAYLOAD_OCID_MULTIPLE_KEYS }}\n
           OCI_PASSWORD_PAYLOAD_OCID_KEY=${{ secrets.TEST_OCI_PASSWORD_PAYLOAD_OCID_KEY }}\n
+          OCI_USERNAME_OCID=${{ secrets.TEST_OCI_PASSWORD_OCID }}\n
+          OCI_SSO_TLS_WALLET_OCID=${{ secrets.TEST_OCI_SSO_TLS_WALLET_OCID }}\n
+          OCI_PKCS12_TLS_WALLET_OCID=${{ secrets.TEST_OCI_PKCS12_TLS_WALLET_OCID }}\n
+          OCI_PEM_TLS_WALLET_OCID=${{ secrets.TEST_OCI_PEM_TLS_WALLET_OCID }}\n
+          OCI_CORRUPTED_SEPS_WALLET_OCID=${{ secrets.TEST_OCI_CORRUPTED_SEPS_WALLET_OCID }}\n
+          OCI_PKCS12_TLS_WALLET_PASSWORD=${{ secrets.TEST_OCI_PKCS12_TLS_WALLET_PASSWORD }}\n
+          OCI_PEM_TLS_WALLET_PASSWORD=${{ secrets.TEST_OCI_PEM_TLS_WALLET_PASSWORD }}\n
+          OCI_SSO_SEPS_WALLET_OCID=${{ secrets.TEST_OCI_SSO_SEPS_WALLET_OCID }}\n
+          OCI_PKCS12_SEPS_WALLET_OCID=${{ secrets.TEST_OCI_PKCS12_SEPS_WALLET_OCID }}\n
+          OCI_CORRUPTED_TLS_WALLET_OCID=${{ secrets.TEST_OCI_CORRUPTED_TLS_WALLET_OCID }}\n
+          OCI_PKCS12_SEPS_WALLET_PASSWORD=${{ secrets.TEST_OCI_PKCS12_SEPS_WALLET_PASSWORD }}\n
+          OCI_SEPS_CONNECTION_STRING_INDEX=${{ secrets.TEST_OCI_SEPS_CONNECTION_STRING_INDEX }}\n
+          OCI_TNS_NAMES_OCID=${{ secrets.OCI_TNS_NAMES_OCID }}\n
+          OCI_TNS_NAMES_ALIAS=${{ secrets.OCI_TNS_NAMES_ALIAS }}\n
+          OCI_NON_BASE64_TNS_NAMES_OCID=${{ secrets.OCI_NON_BASE64_TNS_NAMES_OCID }}\n
           " >> ojdbc-provider-oci/test.properties
           
           # Generate ojdbc-provider-jackson-oson/test.properties
@@ -94,10 +118,6 @@ jobs:
           JACKSON_OSON_USERNAME=${{ secrets.TEST_JACKSON_OSON_USERNAME }}\n
           JACKSON_OSON_PASSWORD=${{ secrets.TEST_JACKSON_OSON_PASSWORD }}\n
           " >> ojdbc-provider-jackson-oson/test.properties
-
-          # Generate GCP config
-          echo "${{ secrets.TEST_GCP_CONFIG }}" > $HOME/.gcp/config.json
-          echo "${{ secrets.GCP_TEST_PROPERTIES }}" > ojdbc-provider-gcp/test.properties
 
       - name: Run tests with Maven
         run: mvn -B test --file pom.xml
@@ -111,8 +131,5 @@ jobs:
           rm $HOME/.azure/ojdbc-plugin-test-app.pem
           rm ojdbc-provider-azure/ojdbc-provider-test-app.pfx
           rm ojdbc-provider-azure/test.properties
-          
-          rm $HOME/.gcp/config.json
-          rm ojdbc-provider-gcp/test.properties
           
           rm ojdbc-provider-jackson-oson/test.properties

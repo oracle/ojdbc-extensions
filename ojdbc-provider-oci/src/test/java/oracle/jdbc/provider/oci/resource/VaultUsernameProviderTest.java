@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2024 Oracle and/or its affiliates.
+ ** Copyright (c) 2023 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -35,51 +35,42 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.gcp.configuration;
 
-import com.google.protobuf.ByteString;
+package oracle.jdbc.provider.oci.resource;
 
-import java.util.Base64;
+import oracle.jdbc.provider.TestProperties;
+import oracle.jdbc.provider.oci.OciTestProperty;
+import oracle.jdbc.spi.OracleResourceProvider.Parameter;
+import oracle.jdbc.spi.UsernameProvider;
+import org.junit.jupiter.api.Test;
 
-import oracle.jdbc.provider.configuration.JsonSecretUtil;
-import oracle.jdbc.provider.gcp.secrets.GcpSecretManagerFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
-import oracle.sql.json.OracleJsonObject;
+import java.util.HashMap;
+import java.util.Map;
 
-public class GcpJsonSecretManagerProvider implements OracleConfigurationJsonSecretProvider {
+import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.createParameterValues;
+import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.findProvider;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-  /**
-   * {@inheritDoc}
-   * <p>
-   * Returns the password of the Secret that is retrieved from GCP Secrets.
-   * </p>
-   * <p>
-   * The {@code jsonObject} has the following form:
-   * </p>
-   * 
-   * <pre>{@code
-   *   "password": {
-  *       "type": "gcpsecretmanager",
-  *       "value": "projects/<project_name>/secrets/<secret_name>/versions/<version>",
-   *   }
-   * }</pre>
-   *
-   * @param jsonObject json object to be parsed
-   * @return encoded char array in base64 format that represents the retrieved
-   *         Secret.
-   */
-  @Override
-  public char[] getSecret(OracleJsonObject jsonObject) {
-    ParameterSet parameterSet = GcpConfigurationParameters.getParser().parseNamedValues(
-        JsonSecretUtil.toNamedValues(jsonObject));
+public class VaultUsernameProviderTest {
 
-    ByteString stringData = GcpSecretManagerFactory.getInstance().request(parameterSet).getContent().getData();
-    return Base64.getEncoder().encodeToString(stringData.toByteArray()).toCharArray();
-  }
+  private static final UsernameProvider PROVIDER =
+    findProvider(UsernameProvider.class, "ojdbc-provider-oci-vault-username");
 
-  @Override
-  public String getSecretType() {
-    return "gcpsecretmanager";
+  @Test
+  public void test() {
+    Map<String, CharSequence> testParameters = new HashMap<>();
+    testParameters.put("authenticationMethod", "config-file");
+    testParameters.put("configFile", TestProperties.getOrAbort(
+      OciTestProperty.OCI_CONFIG_FILE));
+    testParameters.put("profile", TestProperties.getOrAbort(
+      OciTestProperty.OCI_CONFIG_PROFILE));
+    testParameters.put("ocid", TestProperties.getOrAbort(
+      OciTestProperty.OCI_USERNAME_OCID));
+
+    Map<Parameter, CharSequence> parameterValues =
+      createParameterValues(PROVIDER, testParameters);
+
+    String username = PROVIDER.getUsername(parameterValues);
+    assertNotNull(username);
   }
 }

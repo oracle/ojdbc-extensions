@@ -36,27 +36,28 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.azure.resource;
+package oracle.jdbc.provider.oci.resource;
 
 import oracle.jdbc.provider.resource.ResourceParameter;
 import oracle.jdbc.provider.util.TNSNames;
 import oracle.jdbc.spi.ConnectionStringProvider;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Base64;
 import java.util.Map;
 
+import static oracle.jdbc.provider.oci.vault.SecretFactory.OCID;
 import static oracle.jdbc.provider.util.CommonParameters.TNS_ALIAS;
-
 
 /**
  * <p>
  * A provider for securely retrieving the connection string from a tnsnames.ora
- * file stored in Azure Key Vault for use with an Oracle Autonomous Database.
- * The tnsnames.ora file is stored as a base64-encoded secret in Azure Key Vault,
- * and is decoded and parsed to select connection strings based on specified
- * aliases.
+ * file stored in OCI Vault for use with an Oracle Autonomous Database.
+ * The tnsnames.ora file can be stored as plain text or base64-encoded content
+ * in OCI Vault. This class decodes and parses the content to select
+ * connection strings based on specified aliases.
  * </p>
  * <p>
  * This class implements the {@link ConnectionStringProvider} SPI defined by
@@ -64,11 +65,12 @@ import static oracle.jdbc.provider.util.CommonParameters.TNS_ALIAS;
  * It is designed to be instantiated via {@link java.util.ServiceLoader}.
  * </p>
  */
-public class KeyVaultConnectionStringProvider
-        extends KeyVaultSecretProvider
+public class VaultConnectionStringProvider
+        extends OciResourceProvider
         implements ConnectionStringProvider {
 
-  private static final ResourceParameter[] TNS_NAMES_PARAMETERS = {
+  private static final ResourceParameter[] PARAMETERS = {
+          new ResourceParameter("ocid", OCID),
           new ResourceParameter("tnsAlias", TNS_ALIAS)
   };
 
@@ -76,28 +78,30 @@ public class KeyVaultConnectionStringProvider
    * A public no-arg constructor used by {@link java.util.ServiceLoader} to
    * construct an instance of this provider.
    */
-  public KeyVaultConnectionStringProvider() {
-    super("key-vault-tnsnames", TNS_NAMES_PARAMETERS);
+  public VaultConnectionStringProvider() {
+    super("vault-tnsnames", PARAMETERS);
   }
 
   /**
    * Retrieves a database connection string from the tnsnames.ora file stored
-   * in Azure Key Vault.
+   * in OCI Vault.
    * <p>
-   * This method accesses the file in Azure Key Vault, decodes it, and parses
-   * the tnsnames.ora content. It returns the connection string associated
-   * with the specified alias from the tnsnames.ora file.
+   * This method accesses the file in OCI Vault, decodes it if it is
+   * base64-encoded, and parses the `tnsnames.ora` content. The method
+   * returns the connection string associated with the specified alias from
+   * the `tnsnames.ora` file.
+   * The file can either be stored as plain text or as base64-encoded content
+   * in the vault.
    * </p>
    *
-   * @param parameterValues The parameters required to access the tnsnames.ora
-   * file in Azure Key Vault, including the vault URL, the secret name, and
-   * the tnsAlias.
+   * @param parameterValues The parameters required to access the `tnsnames.ora`
+   * file in OCI Vault, including the vault OCID and the tns-alias.
    * @return The connection string associated with the specified alias
-   * in the tnsnames.ora file.
-   * @throws IllegalStateException If there is an error reading the tnsnames.ora
-   * file or accessing the Azure Key Vault.
+   * in the `tnsnames.ora` file.
+   * @throws IllegalStateException If there is an error reading the `tnsnames.ora`
+   * file, decoding its content, or accessing the OCI Vault.
    * @throws IllegalArgumentException If the specified alias is invalid or
-   * does not exist in the tnsnames.ora file.
+   * does not exist in the `tnsnames.ora` file.
    */
   @Override
   public String getConnectionString(Map<Parameter, CharSequence> parameterValues) {
@@ -107,14 +111,14 @@ public class KeyVaultConnectionStringProvider
       alias = parseParameterValues(parameterValues).getRequired(TNS_ALIAS);
     } catch (IllegalStateException e) {
       throw new IllegalArgumentException(
-              "Required parameter 'tnsAlias' is missing", e
+              "Required parameter 'tnAlias' is missing", e
       );
     }
 
-    // Retrieve the secret containing tnsnames.ora content from Azure Key Vault
-    String secretValue = getSecret(parameterValues);
+    // Retrieve the secret containing tnsnames.ora content from OCI Vault
+    String secretValue = getVaultSecret(parameterValues)
+                           .getBase64Secret();
 
-    // Decode the base64-encoded tnsnames.ora content
     byte[] fileBytes = Base64.getDecoder().decode(secretValue);
 
     TNSNames tnsNames;

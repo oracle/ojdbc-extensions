@@ -12,9 +12,7 @@ Each module of this project contains a set of providers.
 <dt><a href="ojdbc-provider-oci/README.md">Oracle JDBC OCI Providers</a></dt>
 <dd>Providers for integration with Oracle Cloud Infrastructure (OCI).</dd>
 <dt><a href="ojdbc-provider-azure/README.md">Oracle JDBC Azure Providers</a></dt>
-<dd>Providers for integration with Microsoft Azure.</dd>
-<dt><a href="ojdbc-provider-gcp/README.md">Oracle JDBC GCP Providers</a></dt>
-<dd>Providers for integration with Google Cloud Platform.</dd>
+<dd>Providers for integration with Microsoft Azure</dd>
 </dl>
 <u>The next one contains a provider for Open Telemetry:</u>
 <dl>
@@ -129,8 +127,6 @@ this project:
 [ojdbc-provider-oci](ojdbc-provider-oci/README.md#installation)
 
 [ojdbc-provider-azure](ojdbc-provider-azure/README.md#installation)
-
-[ojdbc-provider-gcp](ojdbc-provider-gcp/README.md#installation)
 
 [ojdbc-provider-opentelemetry](ojdbc-provider-opentelemetry/README.md#installation)
 
