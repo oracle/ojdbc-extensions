@@ -153,7 +153,7 @@ The rest are dependent on the driver, in our case `/jdbc`. The key-value pairs t
 For example, let's suppose a URL like:
 
 <pre>
-jdbc:oracle:thin:@config-hcpdedicatedvault:///v1/admin/secret/data/test_config?KEY=sales_app1
+jdbc:oracle:thin:@config-hcpdedicatedvault:///v1/namespace/secret/data/secret_name?KEY=sales_app1
 </pre>
 
 And the JSON Payload for the secret **test_config** stored in the HCP Vault Dedicated would look like the following:
@@ -164,7 +164,7 @@ And the JSON Payload for the secret **test_config** stored in the HCP Vault Dedi
   "user": "scott",
   "password": {
     "type": "hcpdedicatedvault",
-    "value": "/v1/admin/secret/data/password",
+    "value": "/v1/namespace/secret/data/password",
     "field_name": "db-password"
   },
   "jdbc": {
@@ -179,7 +179,7 @@ The sample code below executes as expected with the previous configuration.
 
 ```java
     OracleDataSource ds = new OracleDataSource();
-    ds.setURL("jdbc:oracle:thin:@config-hcpdedicatedvault:///v1/admin/secret/data/test_config");
+    ds.setURL("jdbc:oracle:thin:@config-hcpdedicatedvault:///v1/namespace/secret/data/test_config");
     Connection cn = ds.getConnection();
     Statement st = cn.createStatement();
     ResultSet rs = st.executeQuery("select sysdate from dual");
@@ -190,8 +190,8 @@ The sample code below executes as expected with the previous configuration.
 For **HCP Vault Secrets**
 For example, let's suppose a URL like:
 
-<pre> jdbc:oracle:thin:@config-hcpvault://first-app </pre>
-And the JSON Payload for the secret first-app stored in the HCP Vault Secrets would look like the following:
+<pre> jdbc:oracle:thin:@config-hcpvault://app_name </pre>
+And the JSON Payload for a secret stored within the application app_name in the HCP Vault Secrets would look like the following:
 
 ```json
 {
