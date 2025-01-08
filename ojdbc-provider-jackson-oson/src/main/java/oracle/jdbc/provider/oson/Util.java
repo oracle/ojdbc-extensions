@@ -43,6 +43,7 @@ import com.fasterxml.jackson.databind.ser.BeanPropertyWriter;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * Utility class providing helper methods for identifying and handling
@@ -52,6 +53,7 @@ import java.util.List;
  */
 public class Util {
 
+  private static final Logger logger = Logger.getLogger(Util.class.getName());
   /**
    * Checks if a given class belongs to the standard Java packages or is an array,
    * which are typically considered inherently serializable.
@@ -62,7 +64,7 @@ public class Util {
    */
   public static boolean isJavaSerializableType(Class<?> clazz) {
     String packageName = clazz.getPackage().getName();
-
+    logger.fine("Util.isJavaSerializableType packageName: " + packageName);
     return packageName.startsWith("java.lang")
               || packageName.startsWith("java.util")
               || packageName.startsWith("java.sql")

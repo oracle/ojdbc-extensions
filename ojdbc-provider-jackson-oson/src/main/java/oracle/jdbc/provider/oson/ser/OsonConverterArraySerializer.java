@@ -50,6 +50,7 @@ import jakarta.persistence.AttributeConverter;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 /**
  * A custom serializer for arrays of objects, using an `AttributeConverter` to convert each element
@@ -63,6 +64,8 @@ public class OsonConverterArraySerializer extends ArraySerializerBase<Object[]> 
    */
   private final AttributeConverter<Object, Object> attributeConverter;
 
+  private final Class<?> requiredType;
+
   /**
    * Constructs an instance of `OsonConverterArraySerializer` with the provided `AttributeConverter` class.
    *
@@ -73,12 +76,31 @@ public class OsonConverterArraySerializer extends ArraySerializerBase<Object[]> 
     super(Object[].class);
     try {
       this.attributeConverter = converter.getConstructor().newInstance();
+      this.requiredType = resolveRequiredType(attributeConverter);
     } catch (InstantiationException
          | IllegalAccessException
          | InvocationTargetException
          | NoSuchMethodException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private Class<?> resolveRequiredType(AttributeConverter<?,?> attributeConverter) {
+    Class<?> iter = attributeConverter.getClass();
+    do{
+      Method[] methods = iter.getDeclaredMethods();
+      for(Method method : methods) {
+        if (method.getName().equals("convertToDatabaseColumn")
+                && method.getReturnType() != Object.class){
+          Class<?> returnType = method.getReturnType();
+          return returnType;
+        }
+      }
+      iter = iter.getSuperclass();
+    }while(iter.getSuperclass() != null);
+
+    return Object.class;
+
   }
 
   /**
@@ -93,17 +115,14 @@ public class OsonConverterArraySerializer extends ArraySerializerBase<Object[]> 
   @Override
   public void serialize(Object[] value, JsonGenerator gen, SerializerProvider provider) throws IOException {
     int len = value.length;
-//    if (len == 1) {
-//      Object convertedValue = attributeConverter.convertToDatabaseColumn(value[0]);
-//      gen.writeObject(convertedValue);
-//      return;
-//    }
     gen.writeStartArray();
 
     for (int i = 0; i < len; i++) {
       if (value[i] == null) {
         gen.writeNull();
-      }else {
+      }else if(requiredType.isAssignableFrom(value[i].getClass())){
+        gen.writeObject(value[i]);
+      } else {
         Object convertedValue = attributeConverter.convertToDatabaseColumn(value[i]);
         gen.writeObject(convertedValue);
       }

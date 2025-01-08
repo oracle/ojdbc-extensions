@@ -162,6 +162,7 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeStartArray() throws IOException {
     _verifyValueWrite("writeStartArray");
+    logger.log(Level.FINEST, "writeStartArray");
     _writeContext = _writeContext.createChildArrayContext();
     gen.writeStartArray();
   }
@@ -180,6 +181,7 @@ public class OsonGenerator extends GeneratorBase {
     if (!_writeContext.inArray()) {
       _reportError("Current context not an ARRAY but " + _writeContext.getTypeDesc());
     }
+    logger.log(Level.FINEST, "writeEndArray");
     gen.writeEnd();
     _writeContext = _writeContext.getParent();
   }
@@ -192,6 +194,7 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeStartObject() throws IOException {
     _verifyValueWrite("write start object");
+    logger.log(Level.FINEST, "writeStartObject");
     _writeContext = _writeContext.createChildObjectContext();
     gen.writeStartObject();
   }
@@ -210,6 +213,7 @@ public class OsonGenerator extends GeneratorBase {
     if (!_writeContext.inObject()) {
       _reportError("Current context not an OBJECT but " + _writeContext.getTypeDesc());
     }
+    logger.log(Level.FINEST, "writeEndObject");
     gen.writeEnd();
     _writeContext = _writeContext.getParent();
   }
@@ -226,6 +230,7 @@ public class OsonGenerator extends GeneratorBase {
     if (status == JsonWriteContext.STATUS_EXPECT_VALUE) {
       _reportError("Can not write a field name, expecting a value");
     }
+    logger.log(Level.FINEST, "writeFieldName: " + name);
     gen.writeKey(name);
   }
 
@@ -238,6 +243,7 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeString(String text) throws IOException {
     _verifyValueWrite("write string");
+    logger.log(Level.FINEST, "writeString: " + text);
     gen.write(text);
   }
 
@@ -252,6 +258,7 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeString(char[] buffer, int offset, int len) throws IOException {
     _verifyValueWrite("write string");
+    logger.log(Level.FINEST, "writeString ");
     gen.write(new String(buffer, offset, len));
   }
 
@@ -266,6 +273,7 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeRawUTF8String(byte[] buffer, int offset, int len) throws IOException {
     _verifyValueWrite("writeRawUTF8String");
+    logger.log(Level.FINEST, "writeRawUTF8String ");
     gen.write(new String(buffer, offset, len, StandardCharsets.UTF_8));
   }
 
@@ -280,6 +288,7 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeUTF8String(byte[] buffer, int offset, int len) throws IOException {
     _verifyValueWrite("writeUTF8String");
+   logger.log(Level.FINEST, "writeUTF8String ");
     gen.write(new String(buffer, offset, len, StandardCharsets.UTF_8));
   }
 
@@ -292,6 +301,7 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeRaw(String text) throws IOException {
     _verifyValueWrite("writeRaw");
+    logger.log(Level.FINEST, "writeRaw: " + text);
     gen.write(text);
   }
 
@@ -306,6 +316,7 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeRaw(String text, int offset, int len) throws IOException {
     _verifyValueWrite("writeRaw");
+    logger.log(Level.FINEST, "writeRaw: " + text);
     gen.write(text.substring(offset, offset+len));
   }
 
@@ -320,6 +331,7 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeRaw(char[] text, int offset, int len) throws IOException {
     _verifyValueWrite("writeRaw");
+    logger.log(Level.FINEST, "writeRaw");
     gen.write(new String(text, offset, offset+len));
   }
 
@@ -332,6 +344,7 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeRaw(char c) throws IOException {
     _verifyValueWrite("writeRaw");
+    logger.log(Level.FINEST, "writeRaw: " + c);
     gen.write(c);
   }
 
@@ -349,6 +362,7 @@ public class OsonGenerator extends GeneratorBase {
   public void writeBinary(Base64Variant bv, byte[] data, int offset, int len) throws IOException {
     _verifyValueWrite("writeBinary");
 //    gen.write(bv.encode(Arrays.copyOfRange(data, offset, offset+len)));
+    logger.log(Level.FINEST, "writeBinary");
     gen.write(Arrays.copyOfRange(data, offset, offset+len));
   }
 
@@ -361,6 +375,7 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeNumber(int v) throws IOException {
     _verifyValueWrite("writeNumber");
+    logger.log(Level.FINEST, "writeNumber: " + v);
     gen.write(v);
   }
 
@@ -373,6 +388,7 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeNumber(long v) throws IOException {
     _verifyValueWrite("writeNumber");
+    logger.log(Level.FINEST, "writeNumber: " + v);
     gen.write(v);
   }
 
@@ -385,6 +401,7 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeNumber(BigInteger v) throws IOException {
     _verifyValueWrite("writeNumber");
+    logger.log(Level.FINEST, "writeNumber: " + v);
     gen.write(v);
   }
 
@@ -397,6 +414,7 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeNumber(double v) throws IOException {
     _verifyValueWrite("writeNumber");
+    logger.log(Level.FINEST, "writeNumber: " + v);
     gen.write(v);
   }
 
@@ -409,6 +427,7 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeNumber(float v) throws IOException {
     _verifyValueWrite("writeNumber");
+    logger.log(Level.FINEST, "writeNumber: " + v);
     gen.write(v);
   }
 
@@ -421,6 +440,7 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeNumber(BigDecimal v) throws IOException {
     _verifyValueWrite("writeNumber");
+    logger.log(Level.FINEST, "writeNumber ");
     gen.write(v);
   }
 
@@ -433,6 +453,7 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeNumber(String encodedValue) throws IOException {
     _verifyValueWrite("writeNumber");
+    logger.log(Level.FINEST, "writeNumber: " + encodedValue);
     gen.write(new BigDecimal(encodedValue));
   }
 
@@ -445,6 +466,7 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeBoolean(boolean state) throws IOException {
     _verifyValueWrite("writeBoolean");
+    logger.log(Level.FINEST, "writeBoolean: " + state);
     gen.write(state);
   }
 
@@ -456,6 +478,7 @@ public class OsonGenerator extends GeneratorBase {
    */
   public void writeLocalDateTime(LocalDateTime v) throws IOException {
     _verifyValueWrite("writeLocalDateTime");
+    logger.log(Level.FINEST, "writeLocalDateTime:");
     gen.write(v);
   }
 
@@ -467,6 +490,7 @@ public class OsonGenerator extends GeneratorBase {
    */
   public void writeOffsetDateTime(OffsetDateTime v) throws IOException {
     _verifyValueWrite("writeOffsetDateTime");
+    logger.log(Level.FINEST, "writeOffsetDateTime:");
     gen.write(v);
   }
 
@@ -478,6 +502,7 @@ public class OsonGenerator extends GeneratorBase {
    */
   public void writeDuration(Duration v) throws IOException {
     _verifyValueWrite("writeDuration");
+    logger.log(Level.FINEST, "writeDuration:");
     gen.write(v);
   }
 
@@ -489,6 +514,7 @@ public class OsonGenerator extends GeneratorBase {
    */
   public void writePeriod(Period v) throws IOException {
     _verifyValueWrite("writePeriod");
+    logger.log(Level.FINEST, "writePeriod:");
     gen.write(v);
   }
 
@@ -500,6 +526,7 @@ public class OsonGenerator extends GeneratorBase {
   @Override
   public void writeNull() throws IOException {
     _verifyValueWrite("writeNull");
+    logger.log(Level.FINEST, "writeNull");
     gen.writeNull();
   }
 
@@ -509,6 +536,7 @@ public class OsonGenerator extends GeneratorBase {
    */
   @Override
   public boolean isClosed() {
+    logger.log(Level.FINEST, "isClosed");
     return closed;
   }
 
@@ -535,11 +563,13 @@ public class OsonGenerator extends GeneratorBase {
     _verifyValueWrite("write date");
 
     if(value instanceof java.sql.Date) {
+      logger.log(Level.FINEST, "writeDate: java.sql.Date");
       DATE dd = new DATE((java.sql.Date)value);
       OracleJsonDate jsonDate = new OracleJsonDateImpl(dd.shareBytes());
       gen.write(jsonDate);
     }else {
       // java.util.Date
+      logger.log(Level.FINEST, "writeDate: java.util.Date");
       DATE dd = new DATE(new java.sql.Date(value.getTime()));
       OracleJsonDate jsonDate = new OracleJsonDateImpl(dd.shareBytes());
       gen.write(jsonDate);
@@ -555,7 +585,7 @@ public class OsonGenerator extends GeneratorBase {
    */
   public void writeLocalDate(LocalDate value) throws IOException {
     _verifyValueWrite("write LocalDate");
-
+    logger.log(Level.FINEST, "writeLocalDate");
     try {
       DATE dd = new DATE(value);
       OracleJsonDate jsonDate = new OracleJsonDateImpl(dd.shareBytes());
@@ -574,6 +604,7 @@ public class OsonGenerator extends GeneratorBase {
    */
   public void writeTimeStamp(Timestamp value) throws IOException {
     _verifyValueWrite("write TimeStamp");
+    logger.log(Level.FINEST, "writeTimeStamp");
     TIMESTAMP timestamp = new TIMESTAMP(value);
     OracleJsonTimestamp writeTimeStamp = new OracleJsonTimestampImpl(timestamp.shareBytes());
     gen.write(writeTimeStamp);

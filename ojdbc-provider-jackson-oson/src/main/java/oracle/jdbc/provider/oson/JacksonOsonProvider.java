@@ -42,6 +42,7 @@ import oracle.jdbc.spi.JsonProvider;
 import oracle.jdbc.spi.OsonConverter;
 
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Provider class for integrating Jackson with the Oson library.
@@ -63,6 +64,8 @@ public class JacksonOsonProvider implements JsonProvider{
    * The name of the Jackson JSON provider.
    */
   public static final String PROVIDER_NAME = "jackson-json-provider";
+
+  private final Logger logger = Logger.getLogger(JacksonOsonProvider.class.getName());
 
   /**
    * Default constructor.
@@ -87,6 +90,7 @@ public class JacksonOsonProvider implements JsonProvider{
    */
   @Override
   public OsonConverter getOsonConverter(Map<Parameter, CharSequence> parameterValues) {
+    logger.fine("JacksonOsonProvider getOsonConverter");
     return new JacksonOsonConverter();
   }
 

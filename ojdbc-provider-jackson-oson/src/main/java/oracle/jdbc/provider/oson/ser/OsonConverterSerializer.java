@@ -45,6 +45,7 @@ import jakarta.persistence.AttributeConverter;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 /**
  * A custom serializer for converting Java objects using an `AttributeConverter` during serialization.
@@ -56,7 +57,9 @@ public class OsonConverterSerializer extends JsonSerializer<Object> {
   /**
    * The attribute converter used to transform objects during serialization.
    */
-  private AttributeConverter<Object, Object> attributeConverter;
+  private final AttributeConverter<Object,Object> attributeConverter;
+
+  private final Class<?> requiredType;
 
   /**
    * Constructs an instance of `OsonConverterSerializer` with the provided `AttributeConverter` class.
@@ -67,12 +70,31 @@ public class OsonConverterSerializer extends JsonSerializer<Object> {
   public OsonConverterSerializer(Class<? extends AttributeConverter> converter) {
     try {
       this.attributeConverter = converter.getConstructor().newInstance();
+      this.requiredType = resolveRequiredType(attributeConverter);
     } catch (InstantiationException
          | IllegalAccessException
          | InvocationTargetException
          | NoSuchMethodException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private Class<?> resolveRequiredType(AttributeConverter<?,?> attributeConverter) {
+    Class<?> iter = attributeConverter.getClass();
+    do{
+      Method[] methods = iter.getDeclaredMethods();
+      for(Method method : methods) {
+        if (method.getName().equals("convertToDatabaseColumn")
+                && method.getReturnType() != Object.class){
+          Class<?> returnType = method.getReturnType();
+          return returnType;
+        }
+      }
+      iter = iter.getSuperclass();
+    }while(iter.getSuperclass() != null);
+
+    return Object.class;
+
   }
 
   /**
@@ -88,6 +110,10 @@ public class OsonConverterSerializer extends JsonSerializer<Object> {
   public void serialize(Object value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
     if (value == null) {
       gen.writeNull();
+      return;
+    }
+    if (requiredType.isAssignableFrom(value.getClass())) {
+      gen.writeObject(value);
       return;
     }
 

@@ -47,6 +47,8 @@ import oracle.sql.json.OracleJsonGenerator;
 import oracle.sql.json.OracleJsonParser;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Converter class that facilitates the integration of Jackson and Oson libraries.
@@ -68,6 +70,7 @@ public class JacksonOsonConverter implements OsonConverter{
 
   private static final OsonFactory osonFactory = new OsonFactory();
   private static final ObjectMapper om = new ObjectMapper(osonFactory);
+  private static final Logger logger = Logger.getLogger(JacksonOsonConverter.class.getName());
   
   static {
     om.findAndRegisterModules();
@@ -89,6 +92,7 @@ public class JacksonOsonConverter implements OsonConverter{
    */
   @Override
   public void serialize(OracleJsonGenerator oGen, Object object) throws IllegalStateException {
+    logger.log(Level.FINEST, "Serializing to OSON");
     try {
       om.writeValue(osonFactory.createGenerator(oGen), object);
     } 
@@ -107,6 +111,7 @@ public class JacksonOsonConverter implements OsonConverter{
    */
   @Override
   public Object deserialize(OracleJsonParser oParser, Class<?> type) throws IllegalStateException {
+    logger.log(Level.FINEST, "Deserializing OSON");
     if(!oParser.hasNext()) return null;
     try {
       return om.readValue(osonFactory.createParser(oParser), type);
@@ -124,7 +129,8 @@ public class JacksonOsonConverter implements OsonConverter{
    * @return the converted value
    */
   public static Object convertValue(Object fromValue, JavaType javaType) {
-      return om.convertValue(fromValue, javaType);
+    logger.log(Level.FINEST, "Converting value to JavaType");
+    return om.convertValue(fromValue, javaType);
   }
 
   /**
@@ -135,6 +141,10 @@ public class JacksonOsonConverter implements OsonConverter{
     return om;
   }
 
+  /**
+   * Get the OsonFactory instance.
+   * @return the OsonFactory
+   */
   public static OsonFactory getOsonFactory() {
     return osonFactory;
   }

@@ -57,6 +57,8 @@ import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.time.*;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -92,10 +94,12 @@ public class OsonModule extends SimpleModule {
   public static Version VERSION;
   public static final String PROPERTIES_FILE_PATH =
           "/META-INF/maven/com.oracle.database.jdbc/ojdbc-provider-jackson-oson/pom.properties";
+  private static final Logger logger = Logger.getLogger(OsonModule.class.getName());
 
   static  {
     instantiateProviderVersionInfo();
     VERSION = VersionUtil.parseVersion(providerVersion, groupId, artifactId);
+    logger.info("OsonExtention version: " + groupId + ":" + artifactId + ":" + providerVersion);
   }
 
   private static void instantiateProviderVersionInfo() {
@@ -154,6 +158,7 @@ public class OsonModule extends SimpleModule {
     addSerializer(LocalDate.class, OsonLocalDateSerializer.INSTANCE);
     addDeserializer(LocalDate.class, OsonLocalDateDeserializer.INSTANCE);
 
+    logger.log(Level.FINEST, "OsonModule instantiated.");
 
   }
 
@@ -175,15 +180,18 @@ public class OsonModule extends SimpleModule {
             if (writer.getType().isArrayType()) {
               JsonSerializer<?> mySerializer = new OsonConverterArraySerializer(converterClass);
               writer.assignSerializer((JsonSerializer<Object>) mySerializer);
+              logger.log(Level.FINEST, "OsonConverterArraySerializer assigned: " + writer.getName());
             } else {
               JsonSerializer<Object> mySerializer = new OsonConverterSerializer(converterClass);
               writer.assignSerializer(mySerializer);
+              logger.log(Level.FINEST, "OsonConverterSerializer assigned: " + writer.getName());
             }
           }
           if (Util.implementsSerializable(writer.getType().getInterfaces())
                   && !Util.isJavaWrapperSerializable(writer)
                   && !serializerAssigned){
             writer.assignSerializer(OsonSerializableSerializer.INSTANCE);
+            logger.log(Level.FINEST, "OsonSerializableSerializer assigned: " + writer.getName());
           }
         }
         return serializer;
@@ -211,9 +219,11 @@ public class OsonModule extends SimpleModule {
               if(property.getType().isArrayType()){
                 JsonDeserializer<Object[]> deser = new OsonConverterArrayDeserializer(converterClass);
                 ((BeanDeserializer) deserializer).replaceProperty(property,property.withValueDeserializer(deser));
+                logger.log(Level.FINEST, "OsonConverterArrayDeserializer assigned: " + property.getName());
               } else {
                 JsonDeserializer<Object> deser = new OsonConverterDeserializer(converterClass);
                 ((BeanDeserializer) deserializer).replaceProperty(property,property.withValueDeserializer(deser));
+                logger.log(Level.FINEST, "OsonConverterDeserializer assigned: " + property.getName());
               }
             }
             if (Util.implementsSerializable(property.getType().getInterfaces())
@@ -221,6 +231,7 @@ public class OsonModule extends SimpleModule {
                     && !deserializerAssigned){
               JsonDeserializer<Object> deser = OsonSerializableDeserializer.INSTANCE;
               ((BeanDeserializer) deserializer).replaceProperty(property,property.withValueDeserializer(deser));
+              logger.log(Level.FINEST, "OsonSerializableDeserializer assigned: " + property.getName());
             }
           }
           return deserializer;

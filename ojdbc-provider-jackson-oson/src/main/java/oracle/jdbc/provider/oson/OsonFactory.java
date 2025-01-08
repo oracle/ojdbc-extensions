@@ -47,6 +47,8 @@ import oracle.sql.json.OracleJsonParser;
 import java.io.*;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The OsonFactory class extends the JsonFactory to provide custom JSON generation and parsing
@@ -54,7 +56,7 @@ import java.nio.ByteBuffer;
  * JsonFactory to create instances of JsonGenerator and JsonParser.
  */
 public class OsonFactory extends JsonFactory {
-
+  private final Logger logger = Logger.getLogger(OsonFactory.class.getName());
   /**
    * {@link OracleJsonFactory} object to create generator/parser instances.
    */
@@ -68,6 +70,7 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   public JsonGenerator createGenerator(OutputStream out) throws IOException {
+    logger.log(Level.FINEST, "createGenerator(OutputStream)");
     return createGenerator(out, JsonEncoding.UTF8);
   }
 
@@ -81,6 +84,7 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   public JsonGenerator createGenerator(OutputStream out, JsonEncoding enc) throws IOException {
+    logger.log(Level.FINEST, "createGenerator(OutputStream, JsonEncoding)");
     IOContext ctxt = _createContext(out, true);
     ctxt.setEncoding(enc);
     if (_outputDecorator != null) {
@@ -108,6 +112,7 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   public JsonGenerator createGenerator(Writer out) throws IOException {
+    logger.log(Level.FINEST, "createGenerator(Writer)");
     IOContext ctxt = _createContext(_createContentReference(out), true);
     OsonGenerator g = new OsonGenerator(_generatorFeatures, null,
         factory.createJsonTextGenerator(_decorate(out,ctxt)));
@@ -130,6 +135,7 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   public JsonGenerator createGenerator(DataOutput out) throws IOException {
+    logger.log(Level.FINEST, "createGenerator(DataOutput)");
     return createGenerator((OutputStream) out, JsonEncoding.UTF8);
   }
 
@@ -142,6 +148,7 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   public JsonGenerator createGenerator(DataOutput out, JsonEncoding enc) throws IOException {
+    logger.log(Level.FINEST, "createGenerator(DataOutput, JsonEncoding)");
     return createGenerator((OutputStream) out, enc);
   }
 
@@ -155,6 +162,7 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   public JsonGenerator createGenerator(File f, JsonEncoding enc) throws IOException {
+    logger.log(Level.FINEST, "createGenerator(File, JsonEncoding)");
     OutputStream out = new FileOutputStream(f);
     IOContext ctxt = _createContext(out, true);
     ctxt.setEncoding(enc);
@@ -171,6 +179,7 @@ public class OsonFactory extends JsonFactory {
    * @return A custom OsonGenerator instance.
    */
   public JsonGenerator createGenerator(OracleJsonGenerator oGen) {
+    logger.log(Level.FINEST, "createGenerator(OracleJsonGenerator)");
     OsonGenerator g = new OsonGenerator(_generatorFeatures, null, oGen);
     ObjectCodec codec = getCodec();
     if (codec != null) {
@@ -190,6 +199,7 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   public JsonParser createParser(byte[] data) {
+    logger.log(Level.FINEST, "createParser(byte[])");
     IOContext ctxt = _createContext(data, true);
     return _createParser(data, 0, data.length, ctxt);
   }
@@ -202,6 +212,7 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   public JsonParser createParser(char[] content) {
+    logger.log(Level.FINEST, "createParser(char[])");
     IOContext ctxt = _createContext(content, true);
     return _createParser(content, 0, content.length, ctxt, false);
   }
@@ -215,6 +226,7 @@ public class OsonFactory extends JsonFactory {
   @SuppressWarnings({ "deprecation", "resource" })
   @Override
   public JsonParser createParser(File f) throws IOException {
+    logger.log(Level.FINEST, "createParser(File)");
     IOContext ctxt = _createContext(f, true);
     InputStream in = new FileInputStream(f);
     if (_inputDecorator != null) {
@@ -231,6 +243,7 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   public JsonParser createParser(Reader r) throws IOException {
+    logger.log(Level.FINEST, "createParser(Reader)");
     IOContext ctxt = _createContext(r, true);
     return _createParser(_decorate(r,ctxt), ctxt);
   }
@@ -243,6 +256,7 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   public JsonParser createParser(InputStream in) throws IOException {
+    logger.log(Level.FINEST, "createParser(InputStream)");
     IOContext ctxt = _createContext(in, true);
     return _createParser(_decorate(in, ctxt), ctxt);
   }
@@ -255,6 +269,7 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   public JsonParser createParser(String content) throws IOException {
+    logger.log(Level.FINEST, "createParser(String)");
     IOContext ctxt = _createContext(content, true);
     return _createParser(content.toCharArray(), 0, content.length(), ctxt, false);
   }
@@ -269,6 +284,7 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   public JsonParser createParser(URL url) throws IOException {
+    logger.log(Level.FINEST, "createParser(URL)");
     IOContext ctxt = _createContext(url, true);
     InputStream in = _optimizedStreamFromURL(url);
     if (_inputDecorator != null) {
@@ -289,6 +305,7 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   public JsonParser createParser(byte[] data, int offset, int len) throws IOException {
+    logger.log(Level.FINEST, "createParser(byte[], int, int)");
     IOContext ctxt = _createContext(data, true);
     if (_inputDecorator != null) {
       InputStream in = _inputDecorator.decorate(ctxt, data, offset, len);
@@ -310,6 +327,7 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   public JsonParser createParser(char[] content, int offset, int len) throws IOException {
+    logger.log(Level.FINEST, "createParser(char[], int, int)");
     IOContext ctxt = _createContext(content, true);
     Reader r = new CharArrayReader(content, offset, len);
     if (_inputDecorator != null) {
@@ -328,6 +346,7 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   public JsonParser _createParser(InputStream in, IOContext ctxt) {
+    logger.log(Level.FINEST, "_createParser(InputStream)");
     return new OsonParser(ctxt, _factoryFeatures, factory.createJsonBinaryParser(in));
   }
 
@@ -340,6 +359,7 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   public JsonParser _createParser(Reader r, IOContext ctxt) {
+    logger.log(Level.FINEST, "_createParser(Reader)");
     return new OsonParser(ctxt, _factoryFeatures, factory.createJsonTextParser(r));
   }
 
@@ -356,7 +376,8 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   public JsonParser _createParser(char[] data, int offset, int len, IOContext ctxt, boolean recyclable) {
-    return new OsonParser(ctxt, _factoryFeatures, 
+    logger.log(Level.FINEST, "_createParser(char[], int, int, IOContext)");
+    return new OsonParser(ctxt, _factoryFeatures,
         factory.createJsonTextParser(new CharArrayReader(data, offset, len)));
   }
 
@@ -371,7 +392,8 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   public JsonParser _createParser(byte[] data, int offset, int len, IOContext ctxt) {
-    return new OsonParser(ctxt, _factoryFeatures, 
+    logger.log(Level.FINEST, "_createParser(byte[], int, int, IOContext)");
+    return new OsonParser(ctxt, _factoryFeatures,
         factory.createJsonBinaryParser(ByteBuffer.wrap(data, offset, len)));
   }
 
@@ -381,6 +403,7 @@ public class OsonFactory extends JsonFactory {
    * @return
    */
   public JsonParser createParser(OracleJsonParser oParser) {
+    logger.log(Level.FINEST, "createParser(OracleJsonParser)");
     return new OsonParser(this._createContext(null, false), _factoryFeatures, oParser);
   }
 
@@ -400,7 +423,7 @@ public class OsonFactory extends JsonFactory {
    */
   @Override
   protected JsonParser _createParser(DataInput input, IOContext ctxt) {
-
+    logger.log(Level.FINEST, "_createParser(DataInput, IOContext)");
     InputStream stream = new InputStream() {
       @Override
       public int read() throws IOException {

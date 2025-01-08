@@ -183,7 +183,7 @@ public class OsonParser extends ParserBase {
    */
   @Override
   public JsonToken nextToken() throws IOException {
-     logger.log(Level.FINEST, "nextToken");
+    logger.log(Level.FINEST, "nextToken");
     if (parser.hasNext()) {
       currentEvent = parser.next();
       _currToken = fromOsonEvent(currentEvent);
@@ -225,7 +225,7 @@ public class OsonParser extends ParserBase {
 
   @Override
   public JsonToken nextValue() throws IOException {
-     logger.log(Level.FINEST, "nextValue");
+    logger.log(Level.FINEST, "nextValue");
     return super.nextValue();
   }
 
@@ -253,6 +253,7 @@ public class OsonParser extends ParserBase {
   @Override
   public Object getEmbeddedObject()
   {
+    logger.log(Level.FINEST, "getEmbeddedObject");
     if (currentEvent == Event.VALUE_BINARY) {
       return parser.getBytes();
     }
@@ -316,7 +317,7 @@ public class OsonParser extends ParserBase {
    */
   @Override
   public int currentTokenId() {
-     logger.log(Level.FINEST, "getCurrentTokenId");
+    logger.log(Level.FINEST, "getCurrentTokenId");
     JsonToken jt;
     if ((jt = OSON_EVENT_TO_JSON_TOKEN.get(currentEvent)) != null) {
       return jt.id();
@@ -336,7 +337,7 @@ public class OsonParser extends ParserBase {
    */
   @Override
   public boolean hasCurrentToken() {
-     logger.log(Level.FINEST, "hasCurrentToken");
+    logger.log(Level.FINEST, "hasCurrentToken");
     return currentEvent != null;
   }
 
@@ -345,7 +346,7 @@ public class OsonParser extends ParserBase {
    */
   @Override
   public boolean hasTokenId(final int id) {
-     logger.log(Level.FINEST, "hasTokenId( " + id + " )");
+    logger.log(Level.FINEST, "hasTokenId( " + id + " )");
     if (id == JsonTokenId.ID_FIELD_NAME) {
       return currentEvent == OracleJsonParser.Event.KEY_NAME;
     }
@@ -364,7 +365,7 @@ public class OsonParser extends ParserBase {
    */
   @Override
   public boolean hasToken(JsonToken jsonToken) {
-     logger.log(Level.FINEST, "hasToken( " + jsonToken + " )");
+    logger.log(Level.FINEST, "hasToken( " + jsonToken + " )");
     JsonToken jt = OSON_EVENT_TO_JSON_TOKEN.get(currentEvent);
 
     if (jt != null) {
@@ -392,7 +393,7 @@ public class OsonParser extends ParserBase {
    */
   @Override
   public JsonToken getLastClearedToken() {
-     logger.log(Level.FINEST, "getLastClearedToken");
+    logger.log(Level.FINEST, "getLastClearedToken");
     if (lastClearedEvent == null) {
       return null;
     }
@@ -416,6 +417,7 @@ public class OsonParser extends ParserBase {
    */
   @Override
   public String getCurrentName() throws IOException {
+    logger.log(Level.FINEST, "getCurrentName>"+fieldName);
     return fieldName;
   }
 
