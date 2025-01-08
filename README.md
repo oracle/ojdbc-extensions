@@ -6,7 +6,7 @@ APIs. These SPI implementations are referred as "providers" for short.
 
 Each module of this project contains a set of providers.
 
-<u>Three of these modules contain providers for a particular cloud platform:</u>
+<u>Two of these modules contain providers for a particular cloud platform:</u>
 
 <dl>
 <dt><a href="ojdbc-provider-oci/README.md">Oracle JDBC OCI Providers</a></dt>
