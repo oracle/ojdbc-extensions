@@ -47,7 +47,6 @@ import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonObject;
-import oracle.sql.json.OracleJsonValue;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -101,31 +100,21 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
   public Resource<String> request(DedicatedVaultCredentials credentials, ParameterSet parameterSet) {
     String secretPath = parameterSet.getRequired(SECRET_PATH);
     String vaultAddr = getRequiredOrFallback(parameterSet, VAULT_ADDR, "VAULT_ADDR");
-    String key = parameterSet.getOptional(KEY);
 
     if (vaultAddr == null || vaultAddr.isEmpty()) {
       throw new IllegalStateException("Vault address not found in parameters, system properties, or environment variables");
     }
 
-    String vaultUrl = vaultAddr + secretPath;
+    String secretString = fetchSecretFromVault(vaultAddr + secretPath, credentials.getVaultToken());
 
-    String secretString = fetchSecretFromVault(vaultUrl, credentials.getVaultToken());
-
-    /*
-     * If KEY is specified, we only want a single field from the nested JSON.
-     * If KEY is not specified, we return the entire
-     * {
-     *   "data": { ...all fields... }
-     * }
-     * portion from the second-level data node.
-     */
-    secretString = extractValueFromJson(secretString, key, secretPath);
-
-    return Resource.createPermanentResource(secretString, true);
+    return Resource.createPermanentResource(
+            parseSecretJson(secretString, secretPath),
+            true);
   }
 
   /**
-   * Fetches a secret from the Vault using the given Vault URL and authentication token.
+   * Fetches a secret from the Vault using the given Vault URL and
+   * authentication token.
    *
    * @param vaultUrl The complete Vault URL including the secret path.
    * @param token    The Vault token for authentication.
@@ -159,30 +148,18 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
   }
 
   /**
-   * Extracts a specific key's value from a JSON-formatted secret.
+   * Parses the JSON secret to extract the nested data node.
    *
-   * @param secretJson The JSON string representing the secret.
-   * @param key The key to extract from the JSON.
-   * @return The value corresponding to the key.
-   * @throws IllegalArgumentException If the key is not found or the JSON is invalid.
+   * @param secretJson The raw secret JSON string.
+   * @param secretPath The secret path (for error messages).
+   * @return The extracted JSON data as a string.
    */
-  private static String extractValueFromJson(String secretJson, String key, String secretPath) {
+  private static String parseSecretJson(String secretJson, String secretPath) {
     try (InputStream is = new ByteArrayInputStream(secretJson.getBytes(UTF_8))) {
       OracleJsonObject rootObject = JSON_FACTORY.createJsonTextValue(is).asJsonObject();
       OracleJsonObject dataNode = rootObject.getObject("data");
       OracleJsonObject nestedData = dataNode.getObject("data");
-
-      if (key == null) {
-        return nestedData.toString();
-      }
-
-      OracleJsonValue value = nestedData.get(key);
-      if (value == null) {
-        throw new IllegalArgumentException(
-                "Key \"" + key + "\" not found in secret at path: " + secretPath);
-      }
-
-      return value.toString();
+      return nestedData.toString();
     } catch (IOException e) {
       throw new IllegalArgumentException(
               "Failed to parse JSON for secret at path: " + secretPath, e);

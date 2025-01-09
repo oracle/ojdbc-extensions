@@ -36,7 +36,7 @@ public class DedicatedVaultConfigurationProviderTest {
 
     String location =
             composeUrl(TestProperties.getOrAbort(DedicatedVaultTestProperty.DEDICATED_VAULT_SECRET_PATH),
-                    "KEY="+TestProperties.getOrAbort(DedicatedVaultTestProperty.KEY),
+                    "key="+TestProperties.getOrAbort(DedicatedVaultTestProperty.KEY),
                     "VAULT_ADDR="+TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_ADDR),
                     "VAULT_TOKEN="+TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_TOKEN));
 

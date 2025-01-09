@@ -115,19 +115,12 @@ public final class HcpVaultSecretsManagerFactory extends HcpVaultResourceFactory
     String projectId = getRequiredOrFallback(parameterSet, PROJECT_ID, "PROJECT_ID");
     String appName = getRequiredOrFallback(parameterSet, APP_NAME, "APP_NAME");
     String secretName = getRequiredOrFallback(parameterSet, SECRET_NAME, "SECRET_NAME");
-    String key = parameterSet.getOptional(KEY);
 
     String hcpUrl = String.format(HCP_SECRETS_API_URL_FORMAT, orgId, projectId, appName, secretName);
 
     String secretsJson = HcpVaultApiClient.fetchSecrets(hcpUrl, credentials.getHcpApiToken());
 
-    // If a KEY is specified, extract it from the JSON
-    if (key != null) {
-      return Resource.createPermanentResource(HcpVaultApiClient.extractKeyFromJson(secretsJson
-              , key), true);
-    }
     return Resource.createPermanentResource(secretsJson, true);
   }
-
 
 }

@@ -127,40 +127,4 @@ public final class HcpVaultApiClient {
     }
   }
 
-  /**
-   * Extracts a specific key's value from the JSON response.
-   *
-   * @param json The JSON string containing the secret data. Not null.
-   * @param key  The key to extract from the JSON. Not null.
-   * @return The value of the specified key. Not null.
-   * @throws IllegalArgumentException If the key is not found or the value's
-   * type is unsupported.
-   */
-  public static String extractKeyFromJson(String json, String key) {
-    try (InputStream jsonInputStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))) {
-      OracleJsonObject rootObject = new OracleJsonFactory()
-              .createJsonTextValue(jsonInputStream)
-              .asJsonObject();
-
-      // Check if the key exists in the root JSON object
-      if (!rootObject.containsKey(key)) {
-        throw new IllegalArgumentException("Key '" + key + "' not found in the JSON response.");
-      }
-
-      OracleJsonValue value = rootObject.get(key);
-
-      switch (value.getOracleJsonType()) {
-        case OBJECT:
-          return value.asJsonObject().toString();
-        case STRING:
-          return value.asJsonString().getString();
-        default:
-          throw new IllegalArgumentException("Unsupported JSON type for key '" + key + "': "
-                  + value.getOracleJsonType());
-      }
-    } catch (IOException e) {
-      throw new IllegalStateException("Failed to parse JSON while extracting key: " + key, e);
-    }
-  }
-
 }
