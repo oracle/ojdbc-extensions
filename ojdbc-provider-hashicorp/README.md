@@ -25,7 +25,7 @@ The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-hashicorp</artifactId>
-  <version>1.2.0</version>
+  <version>1.0.3</version>
 </dependency>
 ```
 
@@ -250,7 +250,7 @@ For the JSON type of provider (HCP Vault Dedicated, HCP Vault Secrets, HTTP/HTTP
     - Description: Specifies the key within the secret JSON object to retrieve the password value.
       For example, if the secret contains `{ "db-password": "mypassword" }`,
       setting `field_name: "db-password"` will extract `"mypassword"`.
-- SECRET_NAME (HCP Vault Secrets only)
+- secret_name (HCP Vault Secrets only)
     - Mandatory
     - Description: Specifies the name of the secret key to be retrieved from the application in HCP Vault Secrets.
 - authentication
