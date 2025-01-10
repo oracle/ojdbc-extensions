@@ -111,8 +111,8 @@ The provider searches for the following parameters:
 <td>Yes</td>
 </tr>
 <tr>
-<td><code>SECRET_NAME</code></td>
-<td>The name of the secret to be retrieved from the Vault</td>
+<td><code>APP_NAME</code></td>
+<td>The application name in HCP Vault Secrets</td>
 <td>Yes</td>
 </tr>
 </tbody>
@@ -125,20 +125,20 @@ The provider searches for the following parameters:
 The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-hcpdedicatedvault://` to be able to identify that the configuration parameters should be loaded using HCP Vault Dedicated. Users need to indicate the secret path with the following syntax:
 
 <pre>
-jdbc:oracle:thin:@config-hcpdedicatedvault://{secret-path}[?option1=value1&option2=value2...]
+jdbc:oracle:thin:@config-hcpvaultdedicated://{secret-path}[?option1=value1&option2=value2...]
 </pre>
 
 The `secret-path` refers to the exact location of the secret within the HCP Vault Dedicated. 
 
 ### HCP Vault Secrets Config Provider
 
-The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-hcpvault://` to identify that the configuration parameters should be loaded using HCP Vault Secrets. Users need to indicate the application name (`APP_NAME`) with the following syntax:
+The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-hcpvaultsecret://` to identify that the configuration parameters should be loaded using HCP Vault Secrets. Users need to indicate the secret name (`SECRET_NAME`) with the following syntax:
 
 <pre>
-jdbc:oracle:thin:@config-hcpvault://{app-name}[?option1=value1&option2=value2...]
+jdbc:oracle:thin:@config-hcpvault://{secret-name}[?option1=value1&option2=value2...]
 </pre>
 
-The `app-name` refers to the application associated with the secrets in the HCP Vault Secrets.
+The `app-name` refers to the name of the secret to retrieve from HCP Vault Secrets
 
 ### JSON Payload format
 
@@ -153,7 +153,7 @@ The rest are dependent on the driver, in our case `/jdbc`. The key-value pairs t
 For example, let's suppose a URL like:
 
 <pre>
-jdbc:oracle:thin:@config-hcpdedicatedvault:///v1/namespace/secret/data/secret_name?KEY=sales_app1
+jdbc:oracle:thin:@config-hcpvaultdedicated:///v1/namespace/secret/data/secret_name?KEY=sales_app1
 </pre>
 
 And the JSON Payload for the secret **test_config** stored in the HCP Vault Dedicated would look like the following:
@@ -179,7 +179,7 @@ The sample code below executes as expected with the previous configuration.
 
 ```java
     OracleDataSource ds = new OracleDataSource();
-    ds.setURL("jdbc:oracle:thin:@config-hcpdedicatedvault:///v1/namespace/secret/data/test_config");
+    ds.setURL("jdbc:oracle:thin:@config-hcpvaultdedicated:///v1/namespace/secret/data/test_config");
     Connection cn = ds.getConnection();
     Statement st = cn.createStatement();
     ResultSet rs = st.executeQuery("select sysdate from dual");
@@ -190,7 +190,7 @@ The sample code below executes as expected with the previous configuration.
 For **HCP Vault Secrets**
 For example, let's suppose a URL like:
 
-<pre> jdbc:oracle:thin:@config-hcpvault://app_name </pre>
+<pre> jdbc:oracle:thin:@config-hcpvaultsecret://secret-name </pre>
 And the JSON Payload for a secret stored within the application app_name in the HCP Vault Secrets would look like the following:
 
 ```json
@@ -214,7 +214,7 @@ The sample code below executes as expected with the previous configuration.
 
 ```java
     OracleDataSource ds = new OracleDataSource();
-    ds.setURL("jdbc:oracle:thin:@config-hcpvault://app_name");
+    ds.setURL("jdbc:oracle:thin:@config-hcpvaultsecret://secret-name");
     Connection cn = ds.getConnection();
     Statement st = cn.createStatement();
     ResultSet rs = st.executeQuery("select sysdate from dual");
@@ -233,8 +233,8 @@ For the JSON type of provider (HCP Vault Dedicated, HCP Vault Secrets, HTTP/HTTP
         - azurevault
         - base64
         - gcpsecretmanager
-        - hcpdedicatedvault
-        - hcpvault
+        - hcpvaultdedicated
+        - hcpvaultsecret
 - value
     - Mandatory
     - Possible values
@@ -242,17 +242,14 @@ For the JSON type of provider (HCP Vault Dedicated, HCP Vault Secrets, HTTP/HTTP
         - Azure Key Vault URI (if azurevault)
         - Base64 Encoded password (if base64)
         - GCP resource name (if gcpsecretmanager)
-        - Secret path (if hcpdedicatedvault)
-        - Application name (if hcpvault)
+        - Secret path (if hcpvaultdedicated)
+        - Application name (if hcpvaultsecret)
         - Text
 - field_name (HCP Vault Dedicated only)
     - Mandatory
     - Description: Specifies the key within the secret JSON object to retrieve the password value.
       For example, if the secret contains `{ "db-password": "mypassword" }`,
       setting `field_name: "db-password"` will extract `"mypassword"`.
-- secret_name (HCP Vault Secrets only)
-    - Mandatory
-    - Description: Specifies the name of the secret key to be retrieved from the application in HCP Vault Secrets.
 - authentication
     - Optional
     - Possible Values
