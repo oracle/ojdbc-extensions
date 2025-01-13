@@ -51,10 +51,23 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * The OsonFactory class extends the JsonFactory to provide custom JSON generation and parsing
- * capabilities using {@link OsonGenerator} and {@link OsonParser}. This class overrides methods from
- * JsonFactory to create instances of JsonGenerator and JsonParser.
+ * This class extends the {@link JsonFactory} class to provide custom JSON generation and parsing
+ * capabilities for OSON using {@link OsonGenerator} and {@link OsonParser}. This class overrides methods from
+ * JsonFactory to create instances of {@link OsonGenerator} and {@link OsonParser}.This class is used the same
+ * way as {@link JsonFactory}. It is thread safe.
+ *
+ * Usage Example:
+ * <pre><code>
+ *    JsonFactory osonFactory = new OsonFactory();
+ *    ObjectMapper objectMapper = new ObjectMapper(osonFactory);
+ *    objectMapper.findAndRegisterModules();
+ *    // to add OSON serialization/deserialization capabilities.
+ *    objectMapper.registerModule(new OsonModule());
+ *    // use osonFactory to create Generators/Parsers and the
+ *    // mapper to serialize/deserialize.
+ * </code></pre>
  */
+
 public class OsonFactory extends JsonFactory {
   private final Logger logger = Logger.getLogger(OsonFactory.class.getName());
   /**

@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.oracle.database.jdbc</groupId>
         <artifactId>ojdbc-extensions</artifactId>
-        <version>1.0.2</version>
+        <version>${extensions-version}</version>
     </parent>
 
     <artifactId>ojdbc-provider-jackson-oson</artifactId>

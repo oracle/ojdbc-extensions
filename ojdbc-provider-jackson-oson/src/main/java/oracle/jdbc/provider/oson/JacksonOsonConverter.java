@@ -59,6 +59,24 @@ import java.util.logging.Logger;
  * data into Java objects. It uses {@link OsonFactory} to create Oson-compatible generators and parsers.
  * </p>
  *
+ * Usage Example:
+ * <pre>
+ * <code>
+ *     Employee employee = getEmployee(); // sample POJO
+ *     JacksonOsonConverter conv = new JacksonOsonConverter();
+ *     OracleJsonFactory jsonFactory = new OracleJsonFactory();
+ *     try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+ *       try (OracleJsonGenerator generator = jsonFactory.createJsonBinaryGenerator(out)) {
+ *           conv.serialize(generator, employee);
+ *        }
+ *        try (ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray())) {
+ *            try (OracleJsonParser oParser = jsonFactory.createJsonBinaryParser(in)) {
+ *               Employee deserEmp = (Employee) conv.deserialize(oParser, Employee.class);
+ *             }
+ *         }
+ *       }
+ * </code>
+ * </pre>
  * @see OsonConverter
  * @see ObjectMapper
  * @see OsonFactory
