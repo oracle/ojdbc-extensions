@@ -62,6 +62,7 @@
     <module>ojdbc-provider-oci</module>
     <module>ojdbc-provider-samples</module>
     <module>ojdbc-provider-opentelemetry</module>
+    <module>ojdbc-provider-jackson-oson</module>
   </modules>
 
   <dependencyManagement>
@@ -90,6 +91,12 @@
       <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-engine</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-params</artifactId>
         <version>${junit.version}</version>
         <scope>test</scope>
       </dependency>

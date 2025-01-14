@@ -11,8 +11,13 @@
   <parent>
     <groupId>com.oracle.database.jdbc</groupId>
     <artifactId>ojdbc-extensions</artifactId>
-    <version>${extensions-version}</version>
+    <version>1.0.2</version>
   </parent>
+
+  <properties>
+    <maven.compiler.target>11</maven.compiler.target>
+    <maven.compiler.source>11</maven.compiler.source>
+  </properties>
 
   <dependencies>
     <dependency>
@@ -26,9 +31,24 @@
       <version>${project.parent.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.oracle.database.jdbc</groupId>
+      <artifactId>ojdbc-provider-jackson-oson</artifactId>
+      <version>${project.parent.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.oracle.database.security</groupId>
       <artifactId>oraclepki</artifactId>
       <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate.orm</groupId>
+      <artifactId>hibernate-core</artifactId>
+      <version>6.6.0.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+      <version>2.3.1</version>
     </dependency>
   </dependencies>
 
