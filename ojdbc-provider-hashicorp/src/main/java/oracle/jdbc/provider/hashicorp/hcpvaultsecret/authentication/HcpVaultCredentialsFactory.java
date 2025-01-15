@@ -55,6 +55,10 @@ import static oracle.jdbc.provider.util.ParameterUtil.getRequiredOrFallback;
  */
 public final class HcpVaultCredentialsFactory implements ResourceFactory<HcpVaultCredentials> {
 
+  // 5 minutes buffer for token expiration (in ms)
+  private static final long TOKEN_TTL_BUFFER = 300000;
+  private static volatile BearerToken bearerToken;
+
   /**
    * Parameter indicating the authentication method to use for HCP Vault Secrets.
    */
@@ -96,15 +100,47 @@ public final class HcpVaultCredentialsFactory implements ResourceFactory<HcpVaul
   }
 
   private HcpVaultCredentials createClientCredentials(ParameterSet parameterSet) {
-    String clientId = getRequiredOrFallback(parameterSet, CLIENT_ID, "CLIENT_ID");
-    String clientSecret = getRequiredOrFallback(parameterSet, CLIENT_SECRET, "CLIENT_SECRET");
+    synchronized (HcpVaultCredentialsFactory.class) {
+      long currentTime = System.currentTimeMillis();
 
-    // Call OAuth endpoint to fetch the token
-    String apiToken = HcpVaultOAuthClient.fetchHcpAccessToken(clientId, clientSecret);
-    if (apiToken == null || apiToken.isEmpty()) {
-      throw new IllegalStateException("Failed to obtain HCP token using client_credentials flow");
+      if (bearerToken != null && currentTime < bearerToken.getExpiryTime()) {
+        return new HcpVaultCredentials(bearerToken.getToken());
+      }
+
+      String clientId = getRequiredOrFallback(parameterSet, CLIENT_ID, "CLIENT_ID");
+      String clientSecret = getRequiredOrFallback(parameterSet, CLIENT_SECRET, "CLIENT_SECRET");
+
+      String apiToken = HcpVaultOAuthClient.fetchHcpAccessToken(clientId, clientSecret);
+      if (apiToken == null || apiToken.isEmpty()) {
+        throw new IllegalStateException("Failed to obtain HCP token using client_credentials flow");
+      }
+
+      long tokenTTL = HcpVaultOAuthClient.getLastTokenTTL() * 1000;
+      bearerToken = new BearerToken(apiToken, currentTime + tokenTTL - TOKEN_TTL_BUFFER);
+
+      return new HcpVaultCredentials(apiToken);
+    }
+  }
+
+  /**
+   * A class representing a Bearer Token and its expiration time.
+   */
+  private static class BearerToken {
+    private final String token;
+    private final long expiryTime;
+
+    BearerToken(String token, long expiryTime) {
+      this.token = token;
+      this.expiryTime = expiryTime;
     }
 
-    return new HcpVaultCredentials(apiToken);
+    public String getToken() {
+      return token;
+    }
+
+    public long getExpiryTime() {
+      return expiryTime;
+    }
   }
+
 }

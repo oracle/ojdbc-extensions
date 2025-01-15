@@ -56,6 +56,9 @@ import java.util.Scanner;
  */
 public final class HcpVaultOAuthClient {
 
+  // Default TTL fallback in seconds
+  private static long lastTokenTTL = 3600;
+
   private HcpVaultOAuthClient() {}
 
   /**
@@ -94,7 +97,10 @@ public final class HcpVaultOAuthClient {
                   .createJsonTextValue(new ByteArrayInputStream(jsonResponse.getBytes(StandardCharsets.UTF_8)))
                   .asJsonObject();
 
-          return response.getString("access_token");
+          String accessToken = response.getString("access_token");
+          lastTokenTTL = response.getLong("expires_in");
+
+          return accessToken;
         }
       } else {
         throw new IllegalStateException("Failed to obtain HCP token. HTTP=" + conn.getResponseCode());
@@ -106,5 +112,9 @@ public final class HcpVaultOAuthClient {
         conn.disconnect();
       }
     }
+  }
+
+  public static long getLastTokenTTL() {
+    return lastTokenTTL;
   }
 }
