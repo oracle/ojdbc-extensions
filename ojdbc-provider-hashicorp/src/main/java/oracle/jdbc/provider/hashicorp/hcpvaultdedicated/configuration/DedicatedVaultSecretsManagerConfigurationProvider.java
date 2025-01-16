@@ -64,6 +64,15 @@ public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleCon
                  DedicatedVaultSecretsManagerFactory.VAULT_TOKEN)
               .addParameter("FIELD_NAME",
                  DedicatedVaultSecretsManagerFactory.FIELD_NAME))
+              .addParameter("VAULT_USERNAME",
+                 DedicatedVaultSecretsManagerFactory.USERNAME)
+              .addParameter("VAULT_PASSWORD",
+                 DedicatedVaultSecretsManagerFactory.PASSWORD)
+              .addParameter("VAULT_AUTH_PATH",
+                 DedicatedVaultSecretsManagerFactory.AUTH_PATH,
+                 "userpass")
+              .addParameter("VAULT_NAMESPACE",
+                 DedicatedVaultSecretsManagerFactory.NAMESPACE)
             .build();
 
   @Override

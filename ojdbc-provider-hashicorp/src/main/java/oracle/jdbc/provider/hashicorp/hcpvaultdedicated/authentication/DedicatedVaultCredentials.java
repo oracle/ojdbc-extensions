@@ -43,13 +43,16 @@ package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication;
  * Holds the credentials required for authenticating with Dedicated
  * HashiCorp Vault.
  * </p><p>
- * This class encapsulates a Vault token which is essential for making secure
- * requests to the Vault API.
+ * This class encapsulates credentials used for making secure
+ * requests to the Vault API, supporting both Vault tokens and
+ * Userpass authentication.
  * </p>
  */
 public final class DedicatedVaultCredentials {
 
   private final String vaultToken;
+  private final String username;
+  private final String password;
 
   /**
    * Constructs a new {@code DedicatedVaultCredentials} object with
@@ -60,6 +63,22 @@ public final class DedicatedVaultCredentials {
    */
   public DedicatedVaultCredentials(String vaultToken) {
     this.vaultToken = vaultToken;
+    this.username = null;
+    this.password = null;
+  }
+
+  /**
+   * Constructs a new {@code DedicatedVaultCredentials} object with
+   * the provided username and password.
+   *
+   * @param vaultToken the token used for authentication.
+   * @param username the username for Userpass authentication.
+   * @param password the password for Userpass authentication.
+   */
+  public DedicatedVaultCredentials(String vaultToken, String username, String password) {
+    this.vaultToken = vaultToken;
+    this.username = username;
+    this.password = password;
   }
 
   /**
@@ -70,4 +89,13 @@ public final class DedicatedVaultCredentials {
   public String getVaultToken() {
     return vaultToken;
   }
+
+  public String getUsername() {
+    return username;
+  }
+
+  public String getPassword() {
+    return password;
+  }
+
 }

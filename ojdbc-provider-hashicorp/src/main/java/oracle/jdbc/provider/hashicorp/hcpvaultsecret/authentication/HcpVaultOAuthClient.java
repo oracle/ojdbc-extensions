@@ -57,7 +57,7 @@ import java.util.Scanner;
 public final class HcpVaultOAuthClient {
 
   // Default TTL fallback in seconds
-  private static long lastTokenTTL = 3600;
+  private static long lastTokenTTL = 3_600;
 
   private HcpVaultOAuthClient() {}
 

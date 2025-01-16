@@ -43,8 +43,20 @@ import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.secrets.DedicatedVaultSecretsManagerFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.sql.json.OracleJsonFactory;
+import oracle.sql.json.OracleJsonObject;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Scanner;
+
+import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.secrets.DedicatedVaultSecretsManagerFactory.*;
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
+import static oracle.jdbc.provider.util.ParameterUtil.getOptionalOrFallback;
 import static oracle.jdbc.provider.util.ParameterUtil.getRequiredOrFallback;
 
 /**
@@ -66,6 +78,13 @@ public final class DedicatedVaultCredentialsFactory implements ResourceFactory<D
    */
   public static final Parameter<DedicatedVaultAuthenticationMethod> AUTHENTICATION_METHOD =
           Parameter.create(REQUIRED);
+
+  // 1 minutes buffer for token expiration (in ms)
+  private static final long TOKEN_TTL_BUFFER = 60_000;
+  private static volatile VaultToken vaultToken;
+
+  // Default TTL fallback in seconds
+  private static long lastTokenTTL = 3_600;
 
   private static final DedicatedVaultCredentialsFactory INSTANCE =
           new DedicatedVaultCredentialsFactory();
@@ -102,6 +121,8 @@ public final class DedicatedVaultCredentialsFactory implements ResourceFactory<D
     switch (method) {
       case VAULT_TOKEN:
         return createTokenCredentials(parameterSet);
+      case USERPASS:
+        return createUserpassCredentials(parameterSet);
       default:
         throw new IllegalArgumentException(
                 "Unrecognized authentication method: " + method);
@@ -116,8 +137,9 @@ public final class DedicatedVaultCredentialsFactory implements ResourceFactory<D
    */
   private static DedicatedVaultCredentials createTokenCredentials(ParameterSet parameterSet) {
     String vaultToken = getRequiredOrFallback(
-            parameterSet,
-            DedicatedVaultSecretsManagerFactory.VAULT_TOKEN, "VAULT_TOKEN"
+      parameterSet,
+      DedicatedVaultSecretsManagerFactory.VAULT_TOKEN,
+      "VAULT_TOKEN"
     );
 
     if (vaultToken == null || vaultToken.isEmpty()) {
@@ -127,4 +149,122 @@ public final class DedicatedVaultCredentialsFactory implements ResourceFactory<D
     return new DedicatedVaultCredentials(vaultToken);
   }
 
+  /**
+   * Creates {@link DedicatedVaultCredentials} using the Userpass
+   * authentication method.
+   * <p>
+   * This method uses a username and password to obtain a temporary Vault token.
+   * The token is cached for reuse until it expires.
+   * </p>
+   *
+   * @param parameterSet the set of parameters containing the Userpass credentials.
+   * @return the created {@code DedicatedVaultCredentials} instance.
+   */
+  private static DedicatedVaultCredentials createUserpassCredentials(ParameterSet parameterSet) {
+    String vaultAddr = getRequiredOrFallback(parameterSet, VAULT_ADDR, "VAULT_ADDR");
+    String authPath = getOptionalOrFallback(parameterSet, AUTH_PATH, "VAULT_AUTH_PATH");
+    String namespace = getOptionalOrFallback(parameterSet, NAMESPACE, "VAULT_NAMESPACE");
+    String username = getRequiredOrFallback(parameterSet, USERNAME, "VAULT_USERNAME");
+    String password = getRequiredOrFallback(parameterSet, PASSWORD,
+            "VAULT_PASSWORD");
+
+    synchronized (DedicatedVaultCredentialsFactory.class) {
+      long currentTime = System.currentTimeMillis();
+      if (vaultToken != null && currentTime < vaultToken.getExpiryTime()) {
+        return new DedicatedVaultCredentials(vaultToken.getToken());
+      }
+
+      String token = authenticateWithUserpass(vaultAddr, authPath, namespace, username, password);
+
+      vaultToken = new VaultToken(token,
+              currentTime + lastTokenTTL * 1000 - TOKEN_TTL_BUFFER);
+      return new DedicatedVaultCredentials(token);
+    }
+
+  }
+
+  /**
+   * A class representing a Bearer Token and its expiration time.
+   */
+  private static class VaultToken {
+    private final String token;
+    private final long expiryTime;
+
+    VaultToken(String token, long expiryTime) {
+      this.token = token;
+      this.expiryTime = expiryTime;
+    }
+
+    public String getToken() {
+      return token;
+    }
+
+    public long getExpiryTime() {
+      return expiryTime;
+    }
+  }
+
+  /**
+   * Authenticates with the HashiCorp Vault using the Userpass authentication method.
+   * <p>
+   * This method sends a POST request to the Vault's Userpass authentication
+   * endpoint and retrieves a client token that can be used for subsequent
+   * API requests.
+   * </p>
+   *
+   * @param vaultAddr the base URL of the HashiCorp Vault instance
+   * (e.g., "https://vault.example.com"). Must not be null or empty.
+   * @param authPath  the path of the Userpass authentication mount in Vault
+   * (e.g., "userpass"). default value is "userpass".
+   * @param namespace the namespace for the Vault request.
+   * @param username  the username for Userpass authentication. Must not be null or empty.
+   * @param password  the password for Userpass authentication. Must not be null or empty.
+   * @return the client token as a {@link String}, which can be used for making authenticated
+   * requests to the Vault. Never null or empty if the request succeeds.
+   * @throws IllegalStateException if the authentication fails or if the Vault returns an error.
+   */
+
+  private static String authenticateWithUserpass(String vaultAddr, String authPath, String namespace, String username, String password) {
+    try {
+      // Construct the Userpass authentication endpoint
+      String authEndpoint = vaultAddr + "/v1/auth/" + authPath + "/login/" + username;
+      URL url = new URL(authEndpoint);
+      HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+      conn.setRequestMethod("POST");
+      conn.setRequestProperty("Content-Type", "application/json");
+      // Add the namespace header if provided
+      if (namespace!=null && !namespace.isEmpty()) {
+        conn.setRequestProperty("X-Vault-Namespace", namespace);
+      }
+      conn.setDoOutput(true);
+
+      // Construct the request payload with the password
+      String payload = String.format("{\"password\": \"%s\"}", password);
+      try (OutputStream os = conn.getOutputStream()) {
+        os.write(payload.getBytes(StandardCharsets.UTF_8));
+      }
+
+      if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
+        try (InputStream in = conn.getInputStream();
+             Scanner scanner = new Scanner(in, StandardCharsets.UTF_8.name())) {
+          scanner.useDelimiter("\\A");
+          String jsonResponse = scanner.hasNext() ? scanner.next() : "";
+
+          // Parse the JSON response to extract the client token and TTL
+          OracleJsonObject response = new OracleJsonFactory()
+                  .createJsonTextValue(new ByteArrayInputStream(jsonResponse.getBytes(StandardCharsets.UTF_8)))
+                  .asJsonObject();
+
+          // Extract and cache the token's TTL
+          lastTokenTTL = response.getObject("auth").getLong("lease_duration");
+          // Return the client token
+          return response.getObject("auth").getString("client_token");
+        }
+      } else {
+        throw new IllegalStateException("Failed to authenticate with Userpass. HTTP=" + conn.getResponseCode());
+      }
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to authenticate using Userpass", e);
+    }
+  }
 }

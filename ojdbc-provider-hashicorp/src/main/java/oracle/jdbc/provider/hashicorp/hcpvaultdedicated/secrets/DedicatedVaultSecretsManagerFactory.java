@@ -80,7 +80,31 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
    */
   public static final Parameter<String> VAULT_TOKEN = Parameter.create(REQUIRED);
 
-  public static final Parameter<String> FIELD_NAME = Parameter.create();
+  /**
+   *  The field name for extracting a specific value from the JSON. Required.
+   */
+  public static final Parameter<String> FIELD_NAME = Parameter.create(REQUIRED);
+
+  /**
+   * The username for Userpass authentication. Required for Userpass method.
+   */
+  public static final Parameter<String> USERNAME = Parameter.create(REQUIRED);
+
+  /**
+   *  The password for Userpass authentication. Required for Userpass method.
+   */
+  public static final Parameter<String> PASSWORD = Parameter.create(REQUIRED);
+
+  /**
+   *  The path for Userpass authentication. Optional.
+   */
+  public static final Parameter<String> AUTH_PATH = Parameter.create();
+
+  /**
+   *  The namespace for the Vault API request. Optional.
+   */
+  public static final Parameter<String> NAMESPACE = Parameter.create();
+
 
   private static final OracleJsonFactory JSON_FACTORY = new OracleJsonFactory();
 
@@ -101,15 +125,12 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
     String secretPath = parameterSet.getRequired(SECRET_PATH);
     String vaultAddr = getRequiredOrFallback(parameterSet, VAULT_ADDR, "VAULT_ADDR");
 
-    if (vaultAddr == null || vaultAddr.isEmpty()) {
-      throw new IllegalStateException("Vault address not found in parameters, system properties, or environment variables");
+    if (credentials.getVaultToken() != null) {
+      String secretString = fetchSecretFromVaultWithToken(vaultAddr + secretPath, credentials.getVaultToken());
+      return Resource.createPermanentResource(parseSecretJson(secretString, secretPath), true);
     }
 
-    String secretString = fetchSecretFromVault(vaultAddr + secretPath, credentials.getVaultToken());
-
-    return Resource.createPermanentResource(
-            parseSecretJson(secretString, secretPath),
-            true);
+    throw new IllegalStateException("Invalid credentials: Vault token is missing.");
   }
 
   /**
@@ -121,7 +142,7 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
    * @return The raw secret as a JSON string.
    * @throws IllegalArgumentException If there is an error during the Vault request.
    */
-  private static String fetchSecretFromVault(String vaultUrl, String token) {
+  private static String fetchSecretFromVaultWithToken(String vaultUrl, String token) {
     try {
       URL url = new URL(vaultUrl);
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();

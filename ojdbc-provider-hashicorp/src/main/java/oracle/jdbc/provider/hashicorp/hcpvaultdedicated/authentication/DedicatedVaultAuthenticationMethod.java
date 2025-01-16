@@ -51,5 +51,17 @@ public enum DedicatedVaultAuthenticationMethod {
    * environment variables, or system properties.
    * </p>
    */
-  VAULT_TOKEN
+  VAULT_TOKEN,
+
+  /**
+   * Authentication using the Userpass method.
+   * <p>
+   * The Userpass method allows authentication using a username and password.
+   * It is suitable for scenarios where user credentials are managed directly
+   * by Vault. For more information, see the HashiCorp Vault documentation:
+   * <a href="https://developer.hashicorp.com/vault/api-docs/auth/userpass">
+   * Userpass Authentication API</a>.
+   * </p>
+   */
+  USERPASS
 }

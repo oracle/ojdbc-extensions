@@ -36,13 +36,17 @@ The HashiCorp Vault Providers support two types of Vaults: **HCP Vault Dedicated
 Each type has its own authentication method uses specific parameters. Choose the method that matches the type of Vault you are using.
 The provider searches for these parameters in the following locations in a predefined sequence:
 
-1. Explicitly provided in the application code(passed as parameters)
+1. Explicitly provided in the application code (passed as parameters)
 2. System properties
 3. Environment variables
 
 ### HCP Vault Dedicated
 
-Authentication for the **HCP Vault Dedicated** uses token-based authentication. The provider searches for the following parameters:
+Authentication for the **HCP Vault Dedicated** supports two methods:
+
+#### Token-based Authentication
+
+The provider searches for the following parameters:
 
 <table>
 <thead>
@@ -66,6 +70,52 @@ Authentication for the **HCP Vault Dedicated** uses token-based authentication. 
 </tbody>
 </table>
 
+Once authenticated, the `client_token` generated from the `Userpass` method is cached and reused until it expires.
+This minimizes API calls to the Vault and enhances performance.
+
+For more information, visit the official documentation: [Userpass Authentication](https://developer.hashicorp.com/vault/api-docs/auth/userpass).
+
+#### Userpass Authentication
+
+The provider searches for the following parameters:
+
+<table>
+<thead>
+<tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>VAULT_ADDR</code></td>
+<td>The URL of the HashiCorp Vault instance (e.g., <code>https://vault-dedicated.example.com:8200</code>)</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>VAULT_AUTH_PATH</code></td>
+<td>The authentication path in the Vault (default: <code>userpass</code>)</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>VAULT_NAMESPACE</code></td>
+<td>The namespace in the Vault (if applicable)</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>VAULT_USERNAME</code></td>
+<td>The username for the Userpass method</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>VAULT_PASSWORD</code></td>
+<td>The password for the Userpass method</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+
 ### HCP Vault Secrets
 
 Authentication for the **HCP Vault Secrets** uses the OAuth 2.0 Client Credentials flow.
@@ -73,6 +123,8 @@ Authentication for the **HCP Vault Secrets** uses the OAuth 2.0 Client Credentia
 The `CLIENT_ID` and `CLIENT_SECRET` are used to obtain a Bearer token for authentication,
 the Bearer token is then used for making API calls to retrieve secrets from HCP Vault Secrets.
 Once authenticated, the secrets can be retrieved using the HashiCorp Vault API.
+
+The generated token is cached and reused until it expires, minimizing API calls to the HCP Vault Secrets.
 
 Secrets can be retrieved from the following API endpoint:  
 `https://api.cloud.hashicorp.com/secrets/2023-11-28/organizations/$HCP_ORG_ID/projects/$HCP_PROJECT_ID/apps/$APP_NAME/secrets`

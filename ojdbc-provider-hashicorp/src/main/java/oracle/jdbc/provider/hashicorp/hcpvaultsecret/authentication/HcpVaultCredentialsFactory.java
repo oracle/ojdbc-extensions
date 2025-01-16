@@ -55,8 +55,8 @@ import static oracle.jdbc.provider.util.ParameterUtil.getRequiredOrFallback;
  */
 public final class HcpVaultCredentialsFactory implements ResourceFactory<HcpVaultCredentials> {
 
-  // 5 minutes buffer for token expiration (in ms)
-  private static final long TOKEN_TTL_BUFFER = 300000;
+  // 1 minutes buffer for token expiration (in ms)
+  private static final long TOKEN_TTL_BUFFER = 60_000;
   private static volatile BearerToken bearerToken;
 
   /**
