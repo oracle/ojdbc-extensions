@@ -29,7 +29,7 @@ public class AwsS3ConfigurationProvider extends OracleConfigurationJsonProvider 
 
         URI uri = null;
         try {
-            uri = new URI(s3Url);
+            uri = getURI(s3Url);
         } catch (URISyntaxException uriSyntaxException) {
             throw new SQLException(uriSyntaxException);
         }
@@ -52,5 +52,12 @@ public class AwsS3ConfigurationProvider extends OracleConfigurationJsonProvider 
     @Override
     public String getType() {
         return "awss3";
+    }
+
+    private URI getURI(String s3Url) throws URISyntaxException {
+        if (!s3Url.startsWith("s3://")) {
+            s3Url = "s3://" + s3Url;
+        }
+        return new URI(s3Url);
     }
 }

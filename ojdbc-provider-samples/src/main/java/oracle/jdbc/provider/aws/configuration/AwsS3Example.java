@@ -44,15 +44,28 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+/**
+ * A standalone example that configures Oracle JDBC to be provided with the
+ * connection properties retrieved from AWS S3.
+ */
 public class AwsS3Example {
   private static String url;
+
+  /**
+   * <p>
+   * A simple example to retrieve connection properties from AWS S3.
+   * </p><p>
+   * For the default authentication, the only required local configuration is
+   * to have a valid AWS Config in ~/.aws/config and ~/.aws/credentials.
+   * </p>
+   * @param args the command line arguments
+   * @throws SQLException if an error occurs during the database calls
+   */
   public static void main(String[] args) throws SQLException {
 
     // Sample default URL if non present
     if (args.length == 0) {
-//      url = "jdbc:oracle:thin:@config-awss3://s3://{bucket-name}/{key-name}";
-      url = "jdbc:oracle:thin:@config-awss3://s3://tinglwan-general-bucket/folder1/payload_ojdbc_adb_aws_secret.json";
-//      url = "jdbc:oracle:thin:@config-file:///Users/tinglwang/Notes/ojdbc-plugins/ociobject/payload_ojdbc_wallet_location_base64_sso.json";
+      url = "jdbc:oracle:thin:@config-awss3://{bucket-name}/{key-name}";
     } else {
       url = args[0];
     }
