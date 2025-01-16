@@ -50,5 +50,11 @@ public enum DedicatedVaultTestProperty {
 
   VAULT_TOKEN,
 
-  VAULT_ADDR
+  VAULT_ADDR,
+
+  VAULT_USERNAME,
+
+  VAULT_PASSWORD,
+
+  VAULT_NAMESPACE
 }

@@ -102,6 +102,53 @@ public class DedicatedVaultConfigurationProviderTest {
   }
 
   /**
+   * Verifies if Dedicated Vault Configuration Provider works with TOKEN-based
+   * authentication.
+   * Without the key option.
+   */
+  @Test
+  public void testUserPassAuthenticationWithoutKeyOption() throws SQLException {
+    String location =
+            composeUrl(TestProperties.getOrAbort(DedicatedVaultTestProperty.DEDICATED_VAULT_SECRET_PATH),
+                    "VAULT_ADDR="+TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_ADDR),
+                    "VAULT_USERNAME="+TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_USERNAME),
+                    "VAULT_PASSWORD="+TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_PASSWORD),
+                    "VAULT_NAMESPACE="+TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_NAMESPACE),
+                    "authentication=userpass");
+
+
+    Properties properties = PROVIDER.getConnectionProperties(location);
+
+    assertTrue(properties.containsKey("URL"), "Contains property URL");
+    assertTrue(properties.containsKey("user"), "Contains property user");
+    assertTrue(properties.containsKey("password"), "Contains property password");
+  }
+
+  /**
+   * Verifies if Dedicated Vault Configuration Provider works with TOKEN-based
+   * authentication.
+   * With the key option.
+   */
+  @Test
+  public void testUserPassAuthenticationWithKeyOption() throws SQLException {
+    String location =
+            composeUrl(TestProperties.getOrAbort(DedicatedVaultTestProperty.DEDICATED_VAULT_SECRET_PATH_WITH_MULTIPLE_KEYS),
+                    "key="+TestProperties.getOrAbort(DedicatedVaultTestProperty.KEY),
+                    "VAULT_ADDR="+TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_ADDR),
+                    "VAULT_USERNAME="+TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_USERNAME),
+                    "VAULT_PASSWORD="+TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_PASSWORD),
+                    "VAULT_NAMESPACE="+TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_NAMESPACE),
+                    "authentication=userpass");
+
+
+    Properties properties = PROVIDER.getConnectionProperties(location);
+
+    assertTrue(properties.containsKey("URL"), "Contains property URL");
+    assertTrue(properties.containsKey("user"), "Contains property user");
+    assertTrue(properties.containsKey("password"), "Contains property password");
+  }
+
+  /**
    * Composes a full URL from a base URL and query options.
    */
   private static String composeUrl(String baseUrl, String... options) {
