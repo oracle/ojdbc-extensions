@@ -26,7 +26,7 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-aws</artifactId>
-  <version>1.2.0</version>
+  <version>1.0.2</version>
 </dependency>
 ```
 
@@ -47,11 +47,19 @@ The default credentials provider chain searches for credentials in one of the fo
 6. Amazon EC2 instance IAM role-provided credentials
 
 ## AWS S3 Config Provider
-The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-awss3:` to be able to identify that the configuration parameters should be loaded using AWS S3. Users only need to indicate the S3 URI of the object that contains the JSON payload, with the following syntax:
+The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-awss3:` to be able to identify that the configuration parameters should be loaded using AWS S3.
+Users only need to indicate the S3 URI of the object that contains the JSON payload.
 
+A URL with either of the following formats is valid:
 <pre>
-jdbc:oracle:thin:@config-awass3://{s3-uri}
+jdbc:oracle:thin:@config-awss3://{S3-URI}
 </pre>
+or
+<pre>
+jdbc:oracle:thin:@config-aws{S3-URI}
+</pre>
+
+The {S3-URI} can be obtained from the Amazon S3 console and follows this naming convention: s3://bucket-name/file-name.
 
 ### JSON Payload format
 

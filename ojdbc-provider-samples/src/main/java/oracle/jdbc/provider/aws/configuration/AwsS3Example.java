@@ -65,7 +65,12 @@ public class AwsS3Example {
 
     // Sample default URL if non present
     if (args.length == 0) {
-      url = "jdbc:oracle:thin:@config-awss3://{bucket-name}/{key-name}";
+      // A URL with either of the following formats is valid:
+      // "jdbc:oracle:thin:@config-awss3://{S3-URI}" or
+      // "jdbc:oracle:thin:@config-aws{S3-URI}".
+      // The {S3-URI} can be obtained from the Amazon S3 console and follows
+      // this naming convention: S3://bucket-name/file-name.
+      url = "jdbc:oracle:thin:@config-awss3://mybucket/myconfigfile.json";
     } else {
       url = args[0];
     }

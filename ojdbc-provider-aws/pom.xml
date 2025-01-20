@@ -5,13 +5,13 @@
   <name>Oracle JDBC AWS Providers</name>
 
   <artifactId>ojdbc-provider-aws</artifactId>
-  <version>1.0.1</version>
+  <version>1.0.2</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>com.oracle.database.jdbc</groupId>
     <artifactId>ojdbc-extensions</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
   </parent>
 
   <dependencyManagement>
@@ -38,14 +38,6 @@
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>s3</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>appconfig</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>appconfigdata</artifactId>
     </dependency>
     <dependency>
       <groupId>software.amazon.awssdk</groupId>

@@ -1,6 +1,7 @@
 package oracle.jdbc.provider.aws.configuration;
 
 import oracle.jdbc.driver.OracleConfigurationJsonProvider;
+import oracle.jdbc.util.OracleConfigurationCache;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 
@@ -52,6 +53,15 @@ public class AwsS3ConfigurationProvider extends OracleConfigurationJsonProvider 
     @Override
     public String getType() {
         return "awss3";
+    }
+
+    /**
+     * {@inheritDoc}
+     * @return cache of this provider which is used to store configuration
+     */
+    @Override
+    public OracleConfigurationCache getCache() {
+        return CACHE;
     }
 
     private URI getURI(String s3Url) throws URISyntaxException {

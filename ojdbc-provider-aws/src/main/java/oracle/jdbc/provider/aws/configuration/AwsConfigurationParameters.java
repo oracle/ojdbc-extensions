@@ -40,10 +40,7 @@ package oracle.jdbc.provider.aws.configuration;
 
 import oracle.jdbc.provider.aws.authentication.AwsAuthenticationMethod;
 import oracle.jdbc.provider.aws.authentication.AwsCredentialsFactory;
-import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
-
-import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
 
 public final class AwsConfigurationParameters {
 

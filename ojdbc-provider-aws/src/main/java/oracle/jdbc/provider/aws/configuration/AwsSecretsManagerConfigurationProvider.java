@@ -4,6 +4,7 @@ import oracle.jdbc.driver.OracleConfigurationJsonProvider;
 import oracle.jdbc.provider.aws.secrets.SecretsManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
+import oracle.jdbc.util.OracleConfigurationCache;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -56,5 +57,14 @@ public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationJ
   @Override
   public String getType() {
     return "awssecretsmanager";
+  }
+
+  /**
+   * {@inheritDoc}
+   * @return cache of this provider which is used to store configuration
+   */
+  @Override
+  public OracleConfigurationCache getCache() {
+    return CACHE;
   }
 }

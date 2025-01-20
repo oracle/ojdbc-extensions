@@ -38,17 +38,15 @@
 
 package oracle.jdbc.provider.aws.authentication;
 
+import oracle.jdbc.provider.aws.AwsResourceFactory;
 import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
-import software.amazon.awssdk.services.appconfigdata.AppConfigDataClient;
 
-import static java.lang.String.format;
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
-import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.SENSITIVE;
 
 /**
  * <p>
@@ -115,7 +113,7 @@ public final class AwsCredentialsFactory
   }
 
   /**
-   * Returns credentials resolved by {@link AppConfigDataClient}.
+   * Returns credentials resolved by {@link AwsResourceFactory}.
    * @return
    */
   private static AwsCredentials defaultCredentials() {
