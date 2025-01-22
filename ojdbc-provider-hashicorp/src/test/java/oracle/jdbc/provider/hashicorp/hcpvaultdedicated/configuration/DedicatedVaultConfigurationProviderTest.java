@@ -140,6 +140,27 @@ public class DedicatedVaultConfigurationProviderTest {
                     "VAULT_NAMESPACE="+TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_NAMESPACE),
                     "authentication=userpass");
 
+    Properties properties = PROVIDER.getConnectionProperties(location);
+
+    assertTrue(properties.containsKey("URL"), "Contains property URL");
+    assertTrue(properties.containsKey("user"), "Contains property user");
+    assertTrue(properties.containsKey("password"), "Contains property password");
+  }
+
+  /**
+   * Verifies if Dedicated Vault Configuration Provider works with AppRole
+   * authentication and a key option for secrets with multiple keys.
+   */
+  @Test
+  public void testAppRoleAuthenticationWithKeyOption() throws SQLException {
+    String location = composeUrl(
+            TestProperties.getOrAbort(DedicatedVaultTestProperty.DEDICATED_VAULT_SECRET_PATH_WITH_MULTIPLE_KEYS),
+            "key=" + TestProperties.getOrAbort(DedicatedVaultTestProperty.KEY),
+            "VAULT_ADDR=" + TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_ADDR),
+            "ROLE_ID=" + TestProperties.getOrAbort(DedicatedVaultTestProperty.ROLE_ID),
+            "VAULT_NAMESPACE="+TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_NAMESPACE),
+            "SECRET_ID=" + TestProperties.getOrAbort(DedicatedVaultTestProperty.SECRET_ID),
+            "authentication=approle");
 
     Properties properties = PROVIDER.getConnectionProperties(location);
 

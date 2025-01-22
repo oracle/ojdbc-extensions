@@ -56,5 +56,9 @@ public enum DedicatedVaultTestProperty {
 
   VAULT_PASSWORD,
 
-  VAULT_NAMESPACE
+  VAULT_NAMESPACE,
+
+  ROLE_ID,
+
+  SECRET_ID,
 }

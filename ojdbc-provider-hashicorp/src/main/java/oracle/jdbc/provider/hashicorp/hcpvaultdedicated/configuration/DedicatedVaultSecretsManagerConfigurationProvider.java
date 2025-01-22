@@ -68,11 +68,16 @@ public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleCon
                  DedicatedVaultSecretsManagerFactory.USERNAME)
               .addParameter("VAULT_PASSWORD",
                  DedicatedVaultSecretsManagerFactory.PASSWORD)
-              .addParameter("VAULT_AUTH_PATH",
-                 DedicatedVaultSecretsManagerFactory.AUTH_PATH,
-                 "userpass")
+              .addParameter("USERPASS_AUTH_PATH",
+                 DedicatedVaultSecretsManagerFactory.USERPASS_AUTH_PATH)
               .addParameter("VAULT_NAMESPACE",
                  DedicatedVaultSecretsManagerFactory.NAMESPACE)
+              .addParameter("ROLE_ID",
+                 DedicatedVaultSecretsManagerFactory.ROLE_ID)
+              .addParameter("SECRET_ID",
+                 DedicatedVaultSecretsManagerFactory.SECRET_ID)
+              .addParameter("APPROLE_AUTH_PATH",
+                 DedicatedVaultSecretsManagerFactory.APPROLE_AUTH_PATH)
             .build();
 
   @Override

@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2024 Oracle and/or its affiliates.
+ ** Copyright (c) 2025 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -38,43 +38,30 @@
 
 package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication;
 
+import oracle.jdbc.AccessToken;
+
 /**
- * Enumeration of authentication methods supported by Dedicated HashiCorp Vault.
+ * Represents a cached Vault authentication token with its expiration time.
+ * <p>
+ * The cached token contains the {@link AccessToken} and its expiration time.
+ * It is used to avoid redundant authentication requests by checking token validity
+ * before re-authenticating.
+ * </p>
  */
-public enum DedicatedVaultAuthenticationMethod {
+public class CachedToken {
+  private final AccessToken token;
+  private final long expirationTime;
 
-  /**
-   * Authentication using a Vault token.
-   * <p>
-   * The Vault token is a secure string used to authenticate API requests
-   * to the HashiCorp Vault. It can be provided through configuration parameters,
-   * environment variables, or system properties.
-   * </p>
-   */
-  VAULT_TOKEN,
+  public CachedToken(AccessToken token, long leaseDurationInSeconds) {
+    this.token = token;
+    this.expirationTime = System.currentTimeMillis() + (leaseDurationInSeconds * 1000);
+  }
 
-  /**
-   * Authentication using the Userpass method.
-   * <p>
-   * The Userpass method allows authentication using a username and password.
-   * It is suitable for scenarios where user credentials are managed directly
-   * by Vault. For more information, see the HashiCorp Vault documentation:
-   * <a href="https://developer.hashicorp.com/vault/api-docs/auth/userpass">
-   * Userpass Authentication API</a>.
-   * </p>
-   */
-  USERPASS,
+  public AccessToken getToken() {
+    return token;
+  }
 
-  /**
-   * Authentication using the AppRole method.
-   * <p>
-   * The AppRole method allows authentication using a Role ID and Secret ID.
-   * This method is designed for machine-to-machine authentication or
-   * service-based applications. For more information, see the HashiCorp Vault
-   * documentation:
-   * <a href="https://developer.hashicorp.com/vault/api-docs/auth/approle">
-   * AppRole Authentication API</a>.
-   * </p>
-   */
-  APPROLE
+  public boolean isValid(long currentTime, long ttlBuffer) {
+    return currentTime < expirationTime - ttlBuffer;
+  }
 }

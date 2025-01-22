@@ -91,6 +91,8 @@ public final class DedicatedVaultConfigurationParameters {
         return DedicatedVaultAuthenticationMethod.VAULT_TOKEN;
       case "USERPASS":
         return DedicatedVaultAuthenticationMethod.USERPASS;
+      case "APPROLE":
+        return DedicatedVaultAuthenticationMethod.APPROLE;
       default:
         throw new IllegalArgumentException(
                 "Unrecognized Hashicorp authentication value: " + value);

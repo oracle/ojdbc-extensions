@@ -70,11 +70,6 @@ The provider searches for the following parameters:
 </tbody>
 </table>
 
-Once authenticated, the `client_token` generated from the `Userpass` method is cached and reused until it expires.
-This minimizes API calls to the Vault and enhances performance.
-
-For more information, visit the official documentation: [Userpass Authentication](https://developer.hashicorp.com/vault/api-docs/auth/userpass).
-
 #### Userpass Authentication
 
 The provider searches for the following parameters:
@@ -115,6 +110,56 @@ The provider searches for the following parameters:
 </tr>
 </tbody>
 </table>
+
+Once authenticated, the `client_token` generated from the `Userpass` method is cached and reused until it expires.
+This minimizes API calls to the Vault and enhances performance.
+
+For more information, visit the official documentation: [Userpass Authentication](https://developer.hashicorp.com/vault/api-docs/auth/userpass).
+
+#### AppRole Authentication
+
+The provider searches for the following parameters:
+
+<table>
+<thead>
+<tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>VAULT_ADDR</code></td>
+<td>The URL of the HashiCorp Vault instance (e.g., <code>https://vault-dedicated.example.com:8200</code>)</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>APPROLE_AUTH_PATH</code></td>
+<td>The authentication path in the Vault for AppRole (default: <code>approle</code>)</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>VAULT_NAMESPACE</code></td>
+<td>The namespace in the Vault (if applicable)</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>ROLE_ID</code></td>
+<td>The role ID for the AppRole method</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>SECRET_ID</code></td>
+<td>The secret ID for the AppRole method</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+
+Once authenticated, the <code>client_token</code> generated from the <strong>AppRole</strong> method is cached and reused until it expires. This minimizes API calls to the Vault and enhances performance.
+
+For more information, visit the official documentation: <a href="https://developer.hashicorp.com/vault/api-docs/auth/approle">AppRole Authentication</a>.
 
 ### HCP Vault Secrets
 

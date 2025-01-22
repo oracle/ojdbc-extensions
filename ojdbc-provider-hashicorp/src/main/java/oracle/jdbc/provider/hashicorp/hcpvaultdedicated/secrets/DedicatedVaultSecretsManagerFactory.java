@@ -98,13 +98,40 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
   /**
    *  The path for Userpass authentication. Optional.
    */
-  public static final Parameter<String> AUTH_PATH = Parameter.create();
+  public static final Parameter<String> USERPASS_AUTH_PATH = Parameter.create();
 
   /**
    *  The namespace for the Vault API request. Optional.
    */
   public static final Parameter<String> NAMESPACE = Parameter.create();
 
+  /**
+   * The Role ID for AppRole authentication. Required for AppRole method.
+   * <p>
+   * The Role ID identifies the role to use for authentication. It must be
+   * configured in Vault as part of the AppRole authentication setup.
+   * </p>
+   */
+  public static final Parameter<String> ROLE_ID = Parameter.create();
+
+  /**
+   * The Secret ID for AppRole authentication. Required for AppRole method.
+   * <p>
+   * The Secret ID is a credential tied to a specific role and used in
+   * conjunction with the Role ID for AppRole authentication.
+   * </p>
+   */
+  public static final Parameter<String> SECRET_ID = Parameter.create();
+
+  /**
+   * The path for AppRole authentication. Optional.
+   * <p>
+   * This parameter specifies the path where the AppRole authentication
+   * method is enabled. The default path is "approle". If the method is
+   * enabled at a different path, that value should be provided here.
+   * </p>
+   */
+  public static final Parameter<String> APPROLE_AUTH_PATH = Parameter.create();
 
   private static final OracleJsonFactory JSON_FACTORY = new OracleJsonFactory();
 

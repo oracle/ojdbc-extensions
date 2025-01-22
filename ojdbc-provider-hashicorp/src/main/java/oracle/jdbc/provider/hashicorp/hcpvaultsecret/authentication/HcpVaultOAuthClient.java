@@ -38,6 +38,7 @@
 
 package oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication;
 
+import oracle.jdbc.driver.oauth.JsonWebToken;
 import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonObject;
 
@@ -97,10 +98,8 @@ public final class HcpVaultOAuthClient {
                   .createJsonTextValue(new ByteArrayInputStream(jsonResponse.getBytes(StandardCharsets.UTF_8)))
                   .asJsonObject();
 
-          String accessToken = response.getString("access_token");
-          lastTokenTTL = response.getLong("expires_in");
-
-          return accessToken;
+          System.out.println("fetching a new token "+ response.getString("access_token"));
+          return response.getString("access_token");
         }
       } else {
         throw new IllegalStateException("Failed to obtain HCP token. HTTP=" + conn.getResponseCode());
