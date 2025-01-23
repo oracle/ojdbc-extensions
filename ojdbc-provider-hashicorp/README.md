@@ -89,7 +89,7 @@ The provider searches for the following parameters:
 <td>Yes</td>
 </tr>
 <tr>
-<td><code>VAULT_AUTH_PATH</code></td>
+<td><code>USERPASS_AUTH_PATH</code></td>
 <td>The authentication path in the Vault (default: <code>userpass</code>)</td>
 <td>No</td>
 </tr>

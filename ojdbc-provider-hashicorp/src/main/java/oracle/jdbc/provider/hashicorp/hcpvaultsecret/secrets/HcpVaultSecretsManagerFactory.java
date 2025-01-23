@@ -42,7 +42,7 @@ import oracle.jdbc.provider.cache.CachedResourceFactory;
 import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.hashicorp.hcpvaultsecret.HcpVaultResourceFactory;
-import oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultCredentials;
+import oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultSecretToken;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 
@@ -110,7 +110,7 @@ public final class HcpVaultSecretsManagerFactory extends HcpVaultResourceFactory
   }
 
   @Override
-  public Resource<String> request(HcpVaultCredentials credentials, ParameterSet parameterSet) {
+  public Resource<String> request(HcpVaultSecretToken credentials, ParameterSet parameterSet) {
     String orgId = getRequiredOrFallback(parameterSet, ORG_ID, "ORG_ID");
     String projectId = getRequiredOrFallback(parameterSet, PROJECT_ID, "PROJECT_ID");
     String appName = getRequiredOrFallback(parameterSet, APP_NAME, "APP_NAME");

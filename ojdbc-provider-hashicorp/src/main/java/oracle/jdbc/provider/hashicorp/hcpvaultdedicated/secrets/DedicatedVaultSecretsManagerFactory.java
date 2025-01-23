@@ -42,7 +42,7 @@ import oracle.jdbc.provider.cache.CachedResourceFactory;
 import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.DedicatedVaultResourceFactory;
-import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultCredentials;
+import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultToken;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.sql.json.OracleJsonFactory;
@@ -148,7 +148,7 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
   }
 
   @Override
-  public Resource<String> request(DedicatedVaultCredentials credentials, ParameterSet parameterSet) {
+  public Resource<String> request(DedicatedVaultToken credentials, ParameterSet parameterSet) {
     String secretPath = parameterSet.getRequired(SECRET_PATH);
     String vaultAddr = getRequiredOrFallback(parameterSet, VAULT_ADDR, "VAULT_ADDR");
 

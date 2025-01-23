@@ -44,10 +44,10 @@ package oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication;
  * This class holds the API token obtained from the client_credentials OAuth2 flow.
  * </p>
  */
-public final class HcpVaultCredentials {
+public final class HcpVaultSecretToken {
   private final String hcpApiToken;
 
-  public HcpVaultCredentials(String hcpApiToken) {
+  public HcpVaultSecretToken(String hcpApiToken) {
     this.hcpApiToken = hcpApiToken;
   }
 

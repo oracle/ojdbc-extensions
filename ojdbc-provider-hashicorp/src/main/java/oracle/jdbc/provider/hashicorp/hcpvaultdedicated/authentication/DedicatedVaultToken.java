@@ -47,7 +47,7 @@ package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication;
  * requests to the Vault API.
  * </p>
  */
-public final class DedicatedVaultCredentials {
+public final class DedicatedVaultToken {
 
   private final String vaultToken;
 
@@ -58,7 +58,7 @@ public final class DedicatedVaultCredentials {
    * @param vaultToken the token used to authenticate API requests to
    * the Vault. Must not be null or empty.
    */
-  public DedicatedVaultCredentials(String vaultToken) {
+  public DedicatedVaultToken(String vaultToken) {
     this.vaultToken = vaultToken;
   }
   /**

@@ -65,15 +65,15 @@ import static oracle.jdbc.provider.util.ParameterUtil.getRequiredOrFallback;
 
 /**
  * <p>
- * Factory for creating {@link DedicatedVaultCredentials} objects for authenticating
+ * Factory for creating {@link DedicatedVaultToken} objects for authenticating
  * with Dedicated HashiCorp Vault.
  * </p><p>
  * This factory determines the appropriate authentication method based on the provided
  * {@link ParameterSet} and creates credentials accordingly.
  * </p>
  */
-public final class DedicatedVaultCredentialsFactory
-        implements ResourceFactory<DedicatedVaultCredentials> {
+public final class DedicatedVaultTokenFactory
+        implements ResourceFactory<DedicatedVaultToken> {
 
   /**
    * <p>
@@ -90,10 +90,10 @@ public final class DedicatedVaultCredentialsFactory
   // 1 minutes buffer for token expiration (in ms)
   private static final long TOKEN_TTL_BUFFER = 60_000;
 
-  private static final DedicatedVaultCredentialsFactory INSTANCE =
-          new DedicatedVaultCredentialsFactory();
+  private static final DedicatedVaultTokenFactory INSTANCE =
+          new DedicatedVaultTokenFactory();
 
-  private DedicatedVaultCredentialsFactory() {
+  private DedicatedVaultTokenFactory() {
   }
 
   /**
@@ -101,13 +101,13 @@ public final class DedicatedVaultCredentialsFactory
    *
    * @return a singleton instance. Not null.
    */
-  public static DedicatedVaultCredentialsFactory getInstance() {
+  public static DedicatedVaultTokenFactory getInstance() {
     return INSTANCE;
   }
 
   @Override
-  public Resource<DedicatedVaultCredentials> request(ParameterSet parameterSet) {
-    DedicatedVaultCredentials credentials = getCredential(parameterSet);
+  public Resource<DedicatedVaultToken> request(ParameterSet parameterSet) {
+    DedicatedVaultToken credentials = getCredential(parameterSet);
     return Resource.createPermanentResource(credentials, true);
   }
 
@@ -118,7 +118,7 @@ public final class DedicatedVaultCredentialsFactory
    *                     not be null.
    * @return the created {@code DedicatedVaultCredentials} instance.
    */
-  private static DedicatedVaultCredentials getCredential(ParameterSet parameterSet) {
+  private static DedicatedVaultToken getCredential(ParameterSet parameterSet) {
     // Check which authentication method is requested
     DedicatedVaultAuthenticationMethod method =
             parameterSet.getRequired(AUTHENTICATION_METHOD);
@@ -127,9 +127,9 @@ public final class DedicatedVaultCredentialsFactory
       case VAULT_TOKEN:
         return createTokenCredentials(parameterSet);
       case USERPASS:
-        return createScopedToken(parameterSet, method, DedicatedVaultCredentialsFactory::createUserpassToken);
+        return createScopedToken(parameterSet, method, DedicatedVaultTokenFactory::createUserpassToken);
       case APPROLE:
-        return createScopedToken(parameterSet, method, DedicatedVaultCredentialsFactory::createAppRoleToken);
+        return createScopedToken(parameterSet, method, DedicatedVaultTokenFactory::createAppRoleToken);
       default:
         throw new IllegalArgumentException(
                 "Unrecognized authentication method: " + method);
@@ -137,12 +137,12 @@ public final class DedicatedVaultCredentialsFactory
   }
 
   /**
-   * Creates {@link DedicatedVaultCredentials} using the Vault token.
+   * Creates {@link DedicatedVaultToken} using the Vault token.
    *
    * @param parameterSet the set of parameters containing the Vault token. Must not be null.
    * @return the created {@code DedicatedVaultCredentials} instance.
    */
-  private static DedicatedVaultCredentials createTokenCredentials(ParameterSet parameterSet) {
+  private static DedicatedVaultToken createTokenCredentials(ParameterSet parameterSet) {
     String vaultToken = getRequiredOrFallback(
             parameterSet,
             DedicatedVaultSecretsManagerFactory.VAULT_TOKEN,
@@ -153,11 +153,11 @@ public final class DedicatedVaultCredentialsFactory
       throw new IllegalStateException("Vault Token not found in parameters, " +
               "system properties, or environment variables");
     }
-    return new DedicatedVaultCredentials(vaultToken);
+    return new DedicatedVaultToken(vaultToken);
   }
 
   /**
-   * Creates or retrieves a cached {@link DedicatedVaultCredentials} using
+   * Creates or retrieves a cached {@link DedicatedVaultToken} using
    * a scoped token.
    *
    * @param parameterSet the set of parameters for the request.
@@ -165,13 +165,13 @@ public final class DedicatedVaultCredentialsFactory
    * @param generator the token generator function.
    * @return a {@code DedicatedVaultCredentials} instance.
    */
-  private static DedicatedVaultCredentials createScopedToken(
+  private static DedicatedVaultToken createScopedToken(
           ParameterSet parameterSet,
           DedicatedVaultAuthenticationMethod method,
           TokenGenerator generator
   ) {
     ParameterSet cacheKey = generateCacheKey(parameterSet, method);
-    synchronized (DedicatedVaultCredentialsFactory.class) {
+    synchronized (DedicatedVaultTokenFactory.class) {
       CachedToken cachedToken = tokenCache.get(cacheKey);
       long currentTime = System.currentTimeMillis();
 
@@ -183,7 +183,7 @@ public final class DedicatedVaultCredentialsFactory
       CachedToken validCachedToken = tokenCache.get(cacheKey);
       if (validCachedToken.getToken() instanceof OpaqueAccessToken) {
         OpaqueAccessToken opaqueToken = (OpaqueAccessToken) validCachedToken.getToken();
-        return new DedicatedVaultCredentials(opaqueToken.token().get());
+        return new DedicatedVaultToken(opaqueToken.token().get());
       } else {
         throw new IllegalStateException("Cached token is not an instance of OpaqueAccessToken");
       }

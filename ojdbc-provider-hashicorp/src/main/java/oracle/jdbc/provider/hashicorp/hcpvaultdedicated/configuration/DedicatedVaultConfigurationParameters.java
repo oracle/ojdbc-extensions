@@ -39,7 +39,7 @@
 package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.configuration;
 
 import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultAuthenticationMethod;
-import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultCredentialsFactory;
+import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultTokenFactory;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 
 /**
@@ -71,7 +71,7 @@ public final class DedicatedVaultConfigurationParameters {
             // The parameter name is "AUTHENTICATION"
             "AUTHENTICATION",
             // Tied to HashicorpCredentialsFactory.AUTHENTICATION_METHOD
-            DedicatedVaultCredentialsFactory.AUTHENTICATION_METHOD,
+            DedicatedVaultTokenFactory.AUTHENTICATION_METHOD,
             // Default value if none is specified:
             DedicatedVaultAuthenticationMethod.VAULT_TOKEN,
             DedicatedVaultConfigurationParameters::parseAuthentication)

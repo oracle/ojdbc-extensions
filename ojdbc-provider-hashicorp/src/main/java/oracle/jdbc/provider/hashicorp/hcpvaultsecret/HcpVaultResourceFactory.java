@@ -40,15 +40,15 @@ package oracle.jdbc.provider.hashicorp.hcpvaultsecret;
 
 import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
-import oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultCredentials;
-import oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultCredentialsFactory;
+import oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultSecretToken;
+import oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultTokenFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 
 public abstract class HcpVaultResourceFactory<T> implements ResourceFactory<T> {
 
   @Override
   public final Resource<T> request(ParameterSet parameterSet) {
-    HcpVaultCredentials credentials = HcpVaultCredentialsFactory
+    HcpVaultSecretToken credentials = HcpVaultTokenFactory
       .getInstance()
       .request(parameterSet)
       .getContent();
@@ -62,5 +62,5 @@ public abstract class HcpVaultResourceFactory<T> implements ResourceFactory<T> {
   }
 
   public abstract Resource<T> request(
-          HcpVaultCredentials credentials, ParameterSet parameterSet);
+          HcpVaultSecretToken credentials, ParameterSet parameterSet);
 }

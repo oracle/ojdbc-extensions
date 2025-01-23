@@ -40,26 +40,24 @@ package oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication;
 
 import oracle.jdbc.AccessToken;
 import oracle.jdbc.driver.oauth.JsonWebToken;
-import oracle.jdbc.provider.cache.CachedResourceFactory;
 import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 
-import java.time.OffsetDateTime;
 import java.util.function.Supplier;
 
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
 import static oracle.jdbc.provider.util.ParameterUtil.getRequiredOrFallback;
 
 /**
- * A factory for creating {@link HcpVaultCredentials} objects for HCP Vault Secrets.
+ * A factory for creating {@link HcpVaultSecretToken} objects for HCP Vault Secrets.
  * <p>
  * This class implements the client_credentials flow for OAuth2 authentication, retrieving
  * an API token to interact with the HCP Vault Secrets API.
  * </p>
  */
-public final class HcpVaultCredentialsFactory implements ResourceFactory<HcpVaultCredentials> {
+public final class HcpVaultTokenFactory implements ResourceFactory<HcpVaultSecretToken> {
 
   /**
    * Parameter indicating the authentication method to use for HCP Vault Secrets.
@@ -76,26 +74,26 @@ public final class HcpVaultCredentialsFactory implements ResourceFactory<HcpVaul
    */
   public static final Parameter<String> CLIENT_SECRET = Parameter.create(REQUIRED);
 
-  private static final HcpVaultCredentialsFactory INSTANCE = new HcpVaultCredentialsFactory();
+  private static final HcpVaultTokenFactory INSTANCE = new HcpVaultTokenFactory();
 
   /**
    * Cached supplier for tokens.
    */
   private static Supplier<? extends AccessToken> cachedTokenSupplier;
 
-  private HcpVaultCredentialsFactory() {}
+  private HcpVaultTokenFactory() {}
 
-  public static HcpVaultCredentialsFactory getInstance() {
+  public static HcpVaultTokenFactory getInstance() {
     return INSTANCE;
   }
 
   @Override
-  public Resource<HcpVaultCredentials> request(ParameterSet parameterSet) {
-    HcpVaultCredentials credentials = getCredential(parameterSet);
+  public Resource<HcpVaultSecretToken> request(ParameterSet parameterSet) {
+    HcpVaultSecretToken credentials = getCredential(parameterSet);
     return Resource.createPermanentResource(credentials, true);
   }
 
-  private HcpVaultCredentials getCredential(ParameterSet parameterSet) {
+  private HcpVaultSecretToken getCredential(ParameterSet parameterSet) {
     HcpVaultAuthenticationMethod method = parameterSet.getRequired(AUTHENTICATION_METHOD);
 
     switch (method) {
@@ -106,9 +104,9 @@ public final class HcpVaultCredentialsFactory implements ResourceFactory<HcpVaul
     }
   }
 
-  private HcpVaultCredentials createClientCredentials(ParameterSet parameterSet) {
+  private HcpVaultSecretToken createClientCredentials(ParameterSet parameterSet) {
     if (cachedTokenSupplier == null) {
-      synchronized (HcpVaultCredentialsFactory.class) {
+      synchronized (HcpVaultTokenFactory.class) {
           cachedTokenSupplier = AccessToken.createJsonWebTokenCache(() -> {
             String clientId = getRequiredOrFallback(parameterSet, CLIENT_ID, "CLIENT_ID");
             String clientSecret = getRequiredOrFallback(parameterSet, CLIENT_SECRET, "CLIENT_SECRET");
@@ -119,14 +117,9 @@ public final class HcpVaultCredentialsFactory implements ResourceFactory<HcpVaul
         }
     }
 
-    // Get the cached token
     AccessToken cachedToken = cachedTokenSupplier.get();
-
-    // Cast to JsonWebToken to access token and expiration methods
     JsonWebToken jwt = (JsonWebToken) cachedToken;
-
-    // Return credentials using the token
-    return new HcpVaultCredentials(jwt.token().get());
+    return new HcpVaultSecretToken(jwt.token().get());
   }
 
 }

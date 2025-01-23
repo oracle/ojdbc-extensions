@@ -38,7 +38,6 @@
 
 package oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication;
 
-import oracle.jdbc.driver.oauth.JsonWebToken;
 import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonObject;
 
@@ -56,9 +55,6 @@ import java.util.Scanner;
  * </p>
  */
 public final class HcpVaultOAuthClient {
-
-  // Default TTL fallback in seconds
-  private static long lastTokenTTL = 3_600;
 
   private HcpVaultOAuthClient() {}
 
@@ -98,7 +94,6 @@ public final class HcpVaultOAuthClient {
                   .createJsonTextValue(new ByteArrayInputStream(jsonResponse.getBytes(StandardCharsets.UTF_8)))
                   .asJsonObject();
 
-          System.out.println("fetching a new token "+ response.getString("access_token"));
           return response.getString("access_token");
         }
       } else {
@@ -113,7 +108,4 @@ public final class HcpVaultOAuthClient {
     }
   }
 
-  public static long getLastTokenTTL() {
-    return lastTokenTTL;
-  }
 }

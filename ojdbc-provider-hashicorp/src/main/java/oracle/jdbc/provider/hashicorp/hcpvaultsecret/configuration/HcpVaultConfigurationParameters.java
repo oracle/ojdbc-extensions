@@ -39,7 +39,7 @@
 package oracle.jdbc.provider.hashicorp.hcpvaultsecret.configuration;
 
 import oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultAuthenticationMethod;
-import oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultCredentialsFactory;
+import oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultTokenFactory;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 
 /**
@@ -59,15 +59,15 @@ public final class HcpVaultConfigurationParameters {
     return builder
       .addParameter(
          "AUTHENTICATION",
-         HcpVaultCredentialsFactory.AUTHENTICATION_METHOD,
+         HcpVaultTokenFactory.AUTHENTICATION_METHOD,
          HcpVaultAuthenticationMethod.CLIENT_CREDENTIALS,
          HcpVaultConfigurationParameters::parseAuthMethod)
       .addParameter(
          "CLIENT_ID",
-         HcpVaultCredentialsFactory.CLIENT_ID)
+         HcpVaultTokenFactory.CLIENT_ID)
       .addParameter(
          "CLIENT_SECRET",
-         HcpVaultCredentialsFactory.CLIENT_SECRET);
+         HcpVaultTokenFactory.CLIENT_SECRET);
   }
 
   /**

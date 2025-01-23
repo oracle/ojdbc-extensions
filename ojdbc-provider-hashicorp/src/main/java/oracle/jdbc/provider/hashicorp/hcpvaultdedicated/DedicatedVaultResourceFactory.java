@@ -40,8 +40,8 @@ package oracle.jdbc.provider.hashicorp.hcpvaultdedicated;
 
 import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
-import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultCredentials;
-import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultCredentialsFactory;
+import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultToken;
+import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultTokenFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 
 /**
@@ -53,7 +53,7 @@ public abstract class DedicatedVaultResourceFactory<T> implements ResourceFactor
   @Override
   public final Resource<T> request(ParameterSet parameterSet) {
     // Retrieve the Vault credentials from the credentials factory
-    DedicatedVaultCredentials credentials = DedicatedVaultCredentialsFactory
+    DedicatedVaultToken credentials = DedicatedVaultTokenFactory
             .getInstance()
             .request(parameterSet)
             .getContent();
@@ -67,5 +67,5 @@ public abstract class DedicatedVaultResourceFactory<T> implements ResourceFactor
   }
 
   public abstract Resource<T> request(
-          DedicatedVaultCredentials credentials, ParameterSet parameterSet);
+          DedicatedVaultToken credentials, ParameterSet parameterSet);
 }
