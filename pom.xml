@@ -4,7 +4,7 @@
 
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-extensions</artifactId>
-  <version>${extensions-version}</version>
+  <version>1.0.2</version>
   <packaging>pom</packaging>
 
   <name>Extensions for the Oracle JDBC Driver</name>
@@ -37,7 +37,6 @@
     <mockito.version>4.11.0</mockito.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <extensions-version>1.0.2</extensions-version>
   </properties>
 
   <profiles>
@@ -63,6 +62,7 @@
     <module>ojdbc-provider-samples</module>
     <module>ojdbc-provider-opentelemetry</module>
     <module>ojdbc-provider-gcp</module>
+    <module>ojdbc-provider-jackson-oson</module>
   </modules>
 
   <dependencyManagement>
@@ -70,7 +70,7 @@
       <dependency>
         <groupId>com.oracle.database.jdbc</groupId>
         <artifactId>ojdbc-provider-common</artifactId>
-        <version>${extensions-version}</version>
+        <version>1.0.2</version>
       </dependency>
       <dependency>
         <groupId>com.oracle.database.jdbc</groupId>
@@ -95,9 +95,15 @@
         <scope>test</scope>
       </dependency>
       <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-params</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
         <groupId>com.oracle.database.jdbc</groupId>
         <artifactId>ojdbc-provider-common</artifactId>
-        <version>${extensions-version}</version>
+        <version>1.0.2</version>
         <classifier>tests</classifier>
         <type>test-jar</type>
         <scope>test</scope>

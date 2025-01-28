@@ -694,7 +694,7 @@ common set of parameters.
       </i></td>
     </tr>
     <tr>
-      <td>redirectUrl</td>
+      <td>redirectUri</td>
       <td>
       <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/reply-url">
       Redirect URL

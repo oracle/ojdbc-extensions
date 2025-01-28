@@ -11,11 +11,11 @@
     <parent>
       <groupId>com.oracle.database.jdbc</groupId>
       <artifactId>ojdbc-extensions</artifactId>
-      <version>${extensions-version}</version>
+      <version>1.0.2</version>
     </parent>
 
     <properties>
-        <opentelemetry.version>1.42.1</opentelemetry.version>
+        <opentelemetry.version>1.44.1</opentelemetry.version>
     </properties>
 
     <dependencies>
