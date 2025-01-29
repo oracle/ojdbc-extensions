@@ -41,21 +41,15 @@ package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication;
 import oracle.jdbc.driver.oauth.OpaqueAccessToken;
 import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
+import oracle.jdbc.provider.hashicorp.HttpUtil;
+import oracle.jdbc.provider.hashicorp.JsonUtil;
 import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.secrets.DedicatedVaultSecretsManagerFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetBuilder;
-import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonObject;
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
-import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.secrets.DedicatedVaultSecretsManagerFactory.*;
@@ -130,6 +124,8 @@ public final class DedicatedVaultTokenFactory
         return createScopedToken(parameterSet, method, DedicatedVaultTokenFactory::createUserpassToken);
       case APPROLE:
         return createScopedToken(parameterSet, method, DedicatedVaultTokenFactory::createAppRoleToken);
+      case GITHUB:
+        return createScopedToken(parameterSet, method, DedicatedVaultTokenFactory::createGitHubToken);
       default:
         throw new IllegalArgumentException(
                 "Unrecognized authentication method: " + method);
@@ -211,7 +207,14 @@ public final class DedicatedVaultTokenFactory
     return authenticateWithAppRole(vaultAddr, namespace, roleId, secretId,authPath);
   }
 
+  private static CachedToken createGitHubToken(ParameterSet parameterSet) {
+    String vaultAddr = getRequiredOrFallback(parameterSet, VAULT_ADDR, "VAULT_ADDR");
+    String githubToken = getRequiredOrFallback(parameterSet, GITHUB_TOKEN, "GITHUB_TOKEN");
+    String namespace = getOptionalOrFallback(parameterSet, NAMESPACE, "VAULT_NAMESPACE");
+    String github_auth_path = getOptionalOrFallback(parameterSet, GITHUB_AUTH_PATH, "GITHUB_AUTH_PATH");
 
+    return authenticateWithGitHub(vaultAddr, namespace, githubToken, github_auth_path);
+  }
 
   /**
    * Authenticates with the HashiCorp Vault using the Userpass authentication method.
@@ -222,7 +225,7 @@ public final class DedicatedVaultTokenFactory
    * </p>
    *
    * @param vaultAddr the base URL of the HashiCorp Vault instance
-   * (e.g., "https://vault.example.com"). Must not be null or empty.
+   * (e.g., "https://vault.example.com:8200"). Must not be null or empty.
    * @param authPath  the path of the Userpass authentication mount in Vault
    * (e.g., "userpass"). default value is "userpass".
    * @param namespace the namespace for the Vault request.
@@ -232,50 +235,25 @@ public final class DedicatedVaultTokenFactory
    * requests to the Vault. Never null or empty if the request succeeds.
    * @throws IllegalStateException if the authentication fails or if the Vault returns an error.
    */
-
-  private static CachedToken authenticateWithUserpass(String vaultAddr, String authPath
-          , String namespace, String username, String password) {
+  private static CachedToken authenticateWithUserpass(String vaultAddr, String authPath, String namespace, String username, String password) {
     try {
-      if(authPath == null || authPath.isEmpty()) {
+      if (authPath == null || authPath.isEmpty()) {
         authPath = "userpass";
       }
-      // Construct the Userpass authentication endpoint
       String authEndpoint = vaultAddr + "/v1/auth/" + authPath + "/login/" + username;
-      URL url = new URL(authEndpoint);
-      HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-      conn.setRequestMethod("POST");
-      conn.setRequestProperty("Content-Type", "application/json");
-      // Add the namespace header if provided
-      if (namespace != null && !namespace.isEmpty()) {
-        conn.setRequestProperty("X-Vault-Namespace", namespace);
-      }
-      conn.setDoOutput(true);
-
-      // Construct the request payload with the password
+      HttpURLConnection conn = HttpUtil.createConnection(authEndpoint, "POST",
+              "application/json",
+              null,
+              namespace);
       String payload = String.format("{\"password\": \"%s\"}", password);
-      try (OutputStream os = conn.getOutputStream()) {
-        os.write(payload.getBytes(StandardCharsets.UTF_8));
-      }
+      String jsonResponse = HttpUtil.sendPayloadAndGetResponse(conn, payload);
+      OracleJsonObject response = JsonUtil.parseJsonResponse(jsonResponse);
 
-      if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-        try (InputStream in = conn.getInputStream();
-             Scanner scanner = new Scanner(in, StandardCharsets.UTF_8.name())) {
-          scanner.useDelimiter("\\A");
-          String jsonResponse = scanner.hasNext() ? scanner.next() : "";
+      String clientToken = response.getObject("auth").getString("client_token");
+      long leaseDurationInSeconds = response.getObject("auth").getLong("lease_duration");
+      OffsetDateTime expiration = OffsetDateTime.now().plusSeconds(leaseDurationInSeconds);
 
-          // Parse the JSON response to extract the client token and TTL
-          OracleJsonObject response = new OracleJsonFactory()
-                  .createJsonTextValue(new ByteArrayInputStream(jsonResponse.getBytes(StandardCharsets.UTF_8)))
-                  .asJsonObject();
-
-          String clientToken = response.getObject("auth").getString("client_token");
-          long leaseDurationInSeconds = response.getObject("auth").getLong("lease_duration");
-          OffsetDateTime expiration = OffsetDateTime.now().plusSeconds(leaseDurationInSeconds);
-          return new CachedToken(OpaqueAccessToken.create(clientToken.toCharArray(), expiration), leaseDurationInSeconds);
-        }
-      } else {
-        throw new IllegalStateException("Failed to authenticate with Userpass. HTTP=" + conn.getResponseCode());
-      }
+      return new CachedToken(OpaqueAccessToken.create(clientToken.toCharArray(), expiration), leaseDurationInSeconds);
     } catch (Exception e) {
       throw new IllegalStateException("Failed to authenticate using Userpass", e);
     }
@@ -291,7 +269,7 @@ public final class DedicatedVaultTokenFactory
    * </p>
    *
    * @param vaultAddr The base URL of the HashiCorp Vault instance
-   *  (e.g., "https://vault.example.com"). Must not be null or empty.
+   *  (e.g., "https://vault.example.com:8200"). Must not be null or empty.
    * @param namespace The namespace for the Vault API request. Optional.
    * @param roleId The Role ID used for AppRole authentication. Must not be null or empty.
    * @param secretId The Secret ID used for AppRole authentication. Must not be null or empty.
@@ -300,51 +278,70 @@ public final class DedicatedVaultTokenFactory
    * @return A {@link CachedToken} containing the client token and its expiration details.
    * @throws IllegalStateException If authentication fails or if any required parameter is missing.
    */
-  private static CachedToken authenticateWithAppRole(String vaultAddr, String namespace,
-        String roleId, String secretId, String authPath) {
+  private static CachedToken authenticateWithAppRole(String vaultAddr, String namespace, String roleId, String secretId, String authPath) {
     try {
-      String payload = String.format("{\"role_id\":\"%s\", \"secret_id\":\"%s\"}", roleId, secretId);
-
-      if(authPath == null || authPath.isEmpty()) {
+      if (authPath == null || authPath.isEmpty()) {
         authPath = "approle";
       }
-      // Construct the authentication endpoint
-      String authEndpoint = vaultAddr + "/v1/auth/" + authPath + "/login" ;
-      HttpURLConnection conn = (HttpURLConnection) new URL(authEndpoint).openConnection();
-      conn.setRequestMethod("POST");
-      conn.setRequestProperty("Content-Type", "application/json");
-      if (namespace != null && !namespace.isEmpty()) {
-        conn.setRequestProperty("X-Vault-Namespace", namespace);
-      }
-      conn.setDoOutput(true);
+      String authEndpoint = vaultAddr + "/v1/auth/" + authPath + "/login";
+      HttpURLConnection conn = HttpUtil.createConnection(authEndpoint, "POST",
+              "application/json",
+              null,
+              namespace);
+      String payload = String.format("{\"role_id\":\"%s\", \"secret_id\":\"%s\"}", roleId, secretId);
+      String jsonResponse = HttpUtil.sendPayloadAndGetResponse(conn, payload);
+      OracleJsonObject response = JsonUtil.parseJsonResponse(jsonResponse);
 
-      try (OutputStream os = conn.getOutputStream()) {
-        os.write(payload.getBytes(StandardCharsets.UTF_8));
-      }
+      String clientToken = response.getObject("auth").getString("client_token");
+      long leaseDurationInSeconds = response.getObject("auth").getLong("lease_duration");
+      OffsetDateTime expiration = OffsetDateTime.now().plusSeconds(leaseDurationInSeconds);
 
-      if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-        try (Scanner scanner = new Scanner(conn.getInputStream(), StandardCharsets.UTF_8.name())) {
-          String jsonResponse = scanner.useDelimiter("\\A").next();
-
-          // Parse the JSON response to extract the client token and TTL
-          OracleJsonObject response = new OracleJsonFactory()
-                  .createJsonTextValue(new ByteArrayInputStream(jsonResponse.getBytes(StandardCharsets.UTF_8)))
-                  .asJsonObject();
-
-          String clientToken = response.getObject("auth").getString("client_token");
-          long leaseDurationInSeconds = response.getObject("auth").getLong("lease_duration");
-          OffsetDateTime expiration = OffsetDateTime.now().plusSeconds(leaseDurationInSeconds);
-
-          // Create and return a CachedToken
-          return new CachedToken(OpaqueAccessToken.create(clientToken.toCharArray(), expiration), leaseDurationInSeconds);
-        }
-      } else {
-        try (Scanner scanner = new Scanner(conn.getErrorStream(), StandardCharsets.UTF_8.name())) {
-          throw new IllegalStateException("Authentication failed: " + scanner.useDelimiter("\\A").next());
-        }
-      }
+      return new CachedToken(OpaqueAccessToken.create(clientToken.toCharArray(), expiration), leaseDurationInSeconds);
     } catch (Exception e) {
       throw new IllegalStateException("Failed to authenticate with AppRole", e);
+    }
+  }
+
+  /**
+   * Authenticates with the HashiCorp Vault using the GitHub authentication method.
+   * <p>
+   * This method sends a POST request to the Vault's GitHub authentication endpoint
+   * and retrieves a client token that can be used for subsequent API requests.
+   * The endpoint path is dynamic and depends on the provided {@code githubAuthPath},
+   * which defaults to "github" if not explicitly specified.
+   * </p>
+   *
+   * @param vaultAddr The base URL of the HashiCorp Vault instance
+   * (e.g., "https://vault.example.com:8200"). Must not be null or empty.
+   * @param namespace The namespace for the Vault API request. Optional, can be null or empty.
+   * @param githubToken The GitHub personal access token used for authentication. Must not be null or empty.
+   * @param githubAuthPath The path where the GitHub authentication method is enabled.
+   * Optional, defaults to "github" if not provided or empty.
+   * @return A {@link CachedToken} containing the client token and its expiration details.
+   * @throws IllegalStateException If authentication fails, the Vault returns an error,
+   * or the response does not contain the required fields.
+   */
+  private static CachedToken authenticateWithGitHub(String vaultAddr, String namespace, String githubToken, String githubAuthPath) {
+    try {
+      if (githubAuthPath == null || githubAuthPath.isEmpty()) {
+        githubAuthPath = "github";
+      }
+      String authEndpoint = vaultAddr + "/v1/auth/" + githubAuthPath + "/login";
+      HttpURLConnection conn = HttpUtil.createConnection(authEndpoint, "POST",
+              "application/json",
+              githubToken,
+              namespace);
+      String payload = String.format("{\"token\": \"%s\"}", githubToken);
+      String jsonResponse = HttpUtil.sendPayloadAndGetResponse(conn, payload);
+      OracleJsonObject response = JsonUtil.parseJsonResponse(jsonResponse);
+
+      String clientToken = response.getObject("auth").getString("client_token");
+      long leaseDurationInSeconds = response.getObject("auth").getLong("lease_duration");
+      OffsetDateTime expiration = OffsetDateTime.now().plusSeconds(leaseDurationInSeconds);
+
+      return new CachedToken(OpaqueAccessToken.create(clientToken.toCharArray(), expiration), leaseDurationInSeconds);
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to authenticate with GitHub", e);
     }
   }
 
@@ -392,6 +389,15 @@ public final class DedicatedVaultTokenFactory
         }
         keyBuilder.add("VAULT_USERNAME", USERNAME, username);
         keyBuilder.add("VAULT_PASSWORD", PASSWORD, password);
+        break;
+      }
+      case GITHUB: {
+        String githubToken = getRequiredOrFallback(parameterSet, GITHUB_TOKEN, "GITHUB_TOKEN");
+        String githubAuthPath = getOptionalOrFallback(parameterSet, GITHUB_AUTH_PATH, "GITHUB_AUTH_PATH");
+        if (githubAuthPath != null && !githubAuthPath.isEmpty()) {
+          keyBuilder.add("GITHUB_AUTH_PATH", GITHUB_AUTH_PATH, githubAuthPath);
+        }
+        keyBuilder.add("GITHUB_TOKEN", GITHUB_TOKEN, githubToken);
         break;
       }
       default: {

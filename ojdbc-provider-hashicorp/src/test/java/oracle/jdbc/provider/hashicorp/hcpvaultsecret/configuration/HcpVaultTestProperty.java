@@ -42,15 +42,15 @@ package oracle.jdbc.provider.hashicorp.hcpvaultsecret.configuration;
  * Enumeration of test properties for HCP Vault.
  */
 public enum HcpVaultTestProperty {
-  APP_NAME,
+  HCP_APP_NAME,
 
-  ORG_ID,
+  HCP_ORG_ID,
 
-  PROJECT_ID,
+  HCP_PROJECT_ID,
 
-  CLIENT_ID,
+  HCP_CLIENT_ID,
 
-  CLIENT_SECRET,
+  HCP_CLIENT_SECRET,
 
   SECRET_NAME,
 

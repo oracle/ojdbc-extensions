@@ -41,6 +41,7 @@ package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.secrets;
 import oracle.jdbc.provider.cache.CachedResourceFactory;
 import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
+import oracle.jdbc.provider.hashicorp.HttpUtil;
 import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.DedicatedVaultResourceFactory;
 import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultToken;
 import oracle.jdbc.provider.parameter.Parameter;
@@ -52,8 +53,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.Scanner;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
@@ -133,6 +132,28 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
    */
   public static final Parameter<String> APPROLE_AUTH_PATH = Parameter.create();
 
+  /**
+   * The GitHub personal access token. Required for GitHub authentication method.
+   * <p>
+   * This token is used to authenticate with the HashiCorp Vault via the
+   * GitHub authentication method. The token should be a valid GitHub
+   * personal access token with the necessary permissions configured in
+   * the Vault policy.
+   * </p>
+   */
+  public static final Parameter<String> GITHUB_TOKEN = Parameter.create(REQUIRED);
+
+  /**
+   * The path for GitHub authentication. Optional.
+   * <p>
+   * This parameter specifies the path where the GitHub authentication method
+   * is enabled. The default path is "github". If the GitHub authentication
+   * method is enabled at a custom path, provide this parameter with the
+   * appropriate value.
+   * </p>
+   */
+  public static final Parameter<String> GITHUB_AUTH_PATH = Parameter.create();
+
   private static final OracleJsonFactory JSON_FACTORY = new OracleJsonFactory();
 
   /**
@@ -171,27 +192,10 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
    */
   private static String fetchSecretFromVaultWithToken(String vaultUrl, String token) {
     try {
-      URL url = new URL(vaultUrl);
-      HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-      conn.setRequestMethod("GET");
-      conn.setRequestProperty("X-Vault-Token", token);
-      conn.setRequestProperty("Accept", "application/json");
-
-      if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
-        throw new IllegalStateException(
-                "Failed to fetch secret. HTTP error code: " + conn.getResponseCode());
-      }
-
-      try (InputStream in = conn.getInputStream();
-        Scanner scanner = new Scanner(in, UTF_8.name())) {
-          scanner.useDelimiter("\\A");
-          return scanner.hasNext() ? scanner.next() : "";
-      } finally {
-        conn.disconnect();
-      }
-    } catch (IOException e) {
-      throw new IllegalArgumentException(
-              "Failed to read secret from Vault at " + vaultUrl, e);
+      HttpURLConnection conn = HttpUtil.createConnection(vaultUrl, "GET", "application/json", token, null);
+      return HttpUtil.sendGetRequestAndGetResponse(conn);
+    } catch (Exception e) {
+      throw new IllegalArgumentException("Failed to read secret from Vault at " + vaultUrl, e);
     }
   }
 

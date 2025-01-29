@@ -67,12 +67,12 @@ public final class HcpVaultTokenFactory implements ResourceFactory<HcpVaultSecre
   /**
    * Parameter for the OAuth2 client ID. Required.
    */
-  public static final Parameter<String> CLIENT_ID = Parameter.create(REQUIRED);
+  public static final Parameter<String> HCP_CLIENT_ID = Parameter.create(REQUIRED);
 
   /**
    * Parameter for the OAuth2 client secret. Required.
    */
-  public static final Parameter<String> CLIENT_SECRET = Parameter.create(REQUIRED);
+  public static final Parameter<String> HCP_CLIENT_SECRET = Parameter.create(REQUIRED);
 
   private static final HcpVaultTokenFactory INSTANCE = new HcpVaultTokenFactory();
 
@@ -108,8 +108,8 @@ public final class HcpVaultTokenFactory implements ResourceFactory<HcpVaultSecre
     if (cachedTokenSupplier == null) {
       synchronized (HcpVaultTokenFactory.class) {
           cachedTokenSupplier = AccessToken.createJsonWebTokenCache(() -> {
-            String clientId = getRequiredOrFallback(parameterSet, CLIENT_ID, "CLIENT_ID");
-            String clientSecret = getRequiredOrFallback(parameterSet, CLIENT_SECRET, "CLIENT_SECRET");
+            String clientId = getRequiredOrFallback(parameterSet, HCP_CLIENT_ID, "HCP_CLIENT_ID");
+            String clientSecret = getRequiredOrFallback(parameterSet, HCP_CLIENT_SECRET, "HCP_CLIENT_SECRET");
 
             String rawToken = HcpVaultOAuthClient.fetchHcpAccessToken(clientId, clientSecret);
             return AccessToken.createJsonWebToken(rawToken.toCharArray());

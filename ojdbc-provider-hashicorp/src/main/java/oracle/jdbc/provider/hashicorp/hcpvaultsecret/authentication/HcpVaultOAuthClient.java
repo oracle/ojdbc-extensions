@@ -38,14 +38,10 @@
 
 package oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication;
 
-import oracle.sql.json.OracleJsonFactory;
+import oracle.jdbc.provider.hashicorp.HttpUtil;
+import oracle.jdbc.provider.hashicorp.JsonUtil;
 import oracle.sql.json.OracleJsonObject;
-
-import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.Scanner;
 
 /**
  * A client for performing OAuth2 operations with HCP Vault Secrets.
@@ -67,44 +63,27 @@ public final class HcpVaultOAuthClient {
    * @throws IllegalStateException if the token cannot be obtained.
    */
   public static String fetchHcpAccessToken(String clientId, String clientSecret) {
-    HttpURLConnection conn = null;
     try {
-      URL url = new URL("https://auth.idp.hashicorp.com/oauth/token");
-      conn = (HttpURLConnection) url.openConnection();
-      conn.setRequestMethod("POST");
-      conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-      conn.setDoOutput(true);
+      HttpURLConnection conn = HttpUtil.createConnection(
+              "https://auth.idp.hashicorp.com/oauth/token",
+              "POST",
+              "application/x-www-form-urlencoded",
+              null,
+              null
+      );
 
       String body = "grant_type=client_credentials"
               + "&client_id=" + clientId
               + "&client_secret=" + clientSecret
               + "&audience=https://api.hashicorp.cloud";
 
-      try (OutputStream os = conn.getOutputStream()) {
-        os.write(body.getBytes(StandardCharsets.UTF_8));
-      }
+      String jsonResponse = HttpUtil.sendPayloadAndGetResponse(conn, body);
 
-      if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-        try (InputStream in = conn.getInputStream();
-             Scanner scanner = new Scanner(in, StandardCharsets.UTF_8.name())) {
-          scanner.useDelimiter("\\A");
-          String jsonResponse = scanner.hasNext() ? scanner.next() : "";
+      OracleJsonObject response = JsonUtil.parseJsonResponse(jsonResponse);
+      return JsonUtil.extractField(response, "access_token");
 
-          OracleJsonObject response = new OracleJsonFactory()
-                  .createJsonTextValue(new ByteArrayInputStream(jsonResponse.getBytes(StandardCharsets.UTF_8)))
-                  .asJsonObject();
-
-          return response.getString("access_token");
-        }
-      } else {
-        throw new IllegalStateException("Failed to obtain HCP token. HTTP=" + conn.getResponseCode());
-      }
-    } catch (IOException e) {
+    } catch (Exception e) {
       throw new IllegalStateException("Failed to fetch HCP access token", e);
-    } finally {
-      if (conn != null) {
-        conn.disconnect();
-      }
     }
   }
 

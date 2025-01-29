@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2024 Oracle and/or its affiliates.
+ ** Copyright (c) 2025 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -36,58 +36,48 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.hashicorp.hcpvaultsecret.configuration;
+package oracle.jdbc.provider.hashicorp;
 
-import oracle.jdbc.driver.OracleConfigurationJsonProvider;
-import oracle.jdbc.provider.hashicorp.hcpvaultsecret.secrets.HcpVaultSecretsManagerFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.provider.parameter.ParameterSetParser;
-import oracle.jdbc.util.OracleConfigurationCache;
+import oracle.sql.json.OracleJsonFactory;
+import oracle.sql.json.OracleJsonObject;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
 
+/**
+ * Utility class for JSON parsing and extraction using Oracle JSON library.
+ */
+public class JsonUtil {
 
-public class HcpVaultSecretsManagerConfigurationProvider extends OracleConfigurationJsonProvider {
-
-  static final ParameterSetParser PARAMETER_SET_PARSER =
-    HcpVaultConfigurationParameters.configureBuilder(
-      ParameterSetParser.builder()
-        .addParameter("value", HcpVaultSecretsManagerFactory.SECRET_NAME)
-        .addParameter("HCP_ORG_ID", HcpVaultSecretsManagerFactory.HCP_ORG_ID)
-        .addParameter("HCP_PROJECT_ID", HcpVaultSecretsManagerFactory.HCP_PROJECT_ID)
-        .addParameter("HCP_APP_NAME", HcpVaultSecretsManagerFactory.HCP_APP_NAME)
-        .addParameter("KEY", HcpVaultSecretsManagerFactory.KEY))
-      .build();
-
-  @Override
-  public InputStream getJson(String secretName) {
-    final String valueField = "value";
-    Map<String, String> optionsWithAppName = new HashMap<>(options);
-    optionsWithAppName.put(valueField, secretName);
-
-    ParameterSet parameterSet = PARAMETER_SET_PARSER.parseNamedValues(optionsWithAppName);
-
-    String secretsJson = HcpVaultSecretsManagerFactory
-      .getInstance()
-      .request(parameterSet)
-      .getContent();
-
-    return new ByteArrayInputStream(secretsJson.getBytes(StandardCharsets.UTF_8));
+  /**
+   * Parses a JSON response string into an OracleJsonObject.
+   *
+   * @param jsonResponse the JSON response string to parse. Must not be null.
+   * @return the parsed OracleJsonObject. Never null.
+   * @throws IllegalStateException if parsing fails.
+   */
+  public static OracleJsonObject parseJsonResponse(String jsonResponse) {
+    try {
+      return new OracleJsonFactory()
+              .createJsonTextValue(new ByteArrayInputStream(jsonResponse.getBytes(StandardCharsets.UTF_8)))
+              .asJsonObject();
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to parse JSON response", e);
+    }
   }
 
-  @Override
-  public String getType() {
-    // The provider name that appears in the JDBC URL after "config-"
-    return "hcpvaultsecret";
+  /**
+   * Extracts a specific field from an {@link OracleJsonObject}.
+   *
+   * @param jsonObject The JSON object containing the field. Must not be null.
+   * @param fieldName  The name of the field to extract. Must not be null.
+   * @return The value of the field as a string. Never null.
+   * @throws IllegalStateException if the field does not exist or is not a string.
+   */
+  public static String extractField(OracleJsonObject jsonObject, String fieldName) {
+    if (jsonObject.containsKey(fieldName)) {
+      return jsonObject.getString(fieldName);
+    }
+    throw new IllegalStateException("Missing field '" + fieldName + "' in the response JSON.");
   }
-
-  @Override
-  public OracleConfigurationCache getCache() {
-    return CACHE;
-  }
-
 }

@@ -48,7 +48,18 @@ public enum HcpVaultAuthenticationMethod {
 
   /**
    * Authentication using client credentials via the OAuth2 client_credentials flow.
-   * This method retrieves an API token by providing a client ID and client secret.
-   */
+   * <p>
+   * This method requires the following:
+   * <ul>
+   *   <li>A <b>Client ID</b> provided by the HCP Vault console or associated
+   *      with an HCP Service Principal.
+   *   </li>
+   *   <li>A <b>Client Secret</b> corresponding to the Client ID, ensuring
+   *   secure access.
+   *   </li>
+   * </ul>
+   * By using these credentials, the method retrieves a short-lived API token
+   * by calling the HCP OAuth2 endpoint.
+   * </p>   */
   CLIENT_CREDENTIALS
 }

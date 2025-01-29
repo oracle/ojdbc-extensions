@@ -76,5 +76,17 @@ public enum DedicatedVaultAuthenticationMethod {
    * AppRole Authentication API</a>.
    * </p>
    */
-  APPROLE
+  APPROLE,
+
+  /**
+   * Authentication using the GitHub method.
+   * <p>
+   * The GitHub method allows authentication using a GitHub personal access token.
+   * This is particularly useful for applications or developers using GitHub
+   * as an identity provider for Vault. For more information, see:
+   * <a href="https://developer.hashicorp.com/vault/docs/auth/github">
+   * GitHub Authentication API</a>.
+   * </p>
+   */
+  GITHUB
 }

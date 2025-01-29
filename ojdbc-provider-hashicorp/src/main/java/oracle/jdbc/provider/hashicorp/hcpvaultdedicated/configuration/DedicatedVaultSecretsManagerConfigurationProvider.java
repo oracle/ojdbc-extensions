@@ -78,6 +78,10 @@ public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleCon
                  DedicatedVaultSecretsManagerFactory.SECRET_ID)
               .addParameter("APPROLE_AUTH_PATH",
                  DedicatedVaultSecretsManagerFactory.APPROLE_AUTH_PATH)
+              .addParameter("GITHUB_TOKEN",
+                 DedicatedVaultSecretsManagerFactory.GITHUB_TOKEN)
+              .addParameter("GITHUB_AUTH_PATH",
+                 DedicatedVaultSecretsManagerFactory.GITHUB_AUTH_PATH)
             .build();
 
   @Override

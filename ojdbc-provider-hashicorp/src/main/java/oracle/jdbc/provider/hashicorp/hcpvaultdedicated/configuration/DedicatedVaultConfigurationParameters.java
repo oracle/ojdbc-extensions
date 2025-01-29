@@ -93,6 +93,8 @@ public final class DedicatedVaultConfigurationParameters {
         return DedicatedVaultAuthenticationMethod.USERPASS;
       case "APPROLE":
         return DedicatedVaultAuthenticationMethod.APPROLE;
+      case "GITHUB":
+        return DedicatedVaultAuthenticationMethod.GITHUB;
       default:
         throw new IllegalArgumentException(
                 "Unrecognized Hashicorp authentication value: " + value);

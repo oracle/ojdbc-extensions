@@ -74,17 +74,17 @@ public final class HcpVaultSecretsManagerFactory extends HcpVaultResourceFactory
   /**
    * Parameter for the organization ID. Required.
    */
-  public static final Parameter<String> ORG_ID = Parameter.create(REQUIRED);
+  public static final Parameter<String> HCP_ORG_ID = Parameter.create(REQUIRED);
 
   /**
    * Parameter for the project ID. Required.
    */
-  public static final Parameter<String> PROJECT_ID = Parameter.create(REQUIRED);
+  public static final Parameter<String> HCP_PROJECT_ID = Parameter.create(REQUIRED);
 
   /**
    * Parameter for the application name. Required.
    */
-  public static final Parameter<String> APP_NAME = Parameter.create(REQUIRED);
+  public static final Parameter<String> HCP_APP_NAME = Parameter.create(REQUIRED);
 
   /**
    * Parameter for the secret name. Required.
@@ -111,9 +111,12 @@ public final class HcpVaultSecretsManagerFactory extends HcpVaultResourceFactory
 
   @Override
   public Resource<String> request(HcpVaultSecretToken credentials, ParameterSet parameterSet) {
-    String orgId = getRequiredOrFallback(parameterSet, ORG_ID, "ORG_ID");
-    String projectId = getRequiredOrFallback(parameterSet, PROJECT_ID, "PROJECT_ID");
-    String appName = getRequiredOrFallback(parameterSet, APP_NAME, "APP_NAME");
+    String orgId = getRequiredOrFallback(parameterSet, HCP_ORG_ID,
+            "HCP_ORG_ID");
+    String projectId = getRequiredOrFallback(parameterSet, HCP_PROJECT_ID,
+            "HCP_PROJECT_ID");
+    String appName = getRequiredOrFallback(parameterSet, HCP_APP_NAME,
+            "HCP_APP_NAME");
     String secretName = getRequiredOrFallback(parameterSet, SECRET_NAME, "SECRET_NAME");
 
     String hcpUrl = String.format(HCP_SECRETS_API_URL_FORMAT, orgId, projectId, appName, secretName);

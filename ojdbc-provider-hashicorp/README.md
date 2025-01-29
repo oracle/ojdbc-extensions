@@ -7,7 +7,7 @@ and HashiCorp Vault (HCP).
 <dl>
 <dt><a href="#hcp-vault-secrets-config-provider">HashiCorp Vault Secrets Config Provider</a></dt>
 <dd>Provides connection properties managed by the Vault Secrets service</dd>
-<dt><a href="#hcp-vault-dedicated-config-provider">HashiCorp Dedicated Vault Config Provider</a></dt>
+<dt><a href="#hcp-vault-dedicated-config-provider">HashiCorp Vault Dedicated Config Provider</a></dt>
 <dd>Provides connection properties managed by the Dedicated Vault service</dd>
 <dt><a href="#caching-configuration">Caching configuration</a></dt>
 <dd>Caching mechanism adopted by Centralized Config Providers</dd>
@@ -36,15 +36,19 @@ The HashiCorp Vault Providers support two types of Vaults: **HCP Vault Dedicated
 Each type has its own authentication method uses specific parameters. Choose the method that matches the type of Vault you are using.
 The provider searches for these parameters in the following locations in a predefined sequence:
 
-1. Explicitly provided in the application code (passed as parameters)
+1. Explicitly provided in the URL
 2. System properties
 3. Environment variables
 
 ### HCP Vault Dedicated
 
-Authentication for the **HCP Vault Dedicated** supports two methods:
+Authentication for the **HCP Vault Dedicated** offers various methods to suit different use cases,
+including token-based, userpass, AppRole, and GitHub authentication.
+Below is an overview of these methods:
 
 #### Token-based Authentication
+Token-based authentication is the simplest way to authenticate with HashiCorp Vault.
+It uses a static token provided by the Vault administrator, offering direct and straightforward access to the Vault's API.
 
 The provider searches for the following parameters:
 
@@ -71,6 +75,9 @@ The provider searches for the following parameters:
 </table>
 
 #### Userpass Authentication
+Userpass authentication is a method that uses a combination of a username and a password to authenticate against the Vault.
+It relies on the userpass authentication backend and can optionally include additional configuration parameters
+such as namespaces or custom authentication paths.
 
 The provider searches for the following parameters:
 
@@ -117,6 +124,8 @@ This minimizes API calls to the Vault and enhances performance.
 For more information, visit the official documentation: [Userpass Authentication](https://developer.hashicorp.com/vault/api-docs/auth/userpass).
 
 #### AppRole Authentication
+AppRole authentication is a method that relies on a role_id and a secret_id for secure authentication. It is based on the AppRole authentication backend in HashiCorp Vault,
+which allows entities to authenticate and obtain a `client_token` by providing these identifiers.
 
 The provider searches for the following parameters:
 
@@ -161,6 +170,49 @@ Once authenticated, the <code>client_token</code> generated from the <strong>App
 
 For more information, visit the official documentation: <a href="https://developer.hashicorp.com/vault/api-docs/auth/approle">AppRole Authentication</a>.
 
+#### GitHub Authentication
+GitHub authentication is a method that uses a personal access token to authenticate against the Vault.
+It relies on the github authentication backend and supports configuring a custom authentication path.
+
+The provider searches for the following parameters:
+
+<table>
+<thead>
+<tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>VAULT_ADDR</code></td>
+<td>The URL of the HashiCorp Vault instance (e.g., <code>https://vault-dedicated.example.com:8200</code>)</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>GITHUB_TOKEN</code></td>
+<td>The GitHub personal access token for authentication</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>GITHUB_AUTH_PATH</code></td> 
+<td>The authentication path for GitHub in the Vault (default: <code>github</code>)</td> 
+<td>No</td>
+</tr>
+<tr>
+<td><code>VAULT_NAMESPACE</code></td> 
+<td>The namespace in the Vault (if applicable)</td> 
+<td>No</td>
+</tr> 
+</tbody>
+</table>
+
+The `GITHUB` method allows authentication using a GitHub personal access token and supports
+configuration of a custom path for GitHub authentication.
+
+For more information, visit the official documentation: <a href="https://developer.hashicorp.com/vault/api-docs/auth/github">Github Authentication</a>.
+
 ### HCP Vault Secrets
 
 Authentication for the **HCP Vault Secrets** uses the OAuth 2.0 Client Credentials flow.
@@ -188,27 +240,27 @@ The provider searches for the following parameters:
 </thead>
 <tbody>
 <tr>
-<td><code>CLIENT_ID</code></td>
+<td><code>HCP_CLIENT_ID</code></td>
 <td>The client ID for OAuth 2.0 authentication</td>
 <td>Yes</td>
 </tr>
 <tr>
-<td><code>CLIENT_SECRET</code></td>
+<td><code>HCP_CLIENT_SECRET</code></td>
 <td>The client secret for OAuth 2.0 authentication</td>
 <td>Yes</td>
 </tr>
 <tr>
-<td><code>ORG_ID</code></td>
+<td><code>HCP_ORG_ID</code></td>
 <td>The organization ID associated with the Vault</td>
 <td>Yes</td>
 </tr>
 <tr>
-<td><code>PROJECT_ID</code></td>
+<td><code>HCP_PROJECT_ID</code></td>
 <td>The project ID associated with the Vault</td>
 <td>Yes</td>
 </tr>
 <tr>
-<td><code>APP_NAME</code></td>
+<td><code>HCP_APP_NAME</code></td>
 <td>The application name in HCP Vault Secrets</td>
 <td>Yes</td>
 </tr>
@@ -232,10 +284,10 @@ The `secret-path` refers to the exact location of the secret within the HCP Vaul
 The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-hcpvaultsecret://` to identify that the configuration parameters should be loaded using HCP Vault Secrets. Users need to indicate the secret name (`SECRET_NAME`) with the following syntax:
 
 <pre>
-jdbc:oracle:thin:@config-hcpvault://{secret-name}[?option1=value1&option2=value2...]
+jdbc:oracle:thin:@config-hcpvaultsecret://{secret-name}[?option1=value1&option2=value2...]
 </pre>
 
-The `app-name` refers to the name of the secret to retrieve from HCP Vault Secrets
+The `secret-name` refers to the name of the secret to retrieve from HCP Vault Secrets
 
 ### JSON Payload format
 
@@ -260,7 +312,7 @@ And the JSON Payload for the secret **test_config** stored in the HCP Vault Dedi
   "connect_descriptor": "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=adb.us-phoenix-1.oraclecloud.com))(connect_data=(service_name=xsxsxs_dbtest_medium.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))",
   "user": "scott",
   "password": {
-    "type": "hcpdedicatedvault",
+    "type": "hcpvaultdedicated",
     "value": "/v1/namespace/secret/data/password",
     "field_name": "db-password"
   },
@@ -295,9 +347,8 @@ And the JSON Payload for a secret stored within the application app_name in the 
   "connect_descriptor": "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=adb.us-phoenix-1.oraclecloud.com))(connect_data=(service_name=xsxsxs_dbtest_medium.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))",
   "user": "scott",
   "password": {
-    "type": "hcpvault",
-    "value": "app_name",
-    "secret_name": "db_password"
+    "type": "hcpvaultsecret",
+    "value": "secret-name"
   },
   "jdbc": {
     "oracle.jdbc.ReadTimeout": 1000,
@@ -340,7 +391,7 @@ For the JSON type of provider (HCP Vault Dedicated, HCP Vault Secrets, HTTP/HTTP
         - Base64 Encoded password (if base64)
         - GCP resource name (if gcpsecretmanager)
         - Secret path (if hcpvaultdedicated)
-        - Application name (if hcpvaultsecret)
+        - Secret name (if hcpvaultsecret)
         - Text
 - field_name (HCP Vault Dedicated only)
     - Mandatory

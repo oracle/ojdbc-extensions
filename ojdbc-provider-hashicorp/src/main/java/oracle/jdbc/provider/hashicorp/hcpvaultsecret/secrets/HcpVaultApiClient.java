@@ -38,15 +38,14 @@
 
 package oracle.jdbc.provider.hashicorp.hcpvaultsecret.secrets;
 
+import oracle.jdbc.provider.hashicorp.HttpUtil;
 import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonParser;
 import oracle.sql.json.OracleJsonValue;
 
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Scanner;
 
 /**
  * <p>
@@ -71,58 +70,36 @@ public final class HcpVaultApiClient {
    * @throws IllegalStateException If the HTTP request fails or the response
    * does not contain the required fields.
    */
-  static String fetchSecrets(String urlStr, String token) {
-    HttpURLConnection conn = null;
+  public static String fetchSecrets(String urlStr, String token) {
     try {
-      URL url = new URL(urlStr);
-      conn = (HttpURLConnection) url.openConnection();
-      conn.setRequestMethod("GET");
-      conn.setRequestProperty("Authorization", "Bearer " + token);
-      conn.setRequestProperty("Accept", "application/json");
+      HttpURLConnection conn = HttpUtil.createConnection(
+              urlStr,
+              "GET",
+              "application/json",
+              token, null
+      );
 
-      int statusCode = conn.getResponseCode();
-      if (statusCode != HttpURLConnection.HTTP_OK) {
-        throw new IllegalStateException(
-                "Failed to retrieve HCP secrets. HTTP status: " + statusCode
-        );
-      }
+      String jsonResponse = HttpUtil.sendGetRequestAndGetResponse(conn);
 
-      try (InputStream in = conn.getInputStream();
-           Scanner scanner = new Scanner(in, StandardCharsets.UTF_8.name())) {
-        String jsonResponse = scanner.useDelimiter("\\A").hasNext() ? scanner.next() : "";
+      OracleJsonFactory factory = new OracleJsonFactory();
+      ByteArrayInputStream jsonInputStream = new ByteArrayInputStream(
+              jsonResponse.getBytes(StandardCharsets.UTF_8));
+      OracleJsonParser parser = factory.createJsonTextParser(jsonInputStream);
 
-        OracleJsonFactory factory = new OracleJsonFactory();
-        ByteArrayInputStream jsonInputStream = new ByteArrayInputStream(
-                jsonResponse.getBytes(StandardCharsets.UTF_8));
-        OracleJsonParser parser = factory.createJsonTextParser(jsonInputStream);
-
-        OracleJsonValue value = null;
-
-        while (parser.hasNext()) {
-          OracleJsonParser.Event event = parser.next();
-          if (event == OracleJsonParser.Event.KEY_NAME && "value".equals(parser.getString())) {
-            parser.next();
-            value = parser.getValue();
-            break;
+      while (parser.hasNext()) {
+        if (parser.next() == OracleJsonParser.Event.KEY_NAME && "value".equals(parser.getString())) {
+          parser.next();
+          OracleJsonValue value = parser.getValue();
+          if (value.getOracleJsonType() == OracleJsonValue.OracleJsonType.STRING) {
+            return value.asJsonString().getString();
           }
+          throw new IllegalStateException("The 'value' field is not a string.");
         }
-
-        if (value == null) {
-          throw new IllegalStateException("Missing 'value' field in the response JSON.");
-        }
-
-        if (value.getOracleJsonType() == OracleJsonValue.OracleJsonType.STRING) {
-          return value.asJsonString().getString();
-        }
-
-        throw new IllegalStateException("The 'value' field is not a string.");
       }
-    } catch (IOException e) {
-      throw new IllegalArgumentException("Failed to call HCP secrets endpoint: " + urlStr, e);
-    } finally {
-      if (conn != null) {
-        conn.disconnect();
-      }
+      throw new IllegalStateException("Missing 'value' field in the response JSON.");
+
+    } catch (Exception e) {
+      throw new IllegalArgumentException("Failed to fetch HCP secrets from URL: " + urlStr, e);
     }
   }
 

@@ -63,11 +63,11 @@ public final class HcpVaultConfigurationParameters {
          HcpVaultAuthenticationMethod.CLIENT_CREDENTIALS,
          HcpVaultConfigurationParameters::parseAuthMethod)
       .addParameter(
-         "CLIENT_ID",
-         HcpVaultTokenFactory.CLIENT_ID)
+         "HCP_CLIENT_ID",
+         HcpVaultTokenFactory.HCP_CLIENT_ID)
       .addParameter(
-         "CLIENT_SECRET",
-         HcpVaultTokenFactory.CLIENT_SECRET);
+         "HCP_CLIENT_SECRET",
+         HcpVaultTokenFactory.HCP_CLIENT_SECRET);
   }
 
   /**

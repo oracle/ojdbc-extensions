@@ -61,4 +61,6 @@ public enum DedicatedVaultTestProperty {
   ROLE_ID,
 
   SECRET_ID,
+
+  GITHUB_TOKEN
 }

@@ -170,6 +170,27 @@ public class DedicatedVaultConfigurationProviderTest {
   }
 
   /**
+   * Verifies if Dedicated Vault Configuration Provider works with GitHub
+   * authentication and a key option for secrets with multiple keys.
+   */
+  @Test
+  public void testGithubAuthenticationWithKeyOption() throws SQLException {
+    String location = composeUrl(
+            TestProperties.getOrAbort(DedicatedVaultTestProperty.DEDICATED_VAULT_SECRET_PATH_WITH_MULTIPLE_KEYS),
+            "key=" + TestProperties.getOrAbort(DedicatedVaultTestProperty.KEY),
+            "VAULT_ADDR=" + TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_ADDR),
+            "GITHUB_TOKEN=" + TestProperties.getOrAbort(DedicatedVaultTestProperty.GITHUB_TOKEN),
+            "VAULT_NAMESPACE="+TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_NAMESPACE),
+            "authentication=github");
+
+    Properties properties = PROVIDER.getConnectionProperties(location);
+
+    assertTrue(properties.containsKey("URL"), "Contains property URL");
+    assertTrue(properties.containsKey("user"), "Contains property user");
+    assertTrue(properties.containsKey("password"), "Contains property password");
+  }
+
+  /**
    * Composes a full URL from a base URL and query options.
    */
   private static String composeUrl(String baseUrl, String... options) {
