@@ -84,18 +84,20 @@ public final class SecretsManagerFactory
     String secretName = parameterSet.getRequired(SECRET_NAME);
     String region = parameterSet.getOptional(REGION);
 
-    SecretsManagerClientBuilder builder = SecretsManagerClient.builder()
+    SecretsManagerClientBuilder builder = SecretsManagerClient
+        .builder()
         .credentialsProvider(() -> awsCredentials);
     if (region != null)
       builder.region(Region.of(region));
 
-    SecretsManagerClient client = builder.build();
-    GetSecretValueRequest request = GetSecretValueRequest.builder()
-        .secretId(secretName).build();
-    GetSecretValueResponse response = client.getSecretValue(request);
+    try (SecretsManagerClient client = builder.build()) {
+      GetSecretValueRequest request = GetSecretValueRequest.builder()
+          .secretId(secretName).build();
+      GetSecretValueResponse response = client.getSecretValue(request);
 
-    String secretString = response.secretString();
+      String secretString = response.secretString();
 
-    return Resource.createPermanentResource(secretString, true);
+      return Resource.createPermanentResource(secretString, true);
+    }
   }
 }
