@@ -38,20 +38,30 @@
 package oracle.jdbc.provider.aws.configuration;
 
 import oracle.jdbc.driver.OracleConfigurationJsonProvider;
+import oracle.jdbc.provider.aws.s3.S3Factory;
+import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.provider.parameter.ParameterSetParser;
 import oracle.jdbc.util.OracleConfigurationCache;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+
+import static oracle.jdbc.provider.aws.configuration.AwsConfigurationParameters.REGION;
+import static oracle.jdbc.provider.aws.s3.S3Factory.S3_URL;
 
 /**
  * A provider for JSON payload which contains configuration from AWS S3.
  * See {@link #getJson(String)} for the spec of the JSON payload.
  **/
 public class AwsS3ConfigurationProvider extends OracleConfigurationJsonProvider {
+    private static final ParameterSetParser PARAMETER_SET_PARSER =
+        AwsConfigurationParameters.configureBuilder(
+                ParameterSetParser.builder()
+                    .addParameter("s3_url", S3_URL, "")
+                    .addParameter("key", AwsConfigurationParameters.KEY)
+                    .addParameter("AWS_REGION", REGION))
+            .build();
 
     /**
      * {@inheritDoc}
@@ -63,28 +73,22 @@ public class AwsS3ConfigurationProvider extends OracleConfigurationJsonProvider 
      * @return JSON payload
      */
     @Override
-    public InputStream getJson(String s3Url) throws SQLException {
-
-        URI uri = null;
-        try {
-            uri = getURI(s3Url);
-        } catch (URISyntaxException uriSyntaxException) {
-            throw new SQLException(uriSyntaxException);
+    public InputStream getJson(String s3Url) {
+        // Appends "s3://" as the URL prefix if it is not already present
+        if (!s3Url.startsWith("s3://")) {
+            s3Url = "s3://" + s3Url;
         }
 
-        try (S3Client client = S3Client.builder().build()) {
+        // Add objectUrl to the "options" Map, so it can be parsed.
+        Map<String, String> optionsWithUrl = new HashMap<>(options);
+        optionsWithUrl.put("s3_url", s3Url);
 
-            String bucketName = uri.getHost();
-            String objectKey = uri.getPath()
-                    .substring(1);
+        ParameterSet parameters =
+            PARAMETER_SET_PARSER.parseNamedValues(optionsWithUrl);
 
-            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key(objectKey)
-                    .build();
-
-            return client.getObjectAsBytes(getObjectRequest).asInputStream();
-        }
+        return S3Factory.getInstance()
+            .request(parameters)
+            .getContent();
     }
 
     @Override
@@ -99,12 +103,5 @@ public class AwsS3ConfigurationProvider extends OracleConfigurationJsonProvider 
     @Override
     public OracleConfigurationCache getCache() {
         return CACHE;
-    }
-
-    private URI getURI(String s3Url) throws URISyntaxException {
-        if (!s3Url.startsWith("s3://")) {
-            s3Url = "s3://" + s3Url;
-        }
-        return new URI(s3Url);
     }
 }

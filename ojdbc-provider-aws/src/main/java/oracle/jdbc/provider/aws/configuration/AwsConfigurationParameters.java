@@ -39,6 +39,7 @@ package oracle.jdbc.provider.aws.configuration;
 
 import oracle.jdbc.provider.aws.authentication.AwsAuthenticationMethod;
 import oracle.jdbc.provider.aws.authentication.AwsCredentialsFactory;
+import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 
 public final class AwsConfigurationParameters {
@@ -47,6 +48,16 @@ public final class AwsConfigurationParameters {
    * Private constructor that should never be called: This class is a singleton.
    */
   private AwsConfigurationParameters() {}
+
+  /** Region where the resource is located. This is an optional parameter. */
+  public static final Parameter<String> REGION = Parameter.create();
+
+  /**
+   * Key of the object if the nested JSON object contains multiple datasource
+   * keys. This value is analogous to the prefixes in Azure App Config.
+   * This is an optional parameter.
+   */
+  public static final Parameter<String> KEY = Parameter.create();
 
   /**
    * Configures a {@code builder} to build a parser that recognizes the common

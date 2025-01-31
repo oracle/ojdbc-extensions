@@ -45,6 +45,9 @@ import oracle.jdbc.provider.parameter.ParameterSet;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 
+import java.time.Instant;
+import java.time.OffsetDateTime;
+
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
 
 /**
@@ -84,9 +87,18 @@ public final class AwsCredentialsFactory
   @Override
   public Resource<AwsCredentials> request(ParameterSet parameterSet) {
     AwsCredentials awsCredentials = getCredential(parameterSet);
-    // TODO: Access tokens expire. Does a TokenCredential internally cache one?
-    //   If so, then return an expiring resource.
-    return Resource.createPermanentResource(awsCredentials, true);
+
+    // If the token has expiration time, create an expiring resource
+    // with the expiration time.
+    // Otherwise, create a permanent resource.
+    if (awsCredentials.expirationTime().isPresent()) {
+      Instant expirationTime = awsCredentials.expirationTime().get();
+      return Resource.createExpiringResource(
+          awsCredentials,
+          expirationTime.atOffset(OffsetDateTime.now().getOffset()),true);
+    } else {
+      return Resource.createPermanentResource(awsCredentials, true);
+    }
   }
 
   /**
@@ -113,7 +125,6 @@ public final class AwsCredentialsFactory
 
   /**
    * Returns credentials resolved by {@link AwsResourceFactory}.
-   * @return
    */
   private static AwsCredentials defaultCredentials() {
     return DefaultCredentialsProvider

@@ -56,15 +56,15 @@ import java.util.Map;
 public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationJsonProvider {
 
   /**
-   * Parser that recognizes the named parameters which appear in the query
-   * section of a URL.
+   * Parser that recognizes the named parameters which appear in a URL,
+   * or a Json object.
    */
   static final ParameterSetParser PARAMETER_SET_PARSER =
       AwsConfigurationParameters.configureBuilder(
               ParameterSetParser.builder()
                   .addParameter("value", SecretsManagerFactory.SECRET_NAME)
-                  .addParameter("REGION", SecretsManagerFactory.REGION)
-                  .addParameter("key_name", SecretsManagerFactory.KEY_NAME))
+                  .addParameter("key", AwsConfigurationParameters.KEY)
+                  .addParameter("AWS_REGION", AwsConfigurationParameters.REGION))
           .build();
 
   /**

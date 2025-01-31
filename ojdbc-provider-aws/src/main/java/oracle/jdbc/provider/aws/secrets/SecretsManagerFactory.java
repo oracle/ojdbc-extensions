@@ -43,8 +43,6 @@ import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.sql.json.OracleJsonFactory;
-import oracle.sql.json.OracleJsonObject;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
@@ -52,11 +50,7 @@ import software.amazon.awssdk.services.secretsmanager.SecretsManagerClientBuilde
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
+import static oracle.jdbc.provider.aws.configuration.AwsConfigurationParameters.REGION;
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
 
 public final class SecretsManagerFactory
@@ -65,19 +59,6 @@ public final class SecretsManagerFactory
   /** The name of a secret. This is a required parameter. */
   public static final Parameter<String> SECRET_NAME =
       Parameter.create(REQUIRED);
-
-  /** The Region of a secret. This is an optional parameter. */
-  public static final Parameter<String> REGION =
-      Parameter.create();
-
-  /**
-   * The name of the key if the secret contains key-value pairs.
-   * This is an optional parameter.
-   * */
-  public static final Parameter<String> KEY_NAME =
-      Parameter.create();
-
-  private static final OracleJsonFactory JSON_FACTORY = new OracleJsonFactory();
 
   /**
    * The single instance of {@code CachedResourceFactory} for requesting key
@@ -102,7 +83,6 @@ public final class SecretsManagerFactory
 
     String secretName = parameterSet.getRequired(SECRET_NAME);
     String region = parameterSet.getOptional(REGION);
-    String key = parameterSet.getOptional(KEY_NAME);
 
     SecretsManagerClientBuilder builder = SecretsManagerClient.builder()
         .credentialsProvider(() -> awsCredentials);
@@ -115,28 +95,6 @@ public final class SecretsManagerFactory
     GetSecretValueResponse response = client.getSecretValue(request);
 
     String secretString = response.secretString();
-    if (key != null) {
-      // If key is provided, assume the secret contains key-value pairs
-      try {
-        try (InputStream secretInputStream =
-                 new ByteArrayInputStream(secretString.getBytes(UTF_8))) {
-
-          OracleJsonObject secretJsonObject = JSON_FACTORY
-              .createJsonTextValue(secretInputStream)
-              .asJsonObject();
-
-          if (secretJsonObject.containsKey(key)) {
-            secretString = secretJsonObject.getString(key);
-          } else {
-            throw new IllegalArgumentException(
-                "Failed to find key \"" + key + "\" in " + secretName);
-          }
-        }
-      } catch (IOException ioException) {
-        throw new IllegalArgumentException(
-            "Failed to read Secret: " + secretName, ioException);
-      }
-    }
 
     return Resource.createPermanentResource(secretString, true);
   }
