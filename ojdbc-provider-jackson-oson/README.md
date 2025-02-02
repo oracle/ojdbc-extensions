@@ -93,5 +93,7 @@ Usage Examples for Oracle Jackson OSON Provider Extensions can be found at [ojdb
 - **[AccessJsonColumnUsingPOJO](../ojdbc-provider-samples/src/main/java/oracle/jdbc/provider/oson/sample/AccessJsonColumnUsingPOJO.java)**: 
   Demonstrates how to use the Jackson OSON provider APIs to Serialize/Deserialize POJO and use JDBC
   to directly insert the OSON bytes.
+- **[NestedStructurePOJO](../ojdbc-provider-samples/src/main/java/oracle/jdbc/provider/oson/sample/NestedStructurePOJO.java)**:
+  Shows how to store and  retrieve Java objects in JSON Collection tables.  
 
 
