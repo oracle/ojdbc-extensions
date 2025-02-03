@@ -17,12 +17,13 @@ import javax.management.ObjectName;
 import javax.management.ReflectionException;
 
 import oracle.jdbc.TraceEventListener;
+import oracle.jdbc.provider.observability.configuration.ObservabilityConfiguration;
 import oracle.jdbc.spi.TraceEventListenerProvider;
 
 public class ObservabilityTraceEventListenerProvider implements TraceEventListenerProvider {
 
   private static final String PROVIDER_NAME = "observability-trace-event-listener-provider";
-  private static final String MBEAN_OBJECT_NAME = "com.oracle.jdbc.extension.opentelemetry:type=ObservabilityTraceEventListener";
+  private static final String MBEAN_OBJECT_NAME = "com.oracle.jdbc.extension.observability:type=ObservabilityConfiguration";
 
   private static final MBeanServer server = ManagementFactory.getPlatformMBeanServer();;
   private static ObjectName objectName;
@@ -39,23 +40,13 @@ public class ObservabilityTraceEventListenerProvider implements TraceEventListen
 
   @Override
   public TraceEventListener getTraceEventListener(Map<Parameter, CharSequence> map) {
-    ObservabilityTraceEventListener observabilityBean;
     try {
-      if (objectName != null && server.isRegistered(objectName)) {
-        observabilityBean = (ObservabilityTraceEventListener) server
-            .instantiate(ObservabilityTraceEventListener.class.getName());
-        return observabilityBean;
-      }
-    } catch (ReflectionException | MBeanException e) {
-      logger.log(Level.WARNING, "Could not retrieve MBean from server", e);
-    }
-    observabilityBean = new ObservabilityTraceEventListener();
-    try {
-      server.registerMBean(observabilityBean, objectName);
+      if (!server.isRegistered(objectName))
+      server.registerMBean(ObservabilityConfiguration.getInstance(), objectName);
     } catch (InstanceAlreadyExistsException | MBeanRegistrationException | NotCompliantMBeanException e) {
       logger.log(Level.WARNING, "Could not register MBean", e);
     }
-    return observabilityBean;
+    return new ObservabilityTraceEventListener();
   }
 
   @Override

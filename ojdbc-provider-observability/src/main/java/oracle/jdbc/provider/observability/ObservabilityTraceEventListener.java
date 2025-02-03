@@ -30,7 +30,7 @@ public class ObservabilityTraceEventListener implements TraceEventListener {
   public Object roundTrip(Sequence sequence, TraceContext traceContext, Object userContext) {
     EnumMap<Tracers, Object> currentUserContext = getCurrentUserContext(userContext);
     for (Tracers tracer : ObservabilityConfiguration.getInstance().getEnabledTracersSet()) {
-      Object newUserContext = tracer.getTracer().traceRoudtrip(sequence, traceContext, currentUserContext.get(tracer));
+      Object newUserContext = tracer.getTracer().traceRoundtrip(sequence, traceContext, currentUserContext.get(tracer));
       currentUserContext.put(tracer, newUserContext);
     }
     return currentUserContext;

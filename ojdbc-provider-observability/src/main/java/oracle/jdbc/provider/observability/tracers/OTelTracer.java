@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 
 import javax.security.auth.login.Configuration;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanContext;
@@ -29,6 +30,13 @@ public class OTelTracer implements ObservabilityTracer {
 
   private Tracer tracer;
 
+  public OTelTracer() {
+    this(GlobalOpenTelemetry.get().getTracer(OTelTracer.class.getName()));
+  }
+
+  public OTelTracer(Tracer tracer) {
+    this.tracer = tracer;
+  }
     // Number of parameters expected for each execution event
   private static final Map<JdbcExecutionEvent, Integer> EXECUTION_EVENTS_PARAMETERS = new EnumMap<JdbcExecutionEvent, Integer>(
       JdbcExecutionEvent.class) {
@@ -42,7 +50,7 @@ public class OTelTracer implements ObservabilityTracer {
   private static Logger logger = Logger.getLogger(OTelTracer.class.getName());
 
   @Override
-  public Object traceRoudtrip(Sequence sequence, TraceContext traceContext, Object userContext) {
+  public Object traceRoundtrip(Sequence sequence, TraceContext traceContext, Object userContext) {
 if (sequence == Sequence.BEFORE) {
       // Create the Span before the round-trip.
       final Span span = initAndGetSpan(traceContext, traceContext.databaseOperation());

@@ -8,16 +8,22 @@ import oracle.jdbc.provider.observability.ObservabilityTraceEventListener;
 
 public class ObservabilityConfiguration implements ObservabilityConfigurationMBean {
 
-  private final ReentrantLock observabilityConfiguraitonLock = new ReentrantLock();
+  private static final ReentrantLock observabilityConfiguraitonLock = new ReentrantLock();
 
-  private static final ObservabilityConfiguration INSTANCE = new ObservabilityConfiguration();
+  private static final ObservabilityConfiguration INSTANCE;
+
+  static {
+    INSTANCE = new ObservabilityConfiguration();
+    //INSTANCE.setSensitiveDataEnabled(true);
+    INSTANCE.setEnabledTracers(System.getProperty("oracle.jdbc.provider.observability.tracer", "OTEL,JFR"));
+  }
 
   private ObservabilityConfiguration() {  }
 
   private boolean sensitiveDataEnabled;
   private String tracers;
 
-  private EnumSet<ObservabilityTraceEventListener.Tracers> enabledTracers;
+  private EnumSet<ObservabilityTraceEventListener.Tracers> enabledTracers = EnumSet.noneOf(ObservabilityTraceEventListener.Tracers.class);
 
   @Override
   public String getEnabledTracers() {
@@ -32,6 +38,7 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
   @Override
   public void setEnabledTracers(String tracers) {
     try {
+      observabilityConfiguraitonLock.lock();
       enabledTracers.clear();
       String[] items = tracers.split(",");
       for (String item : items) {
@@ -61,7 +68,11 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
   }
 
   public EnumSet<ObservabilityTraceEventListener.Tracers> getEnabledTracersSet() {
-    return enabledTracers.clone();
+    if (enabledTracers != null) {
+      return enabledTracers.clone();
+    } else {
+      return null;
+    }
   }
 
 }

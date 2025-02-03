@@ -39,6 +39,18 @@
         <artifactId>junit-jupiter-engine</artifactId>
         <scope>test</scope>
       </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-params</artifactId>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <artifactId>ojdbc-provider-common</artifactId>
+        <groupId>com.oracle.database.jdbc</groupId>
+        <version>1.0.2</version>
+        <classifier>tests</classifier>
+        <type>test-jar</type>
+      </dependency>
     </dependencies>
 
 </project>

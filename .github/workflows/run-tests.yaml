@@ -119,6 +119,12 @@ jobs:
           JACKSON_OSON_PASSWORD=${{ secrets.TEST_JACKSON_OSON_PASSWORD }}\n
           " >> ojdbc-provider-jackson-oson/test.properties
 
+          # Generate ojdbc-provider-observability/test.properties
+          echo -e "OBSERVABILITY_URL=${{ secrets.TEST_JACKSON_OSON_URL }}\n
+          OBSERVABILITY_USERNAME=${{ secrets.TEST_JACKSON_OSON_USERNAME }}\n
+          OBSERVABILITY_PASSWORD=${{ secrets.TEST_JACKSON_OSON_PASSWORD }}\n
+          " >> ojdbc-provider-observability/test.properties
+
       - name: Run tests with Maven
         run: mvn -B test --file pom.xml
 
@@ -133,3 +139,4 @@ jobs:
           rm ojdbc-provider-azure/test.properties
           
           rm ojdbc-provider-jackson-oson/test.properties
+          rm ojdbc-provider-observability/test.properties
