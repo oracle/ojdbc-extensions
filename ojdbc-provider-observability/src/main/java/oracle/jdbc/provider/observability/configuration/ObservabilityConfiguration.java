@@ -1,6 +1,7 @@
 package oracle.jdbc.provider.observability.configuration;
 
-import java.util.EnumSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
@@ -23,7 +24,7 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
   private boolean sensitiveDataEnabled;
   private String tracers;
 
-  private EnumSet<ObservabilityTraceEventListener.Tracers> enabledTracers = EnumSet.noneOf(ObservabilityTraceEventListener.Tracers.class);
+  private List<ObservabilityTraceEventListener.Tracers> enabledTracers = new ArrayList<>();
 
   @Override
   public String getEnabledTracers() {
@@ -67,12 +68,8 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
     return INSTANCE;
   }
 
-  public EnumSet<ObservabilityTraceEventListener.Tracers> getEnabledTracersSet() {
-    if (enabledTracers != null) {
-      return enabledTracers.clone();
-    } else {
-      return null;
-    }
+  public List<ObservabilityTraceEventListener.Tracers> getEnabledTracersSet() {
+    return enabledTracers;
   }
 
 }

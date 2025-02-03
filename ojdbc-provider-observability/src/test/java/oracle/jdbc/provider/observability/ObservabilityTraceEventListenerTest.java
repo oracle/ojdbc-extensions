@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.atLeastOnce;
 
 import java.nio.file.Path;
@@ -12,8 +13,6 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
@@ -61,6 +60,7 @@ public class ObservabilityTraceEventListenerTest {
 
   static {
     GlobalOpenTelemetry.set(openTelemetry);
+    configureOTEL();
   }
 
   @ParameterizedTest
@@ -137,7 +137,7 @@ public class ObservabilityTraceEventListenerTest {
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   public void OTELTraceTest(boolean sensitiveDataEnabled) throws Exception {
-    configureOTEL();
+    Mockito.clearInvocations(tracer, spanBuilder);
     ObservabilityConfiguration.getInstance().setEnabledTracers("OTEL");
     ObservabilityConfiguration.getInstance().setSensitiveDataEnabled(sensitiveDataEnabled);
     try (Connection connection = DriverManager.getConnection(url, userName, password);
@@ -165,12 +165,12 @@ public class ObservabilityTraceEventListenerTest {
       Mockito.verify(spanBuilder, Mockito.times(1)).setAttribute("Original SQL Text", "SELECT 'OK' FROM DUAL");
       Mockito.verify(spanBuilder, Mockito.times(1)).setAttribute("Actual SQL Text", "SELECT 'OK' FROM DUAL");
     }
+    Mockito.verify(span, atLeast(4)).end(Mockito.any());
 
 
   }
 
   private static void configureOTEL() {
-    Mockito.reset(spanBuilder, tracer);
     Mockito.when(openTelemetry.getTracerProvider()).thenReturn(tracerProvider);
     Mockito.when(tracerProvider.get(Mockito.anyString())).thenReturn(tracer);
     Mockito.when(openTelemetry.meterBuilder(Mockito.anyString())).thenReturn(meterBuilder);

@@ -1,7 +1,5 @@
 package oracle.jdbc.provider.observability;
 
-import java.util.EnumMap;
-
 import oracle.jdbc.TraceEventListener;
 import oracle.jdbc.provider.observability.configuration.ObservabilityConfiguration;
 import oracle.jdbc.provider.observability.tracers.JFRTracer;
@@ -28,10 +26,10 @@ public class ObservabilityTraceEventListener implements TraceEventListener {
 
   @Override
   public Object roundTrip(Sequence sequence, TraceContext traceContext, Object userContext) {
-    EnumMap<Tracers, Object> currentUserContext = getCurrentUserContext(userContext);
+    Object[] currentUserContext = getCurrentUserContext(userContext);
     for (Tracers tracer : ObservabilityConfiguration.getInstance().getEnabledTracersSet()) {
-      Object newUserContext = tracer.getTracer().traceRoundtrip(sequence, traceContext, currentUserContext.get(tracer));
-      currentUserContext.put(tracer, newUserContext);
+      Object newUserContext = tracer.getTracer().traceRoundtrip(sequence, traceContext, currentUserContext[tracer.ordinal()]);
+      currentUserContext[tracer.ordinal()] = newUserContext;
     }
     return currentUserContext;
   }
@@ -39,10 +37,10 @@ public class ObservabilityTraceEventListener implements TraceEventListener {
 
   @Override
   public Object onExecutionEventReceived(JdbcExecutionEvent event, Object userContext, Object... params) {
-    EnumMap<Tracers, Object> currentUserContext = getCurrentUserContext(userContext);
+    Object[] currentUserContext = getCurrentUserContext(userContext);
     for (Tracers tracer : ObservabilityConfiguration.getInstance().getEnabledTracersSet()) {
-      Object newUserContext = tracer.getTracer().traceExecutionEvent(event, currentUserContext.get(tracer), params);
-      currentUserContext.put(tracer, newUserContext);
+      Object newUserContext = tracer.getTracer().traceExecutionEvent(event, currentUserContext[tracer.ordinal()], params);
+      currentUserContext[tracer.ordinal()] = newUserContext;
     }
     return currentUserContext;
   }
@@ -54,12 +52,12 @@ public class ObservabilityTraceEventListener implements TraceEventListener {
   }
 
   @SuppressWarnings("unchecked")
-  private EnumMap<Tracers, Object> getCurrentUserContext(Object userContext) {
-    EnumMap<Tracers, Object> currentUserContext;
-    if (userContext != null && (userContext instanceof EnumMap<?,?>)) {
-      currentUserContext = (EnumMap<Tracers, Object>) userContext;
+  private Object[] getCurrentUserContext(Object userContext) {
+    Object[] currentUserContext;
+    if (userContext != null && (userContext instanceof Object[])) {
+      currentUserContext = (Object[]) userContext;
     } else {
-      currentUserContext = new EnumMap<Tracers, Object>(Tracers.class);
+      currentUserContext = new Object[Tracers.values().length];
     }
     return currentUserContext;
   }
