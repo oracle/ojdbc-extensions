@@ -33,6 +33,7 @@ import jdk.jfr.Recording;
 import jdk.jfr.consumer.RecordedEvent;
 import jdk.jfr.consumer.RecordingFile;
 import oracle.jdbc.DatabaseFunction;
+import oracle.jdbc.driver.OracleConnection;
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.observability.configuration.ObservabilityConfiguration;
 
@@ -70,11 +71,13 @@ public class ObservabilityTraceEventListenerTest {
     ObservabilityConfiguration.getInstance().setEnabledTracers("JFR");
     ObservabilityConfiguration.getInstance().setSensitiveDataEnabled(sensitiveDataEnabled);
     Configuration configuration = Configuration.getConfiguration("default");
+    String connectionId = null;
     try (Recording recording = new Recording(configuration)) {
       recording.start();
       try (Connection connection = DriverManager.getConnection(url, userName, password);
           Statement statement = connection.createStatement();
           ResultSet resultSet = statement.executeQuery("SELECT 'OK' FROM DUAL")) {
+        connectionId = ((OracleConnection)connection).getNetConnectionId();
         while (resultSet.next()) {
           assertEquals("OK", resultSet.getString(1));
         }
@@ -88,7 +91,7 @@ public class ObservabilityTraceEventListenerTest {
           if (event.getEventType().getCategoryNames().contains("Round trips")) {
             switch (event.getEventType().getName()) {
               case SESSION_KEY:
-                assertNotNull(event.getString("connectionID"));
+                assertEquals(connectionId, event.getString("connectionID"));
                 assertNotNull(event.getString("databaseOperation"));
 //                assertNull(event.getString("tenant"));
                 assertNull(event.getString("sqlID"));
@@ -97,7 +100,7 @@ public class ObservabilityTraceEventListenerTest {
                 assertEquals(sensitiveDataEnabled, event.getString("databaseUser") != null);
                 break;
               case AUTH_CALL:
-                assertNotNull(event.getString("connectionID"));
+                assertEquals(connectionId, event.getString("connectionID"));
                 assertNotNull(event.getString("databaseOperation"));
 //                assertNull(event.getString("tenant"));
                 assertNull(event.getString("sqlID"));
@@ -107,7 +110,7 @@ public class ObservabilityTraceEventListenerTest {
 
                 break;
               case EXECUTE_QUERY:
-                assertNotNull(event.getString("connectionID"));
+                assertEquals(connectionId, event.getString("connectionID"));
                 assertNotNull(event.getString("databaseOperation"));
 //                assertNotNull(event.getString("tenant"));
                 assertNotNull(event.getString("sqlID"));
@@ -116,7 +119,7 @@ public class ObservabilityTraceEventListenerTest {
                 assertEquals(sensitiveDataEnabled, event.getString("databaseUser") != null);
                 break;
               case LOGOFF:
-                assertNotNull(event.getString("connectionID"));
+                assertEquals(connectionId, event.getString("connectionID"));
                 assertNotNull(event.getString("databaseOperation"));
 //                assertNotNull(event.getString("tenant"));
                 assertNull(event.getString("sqlID"));
@@ -141,10 +144,11 @@ public class ObservabilityTraceEventListenerTest {
     ObservabilityConfiguration.getInstance().setEnabledTracers("OTEL");
     ObservabilityConfiguration.getInstance().setSensitiveDataEnabled(sensitiveDataEnabled);
     String otelUrl = url + "?oracle.jdbc.provider.traceEventListener=observability-trace-event-listener-provider";
+    String connectionId = null;
     try (Connection connection = DriverManager.getConnection(otelUrl, userName, password);
           Statement statement = connection.createStatement();
           ResultSet resultSet = statement.executeQuery("SELECT 'OK' FROM DUAL")) {
-      
+      connectionId = ((OracleConnection)connection).getNetConnectionId();
       while (resultSet.next()) {
         assertEquals("OK", resultSet.getString(1));
       }
@@ -157,6 +161,7 @@ public class ObservabilityTraceEventListenerTest {
     Mockito.verify(spanBuilder, atLeastOnce()).startSpan();
     Mockito.verify(spanBuilder, Mockito.atLeast(4)).setAttribute("thread.id", Thread.currentThread().getId());
     Mockito.verify(spanBuilder, Mockito.atLeast(4)).setAttribute("thread.name", Thread.currentThread().getName());
+    Mockito.verify(spanBuilder, Mockito.atLeast(1)).setAttribute("Connection ID", connectionId);
     Mockito.verify(spanBuilder, Mockito.times(1)).setAttribute("Database Operation", DatabaseFunction.SESSION_KEY.getDescription());
     Mockito.verify(spanBuilder, Mockito.times(1)).setAttribute("Database Operation", DatabaseFunction.AUTH_CALL.getDescription());
     Mockito.verify(spanBuilder, Mockito.times(1)).setAttribute("Database Operation", DatabaseFunction.EXECUTE_QUERY.getDescription());
