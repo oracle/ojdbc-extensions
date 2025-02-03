@@ -76,7 +76,7 @@ public class ObservabilityTraceEventListenerTest {
           Statement statement = connection.createStatement();
           ResultSet resultSet = statement.executeQuery("SELECT 'OK' FROM DUAL")) {
         while (resultSet.next()) {
-          System.out.println(resultSet.getString(1));
+          assertEquals("OK", resultSet.getString(1));
         }
       }
       recording.stop();
@@ -140,12 +140,13 @@ public class ObservabilityTraceEventListenerTest {
     Mockito.clearInvocations(tracer, spanBuilder);
     ObservabilityConfiguration.getInstance().setEnabledTracers("OTEL");
     ObservabilityConfiguration.getInstance().setSensitiveDataEnabled(sensitiveDataEnabled);
-    try (Connection connection = DriverManager.getConnection(url, userName, password);
+    String otelUrl = url + "?oracle.jdbc.provider.traceEventListener=observability-trace-event-listener-provider";
+    try (Connection connection = DriverManager.getConnection(otelUrl, userName, password);
           Statement statement = connection.createStatement();
           ResultSet resultSet = statement.executeQuery("SELECT 'OK' FROM DUAL")) {
       
       while (resultSet.next()) {
-        System.out.println(resultSet.getString(1));
+        assertEquals("OK", resultSet.getString(1));
       }
     }
 
