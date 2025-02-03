@@ -63,7 +63,7 @@ public class ObservabilityTraceEventListenerTest {
     configureOTEL();
   }
 
-  @ParameterizedTest
+  @ParameterizedTest(name = "JFRTraceTest - {arguments}")
   @ValueSource(booleans = {true, false})
   public void JFRTraceTest(boolean sensitiveDataEnabled) throws Exception {
 
@@ -134,7 +134,7 @@ public class ObservabilityTraceEventListenerTest {
       
   }
 
-  @ParameterizedTest
+  @ParameterizedTest(name = "OTELTraceTest - {arguments}")
   @ValueSource(booleans = {true, false})
   public void OTELTraceTest(boolean sensitiveDataEnabled) throws Exception {
     Mockito.clearInvocations(tracer, spanBuilder);
