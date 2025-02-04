@@ -570,9 +570,10 @@ public class OsonGenerator extends GeneratorBase {
     }else {
       // java.util.Date
       logger.log(Level.FINEST, "writeDate: java.util.Date");
-      DATE dd = new DATE(new java.sql.Date(value.getTime()));
-      OracleJsonDate jsonDate = new OracleJsonDateImpl(dd.shareBytes());
-      gen.write(jsonDate);
+      Timestamp ts = new Timestamp(value.getTime());
+      TIMESTAMP timestamp = new TIMESTAMP(ts);
+      OracleJsonTimestamp writeTimeStamp = new OracleJsonTimestampImpl(timestamp.shareBytes());
+      gen.write(writeTimeStamp);
     }
   }
 

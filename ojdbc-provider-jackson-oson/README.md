@@ -14,11 +14,11 @@ in order to use the Oracle JDBC driver's JSON processing capabilities. It, there
 - **Java Types Handling**: Support for various complex and basic Java types during serialization and deserialization.
 - **Jackson Annotation support**: Support for Jackson Annotations. Note: When **@Format** annotation is used, the values are processed as Strings.
 
-## Java type to Oson Mappings
+## Java type to OSON Mappings
 When the **OSON Provider for Jackson** is used the Java types are stored as their corresponding OSON types. The type
 mapping is given by the following table.
 
-| **Java Type**                              | **Oson Type**      |
+| **Java Type**                              | **OSON Type**      |
 |--------------------------------------------|--------------------|
 | `LocalDateTime`                            | `OSON TIMESTAMP`   |
 | `OffsetDateTime`                           | `OSON TIMESTAMPTZ` |
@@ -27,7 +27,7 @@ mapping is given by the following table.
 | `BigInteger`                               | `OSON NUMBER`      |
 | `Year`                                     | `OSON NUMBER`      |
 | `byte[]`                                   | `OSON byte[]`      |
-| `java.util.Date`                           | `OSON DATE`        |
+| `java.util.Date`                           | `OSON TIMESTAMP`   |
 | `java.sql.Date`                            | `OSON DATE`        |
 | `Timestamp`                                | `OSON TIMESTAMP`   |
 | `LocalDate`                                | `OSON DATE`        |
