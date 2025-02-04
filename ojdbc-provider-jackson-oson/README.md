@@ -87,6 +87,8 @@ Usage Examples for Oracle Jackson OSON Provider Extensions can be found at [ojdb
   a POJO during retrieval. In this case, the JDBC Thin Driver invokes the provider to serialize/deserialize.
 - **[AccessJsonColumnUsingHibernate](../ojdbc-provider-samples/src/main/java/oracle/jdbc/provider/oson/sample/AccessJsonColumnUsingHibernate.java)**: 
   Performs the same task as above using Hibernate. 
+- **[NestedStructurePOJO](../ojdbc-provider-samples/src/main/java/oracle/jdbc/provider/oson/sample/NestedStructurePOJO.java)**:
+  Shows how to store and  retrieve Java objects in JSON Collection tables.
 - **[AccessJsonColumnUsingJacksonObjectNode](../ojdbc-provider-samples/src/main/java/oracle/jdbc/provider/oson/sample/AccessJsonColumnUsingJacksonObjectNode.java)**: 
   Demonstrates the usage of the Jackson OSON provider to serialize Jackson's ObjectNode 
   to OSON bytes for insertion and retrieval.
