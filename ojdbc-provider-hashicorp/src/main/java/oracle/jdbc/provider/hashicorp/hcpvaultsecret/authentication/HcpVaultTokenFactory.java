@@ -74,12 +74,19 @@ public final class HcpVaultTokenFactory implements ResourceFactory<HcpVaultSecre
    */
   public static final Parameter<String> HCP_CLIENT_SECRET = Parameter.create(REQUIRED);
 
+  /**
+   * Parameter for the credentials file path.
+   * By default, the credentials file is expected at:
+   * <code>System.getProperty("user.home") + "/.config/hcp/creds-cache.json"</code>.
+   */
+  public static final Parameter<String> HCP_CREDENTIALS_FILE = Parameter.create(REQUIRED);
+
   private static final HcpVaultTokenFactory INSTANCE = new HcpVaultTokenFactory();
 
   /**
    * Cached supplier for tokens.
    */
-  private static Supplier<? extends AccessToken> cachedTokenSupplier;
+  private static volatile Supplier<? extends AccessToken> cachedTokenSupplier;
 
   private HcpVaultTokenFactory() {}
 
@@ -93,28 +100,42 @@ public final class HcpVaultTokenFactory implements ResourceFactory<HcpVaultSecre
     return Resource.createPermanentResource(credentials, true);
   }
 
+  /**
+   * Determines the authentication method and retrieves credentials accordingly.
+   *
+   * @param parameterSet The parameter set containing authentication details.
+   * @return The HCP Vault secret token.
+   */
   private HcpVaultSecretToken getCredential(ParameterSet parameterSet) {
     HcpVaultAuthenticationMethod method = parameterSet.getRequired(AUTHENTICATION_METHOD);
 
     switch (method) {
       case CLIENT_CREDENTIALS:
-        return createClientCredentials(parameterSet);
+        return getCachedToken(() -> createClientCredentials(parameterSet));
+      case CLI_CREDENTIALS_FILE:
+        return getCachedToken(() -> createFileBasedCredentials(parameterSet));
       default:
-        throw new IllegalArgumentException("Unrecognized HCP auth method: " + method);
+        throw new IllegalArgumentException("Unrecognized HCP Vault Secret " +
+                "authentication method: " + method);
     }
   }
 
-  private HcpVaultSecretToken createClientCredentials(ParameterSet parameterSet) {
+  /**
+   * Retrieves a cached token if available, otherwise creates a new one.
+   *
+   * @param tokenSupplier The supplier function to generate a new token.
+   * @return The cached or newly generated token.
+   */
+  private HcpVaultSecretToken getCachedToken(Supplier<HcpVaultSecretToken> tokenSupplier) {
     if (cachedTokenSupplier == null) {
       synchronized (HcpVaultTokenFactory.class) {
+        if (cachedTokenSupplier == null) {
           cachedTokenSupplier = AccessToken.createJsonWebTokenCache(() -> {
-            String clientId = getRequiredOrFallback(parameterSet, HCP_CLIENT_ID, "HCP_CLIENT_ID");
-            String clientSecret = getRequiredOrFallback(parameterSet, HCP_CLIENT_SECRET, "HCP_CLIENT_SECRET");
-
-            String rawToken = HcpVaultOAuthClient.fetchHcpAccessToken(clientId, clientSecret);
-            return AccessToken.createJsonWebToken(rawToken.toCharArray());
+            HcpVaultSecretToken token = tokenSupplier.get();
+            return AccessToken.createJsonWebToken(token.getHcpApiToken().toCharArray());
           });
         }
+      }
     }
 
     AccessToken cachedToken = cachedTokenSupplier.get();
@@ -122,4 +143,33 @@ public final class HcpVaultTokenFactory implements ResourceFactory<HcpVaultSecre
     return new HcpVaultSecretToken(jwt.token().get());
   }
 
+  /**
+   * Creates credentials using the OAuth2 client credentials flow.
+   *
+   * @param parameterSet The parameter set containing client credentials.
+   * @return The HCP Vault secret token.
+   */
+  private HcpVaultSecretToken createClientCredentials(ParameterSet parameterSet) {
+    String clientId = getRequiredOrFallback(parameterSet, HCP_CLIENT_ID, "HCP_CLIENT_ID");
+    String clientSecret = getRequiredOrFallback(parameterSet, HCP_CLIENT_SECRET, "HCP_CLIENT_SECRET");
+
+    String rawToken = HcpVaultOAuthClient.fetchHcpAccessToken(clientId, clientSecret);
+    return new HcpVaultSecretToken(rawToken);
+  }
+
+  /**
+   * Creates credentials using an existing credentials file.
+   *
+   * @param parameterSet The parameter set containing the file path.
+   * @return The HCP Vault secret token.
+   */
+  private HcpVaultSecretToken createFileBasedCredentials(ParameterSet parameterSet) {
+    try {
+      HcpVaultCredentialsFileAuthenticator fileAuthenticator = new HcpVaultCredentialsFileAuthenticator(parameterSet);
+      String token = fileAuthenticator.getValidAccessToken();
+      return new HcpVaultSecretToken(token);
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to retrieve HCP Vault token from credentials file", e);
+    }
+  }
 }

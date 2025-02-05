@@ -70,10 +70,18 @@ import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.secrets.Dedicated
  *   }
  * }</pre>
  *
+ * <h3>Behavior for Extracting the Secret</h3>
+ * <ul>
+ *   <li> If {@code field_name} is provided, the corresponding value is
+ *   extracted.</li>
+ *  <li>If the secret contains <b>only one key-value pair</b>, that value
+ *  is automatically selected.</li>
+ *  <li>If multiple keys exist and {@code field_name} is <b>not provided</b>,
+ *  an error is thrown.</li>
+ * </ul>
  * <p>
  * The secret path specified in the JSON is used to query the Vault and fetch
- * the desired secret. If {@code FIELD_NAME} is provided, the corresponding
- * field is extracted from the Vault's JSON response.
+ * the desired secret.
  * </p>
  */
 public class DedicatedVaultJsonSecretProvider implements OracleConfigurationJsonSecretProvider {
@@ -99,7 +107,16 @@ public class DedicatedVaultJsonSecretProvider implements OracleConfigurationJson
         .asJsonObject();
 
     String fieldName = parameterSet.getOptional(FIELD_NAME);
-    String extractedPassword = String.valueOf(secretJsonObj.get(fieldName));
+    String extractedPassword;
+    if (fieldName != null && secretJsonObj.containsKey(fieldName)) {
+      extractedPassword = secretJsonObj.getString(fieldName);
+    } else if (secretJsonObj.size() == 1) {
+      extractedPassword = secretJsonObj.values().iterator().next().toString();
+    } else {
+      throw new IllegalStateException(
+              "FIELD_NAME is required when multiple keys exist in the secret."
+      );
+    }
 
     return Base64.getEncoder()
             .encodeToString(extractedPassword.getBytes())

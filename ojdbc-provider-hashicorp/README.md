@@ -5,9 +5,9 @@ and HashiCorp Vault (HCP).
 
 ## Centralized Config Providers
 <dl>
-<dt><a href="#hcp-vault-secrets-config-provider">HashiCorp Vault Secrets Config Provider</a></dt>
+<dt><a href="#hcp-vault-secrets-config-provider">HashiCorp Vault Dedicated Config Provider</a></dt>
 <dd>Provides connection properties managed by the Vault Secrets service</dd>
-<dt><a href="#hcp-vault-dedicated-config-provider">HashiCorp Vault Dedicated Config Provider</a></dt>
+<dt><a href="#hcp-vault-dedicated-config-provider">HashiCorp Vault Secret Config Provider</a></dt>
 <dd>Provides connection properties managed by the Dedicated Vault service</dd>
 <dt><a href="#caching-configuration">Caching configuration</a></dt>
 <dd>Caching mechanism adopted by Centralized Config Providers</dd>
@@ -215,19 +215,27 @@ For more information, visit the official documentation: <a href="https://develop
 
 ### HCP Vault Secrets
 
-Authentication for the **HCP Vault Secrets** uses the OAuth 2.0 Client Credentials flow.
+Authentication for **HCP Vault Secrets** supports two methods:
 
-The `CLIENT_ID` and `CLIENT_SECRET` are used to obtain a Bearer token for authentication,
-the Bearer token is then used for making API calls to retrieve secrets from HCP Vault Secrets.
-Once authenticated, the secrets can be retrieved using the HashiCorp Vault API.
+1. **OAuth 2.0 Client Credentials Flow**
+    - Uses `HCP_CLIENT_ID` and `HCP_CLIENT_SECRET` to obtain a Bearer token for authentication.
+    - The token is then used to retrieve secrets from HCP Vault Secrets API.
 
-The generated token is cached and reused until it expires, minimizing API calls to the HCP Vault Secrets.
+2. **Credentials File Authentication**
+    - Uses a JSON file (`creds-cache.json`) containing authentication credentials (`access_token`, `refresh_token`, and `access_token_expiry`).    - If the access token is expired, it is automatically refreshed using the stored refresh token.
+    - If the access token is expired, it is **automatically refreshed** using the stored refresh token.
+    - This method allows authentication **without requiring direct API credentials**.
+
+The generated token is cached and reused until it expires, minimizing API calls to HCP Vault Secrets.
 
 Secrets can be retrieved from the following API endpoint:  
 `https://api.cloud.hashicorp.com/secrets/2023-11-28/organizations/$HCP_ORG_ID/projects/$HCP_PROJECT_ID/apps/$APP_NAME/secrets`
 
 For more information, visit the official HashiCorp Vault documentation: [HCP Vault Secrets](https://developer.hashicorp.com/hcp/tutorials/get-started-hcp-vault-secrets/hcp-vault-secrets-retrieve-secret).
 
+#### OAuth 2.0 Client Credentials Flow
+
+This method uses OAuth 2.0 **client credentials** to obtain a **Bearer token**, which is required for authentication.
 The provider searches for the following parameters:
 
 <table>
@@ -249,6 +257,66 @@ The provider searches for the following parameters:
 <td>The client secret for OAuth 2.0 authentication</td>
 <td>Yes</td>
 </tr>
+</tbody>
+</table>
+
+#### CLI CREDENTIALS FILE
+This method **retrieves authentication details** from a **JSON file (`creds-cache.json`)** that contains access tokens.
+
+- If **HCP CLI is installed**, a **creds-cache.json** file is **automatically created** in: <code>~/.config/hcp/creds-cache.json</code>
+- This file contains **access_token, refresh_token, and access_token_expiry**.
+- If **the token is expired**, it is **automatically refreshed** using the **refresh_token**.
+- The credentials file should be a JSON file containing the following structure:
+
+```json
+{
+  "login": {
+    "access_token": "YOUR_ACCESS_TOKEN",
+    "refresh_token": "YOUR_REFRESH_TOKEN",
+    "access_token_expiry": "2025-01-01T12:34:56.789Z"
+  }
+}
+```
+- access_token: The current access token for API authentication.
+- refresh_token: The refresh token used to obtain a new access token when expired.
+- access_token_expiry: The expiration timestamp of the access_token.
+
+When using this method, the provider will:
+   * Read the file and validate the access_token.
+   * Refresh the token if it's expired, using the refresh_token.
+   * Update the file with the new token details.
+
+The provider searches for the following parameters:
+
+<table>
+<thead>
+<tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HCP_CREDENTIALS_FILE</code></td>
+<td>The path of the credentials file ( by default
+<code>~/.config/hcp/creds-cache.json</code></td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+
+#### Common Parameters for HCP Vault Secrets authentication methods
+
+<table>
+<thead>
+<tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
 <tr>
 <td><code>HCP_ORG_ID</code></td>
 <td>The organization ID associated with the Vault</td>
@@ -266,6 +334,7 @@ The provider searches for the following parameters:
 </tr>
 </tbody>
 </table>
+
 
 ## Config Providers
 
@@ -394,10 +463,14 @@ For the JSON type of provider (HCP Vault Dedicated, HCP Vault Secrets, HTTP/HTTP
         - Secret name (if hcpvaultsecret)
         - Text
 - field_name (HCP Vault Dedicated only)
-    - Mandatory
+    - Optional
     - Description: Specifies the key within the secret JSON object to retrieve the password value.
       For example, if the secret contains `{ "db-password": "mypassword" }`,
-      setting `field_name: "db-password"` will extract `"mypassword"`.
+      setting `field_name: "db-password"` will extract `"mypassword"`. 
+    - **Logic behind the `field_name` attribute:**
+      - If `field_name` is **specified**, its corresponding value is extracted.
+      - If the **secret contains only one key-value pair**, that value is **automatically used**.
+      - If `field_name` is **missing** and **multiple keys exist**, an **error is thrown**.
 - authentication
     - Optional
     - Possible Values

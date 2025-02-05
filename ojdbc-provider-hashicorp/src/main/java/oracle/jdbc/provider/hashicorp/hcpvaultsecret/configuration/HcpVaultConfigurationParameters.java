@@ -67,7 +67,10 @@ public final class HcpVaultConfigurationParameters {
          HcpVaultTokenFactory.HCP_CLIENT_ID)
       .addParameter(
          "HCP_CLIENT_SECRET",
-         HcpVaultTokenFactory.HCP_CLIENT_SECRET);
+         HcpVaultTokenFactory.HCP_CLIENT_SECRET)
+      .addParameter("HCP_CREDENTIALS_FILE",
+         HcpVaultTokenFactory.HCP_CREDENTIALS_FILE,
+              System.getProperty("user.home") + "/.config/hcp/creds-cache.json");
   }
 
   /**
@@ -82,6 +85,8 @@ public final class HcpVaultConfigurationParameters {
     switch (value.toUpperCase()) {
       case "CLIENT_CREDENTIALS":
         return HcpVaultAuthenticationMethod.CLIENT_CREDENTIALS;
+      case "CLI_CREDENTIALS_FILE":
+        return HcpVaultAuthenticationMethod.CLI_CREDENTIALS_FILE;
       default:
         throw new IllegalArgumentException("Unrecognized HCP auth method: " + value);
     }
