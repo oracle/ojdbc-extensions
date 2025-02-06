@@ -40,11 +40,9 @@ package oracle.jdbc.provider.oci.configuration;
 
 import java.util.Map;
 
-import oracle.jdbc.provider.configuration.JsonSecretUtil;
 import oracle.jdbc.provider.oci.vault.SecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.spi.OracleConfigurationSecretProvider;
-import oracle.sql.json.OracleJsonObject;
 
 /**
  * A provider of Secret values from OCI Vault.
