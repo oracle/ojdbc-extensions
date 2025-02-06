@@ -1,2 +1,2 @@
 oracle.jdbc.provider.azure.configuration.AzureAppConfigurationProvider
-oracle.jdbc.provider.azure.configuration.AzureVaultSecretProvider
+oracle.jdbc.provider.azure.configuration.AzureVaultJsonProvider
