@@ -39,7 +39,10 @@
 package oracle.jdbc.provider.azure.configuration;
 
 import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
+import oracle.jdbc.provider.configuration.JsonSecretUtil;
+import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
 import oracle.jdbc.spi.OracleConfigurationSecretProvider;
+import oracle.sql.json.OracleJsonObject;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 
@@ -50,7 +53,7 @@ import java.util.Map;
  * A provider of Secret values from Azure Key Vault.
  */
 public final class AzureVaultSecretProvider
-    implements OracleConfigurationSecretProvider {
+    implements OracleConfigurationJsonSecretProvider, OracleConfigurationSecretProvider {
   /**
    * Parser that recognizes the "value" field and parses it as a Key Vault
    * secret URL.
@@ -84,24 +87,12 @@ public final class AzureVaultSecretProvider
    * @return encoded char array in base64 format that represents the retrieved
    *         Secret.
    */
-  /*
   @Override
   public char[] getSecret(OracleJsonObject secretJsonObject) {
 
-    ParameterSet parameterSet =
-      PARAMETER_SET_PARSER.parseNamedValues(
-        JsonSecretUtil.toNamedValues(secretJsonObject));
-
-    String secretString = KeyVaultSecretFactory.getInstance()
-      .request(parameterSet)
-      .getContent()
-      .getValue();
-
-    return Base64.getEncoder()
-      .encodeToString(secretString.getBytes())
-      .toCharArray();
+    Map<String, String> secretProperties = JsonSecretUtil.toNamedValues(secretJsonObject);
+    return getSecret(secretProperties);
   }
- */
 
   /**
    * {@inheritDoc}
@@ -114,9 +105,9 @@ public final class AzureVaultSecretProvider
   }
 
   @Override
-  public char[] getSecret(Map<String, String> arg0) {
+  public char[] getSecret(Map<String, String> secretProperties) {
     ParameterSet parameterSet =
-      PARAMETER_SET_PARSER.parseNamedValues(arg0);
+      PARAMETER_SET_PARSER.parseNamedValues(secretProperties);
 
     String secretString = KeyVaultSecretFactory.getInstance()
       .request(parameterSet)
