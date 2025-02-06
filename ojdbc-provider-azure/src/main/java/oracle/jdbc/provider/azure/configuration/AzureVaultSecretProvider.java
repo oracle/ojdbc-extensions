@@ -42,6 +42,7 @@ import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
 import oracle.jdbc.provider.configuration.JsonSecretUtil;
 import oracle.jdbc.spi.OracleConfigurationSecretProvider;
 import oracle.sql.json.OracleJsonObject;
+import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 
@@ -63,6 +64,7 @@ public final class AzureVaultSecretProvider
   public static final ParameterSetParser PARAMETER_SET_PARSER =
     AzureConfigurationParameters.configureBuilder(
       ParameterSetParser.builder()
+        .addParameter("type", Parameter.create())
         .addParameter("value", AzureVaultURLParser::parseVaultSecretUri))
         .build();
 

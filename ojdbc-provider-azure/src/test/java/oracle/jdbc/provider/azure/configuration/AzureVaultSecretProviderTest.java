@@ -111,6 +111,7 @@ public class AzureVaultSecretProviderTest {
     secretProperties.put("AZURE_CLIENT_ID", clientId);
     secretProperties.put("AZURE_CLIENT_SECRET", clientSecret);
     secretProperties.put("AZURE_TENANT_ID", tenantId);
+    secretProperties.put("type", "azurevault");
     secretProperties.put("value", constructSecretUri(vaultUrl, secretName));
     return secretProperties;
   }
