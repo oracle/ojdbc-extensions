@@ -42,12 +42,8 @@ import oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod;
 import oracle.jdbc.provider.azure.AzureTestProperty;
 import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
 import oracle.jdbc.spi.OracleConfigurationSecretProvider;
-import oracle.sql.json.OracleJsonFactory;
-import oracle.sql.json.OracleJsonObject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import static oracle.jdbc.provider.TestProperties.getOrAbort;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -111,7 +107,7 @@ public class AzureVaultSecretProviderTest {
   private Map<String,String> constructSecretProperties(
     String vaultUrl, String secretName, String clientId, String clientSecret, String tenantId) {
     Map<String,String> secretProperties = new HashMap<>();
-    secretProperties.put("method", "AZURE_SERVICE_PRINCIPAL");
+    secretProperties.put("AUTHENTICATION", "AZURE_SERVICE_PRINCIPAL");
     secretProperties.put("AZURE_CLIENT_ID", clientId);
     secretProperties.put("AZURE_CLIENT_SECRET", clientSecret);
     secretProperties.put("AZURE_TENANT_ID", tenantId);
