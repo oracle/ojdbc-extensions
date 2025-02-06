@@ -38,17 +38,19 @@
 
 package oracle.jdbc.provider.oci.configuration;
 
+import java.util.Map;
+
 import oracle.jdbc.provider.configuration.JsonSecretUtil;
 import oracle.jdbc.provider.oci.vault.SecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
+import oracle.jdbc.spi.OracleConfigurationSecretProvider;
 import oracle.sql.json.OracleJsonObject;
 
 /**
  * A provider of Secret values from OCI Vault.
  */
 public final class OciVaultSecretProvider
-    implements OracleConfigurationJsonSecretProvider {
+    implements OracleConfigurationSecretProvider {
 
   /**
    * {@inheritDoc}
@@ -91,5 +93,37 @@ public final class OciVaultSecretProvider
   @Override
   public String getSecretType() {
     return "ocivault";
+  }
+
+  /**
+   * <p>
+   *   Returns the password of the Secret that is retrieved from OCI Vault.
+   * </p><p>
+   *   The {@code secretProperties} has the following form:
+   * </p><pre>{@code
+   *   "password": {
+   *       "type": "ocivault",
+   *       "value": "ocid1.vaultsecret.oc1.phx.amaaaaaad...",
+   *       "authentication": {
+   *           "method": "OCI_DEFAULT"
+   *       }
+   *   }
+   * }</pre>
+   *
+   * @param secretProperties TODO
+   * @return encoded char array in base64 format that represents the retrieved
+   *         Secret.
+   */
+  @Override
+  public char[] getSecret(Map<String, String> secretProperties) {
+    ParameterSet parameters =
+      OciConfigurationParameters.getParser()
+        .parseNamedValues(secretProperties);
+
+    return SecretFactory.getInstance()
+      .request(parameters)
+      .getContent()
+      .getBase64Secret()
+      .toCharArray();
   }
 }
