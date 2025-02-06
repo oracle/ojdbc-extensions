@@ -41,6 +41,7 @@ import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod;
 import oracle.jdbc.provider.azure.AzureTestProperty;
 import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
+import oracle.jdbc.spi.OracleConfigurationSecretProvider;
 import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonObject;
 import org.junit.jupiter.api.Assertions;
@@ -48,9 +49,12 @@ import org.junit.jupiter.api.Test;
 
 import static oracle.jdbc.provider.TestProperties.getOrAbort;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class AzureVaultSecretProviderTest {
-  private static final OracleConfigurationJsonSecretProvider PROVIDER =
-    OracleConfigurationJsonSecretProvider.find("azurevault");
+  private static final OracleConfigurationSecretProvider PROVIDER =
+    OracleConfigurationSecretProvider.find("azurevault");
 
   /**
    * Verifies {@link OracleConfigurationJsonSecretProvider} as implementing
@@ -61,7 +65,7 @@ public class AzureVaultSecretProviderTest {
   @Test
   public void test() {
     Assertions.assertNotNull(PROVIDER.getSecret(
-      constructJsonObject(
+      constructSecretProperties(
         TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL),
         TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_SECRET_NAME),
         TestProperties.getOrAbort(AzureTestProperty.AZURE_CLIENT_ID),
@@ -84,7 +88,6 @@ public class AzureVaultSecretProviderTest {
    *   }
    * }
    * </pre>
-   */
   private OracleJsonObject constructJsonObject(
     String vaultUrl, String secretName, String clientId, String clientSecret, String tenantId) {
 
@@ -102,6 +105,19 @@ public class AzureVaultSecretProviderTest {
     password.put("authentication", auth);
 
     return password;
+  }
+   */
+
+  private Map<String,String> constructSecretProperties(
+    String vaultUrl, String secretName, String clientId, String clientSecret, String tenantId) {
+    Map<String,String> secretProperties = new HashMap<>();
+    secretProperties.put("method", "AZURE_SERVICE_PRINCIPAL");
+    secretProperties.put("AZURE_CLIENT_ID", clientId);
+    secretProperties.put("AZURE_CLIENT_SECRET", clientSecret);
+    secretProperties.put("AZURE_TENANT_ID", tenantId);
+    secretProperties.put("type", "azurevault");
+    secretProperties.put("value", constructSecretUri(vaultUrl, secretName));
+    return secretProperties;
   }
 
   private String constructSecretUri(String vaultUrl, String secretName) {
