@@ -39,19 +39,18 @@
 package oracle.jdbc.provider.azure.configuration;
 
 import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
-import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
-import oracle.jdbc.provider.configuration.JsonSecretUtil;
+import oracle.jdbc.spi.OracleConfigurationSecretProvider;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
-import oracle.sql.json.OracleJsonObject;
 
 import java.util.Base64;
+import java.util.Map;
 
 /**
  * A provider of Secret values from Azure Key Vault.
  */
 public final class AzureVaultSecretProvider
-    implements OracleConfigurationJsonSecretProvider {
+    implements OracleConfigurationSecretProvider {
   /**
    * Parser that recognizes the "value" field and parses it as a Key Vault
    * secret URL.
@@ -85,6 +84,7 @@ public final class AzureVaultSecretProvider
    * @return encoded char array in base64 format that represents the retrieved
    *         Secret.
    */
+  /*
   @Override
   public char[] getSecret(OracleJsonObject secretJsonObject) {
 
@@ -101,6 +101,7 @@ public final class AzureVaultSecretProvider
       .encodeToString(secretString.getBytes())
       .toCharArray();
   }
+ */
 
   /**
    * {@inheritDoc}
@@ -110,5 +111,20 @@ public final class AzureVaultSecretProvider
   @Override
   public String getSecretType() {
     return "azurevault";
+  }
+
+  @Override
+  public char[] getSecret(Map<String, String> arg0) {
+    ParameterSet parameterSet =
+      PARAMETER_SET_PARSER.parseNamedValues(arg0);
+
+    String secretString = KeyVaultSecretFactory.getInstance()
+      .request(parameterSet)
+      .getContent()
+      .getValue();
+
+    return Base64.getEncoder()
+      .encodeToString(secretString.getBytes())
+      .toCharArray();
   }
 }
