@@ -38,7 +38,7 @@
 
 package oracle.jdbc.provider.azure.configuration;
 
-import oracle.jdbc.driver.OracleConfigurationJsonProvider;
+import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
@@ -52,9 +52,9 @@ import java.util.Map;
 
 /**
  * A provider for JSON payload which contains configuration from Azure Vault.
- * See {@link #getJson(String)} for the spec of the JSON payload.
+ * See {@link #getInputStream(String)} for the spec of the JSON payload.
  */
-public class AzureVaultJsonProvider extends OracleConfigurationJsonProvider {
+public class AzureVaultJsonProvider extends OracleConfigurationParsableProvider {
 
   /**
    * Parser that recognizes the "key" and "value" field,
@@ -85,7 +85,7 @@ public class AzureVaultJsonProvider extends OracleConfigurationJsonProvider {
    * @return JSON payload
    **/
   @Override
-  public InputStream getJson(String secretIdentifier) {
+  public InputStream getInputStream(String secretIdentifier) {
     final String valueFieldName = "value";
     Map<String, String> optionsWithSecret = new HashMap<>(options);
     optionsWithSecret.put(valueFieldName, secretIdentifier);

@@ -59,16 +59,15 @@ import java.time.Year;
  *
  * @see StdScalarDeserializer
  * @see OsonParser
- * @see byte[]
- */
+  */
 public class OsonByteDeserializer extends StdScalarDeserializer<byte[]> {
-   /**
+  /**
   * A singleton instance of the deserializer.
   */
    public static final OsonByteDeserializer INSTANCE = new OsonByteDeserializer();
 
-   /**
-  * Default constructor that initializes the deserializer for the {@link byte[]} class.
+  /**
+  * Default constructor that initializes the deserializer for the byte[] class.
   */
    protected OsonByteDeserializer() {
     super(Year.class);
