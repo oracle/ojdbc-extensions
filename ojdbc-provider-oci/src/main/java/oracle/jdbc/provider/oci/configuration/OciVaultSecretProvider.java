@@ -52,38 +52,6 @@ import oracle.sql.json.OracleJsonObject;
 public final class OciVaultSecretProvider
     implements OracleConfigurationSecretProvider {
 
-  /**
-   * {@inheritDoc}
-   * <p>
-   *   Returns the password of the Secret that is retrieved from OCI Vault.
-   * </p><p>
-   *   The {@code secretJsonObject} has the following form:
-   * </p><pre>{@code
-   *   "password": {
-   *       "type": "ocivault",
-   *       "value": "ocid1.vaultsecret.oc1.phx.amaaaaaad...",
-   *       "authentication": {
-   *           "method": "OCI_DEFAULT"
-   *       }
-   *   }
-   * }</pre>
-   *
-   * @param secretJsonObject json object to be parsed
-   * @return encoded char array in base64 format that represents the retrieved
-   *         Secret.
-   */
-  @Override
-  public char[] getSecret(OracleJsonObject secretJsonObject) {
-    ParameterSet parameters =
-      OciConfigurationParameters.getParser()
-        .parseNamedValues(JsonSecretUtil.toNamedValues(secretJsonObject));
-
-    return SecretFactory.getInstance()
-      .request(parameters)
-      .getContent()
-      .getBase64Secret()
-      .toCharArray();
-  }
 
   /**
    * {@inheritDoc}
