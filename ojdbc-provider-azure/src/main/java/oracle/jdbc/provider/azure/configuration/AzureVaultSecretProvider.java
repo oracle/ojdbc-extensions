@@ -82,7 +82,7 @@ public final class AzureVaultSecretProvider
    *   }
    * }</pre>
    *
-   * @param secretJsonObject json object to be parsed
+   * @param secretProperties json object to be parsed TODO
    * @return encoded char array in base64 format that represents the retrieved
    *         Secret.
    */
