@@ -81,8 +81,7 @@ public class AzureVaultJsonProviderTest {
       "AZURE_CLIENT_SECRET=" + TestProperties.getOrAbort(
         AzureTestProperty.AZURE_CLIENT_SECRET),
       "AZURE_TENANT_ID=" + TestProperties.getOrAbort(
-        AzureTestProperty.AZURE_TENANT_ID),
-      "parser=json"};
+        AzureTestProperty.AZURE_TENANT_ID)};
 
     String url = composeUrl(baseUrl, options);
     verifyProperties(url);
@@ -109,8 +108,7 @@ public class AzureVaultJsonProviderTest {
             "AZURE_TENANT_ID=" + TestProperties.getOrAbort(
                     AzureTestProperty.AZURE_TENANT_ID),
             "key=" + TestProperties.getOrAbort(
-                    AzureTestProperty.AZURE_KEY_VAULT_SECRET_PAYLOAD_KEY),
-            "parser=json"};
+                    AzureTestProperty.AZURE_KEY_VAULT_SECRET_PAYLOAD_KEY)};
 
     String url = composeUrl(baseUrl, options);
     verifyProperties(url);
