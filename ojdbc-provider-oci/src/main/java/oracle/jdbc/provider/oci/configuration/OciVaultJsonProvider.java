@@ -61,6 +61,11 @@ public class OciVaultJsonProvider extends OracleConfigurationParsableProvider {
     return "ocivault";
   }
 
+  @Override
+  public String getParserType(String arg0) {
+    return "json";
+  }
+
   /**
    * {@inheritDoc}
    * @return cache of this provider which is used to store configuration

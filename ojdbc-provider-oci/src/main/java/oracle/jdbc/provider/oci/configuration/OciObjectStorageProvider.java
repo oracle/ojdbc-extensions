@@ -101,6 +101,11 @@ public class OciObjectStorageProvider
     return "ociobject";
   }
 
+  @Override
+  public String getParserType(String arg0) {
+    return "json";
+  }
+
   /**
    * {@inheritDoc}
    * @return cache of this provider which is used to store configuration
