@@ -65,7 +65,7 @@ public class AwsSecretsManagerConfigurationProviderTest {
 
     String url =
         TestProperties.getOrAbort(
-            AwsTestProperty.AWS_SECRETS_MANAGER_URL);
+            AwsTestProperty.AWS_SECRETS_MANAGER_URL).trim();
 
     assertTrue(
         url.startsWith(prefix),
