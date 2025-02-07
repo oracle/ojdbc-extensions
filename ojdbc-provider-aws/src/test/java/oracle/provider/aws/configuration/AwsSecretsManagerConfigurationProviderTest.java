@@ -61,11 +61,19 @@ public class AwsSecretsManagerConfigurationProviderTest {
    */
   @Test
   public void testDefaultAuthentication() throws SQLException {
-    String location =
+    final String prefix = "jdbc:oracle:thin:@config-awssecretsmanager://";
+
+    String url =
         TestProperties.getOrAbort(
-            AwsTestProperty.AWS_SECRET_NAME);
+            AwsTestProperty.AWS_SECRETS_MANAGER_URL);
+
+    assertTrue(
+        url.startsWith(prefix),
+        "AWS_SECRETS_MANAGER_URL should start with " + prefix);
+
     Properties properties = PROVIDER
-        .getConnectionProperties(location);
+        .getConnectionProperties(url.substring(prefix.length()));
+
     assertTrue(properties.containsKey("URL"), "Contains property URL");
     assertTrue(properties.containsKey("user"), "Contains property user");
     assertTrue(properties.containsKey("password"), "Contains property password");

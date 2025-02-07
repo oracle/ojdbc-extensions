@@ -123,7 +123,8 @@ jobs:
           " >> ojdbc-provider-jackson-oson/test.properties
           
           # Generate ojdbc-provider-aws/test.properties
-          echo -e "AWS_S3_URI=${{ secrets.TEST_AWS_S3_URI }}\n
+          echo -e "AWS_S3_URL=${{ secrets.TEST_AWS_S3_URL }}\n
+          AWS_SECRETS_MANAGER_URL=${{ secrets.TEST_AWS_SECRETS_MANAGER_URL }}\n
           " >> ojdbc-provider-aws/test.properties
           
       - name: Run tests with Maven

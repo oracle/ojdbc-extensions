@@ -61,11 +61,19 @@ public class AwsS3ConfigurationProviderTest {
    */
   @Test
   public void testDefaultAuthentication() throws SQLException {
-    String location =
+    final String prefix = "jdbc:oracle:thin:@config-awss3://";
+
+    String url =
         TestProperties.getOrAbort(
-            AwsTestProperty.AWS_S3_URI);
+            AwsTestProperty.AWS_S3_URL);
+
+    assertTrue(
+        url.startsWith(prefix),
+        "AWS_S3_URL should start with " + prefix);
+
     Properties properties = PROVIDER
-        .getConnectionProperties(location);
+        .getConnectionProperties(url.substring(prefix.length()));
+
     assertTrue(properties.containsKey("URL"), "Contains property URL");
     assertTrue(properties.containsKey("user"), "Contains property user");
     assertTrue(properties.containsKey("password"), "Contains property password");
