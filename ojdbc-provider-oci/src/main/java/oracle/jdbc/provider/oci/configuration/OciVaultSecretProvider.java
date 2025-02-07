@@ -65,7 +65,7 @@ public final class OciVaultSecretProvider
    * <p>
    *   Returns the password of the Secret that is retrieved from OCI Vault.
    * </p><p>
-   *   The {@code secretProperties} has the following form:
+   *   The JSON object has the following form:
    * </p><pre>{@code
    *   "password": {
    *       "type": "ocivault",
@@ -76,7 +76,8 @@ public final class OciVaultSecretProvider
    *   }
    * }</pre>
    *
-   * @param secretProperties TODO
+   * @param secretProperties a map containing the flattened key/value pairs of 
+   * the JSON object.
    * @return encoded char array in base64 format that represents the retrieved
    *         Secret.
    */

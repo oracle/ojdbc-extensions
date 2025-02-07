@@ -71,9 +71,9 @@ public final class AzureVaultSecretProvider
   /**
    * {@inheritDoc}
    * <p>
-   *   Returns the password of the Secret that is retrieved from Azure Key Vault.
+   * Returns the password of the Secret that is retrieved from Azure Key Vault.
    * </p><p>
-   *   The {@code secretJsonObject} has the following form:
+   *   The JSON object has the following form:
    * </p><pre>{@code
    *   "password": {
    *       "type": "azurevault",
@@ -84,7 +84,7 @@ public final class AzureVaultSecretProvider
    *   }
    * }</pre>
    *
-   * @param secretProperties json object to be parsed TODO
+   * @param secretProperties a map containing the flattened JSON object.
    * @return encoded char array in base64 format that represents the retrieved
    *         Secret.
    */
