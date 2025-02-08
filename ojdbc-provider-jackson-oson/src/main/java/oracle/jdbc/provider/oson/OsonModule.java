@@ -74,7 +74,7 @@ import java.util.logging.Logger;
  *   <li>{@link Duration} - {@link OsonDurationDeserializer} and {@link OsonDurationSerializer}</li>
  *   <li>{@link BigInteger} - {@link OsonBigIntegerDeserializer} and {@link OsonBigIntegerSerializer}</li>
  *   <li>{@link Year} - {@link OsonYearDeserializer} and {@link OsonYearSerializer}</li>
- *   <li>{@link byte[]} - {@link OsonByteDeserializer} and {@link OsonByteSerializer}</li>
+ *   <li>byte[] - {@link OsonByteDeserializer} and {@link OsonByteSerializer}</li>
  *   <li>{@link java.util.Date}- {@link OsonDateSerializer} and {@link OsonDateDeserializer} </li>
  *   <li>{@link java.sql.Date}- {@link OsonDateSerializer} and {@link OsonSqlDateDeserializer} </li>
  *   <li>{@link Timestamp}- {@link OsonDateSerializer} and {@link OsonTimeStampDeserializer} </li>

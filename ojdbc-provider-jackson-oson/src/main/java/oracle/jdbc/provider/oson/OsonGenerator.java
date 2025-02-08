@@ -532,7 +532,7 @@ public class OsonGenerator extends GeneratorBase {
 
   /**
    * Checks if the generator is closed.
-   * @return
+   * @return true if the generator is closed, otherwise false.
    */
   @Override
   public boolean isClosed() {

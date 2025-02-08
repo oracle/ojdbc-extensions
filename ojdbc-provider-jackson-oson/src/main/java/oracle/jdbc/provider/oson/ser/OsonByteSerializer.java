@@ -55,7 +55,6 @@ import java.io.IOException;
  *
  * @see StdSerializer
  * @see OsonGenerator
- * @see byte[]
  */
 public class OsonByteSerializer extends StdSerializer<byte[]> {
 
