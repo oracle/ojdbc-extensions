@@ -10,7 +10,7 @@
   <parent>
     <groupId>com.oracle.database.jdbc</groupId>
     <artifactId>ojdbc-extensions</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
   </parent>
 
   <dependencyManagement>
@@ -18,7 +18,7 @@
       <dependency>
         <groupId>com.azure</groupId>
         <artifactId>azure-sdk-bom</artifactId>
-        <version>1.2.19</version>
+        <version>1.2.30</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>

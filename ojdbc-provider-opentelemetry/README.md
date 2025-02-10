@@ -44,7 +44,7 @@ The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-opentelemetry</artifactId>
-  <version>1.0.2</version>
+  <version>1.0.3</version>
 </dependency>
 ```
 
@@ -59,14 +59,18 @@ oracle.jdbc.provider.traceEventListener=open-telemetry-trace-event-listener-prov
 
 ## Configuration
 
-A MBean with object name "com.oracle.jdbc.extension.opentelemetry:type=OpenTelemetryTraceEventListener"
-is registered by the provider. It exposes two attributes that  allows the configuration 
-of the TraceEventListener. The following attributes are available :
+The Oracle JDBC provider for Open Telemetry can be configured using system properties 
+or a MBean. Two parameters can be configured: 
   * **Enabled**: when enabled (*true*) traces will be exported to Open 
- Telemetry. This attribute is **enabled by default**.
-  * **SensitiveDataEnabled**: when enabled (*true*) attributes containing
+ Telemetry. This property is **enabled by default**.
+  * **Sensitive data enabled**: when enabled (*true*) attributes containing
  sensitive information like SQL statements and connection URL will be included
- in the traces. This attribute is **disabled by default**.
+ in the traces. This property is **disabled by default**.
+
+The system properties are "oracle.jdbc.provider.opentelemetry.enabled" and 
+"oracle.jdbc.provider.opentelemetry.sensitive-enabled" respectively and the MBean 
+with object name "com.oracle.jdbc.extension.opentelemetry:type=OpenTelemetryTraceEventListener"
+exposes two attributes "Enabled" and "SensitiveDataEnabled".
 
  The sample code below shows how to retrieve the value of an attribute:
 ```java
