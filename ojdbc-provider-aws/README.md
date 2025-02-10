@@ -105,7 +105,6 @@ For the JSON type of provider (AWS S3, AWS Secrets Manager, HTTP/HTTPS, File) th
         - ocivault
         - azurevault
         - base64
-        - gcpsecretmanager
         - awssecretsmanager
 - value
     - Mandatory
@@ -113,7 +112,6 @@ For the JSON type of provider (AWS S3, AWS Secrets Manager, HTTP/HTTPS, File) th
         - OCID of the secret (if ocivault)
         - Azure Key Vault URI (if azurevault)
         - Base64 Encoded password (if base64)
-        - GCP resource name (if gcpsecretmanager)
         - AWS Secret name (if awssecretsmanager)
 - authentication
     - Optional

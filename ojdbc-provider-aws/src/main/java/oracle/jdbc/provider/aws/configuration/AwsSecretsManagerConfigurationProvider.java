@@ -37,7 +37,7 @@
  */
 package oracle.jdbc.provider.aws.configuration;
 
-import oracle.jdbc.driver.OracleConfigurationJsonProvider;
+import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.aws.secrets.SecretsManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
@@ -51,9 +51,9 @@ import java.util.Map;
 /**
  * A provider for JSON payload which contains configuration from AWS Secrets
  * Manager.
- * See {@link #getJson(String)} for the spec of the JSON payload.
+ * See {@link #getInputStream(String)} for the spec of the JSON payload.
  **/
-public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationJsonProvider {
+public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationParsableProvider {
 
   /**
    * Parser that recognizes the named parameters which appear in a URL,
@@ -77,7 +77,7 @@ public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationJ
    * @return JSON payload
    */
   @Override
-  public InputStream getJson(String secretName) {
+  public InputStream getInputStream(String secretName) {
     final String valueFieldName = "value";
     Map<String, String> optionsWithSecret = new HashMap<>(options);
     optionsWithSecret.put(valueFieldName, secretName);
@@ -103,5 +103,14 @@ public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationJ
   @Override
   public OracleConfigurationCache getCache() {
     return CACHE;
+  }
+
+  /**
+   * {@inheritDoc}
+   * @return the parser type
+   */
+  @Override
+  public String getParserType(String location) {
+    return "json";
   }
 }

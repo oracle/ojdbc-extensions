@@ -38,17 +38,17 @@
 package oracle.jdbc.provider.aws.configuration;
 
 import oracle.jdbc.provider.aws.secrets.SecretsManagerFactory;
-import oracle.jdbc.provider.configuration.JsonSecretUtil;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
+import oracle.jdbc.spi.OracleConfigurationSecretProvider;
 import oracle.sql.json.OracleJsonObject;
 
 import java.util.Base64;
+import java.util.Map;
 
 import static oracle.jdbc.provider.aws.configuration.AwsSecretsManagerConfigurationProvider.PARAMETER_SET_PARSER;
 
 public class AwsJsonSecretsManagerProvider
-    implements OracleConfigurationJsonSecretProvider {
+    implements OracleConfigurationSecretProvider {
   /**
    * {@inheritDoc}
    * <p>
@@ -66,16 +66,13 @@ public class AwsJsonSecretsManagerProvider
    *   }
    * }</pre>
    *
-   * @param jsonObject json object to be parsed
+   * @param map Map object to be parsed
    * @return encoded char array in base64 format that represents the retrieved
    *         Secret.
    */
   @Override
-  public char[] getSecret(OracleJsonObject jsonObject) {
-    ParameterSet parameterSet =
-        PARAMETER_SET_PARSER
-            .parseNamedValues(
-                JsonSecretUtil.toNamedValues(jsonObject));
+  public char[] getSecret(Map<String, String> map) {
+    ParameterSet parameterSet = PARAMETER_SET_PARSER.parseNamedValues(map);
 
     String secretString = SecretsManagerFactory.getInstance()
         .request(parameterSet)

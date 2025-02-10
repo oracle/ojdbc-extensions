@@ -37,7 +37,7 @@
  */
 package oracle.jdbc.provider.aws.configuration;
 
-import oracle.jdbc.driver.OracleConfigurationJsonProvider;
+import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.aws.s3.S3Factory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
@@ -52,9 +52,9 @@ import static oracle.jdbc.provider.aws.s3.S3Factory.S3_URL;
 
 /**
  * A provider for JSON payload which contains configuration from AWS S3.
- * See {@link #getJson(String)} for the spec of the JSON payload.
+ * See {@link #getInputStream(String)} for the spec of the JSON payload.
  **/
-public class AwsS3ConfigurationProvider extends OracleConfigurationJsonProvider {
+public class AwsS3ConfigurationProvider extends OracleConfigurationParsableProvider {
     private static final ParameterSetParser PARAMETER_SET_PARSER =
         AwsConfigurationParameters.configureBuilder(
                 ParameterSetParser.builder()
@@ -73,7 +73,7 @@ public class AwsS3ConfigurationProvider extends OracleConfigurationJsonProvider 
      * @return JSON payload
      */
     @Override
-    public InputStream getJson(String s3Url) {
+    public InputStream getInputStream(String s3Url) {
         // Appends "s3://" as the URL prefix if it is not already present
         if (!s3Url.startsWith("s3://")) {
             s3Url = "s3://" + s3Url;
@@ -103,5 +103,14 @@ public class AwsS3ConfigurationProvider extends OracleConfigurationJsonProvider 
     @Override
     public OracleConfigurationCache getCache() {
         return CACHE;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @return the parser type
+     */
+    @Override
+    public String getParserType(String location) {
+        return "json";
     }
 }
