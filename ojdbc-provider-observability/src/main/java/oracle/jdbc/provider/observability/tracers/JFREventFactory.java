@@ -7,8 +7,23 @@ import jdk.jfr.Category;
 import oracle.jdbc.TraceEventListener.TraceContext;
 import oracle.jdbc.provider.observability.configuration.ObservabilityConfiguration;
 
+/**
+ * Factory class for creating JFR events depending on the database function.
+ */
 public class JFREventFactory {
 
+  /**
+   * This class only has a static method, no public constructor needed.
+   */
+  private JFREventFactory() { }
+
+  /**
+   * An instance of {@link RoundTripEvent} for the given trace context. The type
+   * of round trip event depends on the database function.
+   * 
+   * @param traceContext the trace context received by a TraceEventListener.
+   * @return the {@link RoundTripEvent} for the database function.
+   */
   public static RoundTripEvent createJFREvent(TraceContext traceContext) {
     switch (traceContext.databaseFunction()) {
       case ADVANCED_QUEUING_12C_EMON_DEQUEUE:

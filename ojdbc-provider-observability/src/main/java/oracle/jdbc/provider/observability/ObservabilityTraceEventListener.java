@@ -9,21 +9,6 @@ import oracle.jdbc.provider.observability.tracers.ObservabilityTracer;
 public class ObservabilityTraceEventListener implements TraceEventListener {
 
 
-  public enum Tracers {
-    OTEL(new OTelTracer()),
-    JFR(new JFRTracer());
-
-    private ObservabilityTracer tracer;
-
-    Tracers(ObservabilityTracer tracer) {
-      this.tracer = tracer;
-    }
-
-    public ObservabilityTracer getTracer() {
-      return tracer;
-    }
-  }
-
   @Override
   public Object roundTrip(Sequence sequence, TraceContext traceContext, Object userContext) {
     Object[] currentUserContext = getCurrentUserContext(userContext);

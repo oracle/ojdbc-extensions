@@ -93,7 +93,7 @@ public class ObservabilityTraceEventListenerTest {
               case SESSION_KEY:
                 assertEquals(connectionId, event.getString("connectionID"));
                 assertNotNull(event.getString("databaseOperation"));
-//                assertNull(event.getString("tenant"));
+                assertNull(event.getString("tenant"));
                 assertNull(event.getString("sqlID"));
                 assertNull(event.getString("originalSQLText"));
                 assertNull(event.getString("actualSQLText"));
@@ -102,7 +102,7 @@ public class ObservabilityTraceEventListenerTest {
               case AUTH_CALL:
                 assertEquals(connectionId, event.getString("connectionID"));
                 assertNotNull(event.getString("databaseOperation"));
-//                assertNull(event.getString("tenant"));
+                assertNull(event.getString("tenant"));
                 assertNull(event.getString("sqlID"));
                 assertNull(event.getString("originalSQLText"));
                 assertNull(event.getString("actualSQLText"));
@@ -112,7 +112,7 @@ public class ObservabilityTraceEventListenerTest {
               case EXECUTE_QUERY:
                 assertEquals(connectionId, event.getString("connectionID"));
                 assertNotNull(event.getString("databaseOperation"));
-//                assertNotNull(event.getString("tenant"));
+                assertNotNull(event.getString("tenant"));
                 assertNotNull(event.getString("sqlID"));
                 assertEquals(sensitiveDataEnabled, event.getString("originalSQLText") != null);
                 assertEquals(sensitiveDataEnabled, event.getString("actualSQLText") != null);
@@ -121,7 +121,7 @@ public class ObservabilityTraceEventListenerTest {
               case LOGOFF:
                 assertEquals(connectionId, event.getString("connectionID"));
                 assertNotNull(event.getString("databaseOperation"));
-//                assertNotNull(event.getString("tenant"));
+                assertNotNull(event.getString("tenant"));
                 assertNull(event.getString("sqlID"));
                 assertNull(event.getString("originalSQLText"));
                 assertNull(event.getString("actualSQLText"));

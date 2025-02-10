@@ -5,8 +5,14 @@ import oracle.jdbc.TraceEventListener.Sequence;
 import oracle.jdbc.TraceEventListener.TraceContext;
 import oracle.jdbc.provider.observability.tracers.JFREventFactory.RoundTripEvent;
 
+/**
+ * {@link ObservabilityTracer} for tracing Java Flight Recorder events.
+ */
 public class JFRTracer implements ObservabilityTracer{
 
+  /**
+   * Creates a new instance.
+   */
   public JFRTracer() {}
 
   @Override

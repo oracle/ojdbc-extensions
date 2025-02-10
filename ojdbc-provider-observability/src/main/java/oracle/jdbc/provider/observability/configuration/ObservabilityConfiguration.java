@@ -6,7 +6,11 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import oracle.jdbc.provider.observability.ObservabilityTraceEventListener;
+import oracle.jdbc.provider.observability.tracers.Tracers;
 
+/**
+ * 
+ */
 public class ObservabilityConfiguration implements ObservabilityConfigurationMBean {
 
   private static final ReentrantLock observabilityConfiguraitonLock = new ReentrantLock();
@@ -24,7 +28,7 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
   private boolean sensitiveDataEnabled;
   private String tracers;
 
-  private List<ObservabilityTraceEventListener.Tracers> enabledTracers = new ArrayList<>();
+  private List<Tracers> enabledTracers = new ArrayList<>();
 
   @Override
   public String getEnabledTracers() {
@@ -44,7 +48,7 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
       String[] items = tracers.split(",");
       for (String item : items) {
         if (item != null) {
-          enabledTracers.add(ObservabilityTraceEventListener.Tracers.valueOf(item.toUpperCase()));
+          enabledTracers.add(Tracers.valueOf(item.toUpperCase()));
         }
       }
       this.tracers = enabledTracers.stream().map((item) -> item.toString()).collect(Collectors.joining(","));
@@ -68,7 +72,7 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
     return INSTANCE;
   }
 
-  public List<ObservabilityTraceEventListener.Tracers> getEnabledTracersSet() {
+  public List<Tracers> getEnabledTracersSet() {
     return enabledTracers;
   }
 
