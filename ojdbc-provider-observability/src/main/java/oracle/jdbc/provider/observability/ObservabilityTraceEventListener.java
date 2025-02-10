@@ -2,9 +2,7 @@ package oracle.jdbc.provider.observability;
 
 import oracle.jdbc.TraceEventListener;
 import oracle.jdbc.provider.observability.configuration.ObservabilityConfiguration;
-import oracle.jdbc.provider.observability.tracers.JFRTracer;
-import oracle.jdbc.provider.observability.tracers.OTelTracer;
-import oracle.jdbc.provider.observability.tracers.ObservabilityTracer;
+import oracle.jdbc.provider.observability.tracers.Tracers;
 
 public class ObservabilityTraceEventListener implements TraceEventListener {
 
