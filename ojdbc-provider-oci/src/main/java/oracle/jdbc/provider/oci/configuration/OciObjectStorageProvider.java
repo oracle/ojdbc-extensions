@@ -38,7 +38,7 @@
 
 package oracle.jdbc.provider.oci.configuration;
 
-import oracle.jdbc.driver.OracleConfigurationJsonProvider;
+import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.oci.objectstorage.ObjectFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.util.OracleConfigurationCache;
@@ -49,10 +49,10 @@ import java.util.Map;
 
 /**
  * A provider for JSON payload which contains configuration from OCI Object
- * Storage. See {@link #getJson(String)} for the spec of the JSON payload.
+ * Storage. See {@link #getInputStream(String)} for the spec of the JSON payload.
  */
 public class OciObjectStorageProvider
-  extends OracleConfigurationJsonProvider {
+  extends OracleConfigurationParsableProvider {
 
   /**
    * {@inheritDoc}
@@ -71,7 +71,7 @@ public class OciObjectStorageProvider
    * @return JSON payload
    */
   @Override
-  public InputStream getJson(String objectUrl) {
+  public InputStream getInputStream(String objectUrl) {
     // Add implicit prefix if not informed
     if (!objectUrl.startsWith("https://")) {
       objectUrl = "https://" + objectUrl;
@@ -99,6 +99,11 @@ public class OciObjectStorageProvider
   @Override
   public String getType() {
     return "ociobject";
+  }
+
+  @Override
+  public String getParserType(String arg0) {
+    return "json";
   }
 
   /**

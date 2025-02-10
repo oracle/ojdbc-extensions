@@ -70,7 +70,7 @@ consume the JDBC driver.
 The requirements for using a provider are:
 <ul>
 <li>The class path includes the provider's jar.</li>
-<li>The class path includes Oracle JDBC 23.3 or newer.</li>
+<li>The class path includes Oracle JDBC 23.7 or newer.</li>
 <li>Oracle JDBC is configured to use the provider.</li>
 </ul>
 
