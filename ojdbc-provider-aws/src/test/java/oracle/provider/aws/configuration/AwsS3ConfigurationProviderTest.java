@@ -65,7 +65,7 @@ public class AwsS3ConfigurationProviderTest {
 
     String url =
         TestProperties.getOrAbort(
-            AwsTestProperty.AWS_S3_URL).trim();
+            AwsTestProperty.AWS_S3_URL);
 
     assertTrue(
         url.startsWith(prefix),
