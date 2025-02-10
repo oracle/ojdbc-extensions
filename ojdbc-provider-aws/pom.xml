@@ -5,7 +5,6 @@
   <name>Oracle JDBC AWS Providers</name>
 
   <artifactId>ojdbc-provider-aws</artifactId>
-  <version>1.0.2</version>
   <packaging>jar</packaging>
 
   <parent>
