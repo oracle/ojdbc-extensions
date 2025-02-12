@@ -40,14 +40,13 @@ package oracle.jdbc.provider.gcp.configuration;
 import com.google.protobuf.ByteString;
 
 import java.util.Base64;
+import java.util.Map;
 
-import oracle.jdbc.provider.configuration.JsonSecretUtil;
 import oracle.jdbc.provider.gcp.secrets.GcpSecretManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
-import oracle.sql.json.OracleJsonObject;
+import oracle.jdbc.spi.OracleConfigurationSecretProvider;
 
-public class GcpJsonSecretManagerProvider implements OracleConfigurationJsonSecretProvider {
+public class GcpJsonSecretManagerProvider implements OracleConfigurationSecretProvider {
 
   /**
    * {@inheritDoc}
@@ -55,7 +54,7 @@ public class GcpJsonSecretManagerProvider implements OracleConfigurationJsonSecr
    * Returns the password of the Secret that is retrieved from GCP Secrets.
    * </p>
    * <p>
-   * The {@code jsonObject} has the following form:
+   * The JSON object has the following form:
    * </p>
    * 
    * <pre>{@code
@@ -65,14 +64,15 @@ public class GcpJsonSecretManagerProvider implements OracleConfigurationJsonSecr
    *   }
    * }</pre>
    *
-   * @param jsonObject json object to be parsed
+   * @param secretProperties a map containing the flattened key/value pairs of 
+   * the JSON object.
    * @return encoded char array in base64 format that represents the retrieved
    *         Secret.
    */
   @Override
-  public char[] getSecret(OracleJsonObject jsonObject) {
+  public char[] getSecret(Map<String, String> secretProperties) {
     ParameterSet parameterSet = GcpConfigurationParameters.getParser().parseNamedValues(
-        JsonSecretUtil.toNamedValues(jsonObject));
+      secretProperties);
 
     ByteString stringData = GcpSecretManagerFactory.getInstance().request(parameterSet).getContent().getData();
     return Base64.getEncoder().encodeToString(stringData.toByteArray()).toCharArray();
@@ -82,4 +82,5 @@ public class GcpJsonSecretManagerProvider implements OracleConfigurationJsonSecr
   public String getSecretType() {
     return "gcpsecretmanager";
   }
+
 }

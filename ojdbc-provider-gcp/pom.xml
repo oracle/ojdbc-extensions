@@ -7,12 +7,12 @@
   <name>Oracle JDBC GCP Providers</name>
 
   <artifactId>ojdbc-provider-gcp</artifactId>
-    <packaging>jar</packaging>
+  <packaging>jar</packaging>
 
   <parent>
     <groupId>com.oracle.database.jdbc</groupId>
     <artifactId>ojdbc-extensions</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
   </parent>
 
   <dependencyManagement>

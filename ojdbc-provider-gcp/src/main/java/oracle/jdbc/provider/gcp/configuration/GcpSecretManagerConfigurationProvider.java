@@ -43,7 +43,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import oracle.jdbc.driver.OracleConfigurationJsonProvider;
+import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.gcp.secrets.GcpSecretManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.util.OracleConfigurationCache;
@@ -51,10 +51,10 @@ import oracle.jdbc.util.OracleConfigurationCache;
 /**
  * A provider for JSON payload which contains configuration from GCP Secret
  * Manager.
- * See {@link #getJson(String)} for the spec of the JSON payload.
+ * See {@link #getInputStream(String)} for the spec of the JSON payload.
  **/
 public class GcpSecretManagerConfigurationProvider
-    extends OracleConfigurationJsonProvider {
+    extends OracleConfigurationParsableProvider {
 
   @Override
   public String getType() {
@@ -72,7 +72,7 @@ public class GcpSecretManagerConfigurationProvider
    * @return JSON payload
    */
   @Override
-  public InputStream getJson(String location) throws SQLException {
+  public InputStream getInputStream(String location) throws SQLException {
     Map<String, String> namedValues = new HashMap<>();
     namedValues.put("secretVersionName", location);
     ParameterSet parameterSet = GcpConfigurationParameters.getParser().parseNamedValues(namedValues);

@@ -42,17 +42,17 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import oracle.jdbc.driver.OracleConfigurationJsonProvider;
+import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.gcp.objectstorage.GcpCloudStorageFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.util.OracleConfigurationCache;
 
 /**
  * A provider for JSON payload which contains configuration from GCP Cloud
- * Storage. See {@link #getJson(String)} for the spec of the JSON payload.
+ * Storage. See {@link #getInputStream(String)} for the spec of the JSON payload.
  */
 public class GcpCloudStorageConfigurationProvider
-    extends OracleConfigurationJsonProvider {
+    extends OracleConfigurationParsableProvider {
 
   public static final String PROJECT_PARAMETER = "project";
   public static final String BUCKET_PARAMETER = "bucket";
@@ -82,7 +82,7 @@ public class GcpCloudStorageConfigurationProvider
    * @return JSON payload
    */
   @Override
-  public InputStream getJson(String location) throws SQLException {
+  public InputStream getInputStream(String location) throws SQLException {
     Map<String, String> namedValues = new HashMap<>();
     String[] keyValuePairs = location.split(";");
     for (String keyValuePair : keyValuePairs) {
