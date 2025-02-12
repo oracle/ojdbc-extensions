@@ -40,6 +40,7 @@ package oracle.jdbc.provider.gcp.configuration;
 import static oracle.jdbc.provider.gcp.secrets.GcpSecretManagerFactory.SECRET_VERSION_NAME;
 
 import oracle.jdbc.provider.gcp.objectstorage.GcpCloudStorageFactory;
+import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSetParser;;
 
 public class GcpConfigurationParameters {
@@ -59,6 +60,7 @@ public class GcpConfigurationParameters {
           GcpCloudStorageConfigurationProvider.BUCKET_PARAMETER, GcpCloudStorageFactory.BUCKET)
       .addParameter(
           GcpCloudStorageConfigurationProvider.OBJECT_PARAMETER, GcpCloudStorageFactory.OBJECT)
+      .addParameter("type", Parameter.create())
       .build();
 
   /**

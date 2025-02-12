@@ -88,4 +88,9 @@ public class GcpSecretManagerConfigurationProvider
   public OracleConfigurationCache getCache() {
     return CACHE;
   }
+
+  @Override
+  public String getParserType(String arg0) {
+    return "json";
+  }
 }
