@@ -103,7 +103,7 @@ public class MultiThreadTest {
                 try(ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray())) {
                   try (OracleJsonParser oParser = jsonFactory.createJsonBinaryParser(in)) {
                     Organisation deserOrg = (Organisation) conv.deserialize(oParser, Organisation.class);
-                    Assertions.assertEquals(deserOrg, organisation);
+                    Assertions.assertEquals(organisation, deserOrg);
                   }
                 }
 

@@ -14,11 +14,11 @@ in order to use the Oracle JDBC driver's JSON processing capabilities. It, there
 - **Java Types Handling**: Support for various complex and basic Java types during serialization and deserialization.
 - **Jackson Annotation support**: Support for Jackson Annotations. Note: When **@Format** annotation is used, the values are processed as Strings.
 
-## Java type to Oson Mappings
+## Java type to OSON Mappings
 When the **OSON Provider for Jackson** is used the Java types are stored as their corresponding OSON types. The type
 mapping is given by the following table.
 
-| **Java Type**                              | **Oson Type**      |
+| **Java Type**                              | **OSON Type**      |
 |--------------------------------------------|--------------------|
 | `LocalDateTime`                            | `OSON TIMESTAMP`   |
 | `OffsetDateTime`                           | `OSON TIMESTAMPTZ` |
@@ -27,7 +27,7 @@ mapping is given by the following table.
 | `BigInteger`                               | `OSON NUMBER`      |
 | `Year`                                     | `OSON NUMBER`      |
 | `byte[]`                                   | `OSON byte[]`      |
-| `java.util.Date`                           | `OSON DATE`        |
+| `java.util.Date`                           | `OSON TIMESTAMP`   |
 | `java.sql.Date`                            | `OSON DATE`        |
 | `Timestamp`                                | `OSON TIMESTAMP`   |
 | `LocalDate`                                | `OSON DATE`        |
@@ -44,7 +44,7 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-jackson-oson</artifactId>
-  <version>1.0.2</version>
+  <version>1.0.3</version>
 </dependency>
 ```
 ### Note
@@ -56,7 +56,7 @@ It can be done in maven as:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-jackson-oson</artifactId>
-  <version>1.0.2</version>
+  <version>1.0.3</version>
     <exclusions>
         <exclusion>
             <groupId>com.oracle.database.jdbc</groupId> 
@@ -87,6 +87,8 @@ Usage Examples for Oracle Jackson OSON Provider Extensions can be found at [ojdb
   a POJO during retrieval. In this case, the JDBC Thin Driver invokes the provider to serialize/deserialize.
 - **[AccessJsonColumnUsingHibernate](../ojdbc-provider-samples/src/main/java/oracle/jdbc/provider/oson/sample/AccessJsonColumnUsingHibernate.java)**: 
   Performs the same task as above using Hibernate. 
+- **[NestedStructurePOJO](../ojdbc-provider-samples/src/main/java/oracle/jdbc/provider/oson/sample/NestedStructurePOJO.java)**:
+  Shows how to store and  retrieve Java objects in JSON Collection tables.
 - **[AccessJsonColumnUsingJacksonObjectNode](../ojdbc-provider-samples/src/main/java/oracle/jdbc/provider/oson/sample/AccessJsonColumnUsingJacksonObjectNode.java)**: 
   Demonstrates the usage of the Jackson OSON provider to serialize Jackson's ObjectNode 
   to OSON bytes for insertion and retrieval.

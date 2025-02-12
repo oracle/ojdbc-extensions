@@ -81,6 +81,7 @@ public final class OciConfigurationParameters {
     ParameterSetParser.builder()
       .addParameter("key", KEY, "")
       .addParameter("value", OCID, "")
+      .addParameter("type", Parameter.create())
       .addParameter("object_url", OBJECT_URL, "")
       .addParameter("AUTHENTICATION", AUTHENTICATION_METHOD,
         API_KEY,

@@ -59,6 +59,7 @@ import oracle.jdbc.provider.parameter.ParameterSet;
  * {@link TokenCredential} created by {@link TokenCredentialFactory} is passed
  * to the {@link #request(TokenCredential, ParameterSet)} method of a subclass.
  * </p>
+ * @param <T> the type
  */
 public abstract class AzureResourceFactory<T> implements ResourceFactory<T> {
 

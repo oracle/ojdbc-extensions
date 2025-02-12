@@ -130,6 +130,11 @@ public class Employee {
   private Date hireDate;
 
   /**
+   * The date the employee was hired in java.util.Date.
+   */
+  private java.util.Date hireUtilDate;
+
+  /**
    * The LocalDate the employee was hired.
    */
   private LocalDate localHireDate;
@@ -261,7 +266,7 @@ public class Employee {
                   long logoutTime, ZonedDateTime vacationZonedDateTime, short deptId, long employeeCode, byte grade,
                   float bonus, double prevSalary, char gender, Period totalPeriod, Integer idBoxed, Boolean isActiveBoxed,
                   Byte rankBoxed, Character genderBoxed, Short ageBoxed, Long salaryBoxed, Float performanceScoreBoxed,
-                  Double bonusBoxed) {
+                  Double bonusBoxed, java.util.Date hireUtilDate) {
     this.employeeId = employeeId;
     this.salary = salary;
     this.largeNumber = largeNumber;
@@ -302,6 +307,7 @@ public class Employee {
     this.salaryBoxed = salaryBoxed;
     this.performanceScoreBoxed = performanceScoreBoxed;
     this.bonusBoxed = bonusBoxed;
+    this.hireUtilDate = hireUtilDate;
   }
 
 // Getters and Setters
@@ -940,6 +946,16 @@ public class Employee {
     this.bonusBoxed = bonusBoxed;
   }
 
+  public java.util.Date getHireUtilDate() {
+    return hireUtilDate;
+  }
+
+  public void setHireUtilDate(java.util.Date hireUtilDate) {
+    this.hireUtilDate = hireUtilDate;
+  }
+
+
+
 
   /**
    * Provides a string representation of the Employee object.
@@ -950,18 +966,26 @@ public class Employee {
   public String toString() {
     return "Employee{" +
             "employeeId=" + employeeId +
+            ", logoutTime=" + logoutTime +
+            ", active=" + active +
+            ", deptId=" + deptId +
+            ", employeeCode=" + employeeCode +
+            ", grade=" + grade +
+            ", bonus=" + bonus +
+            ", prevSalary=" + prevSalary +
+            ", gender=" + gender +
             ", salary=" + salary +
             ", largeNumber=" + largeNumber +
             ", firstName='" + firstName + '\'' +
             ", middleInitial='" + middleInitial + '\'' +
             ", lastName='" + lastName + '\'' +
             ", hireDate=" + hireDate +
+            ", hireUtilDate=" + hireUtilDate +
             ", localHireDate=" + localHireDate +
             ", loginInstant=" + loginInstant +
             ", loginLocalTime=" + loginLocalTime +
             ", salaryMonthDay=" + salaryMonthDay +
             ", incrementYearmonth=" + incrementYearmonth +
-            ", logoutTime=" + logoutTime +
             ", startTime=" + startTime +
             ", lastUpdated=" + lastUpdated +
             ", localDateTime=" + localDateTime +
@@ -970,16 +994,9 @@ public class Employee {
             ", durationOfEmployment=" + durationOfEmployment +
             ", picture=" + Arrays.toString(picture) +
             ", resume='" + resume + '\'' +
-            ", active=" + active +
             ", rawData=" + Arrays.toString(rawData) +
             ", phones=" + phones +
             ", vacationZonedDateTime=" + vacationZonedDateTime +
-            ", deptId=" + deptId +
-            ", employeeCode=" + employeeCode +
-            ", grade=" + grade +
-            ", bonus=" + bonus +
-            ", gender=" + gender +
-            ", prevSalary=" + prevSalary +
             ", totalPeriod=" + totalPeriod +
             ", idBoxed=" + idBoxed +
             ", isActiveBoxed=" + isActiveBoxed +
@@ -993,41 +1010,58 @@ public class Employee {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    Employee employee = (Employee) o;
-    return employeeId == employee.employeeId && logoutTime == employee.logoutTime && active == employee.active
-            && deptId == employee.deptId && employeeCode == employee.employeeCode && grade == employee.grade
-            && Float.compare(bonus, employee.bonus) == 0 && Double.compare(prevSalary, employee.prevSalary) == 0
+  public boolean equals(Object object) {
+    if (this == object) return true;
+    if (object == null || getClass() != object.getClass()) return false;
+    Employee employee = (Employee) object;
+    return employeeId == employee.employeeId && logoutTime == employee.logoutTime
+            && active == employee.active && deptId == employee.deptId
+            && employeeCode == employee.employeeCode && grade == employee.grade
+            && Float.compare(bonus, employee.bonus) == 0
+            && Double.compare(prevSalary, employee.prevSalary) == 0
             && gender == employee.gender && Objects.equals(salary, employee.salary)
-            && Objects.equals(largeNumber, employee.largeNumber) && Objects.equals(firstName, employee.firstName)
-            && Objects.equals(middleInitial, employee.middleInitial) && Objects.equals(lastName, employee.lastName)
-            && Objects.equals(hireDate, employee.hireDate) && Objects.equals(localHireDate, employee.localHireDate)
-            && Objects.equals(loginInstant, employee.loginInstant) && Objects.equals(loginLocalTime, employee.loginLocalTime)
+            && Objects.equals(largeNumber, employee.largeNumber)
+            && Objects.equals(firstName, employee.firstName)
+            && Objects.equals(middleInitial, employee.middleInitial)
+            && Objects.equals(lastName, employee.lastName)
+            && Objects.equals(hireDate, employee.hireDate)
+            && Objects.equals(hireUtilDate, employee.hireUtilDate)
+            && Objects.equals(localHireDate, employee.localHireDate)
+            && Objects.equals(loginInstant, employee.loginInstant)
+            && Objects.equals(loginLocalTime, employee.loginLocalTime)
             && Objects.equals(salaryMonthDay, employee.salaryMonthDay)
             && Objects.equals(incrementYearmonth, employee.incrementYearmonth)
-            && Objects.equals(startTime, employee.startTime) && Objects.equals(lastUpdated, employee.lastUpdated)
-            && Objects.equals(localDateTime, employee.localDateTime) && Objects.equals(offsetDateTime, employee.offsetDateTime)
-            && Objects.equals(yearJoined, employee.yearJoined) && Objects.equals(durationOfEmployment, employee.durationOfEmployment)
-            &&  Objects.equals(resume, employee.resume)
+            && Objects.equals(startTime, employee.startTime)
+            && Objects.equals(lastUpdated, employee.lastUpdated)
+            && Objects.equals(localDateTime, employee.localDateTime)
+            && Objects.equals(offsetDateTime, employee.offsetDateTime)
+            && Objects.equals(yearJoined, employee.yearJoined)
+            && Objects.equals(durationOfEmployment, employee.durationOfEmployment)
+            && Objects.deepEquals(picture, employee.picture)
+            && Objects.equals(resume, employee.resume)
+            && Objects.deepEquals(rawData, employee.rawData)
             && Objects.equals(phones, employee.phones)
             && Objects.equals(vacationZonedDateTime, employee.vacationZonedDateTime)
-            && Objects.equals(totalPeriod, employee.totalPeriod) && Objects.equals(idBoxed, employee.idBoxed)
-            && Objects.equals(isActiveBoxed, employee.isActiveBoxed) && Objects.equals(rankBoxed, employee.rankBoxed)
-            && Objects.equals(genderBoxed, employee.genderBoxed) && Objects.equals(ageBoxed, employee.ageBoxed)
-            && Objects.equals(salaryBoxed, employee.salaryBoxed) && Objects.equals(performanceScoreBoxed, employee.performanceScoreBoxed)
-            && Objects.equals(bonusBoxed, employee.bonusBoxed)
-            && Arrays.equals(picture, employee.picture) && Arrays.equals(rawData, employee.rawData);
+            && Objects.equals(totalPeriod, employee.totalPeriod)
+            && Objects.equals(idBoxed, employee.idBoxed)
+            && Objects.equals(isActiveBoxed, employee.isActiveBoxed)
+            && Objects.equals(rankBoxed, employee.rankBoxed)
+            && Objects.equals(genderBoxed, employee.genderBoxed)
+            && Objects.equals(ageBoxed, employee.ageBoxed)
+            && Objects.equals(salaryBoxed, employee.salaryBoxed)
+            && Objects.equals(performanceScoreBoxed, employee.performanceScoreBoxed)
+            && Objects.equals(bonusBoxed, employee.bonusBoxed);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(employeeId, logoutTime, active, deptId, employeeCode, grade, bonus, prevSalary, gender,
-            salary, largeNumber, firstName, middleInitial, lastName, hireDate, localHireDate, loginInstant,
-            loginLocalTime, salaryMonthDay, incrementYearmonth, startTime, lastUpdated, localDateTime, offsetDateTime,
-            yearJoined, durationOfEmployment, Arrays.hashCode(picture), resume, Arrays.hashCode(rawData), phones,
-            vacationZonedDateTime, totalPeriod, idBoxed, isActiveBoxed, rankBoxed, genderBoxed, ageBoxed, salaryBoxed,
-            performanceScoreBoxed, bonusBoxed);
+    return Objects.hash(employeeId, logoutTime, active, deptId, employeeCode, grade,
+            bonus, prevSalary, gender, salary, largeNumber, firstName, middleInitial,
+            lastName, hireDate, hireUtilDate, localHireDate, loginInstant, loginLocalTime,
+            salaryMonthDay, incrementYearmonth, startTime, lastUpdated, localDateTime,
+            offsetDateTime, yearJoined, durationOfEmployment,
+            Arrays.hashCode(picture), resume, Arrays.hashCode(rawData), phones,
+            vacationZonedDateTime, totalPeriod, idBoxed, isActiveBoxed,
+            rankBoxed, genderBoxed, ageBoxed, salaryBoxed, performanceScoreBoxed, bonusBoxed);
   }
 }
