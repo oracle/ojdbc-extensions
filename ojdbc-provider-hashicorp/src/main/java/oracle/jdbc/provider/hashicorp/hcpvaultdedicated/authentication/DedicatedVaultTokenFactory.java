@@ -190,8 +190,10 @@ public final class DedicatedVaultTokenFactory
 
   private static CachedToken createUserpassToken(ParameterSet parameterSet) {
     String vaultAddr = getRequiredOrFallback(parameterSet, VAULT_ADDR, "VAULT_ADDR");
-    String authPath = getOptionalOrFallback(parameterSet, USERPASS_AUTH_PATH, "USERPASS_AUTH_PATH");
-    String namespace = getOptionalOrFallback(parameterSet, NAMESPACE, "VAULT_NAMESPACE");
+    String authPath = getOptionalOrFallback(parameterSet, USERPASS_AUTH_PATH,
+            "USERPASS_AUTH_PATH", "userpass");
+    String namespace = getOptionalOrFallback(parameterSet, NAMESPACE,
+            "VAULT_NAMESPACE", "admin");
     String username = getRequiredOrFallback(parameterSet, USERNAME, "VAULT_USERNAME");
     String password = getRequiredOrFallback(parameterSet, PASSWORD, "VAULT_PASSWORD");
 
@@ -201,10 +203,12 @@ public final class DedicatedVaultTokenFactory
 
   private static CachedToken createAppRoleToken(ParameterSet parameterSet) {
     String vaultAddr = getRequiredOrFallback(parameterSet, VAULT_ADDR, "VAULT_ADDR");
-    String namespace = getOptionalOrFallback(parameterSet, NAMESPACE, "VAULT_NAMESPACE");
+    String namespace = getOptionalOrFallback(parameterSet, NAMESPACE,
+            "VAULT_NAMESPACE", "admin");
     String roleId = getRequiredOrFallback(parameterSet, ROLE_ID, "VAULT_ROLE_ID");
     String secretId = getRequiredOrFallback(parameterSet, SECRET_ID, "VAULT_SECRET_ID");
-    String authPath = getOptionalOrFallback(parameterSet, APPROLE_AUTH_PATH, "APPROLE_AUTH_PATH");
+    String authPath = getOptionalOrFallback(parameterSet, APPROLE_AUTH_PATH,
+            "APPROLE_AUTH_PATH", "approle");
 
     return authenticateWithAppRole(vaultAddr, namespace, roleId, secretId,authPath);
   }
@@ -212,8 +216,10 @@ public final class DedicatedVaultTokenFactory
   private static CachedToken createGitHubToken(ParameterSet parameterSet) {
     String vaultAddr = getRequiredOrFallback(parameterSet, VAULT_ADDR, "VAULT_ADDR");
     String githubToken = getRequiredOrFallback(parameterSet, GITHUB_TOKEN, "GITHUB_TOKEN");
-    String namespace = getOptionalOrFallback(parameterSet, NAMESPACE, "VAULT_NAMESPACE");
-    String github_auth_path = getOptionalOrFallback(parameterSet, GITHUB_AUTH_PATH, "GITHUB_AUTH_PATH");
+    String namespace = getOptionalOrFallback(parameterSet, NAMESPACE,
+            "VAULT_NAMESPACE", "admin");
+    String github_auth_path = getOptionalOrFallback(parameterSet,
+            GITHUB_AUTH_PATH, "GITHUB_AUTH_PATH", "github");
 
     return authenticateWithGitHub(vaultAddr, namespace, githubToken, github_auth_path);
   }
@@ -239,9 +245,6 @@ public final class DedicatedVaultTokenFactory
    */
   private static CachedToken authenticateWithUserpass(String vaultAddr, String authPath, String namespace, String username, String password) {
     try {
-      if (authPath == null || authPath.isEmpty()) {
-        authPath = "userpass";
-      }
       String authEndpoint = vaultAddr + "/v1/auth/" + authPath + "/login/" + username;
       HttpURLConnection conn = HttpUtil.createConnection(authEndpoint, "POST",
               "application/json",
@@ -282,9 +285,6 @@ public final class DedicatedVaultTokenFactory
    */
   private static CachedToken authenticateWithAppRole(String vaultAddr, String namespace, String roleId, String secretId, String authPath) {
     try {
-      if (authPath == null || authPath.isEmpty()) {
-        authPath = "approle";
-      }
       String authEndpoint = vaultAddr + "/v1/auth/" + authPath + "/login";
       HttpURLConnection conn = HttpUtil.createConnection(authEndpoint, "POST",
               "application/json",
@@ -325,9 +325,6 @@ public final class DedicatedVaultTokenFactory
    */
   private static CachedToken authenticateWithGitHub(String vaultAddr, String namespace, String githubToken, String githubAuthPath) {
     try {
-      if (githubAuthPath == null || githubAuthPath.isEmpty()) {
-        githubAuthPath = "github";
-      }
       String authEndpoint = vaultAddr + "/v1/auth/" + githubAuthPath + "/login";
       HttpURLConnection conn = HttpUtil.createConnection(authEndpoint, "POST",
               "application/json",
@@ -365,16 +362,17 @@ public final class DedicatedVaultTokenFactory
     String vaultAddr = getRequiredOrFallback(parameterSet, VAULT_ADDR, "VAULT_ADDR");
     keyBuilder.add("VAULT_ADDR", VAULT_ADDR, vaultAddr);
 
-    String namespace = getOptionalOrFallback(parameterSet, NAMESPACE, "VAULT_NAMESPACE");
-    if (namespace != null && !namespace.isEmpty()) {
-      keyBuilder.add("VAULT_NAMESPACE", NAMESPACE, namespace);
-    }
+    String namespace = getOptionalOrFallback(parameterSet, NAMESPACE,
+            "VAULT_NAMESPACE", "admin");
+
+    keyBuilder.add("VAULT_NAMESPACE", NAMESPACE, namespace);
 
     switch (method) {
       case APPROLE: {
         String roleId = getRequiredOrFallback(parameterSet, ROLE_ID, "VAULT_ROLE_ID");
         String secretId = getRequiredOrFallback(parameterSet, SECRET_ID, "VAULT_SECRET_ID");
-        String authPath = getOptionalOrFallback(parameterSet, APPROLE_AUTH_PATH, "APPROLE_AUTH_PATH");
+        String authPath = getOptionalOrFallback(parameterSet,
+                APPROLE_AUTH_PATH, "APPROLE_AUTH_PATH", "approle");
         if (authPath != null && !authPath.isEmpty()) {
           keyBuilder.add("APPROLE_AUTH_PATH", APPROLE_AUTH_PATH, authPath);
         }
@@ -383,7 +381,8 @@ public final class DedicatedVaultTokenFactory
         break;
       }
       case USERPASS: {
-        String authPath = getOptionalOrFallback(parameterSet, USERPASS_AUTH_PATH, "USERPASS_AUTH_PATH");
+        String authPath = getOptionalOrFallback(parameterSet,
+                USERPASS_AUTH_PATH, "USERPASS_AUTH_PATH", "userpass");
         String username = getRequiredOrFallback(parameterSet, USERNAME, "VAULT_USERNAME");
         String password = getRequiredOrFallback(parameterSet, PASSWORD, "VAULT_PASSWORD");
         if (authPath != null && !authPath.isEmpty()) {
@@ -395,7 +394,8 @@ public final class DedicatedVaultTokenFactory
       }
       case GITHUB: {
         String githubToken = getRequiredOrFallback(parameterSet, GITHUB_TOKEN, "GITHUB_TOKEN");
-        String githubAuthPath = getOptionalOrFallback(parameterSet, GITHUB_AUTH_PATH, "GITHUB_AUTH_PATH");
+        String githubAuthPath = getOptionalOrFallback(parameterSet,
+                GITHUB_AUTH_PATH, "GITHUB_AUTH_PATH", "github");
         if (githubAuthPath != null && !githubAuthPath.isEmpty()) {
           keyBuilder.add("GITHUB_AUTH_PATH", GITHUB_AUTH_PATH, githubAuthPath);
         }

@@ -49,17 +49,21 @@ public final class ParameterUtil {
 
   /**
    * Fetches a parameter from the ParameterSet or falls back to
-   * environment/system properties. Returns null if the value is not found.
+   * environment/system properties. Returns the default value if no value is found.
    *
    * @param parameterSet the ParameterSet to search for the parameter
    * @param parameter the Parameter to fetch from the ParameterSet
    * @param envKey the environment/system property key to use as fallback
-   * @return the parameter value or null if not found
+   * @param defaultValue the default value to return if no value is found
+   * @return the parameter value, environment/system property value, or
+   * the default value
    */
   public static String getOptionalOrFallback(
-          ParameterSet parameterSet, Parameter<String> parameter, String envKey) {
+          ParameterSet parameterSet, Parameter<String> parameter,
+          String envKey, String defaultValue) {
     return Optional.ofNullable(parameterSet.getOptional(parameter))
-            .orElse(getEnvOrProperty(envKey));
+            .orElse(Optional.ofNullable(getEnvOrProperty(envKey))
+                    .orElse(defaultValue));
   }
 
 }

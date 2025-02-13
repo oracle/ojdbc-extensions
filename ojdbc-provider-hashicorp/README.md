@@ -102,7 +102,7 @@ The provider searches for the following parameters:
 </tr>
 <tr>
 <td><code>VAULT_NAMESPACE</code></td>
-<td>The namespace in the Vault (if applicable)</td>
+<td>The namespace in the Vault (default: <code>(default: `admin`)</code>)</td>
 <td>No</td>
 </tr>
 <tr>
@@ -150,7 +150,7 @@ The provider searches for the following parameters:
 </tr>
 <tr>
 <td><code>VAULT_NAMESPACE</code></td>
-<td>The namespace in the Vault (if applicable)</td>
+<td>The namespace in the Vault (default: <code>(default: `admin`)</code>)</td>
 <td>No</td>
 </tr>
 <tr>
@@ -202,7 +202,7 @@ The provider searches for the following parameters:
 </tr>
 <tr>
 <td><code>VAULT_NAMESPACE</code></td> 
-<td>The namespace in the Vault (if applicable)</td> 
+<td>The namespace in the Vault (default: <code>(default: `admin`)</code>)</td> 
 <td>No</td>
 </tr> 
 </tbody>
