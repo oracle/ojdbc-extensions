@@ -126,6 +126,8 @@ public final class DedicatedVaultTokenFactory
         return createScopedToken(parameterSet, method, DedicatedVaultTokenFactory::createAppRoleToken);
       case GITHUB:
         return createScopedToken(parameterSet, method, DedicatedVaultTokenFactory::createGitHubToken);
+      case AUTO_DETECT:
+        return autoDetectAuthentication(parameterSet);
       default:
         throw new IllegalArgumentException(
                 "Unrecognized authentication method: " + method);
@@ -406,4 +408,63 @@ public final class DedicatedVaultTokenFactory
     }
     return keyBuilder.build();
   }
+
+  /**
+   * Automatically detects the best authentication method based on available
+   * parameters.
+   *
+   * <p>Priority order:</p>
+   * <ol>
+   *   <li>Uses the Vault token if available.</li>
+   *   <li>Falls back to Userpass authentication.</li>
+   *   <li>Then attempts AppRole authentication.</li>
+   *   <li>Finally, tries GitHub authentication.</li>
+   * </ol>
+   *
+   * @param parameterSet The parameter set containing authentication details.
+   * @return The detected authentication token.
+   */
+  private static DedicatedVaultToken autoDetectAuthentication(ParameterSet parameterSet) {
+    IllegalStateException previousFailure;
+
+    // Attempt VAULT_TOKEN authentication first
+    try {
+      return createTokenCredentials(parameterSet);
+    } catch (RuntimeException noVaultToken) {
+      previousFailure = new IllegalStateException(
+              "Failed to authenticate using a Vault token",
+              noVaultToken);
+    }
+
+    // Attempt USERPASS authentication
+    try {
+      return createScopedToken(parameterSet, DedicatedVaultAuthenticationMethod.USERPASS, DedicatedVaultTokenFactory::createUserpassToken);
+    } catch (RuntimeException noUserpass) {
+      previousFailure.addSuppressed(new IllegalStateException(
+              "Failed to authenticate using Userpass credentials",
+              noUserpass));
+    }
+
+    // Attempt APPROLE authentication
+    try {
+      return createScopedToken(parameterSet, DedicatedVaultAuthenticationMethod.APPROLE, DedicatedVaultTokenFactory::createAppRoleToken);
+    } catch (RuntimeException noAppRole) {
+      previousFailure.addSuppressed(new IllegalStateException(
+              "Failed to authenticate using AppRole credentials",
+              noAppRole));
+    }
+
+    // Attempt GITHUB authentication
+    try {
+      return createScopedToken(parameterSet, DedicatedVaultAuthenticationMethod.GITHUB, DedicatedVaultTokenFactory::createGitHubToken);
+    } catch (RuntimeException noGitHub) {
+      previousFailure.addSuppressed(new IllegalStateException(
+              "Failed to authenticate using GitHub credentials",
+              noGitHub));
+    }
+
+    // If all methods fail, throw an error
+    throw previousFailure;
+  }
+
 }

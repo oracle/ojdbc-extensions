@@ -144,6 +144,41 @@ public class HcpVaultConfigurationProviderTest {
   }
 
   /**
+   * Verifies if HCP Vault Configuration Provider works with
+   * CLI_CREDENTIALS_FILE authentication.
+   * With Key Option
+   */
+  @Test
+  public void testAutoDetectAuthenticationWithKeyOption() throws SQLException {
+    // Load parameters from TestProperties
+    String baseUrl = TestProperties.getOrAbort(HcpVaultTestProperty.SECRET_NAME_WITH_MULTIPLE_KEYS);
+    String orgId = "HCP_ORG_ID=" + TestProperties.getOrAbort(HcpVaultTestProperty.HCP_ORG_ID);
+    String projectId = "HCP_PROJECT_ID=" + TestProperties.getOrAbort(HcpVaultTestProperty.HCP_PROJECT_ID);
+    String appName = "HCP_APP_NAME=" + TestProperties.getOrAbort(HcpVaultTestProperty.HCP_APP_NAME);
+    String key = "key=" + TestProperties.getOrAbort(HcpVaultTestProperty.KEY);
+    // Compose the connection URL
+    String location = composeUrl(baseUrl, orgId, projectId, appName, key);
+
+    // Fetch properties using the provider
+    Properties properties = PROVIDER.getConnectionProperties(location);
+
+    // Assert required properties
+    assertTrue(properties.containsKey("URL"), "Contains property URL");
+    assertTrue(properties.containsKey("user"), "Contains property user");
+    assertTrue(properties.containsKey("password"), "Contains property password");
+  }
+
+
+  @BeforeAll
+  public static void beforeAll() {
+//    System.setProperty("HCP_CLIENT_SECRET",
+//            "Lk9JWHdiLGTNhhu1QVditYPXKsIJ0dfAOMX8YDSRKgSarywFVKccTPWo5wN_VCG1");
+    System.setProperty("HCP_APP_NAME", "first-app");
+    System.setProperty("HCP_ORG_ID","4b1b0b81-8353-4c20-86db-19b8f27fee9f");
+    System.setProperty("HCP_PROJECT_ID", "1ccdb391-2f8b-4cf1-a49d-679c1358378c");
+  }
+
+  /**
    * Composes a full URL from a base URL and query options.
    */
   private static String composeUrl(String baseUrl, String... options) {

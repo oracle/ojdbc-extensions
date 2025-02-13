@@ -60,7 +60,7 @@ public final class HcpVaultConfigurationParameters {
       .addParameter(
          "AUTHENTICATION",
          HcpVaultTokenFactory.AUTHENTICATION_METHOD,
-         HcpVaultAuthenticationMethod.CLIENT_CREDENTIALS,
+         HcpVaultAuthenticationMethod.AUTO_DETECT,
          HcpVaultConfigurationParameters::parseAuthMethod)
       .addParameter(
          "HCP_CLIENT_ID",
@@ -87,6 +87,8 @@ public final class HcpVaultConfigurationParameters {
         return HcpVaultAuthenticationMethod.CLIENT_CREDENTIALS;
       case "CLI_CREDENTIALS_FILE":
         return HcpVaultAuthenticationMethod.CLI_CREDENTIALS_FILE;
+      case "AUTO_DETECT":
+        return HcpVaultAuthenticationMethod.AUTO_DETECT;
       default:
         throw new IllegalArgumentException("Unrecognized HCP auth method: " + value);
     }

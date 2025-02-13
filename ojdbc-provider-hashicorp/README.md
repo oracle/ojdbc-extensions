@@ -213,9 +213,26 @@ configuration of a custom path for GitHub authentication.
 
 For more information, visit the official documentation: <a href="https://developer.hashicorp.com/vault/api-docs/auth/github">Github Authentication</a>.
 
+#### AUTO_DETECT Authentication
+
+The **AUTO_DETECT** authentication method dynamically selects the most suitable authentication mechanism based on the provided parameters. This eliminates the need for users to manually specify an authentication method, ensuring a seamless and efficient authentication process.
+
+#### Selection Order:
+1. **VAULT_TOKEN** → If a pre-existing Vault token is available, it is used.
+2. **USERPASS** → If `VAULT_USERNAME` and `VAULT_PASSWORD` are provided, Userpass authentication is used.
+3. **APPROLE** → If `ROLE_ID` and `SECRET_ID` are available, AppRole authentication is used as a fallback.
+4. **GITHUB** → If no other method is available, GitHub authentication is attempted using `GITHUB_TOKEN`.
+
+The provider automatically detects the available parameters and chooses the best authentication method accordingly.
+
+**Note:** If no authentication method is explicitly specified, **AUTO_DETECT is used by default.**
+
+
 ### HCP Vault Secrets
 
-Authentication for **HCP Vault Secrets** supports two methods:
+Authentication for **HCP Vault Secrets** supports multiple methods:
+
+Below is an overview of the supported authentication methods:
 
 1. **OAuth 2.0 Client Credentials Flow**
     - Uses `HCP_CLIENT_ID` and `HCP_CLIENT_SECRET` to obtain a Bearer token for authentication.
@@ -305,6 +322,19 @@ The provider searches for the following parameters:
 </tr>
 </tbody>
 </table>
+
+#### AUTO_DETECT Authentication
+
+The **AUTO_DETECT** authentication method dynamically selects the most suitable authentication mechanism based on the provided parameters.
+This eliminates the need for users to manually specify an authentication method, ensuring a seamless and efficient authentication process.
+
+#### Selection Order:
+1. **CLI_CREDENTIALS_FILE** → If `HCP_CREDENTIALS_FILE` is provided or the default credentials file (`~/.config/hcp/creds-cache.json`) exists, it is used.
+2. **CLIENT_CREDENTIALS** → If `HCP_CLIENT_ID` and `HCP_CLIENT_SECRET` are available, Client Credentials authentication is used as a fallback.
+
+The provider automatically detects the available parameters and chooses the best authentication method accordingly.
+
+**Note:** If no authentication method is explicitly specified, **AUTO_DETECT is used by default.**
 
 #### Common Parameters for HCP Vault Secrets authentication methods
 

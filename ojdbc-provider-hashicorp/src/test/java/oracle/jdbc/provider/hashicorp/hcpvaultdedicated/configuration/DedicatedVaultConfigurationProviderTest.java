@@ -40,6 +40,7 @@ package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.configuration;
 
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.spi.OracleConfigurationProvider;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
@@ -182,6 +183,24 @@ public class DedicatedVaultConfigurationProviderTest {
             "GITHUB_TOKEN=" + TestProperties.getOrAbort(DedicatedVaultTestProperty.GITHUB_TOKEN),
             "VAULT_NAMESPACE="+TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_NAMESPACE),
             "authentication=github");
+
+    Properties properties = PROVIDER.getConnectionProperties(location);
+
+    assertTrue(properties.containsKey("URL"), "Contains property URL");
+    assertTrue(properties.containsKey("user"), "Contains property user");
+    assertTrue(properties.containsKey("password"), "Contains property password");
+  }
+
+  /**
+   * Verifies if Dedicated Vault Configuration Provider works with the
+   * AUTO-DETECT authentication and a key option for secrets with multiple keys.
+   */
+  @Test
+  public void testAutoDetectAuthenticationWithKeyOption() throws SQLException {
+    String location = composeUrl(
+            TestProperties.getOrAbort(DedicatedVaultTestProperty.DEDICATED_VAULT_SECRET_PATH_WITH_MULTIPLE_KEYS),
+            "key=" + TestProperties.getOrAbort(DedicatedVaultTestProperty.KEY),
+            "VAULT_ADDR=" + TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_ADDR));
 
     Properties properties = PROVIDER.getConnectionProperties(location);
 

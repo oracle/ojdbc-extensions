@@ -91,5 +91,16 @@ public enum HcpVaultAuthenticationMethod {
    * The user can provide a custom path to the credentials file if needed.
    * </p>
    */
-  CLI_CREDENTIALS_FILE
+  CLI_CREDENTIALS_FILE,
+
+  /**
+   * Automatically selects the best authentication method based on available parameters.
+   *
+   * <p>Priority order:</p>
+   * <ol>
+   *   <li>Uses the credentials file if present and valid.</li>
+   *   <li>Falls back to client credentials authentication.</li>
+   * </ol>
+   */
+  AUTO_DETECT
 }

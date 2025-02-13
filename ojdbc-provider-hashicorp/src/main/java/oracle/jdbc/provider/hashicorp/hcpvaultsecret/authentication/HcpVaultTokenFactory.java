@@ -114,6 +114,8 @@ public final class HcpVaultTokenFactory implements ResourceFactory<HcpVaultSecre
         return getCachedToken(() -> createClientCredentials(parameterSet));
       case CLI_CREDENTIALS_FILE:
         return getCachedToken(() -> createFileBasedCredentials(parameterSet));
+      case AUTO_DETECT:
+        return getCachedToken(() -> autoDetectAuthentication(parameterSet));
       default:
         throw new IllegalArgumentException("Unrecognized HCP Vault Secret " +
                 "authentication method: " + method);
@@ -172,4 +174,44 @@ public final class HcpVaultTokenFactory implements ResourceFactory<HcpVaultSecre
       throw new IllegalStateException("Failed to retrieve HCP Vault token from credentials file", e);
     }
   }
+
+  /**
+   * Automatically detects the most appropriate authentication method
+   * based on available parameters.
+   *
+   * <p>The priority order is:</p>
+   * <ol>
+   *   <li>Use the HCP credentials file if available and valid.</li>
+   *   <li>Fallback to client credentials authentication.</li>
+   *   <li>Throw an error if no valid authentication method is found.</li>
+   * </ol>
+   *
+   * @param parameterSet The parameter set containing possible authentication details.
+   * @return The detected authentication token.
+   */
+  private HcpVaultSecretToken autoDetectAuthentication(ParameterSet parameterSet) {
+    IllegalStateException previousFailure;
+
+    // 1. Try CLI_CREDENTIALS_FILE authentication first
+    try {
+      return createFileBasedCredentials(parameterSet);
+    } catch (RuntimeException fileAuthFailed) {
+      previousFailure = new IllegalStateException(
+              "Failed to authenticate using credentials file",
+              fileAuthFailed);
+    }
+
+    // 2. If that fails, try CLIENT_CREDENTIALS
+    try {
+      return createClientCredentials(parameterSet);
+    } catch (RuntimeException clientAuthFailed) {
+      previousFailure.addSuppressed(new IllegalStateException(
+              "Failed to authenticate using client credentials",
+              clientAuthFailed));
+    }
+
+    // 3. If all methods fail, throw an error
+    throw previousFailure;
+  }
+
 }

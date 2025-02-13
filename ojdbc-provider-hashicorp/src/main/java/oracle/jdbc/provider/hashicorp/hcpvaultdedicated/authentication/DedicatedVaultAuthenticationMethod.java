@@ -88,5 +88,18 @@ public enum DedicatedVaultAuthenticationMethod {
    * GitHub Authentication API</a>.
    * </p>
    */
-  GITHUB
+  GITHUB,
+
+  /**
+   * Automatically selects the best authentication method based on available parameters.
+   *
+   * <p>Priority order:</p>
+   * <ol>
+   *   <li>Uses the Vault token if available.</li>
+   *   <li>Falls back to Userpass authentication.</li>
+   *   <li>Then attempts AppRole authentication.</li>
+   *   <li>Finally, tries GitHub authentication.</li>
+   * </ol>
+   */
+  AUTO_DETECT
 }

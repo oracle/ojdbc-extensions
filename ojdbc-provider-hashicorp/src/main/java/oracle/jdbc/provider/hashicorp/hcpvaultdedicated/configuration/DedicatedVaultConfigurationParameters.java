@@ -73,7 +73,7 @@ public final class DedicatedVaultConfigurationParameters {
             // Tied to HashicorpCredentialsFactory.AUTHENTICATION_METHOD
             DedicatedVaultTokenFactory.AUTHENTICATION_METHOD,
             // Default value if none is specified:
-            DedicatedVaultAuthenticationMethod.VAULT_TOKEN,
+            DedicatedVaultAuthenticationMethod.AUTO_DETECT,
             DedicatedVaultConfigurationParameters::parseAuthentication)
             ;
   }
@@ -95,6 +95,8 @@ public final class DedicatedVaultConfigurationParameters {
         return DedicatedVaultAuthenticationMethod.APPROLE;
       case "GITHUB":
         return DedicatedVaultAuthenticationMethod.GITHUB;
+      case "AUTO-DETECT":
+        return DedicatedVaultAuthenticationMethod.AUTO_DETECT;
       default:
         throw new IllegalArgumentException(
                 "Unrecognized Hashicorp authentication value: " + value);
