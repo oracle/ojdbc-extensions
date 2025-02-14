@@ -3,9 +3,14 @@ package oracle.jdbc.provider.observability.tracers;
 import jdk.jfr.Event;
 import jdk.jfr.Label;
 import jdk.jfr.Name;
+
+import java.sql.SQLException;
+
 import jdk.jfr.Category;
+import oracle.jdbc.TraceEventListener.JdbcExecutionEvent;
 import oracle.jdbc.TraceEventListener.TraceContext;
 import oracle.jdbc.provider.observability.configuration.ObservabilityConfiguration;
+import oracle.jdbc.provider.observability.tracers.JFREventFactory.ExecutionEvent;
 
 /**
  * Factory class for creating JFR events depending on the database function.
@@ -18,8 +23,8 @@ public class JFREventFactory {
   private JFREventFactory() { }
 
   /**
-   * An instance of {@link RoundTripEvent} for the given trace context. The type
-   * of round trip event depends on the database function.
+   * Creates an instance of {@link RoundTripEvent} for the given trace context. 
+   * The type of round trip event depends on the database function.
    * 
    * @param traceContext the trace context received by a TraceEventListener.
    * @return the {@link RoundTripEvent} for the database function.
@@ -176,6 +181,29 @@ public class JFREventFactory {
         return new RoundTripEvent(traceContext);
     }
   }
+
+  /**
+   * Creates an instance {@link ExecutionEvent} for the given {@link 
+   * JdbcExecutionEvent}.
+   * 
+   * @param event the event.
+   * @param params the parameters to populate the event properties.
+   * @return the execution event.
+   */
+  public static Event createExecutionEvent(JdbcExecutionEvent event, Object... params) {
+    switch (event) {
+      case AC_REPLAY_STARTED:
+        return new ACReplayStarted(event, params);
+      case AC_REPLAY_SUCCESSFUL:
+        return new ACReplaySuccessful(event, params);
+      case VIP_RETRY:
+        return new VIPRetry(event, params); 
+      default:
+        return new ExecutionEvent(event, params);
+    }
+  }
+
+  // Round-trip events
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.ADVANCED_QUEUING_12C_EMON_DEQUEUE")
   @Label("Round trip")
@@ -876,6 +904,103 @@ public class JFREventFactory {
     @Label("Database user")
     String databaseUser;
 
+  }
+
+  // Execution Events
+  @Name("oracle.jdbc.provider.observability.ExecutionEvent.AC_REPLAY_STARTED")
+  @Label("AC replay started")
+  @Category({"Oracle JDBC", "Execution events"})
+  static class ACReplayStarted extends ACReplay {
+    public ACReplayStarted(JdbcExecutionEvent event, Object... params) {
+      super(event, params);
+    }
+  }
+
+  @Name("oracle.jdbc.provider.observability.ExecutionEvent.AC_REPLAY_SUCCESSFUL")
+  @Label("AC replay successful")
+  @Category({"Oracle JDBC", "Execution events"})
+  static class ACReplaySuccessful extends ACReplay {
+    public ACReplaySuccessful(JdbcExecutionEvent event, Object... params) {
+      super(event, params);
+    }
+  }
+
+
+  @Name("oracle.jdbc.provider.observability.ExecutionEvent.AC_REPLAY")
+  @Label("AC replay")
+  @Category({"Oracle JDBC", "Execution events"})
+  static class ACReplay extends ExecutionEvent {
+    public ACReplay(JdbcExecutionEvent event, Object... params) {
+      super(event, params);
+      if (ObservabilityTracer.EXECUTION_EVENTS_PARAMETERS.get(event) == params.length) {
+        this.errorCode = ((SQLException) params[1]).getErrorCode();
+        this.sqlState = ((SQLException) params[1]).getSQLState();
+        this.currentReplayRetryCount = params[2].toString();
+      }
+    }
+    @Label("Error code")
+    public int errorCode;
+
+    @Label("SQL state")
+    public String sqlState;
+
+    @Label("Current replay retry count")
+    public String currentReplayRetryCount;
+  }
+
+  @Name("oracle.jdbc.provider.observability.ExecutionEvent.VIP_RETRY")
+  @Label("VIP retry")
+  @Category({"Oracle JDBC", "Round trips"})
+  static class VIPRetry extends ExecutionEvent {
+    public VIPRetry(JdbcExecutionEvent event, Object... params) {
+        super(event, params);
+        if (ObservabilityTracer.EXECUTION_EVENTS_PARAMETERS.get(event) == params.length) {
+          protocol = params[1].toString();
+          host = params[2].toString();
+          port = params[3].toString();
+          serviceName = params[4].toString();
+          sid = params[5].toString();
+          connectionData = params[6].toString();
+          vipAddress = params[7].toString();
+        }
+    }
+
+    @Label("The protocol")
+    public String protocol;
+    
+    @Label("The host")
+    public String host;
+    
+    @Label("The port")
+    public String port;
+    
+    @Label("The service name")
+    public String serviceName;
+    
+    @Label("The SID")
+    public String sid;
+    
+    @Label("The connection data")
+    public String connectionData;
+    
+    @Label("The VIP address")
+    public String vipAddress;
+  }
+
+  @Name("oracle.jdbc.provider.observability.ExecutionEvent")
+  @Label("Execution event")
+  @Category({"Oracle JDBC", "Execution events"})
+  static class ExecutionEvent extends Event {
+    public ExecutionEvent(JdbcExecutionEvent event, Object... params) {
+      if (ObservabilityTracer.EXECUTION_EVENTS_PARAMETERS.get(event) == params.length) {
+        if (params != null && params.length > 0) {
+          this.errorMessage = params[0].toString();
+        }
+      }
+    }
+
+    @Label("Error message")
+    String errorMessage;
   }
 
 }

@@ -49,17 +49,6 @@ public class OTelTracer implements ObservabilityTracer {
     this.tracer = tracer;
   }
 
-  /**
-   * Map containing the number of parameters expected for each execution event
-   */
-  private static final Map<JdbcExecutionEvent, Integer> EXECUTION_EVENTS_PARAMETERS = new EnumMap<JdbcExecutionEvent, Integer>(
-      JdbcExecutionEvent.class) {
-    {
-      put(JdbcExecutionEvent.AC_REPLAY_STARTED, 3);
-      put(JdbcExecutionEvent.AC_REPLAY_SUCCESSFUL, 3);
-      put(JdbcExecutionEvent.VIP_RETRY, 8);
-    }
-  };
 
   private static Logger logger = Logger.getLogger(OTelTracer.class.getName());
 
@@ -90,7 +79,7 @@ if (sequence == Sequence.BEFORE) {
 
   @Override
   public Object traceExecutionEvent(JdbcExecutionEvent event, Object userContext, Object... params) {
-if (EXECUTION_EVENTS_PARAMETERS.get(event) == params.length) {
+    if (EXECUTION_EVENTS_PARAMETERS.get(event) == params.length) {
       if (event == TraceEventListener.JdbcExecutionEvent.VIP_RETRY) {
         SpanBuilder spanBuilder = tracer
             .spanBuilder(event.getDescription())

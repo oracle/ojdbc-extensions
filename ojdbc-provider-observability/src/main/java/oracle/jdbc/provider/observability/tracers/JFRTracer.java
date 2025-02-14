@@ -1,5 +1,6 @@
 package oracle.jdbc.provider.observability.tracers;
 
+import jdk.jfr.Event;
 import oracle.jdbc.TraceEventListener.JdbcExecutionEvent;
 import oracle.jdbc.TraceEventListener.Sequence;
 import oracle.jdbc.TraceEventListener.TraceContext;
@@ -34,44 +35,10 @@ public class JFRTracer implements ObservabilityTracer{
 
   @Override
   public Object traceExecutionEvent(JdbcExecutionEvent event, Object userContext, Object... params) {
+    Event executionEvent = JFREventFactory.createExecutionEvent(event, params);
+    executionEvent.begin();
+    executionEvent.commit();
     return null;
   }
-
-  /**
-   * Creates an event for a given database operation.
-   * @param databaseFunction The database function originating the round trip.
-   * @return returns a Java Flight Recorder Event containing the following 
-   * fields:
-   * <ul>
-   *  <li>ConnectionID</li>
-   *  <li>DatabaseOperation</li>
-   *  <li>OriginalSqlText</li>
-   *  <li>ActualSqlText</li>
-   *  <li>User</li>
-   * </ul>
-   */
-  /* 
-  private static Event createEvent(DatabaseFunction databaseFunction) {
-    String eventName = "oracle.jdbc.provider.jfr.roundtrip." + databaseFunction.toString();
-    List<AnnotationElement> eventAnnotations = new ArrayList<AnnotationElement>();
-    eventAnnotations
-        .add(new AnnotationElement(Name.class, eventName));
-    eventAnnotations.add(new AnnotationElement(Label.class, databaseFunction.getDescription()));
-    eventAnnotations.add(new AnnotationElement(Category.class,  new String[] { "Oracle JDBC", "Round trips" }));
-
-    List<ValueDescriptor> fields = new ArrayList<ValueDescriptor>();
-    fields.add(new ValueDescriptor(String.class, "Connection_ID"));
-    fields.add(new ValueDescriptor(String.class, "Database_operation"));
-    fields.add(new ValueDescriptor(String.class, "Database_tenant"));
-    fields.add(new ValueDescriptor(String.class, "SQL_ID"));
-    fields.add(new ValueDescriptor(String.class, "Original_SQL_text"));
-    fields.add(new ValueDescriptor(String.class, "Actual_SQL_text"));
-    fields.add(new ValueDescriptor(String.class, "Database_user"));
-
-    EventFactory f = EventFactory.create(eventAnnotations, fields);
-    return f.newEvent();
-  }
-*/
-
 
 }

@@ -27,14 +27,30 @@ public class ObservabilityTraceEventListenerProvider implements TraceEventListen
 
   private static final String PROVIDER_NAME = "observability-trace-event-listener-provider";
   private static final String MBEAN_OBJECT_NAME = "com.oracle.jdbc.provider.observability:type=ObservabilityConfiguration";
-
-  protected static final String ENABLED_TRACERS = "oracle.jdbc.provider.observability.enabledTracers";
-  protected static final String SENSITIVE_DATA_ENABLED = "oracle.jdbc.provider.observability.sensitiveDataEnabled";
-
-  protected static final MBeanServer server = ManagementFactory.getPlatformMBeanServer();;
   private static ObjectName objectName;
 
-  protected Logger logger = Logger.getLogger(ObservabilityTraceEventListenerProvider.class.getName());
+  /**
+   * System property used to enabled/disable tracers. The value of this system property should be a comma separated list
+   * of {@link Tracer} to enable. By default all tracers will be enabled.
+   */
+  private static final String ENABLED_TRACERS = "oracle.jdbc.provider.observability.enabledTracers";
+
+  /**
+   * System property used to enable/disable exporting sensitive data. Set the property to true to enable sensitive data. 
+   * By default exporting sensitive data is disabled.
+   */
+  private static final String SENSITIVE_DATA_ENABLED = "oracle.jdbc.provider.observability.sensitiveDataEnabled";
+
+  /**
+   * Logger
+   */
+  private Logger logger = Logger.getLogger(ObservabilityTraceEventListenerProvider.class.getName());
+
+  /**
+   * MBean server
+   */
+  protected static final MBeanServer server = ManagementFactory.getPlatformMBeanServer();;
+
 
   static {
     try {

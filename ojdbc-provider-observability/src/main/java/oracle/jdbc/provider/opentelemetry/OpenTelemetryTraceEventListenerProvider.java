@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.management.InstanceAlreadyExistsException;
 import javax.management.MBeanRegistrationException;
@@ -47,6 +48,11 @@ public class OpenTelemetryTraceEventListenerProvider extends ObservabilityTraceE
    * listener.
    */
   public static final String OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED = "oracle.jdbc.provider.opentelemetry.sensitive-enabled";
+
+  /**
+   * Logger
+   */
+  private Logger logger = Logger.getLogger(OpenTelemetryTraceEventListenerProvider.class.getName());
 
   private static ObjectName objectName;
 

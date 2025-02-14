@@ -1,5 +1,8 @@
 package oracle.jdbc.provider.observability.tracers;
 
+import java.util.EnumMap;
+import java.util.Map;
+
 import oracle.jdbc.TraceEventListener.JdbcExecutionEvent;
 import oracle.jdbc.TraceEventListener.Sequence;
 import oracle.jdbc.TraceEventListener.TraceContext;
@@ -9,6 +12,19 @@ import oracle.jdbc.provider.observability.ObservabilityTraceEventListener;
  * This interface must be implemented by all Observability tracers.
  */
 public interface ObservabilityTracer {
+
+    /**
+   * Map containing the number of parameters expected for each execution event
+   */
+  static final Map<JdbcExecutionEvent, Integer> EXECUTION_EVENTS_PARAMETERS 
+      = new EnumMap<JdbcExecutionEvent, Integer>(JdbcExecutionEvent.class) {
+    {
+      put(JdbcExecutionEvent.AC_REPLAY_STARTED, 3);
+      put(JdbcExecutionEvent.AC_REPLAY_SUCCESSFUL, 3);
+      put(JdbcExecutionEvent.VIP_RETRY, 8);
+    }
+  };
+
 
   /**
    * Called by {@link ObservabilityTraceEventListener} when a round trip event
