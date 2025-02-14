@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
-import oracle.jdbc.provider.observability.ObservabilityTraceEventListener;
-import oracle.jdbc.provider.observability.tracers.Tracers;
+import oracle.jdbc.provider.observability.tracers.Tracer;
 
 /**
- * 
+ * Implementation of {@link ObservabilityConfigurationMBean} that allows to 
+ * configure the Oracle JDBC Observability Provider.
  */
 public class ObservabilityConfiguration implements ObservabilityConfigurationMBean {
 
@@ -25,11 +25,35 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
 
   private ObservabilityConfiguration() {  }
 
+  private boolean enabled = true;
   private boolean sensitiveDataEnabled;
   private String tracers;
 
-  private List<Tracers> enabledTracers = new ArrayList<>();
+  private List<Tracer> enabledTracers = new ArrayList<>();
 
+  /**
+   * Returns true if the provider is enabled, otherwise false.
+   * 
+   * @return true if the provider is enabled, otherwise false.
+   */
+  @Override
+  public boolean getEnabled() {
+    return  enabled;
+  }
+
+  /**
+   * Enables/disables the provider.
+   * 
+   * @param enabled true to enable the provider, otherwise false.
+   */
+  @Override
+  public void setEnabled(boolean enabled) {
+    this.enabled = enabled;
+  }
+
+  /**
+   * Returns a comma separated list of enabled tracers.
+   */
   @Override
   public String getEnabledTracers() {
     try {
@@ -40,6 +64,11 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
     }
   }
 
+  /**
+   * Enables the tracers. Available tracers are defined in enum {@link Tracer}.
+   *
+   * @param tracers comma separated list of enabled tracers.
+   */
   @Override
   public void setEnabledTracers(String tracers) {
     try {
@@ -48,7 +77,7 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
       String[] items = tracers.split(",");
       for (String item : items) {
         if (item != null) {
-          enabledTracers.add(Tracers.valueOf(item.toUpperCase()));
+          enabledTracers.add(Tracer.valueOf(item.toUpperCase()));
         }
       }
       this.tracers = enabledTracers.stream().map((item) -> item.toString()).collect(Collectors.joining(","));
@@ -58,22 +87,39 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
 
   }
 
+  /**
+   * Returns true if sensitive data is enabled, otherwise false.
+   */
   @Override
   public boolean getSensitiveDataEnabled() {
     return sensitiveDataEnabled;
   }
 
+  /**
+   * Enables/disables sensitive data.
+   * 
+   * @param sensitiveDataEnabled true to enable sensitive data, otherwise false.
+   */
   @Override
   public void setSensitiveDataEnabled(boolean sensitiveDataEnabled) {
     this.sensitiveDataEnabled = sensitiveDataEnabled;
   }
 
+  /**
+   * Returns the singleton instance of {@link ObservabilityConfiguration}.
+   * @return the singleton instance of {@link ObservabilityConfiguration}.
+   */
   public static ObservabilityConfiguration getInstance() {
     return INSTANCE;
   }
 
-  public List<Tracers> getEnabledTracersSet() {
+  /**
+   * Returns a list of enabled {@link Tracer}.
+   * @return then list of nabled {@link Tracer}.
+   */
+  public List<Tracer> getEnabledTracersSet() {
     return enabledTracers;
   }
+
 
 }

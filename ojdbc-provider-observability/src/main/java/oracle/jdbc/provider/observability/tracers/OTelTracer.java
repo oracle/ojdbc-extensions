@@ -24,20 +24,34 @@ import oracle.jdbc.TraceEventListener.Sequence;
 import oracle.jdbc.TraceEventListener.TraceContext;
 import oracle.jdbc.provider.observability.configuration.ObservabilityConfiguration;
 
+/**
+ * Open Telemetry tracer. Exports round trip event and execution events to
+ * Open Telemetry.
+ */
 public class OTelTracer implements ObservabilityTracer {
 
   private static final String TRACE_KEY = "clientcontext.ora$opentelem$tracectx";
 
   private Tracer tracer;
 
+  /**
+   * Constructor. Uses {@link GlobalOpenTelemetry} to get the tracer.
+   */
   public OTelTracer() {
     this(GlobalOpenTelemetry.get().getTracer(OTelTracer.class.getName()));
   }
 
+  /**
+   * Constructor.
+   * @param tracer Open Telemetry tracer.
+   */
   public OTelTracer(Tracer tracer) {
     this.tracer = tracer;
   }
-    // Number of parameters expected for each execution event
+
+  /**
+   * Map containing the number of parameters expected for each execution event
+   */
   private static final Map<JdbcExecutionEvent, Integer> EXECUTION_EVENTS_PARAMETERS = new EnumMap<JdbcExecutionEvent, Integer>(
       JdbcExecutionEvent.class) {
     {
