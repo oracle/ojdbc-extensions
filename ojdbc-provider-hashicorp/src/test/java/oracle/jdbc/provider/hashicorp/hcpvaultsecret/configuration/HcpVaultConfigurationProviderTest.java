@@ -168,16 +168,6 @@ public class HcpVaultConfigurationProviderTest {
     assertTrue(properties.containsKey("password"), "Contains property password");
   }
 
-
-  @BeforeAll
-  public static void beforeAll() {
-//    System.setProperty("HCP_CLIENT_SECRET",
-//            "Lk9JWHdiLGTNhhu1QVditYPXKsIJ0dfAOMX8YDSRKgSarywFVKccTPWo5wN_VCG1");
-    System.setProperty("HCP_APP_NAME", "first-app");
-    System.setProperty("HCP_ORG_ID","4b1b0b81-8353-4c20-86db-19b8f27fee9f");
-    System.setProperty("HCP_PROJECT_ID", "1ccdb391-2f8b-4cf1-a49d-679c1358378c");
-  }
-
   /**
    * Composes a full URL from a base URL and query options.
    */

@@ -4,21 +4,29 @@ Implementations of service provider interfaces (SPIs) that extend the
 Oracle JDBC Driver for integration with cloud services and other specialized
 APIs. These SPI implementations are referred as "providers" for short.
 
-Each module of this project contains a set of providers. Three of these modules 
-contain providers for a particular cloud platform:
+Each module of this project contains a set of providers.
+
+<u>Two of these modules contain providers for a particular cloud platform:</u>
+
 <dl>
 <dt><a href="ojdbc-provider-oci/README.md">Oracle JDBC OCI Providers</a></dt>
-<dd>Providers for integration with Oracle Cloud Infrastructure (OCI)</dd>
+<dd>Providers for integration with Oracle Cloud Infrastructure (OCI).</dd>
 <dt><a href="ojdbc-provider-azure/README.md">Oracle JDBC Azure Providers</a></dt>
 <dd>Providers for integration with Microsoft Azure</dd>
 <dt><a href="ojdbc-provider-hashicorp/README.md">Oracle JDBC HashiCorp Providers</a></dt>
 <dd>Providers for integration with Hashicorp</dd>
 </dl>
-And the last one contains a provider for Open Telemetry:
+<u>The next one contains a provider for Open Telemetry:</u>
 <dl>
 <dt><a href="ojdbc-provider-opentelemetry/README.md">Oracle JDBC Open Telemetry Provider</a></dt>
-<dd>Provider for integration with Open Telemetry</dd>
+<dd>Provider for integration with Open Telemetry.</dd>
+</dl>
+<u>And the last one contains a provider for Jackson-OSON:</u>
 <dl>
+<dt><a href="ojdbc-provider-jackson-oson/README.md">Oracle JDBC Jackson OSON</a></dt>
+<dd>Provider for <a href="https://docs.oracle.com/en/database/oracle/oracle-database/23/adjsn/json-in-oracle-database.html#GUID-A8A58B49-13A5-4F42-8EA0-508951DAE0BB">OSON</a> through the JACKSON APIs. 
+This provider can be used for seamless integration of applications that use the JACKSON APIs with the Oracle JSON type.</dd>
+</dl>
 Visit any of the links above to learn about providers which are available for 
 a particular platform.
 
@@ -64,7 +72,7 @@ consume the JDBC driver.
 The requirements for using a provider are:
 <ul>
 <li>The class path includes the provider's jar.</li>
-<li>The class path includes Oracle JDBC 23.3 or newer.</li>
+<li>The class path includes Oracle JDBC 23.7 or newer.</li>
 <li>Oracle JDBC is configured to use the provider.</li>
 </ul>
 
@@ -123,6 +131,9 @@ this project:
 [ojdbc-provider-azure](ojdbc-provider-azure/README.md#installation)
 
 [ojdbc-provider-opentelemetry](ojdbc-provider-opentelemetry/README.md#installation)
+
+[ojdbc-provider-jackson-oson](ojdbc-provider-jackson-oson/README.md#installation)
+
 
 Each module listed above is distributed on the Maven Central Repository as a
 separate jar file. Coordinates can be found by visiting the links above.

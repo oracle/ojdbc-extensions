@@ -38,25 +38,25 @@
 
 package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.configuration;
 
-import oracle.jdbc.provider.configuration.JsonSecretUtil;
 import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.secrets.DedicatedVaultSecretsManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
+import oracle.jdbc.spi.OracleConfigurationSecretProvider;
 import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonObject;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Map;
 
 import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.configuration.DedicatedVaultSecretsManagerConfigurationProvider.PARAMETER_SET_PARSER;
 import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.secrets.DedicatedVaultSecretsManagerFactory.FIELD_NAME;
 
 /**
  * <p>
- * Implementation of {@link OracleConfigurationJsonSecretProvider} for
- * Dedicated HashiCorp Vault. This provider retrieves secrets stored in the
- * Vault and optionally extracts a specific field if specified.
+ * Implementation of {@link OracleConfigurationSecretProvider} for
+ * Dedicated HashiCorp Vault. This provider retrieves secrets stored in the HCP
+ * Vault Dedicated and optionally extracts a specific field if specified.
  * </p>
  * <p>
  * The {@code jsonObject} must adhere to the following structure:
@@ -84,15 +84,11 @@ import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.secrets.Dedicated
  * the desired secret.
  * </p>
  */
-public class DedicatedVaultJsonSecretProvider implements OracleConfigurationJsonSecretProvider {
+public class DedicatedVaultJsonSecretProvider implements OracleConfigurationSecretProvider {
 
   @Override
-  public char[] getSecret(OracleJsonObject jsonObject) {
-    ParameterSet parameterSet =
-      PARAMETER_SET_PARSER.parseNamedValues(
-        JsonSecretUtil.toNamedValues(jsonObject)
-      );
-
+  public char[] getSecret(Map<String, String> map) {
+    ParameterSet parameterSet = PARAMETER_SET_PARSER.parseNamedValues(map);
     String secretString = DedicatedVaultSecretsManagerFactory
       .getInstance()
       .request(parameterSet)

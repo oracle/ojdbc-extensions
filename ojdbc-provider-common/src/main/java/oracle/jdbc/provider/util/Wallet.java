@@ -39,10 +39,23 @@
 package oracle.jdbc.provider.util;
 
 import javax.net.ssl.SSLContext;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.security.KeyStore;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * <p>
@@ -59,6 +72,11 @@ import java.util.zip.ZipInputStream;
  * JDBC requires a dependency on the Oracle PKI security provider. The JKS file
  * is chosen over the SSO or PKCS12 files in order to avoid this dependency.
  * </p>
+ * <p>
+ * It also extracts the expiration date of the wallet's certificates from
+ * the {@code README} file included in the wallet zip. The expiration date is
+ * used to determine when the wallet should be refreshed.
+ * </p>
  */
 public final class Wallet {
 
@@ -74,8 +92,19 @@ public final class Wallet {
   /** Type of the keystore file in a wallet zip */
   private static final String KEY_STORE_TYPE = "JKS";
 
+  /** Name of the README file in a wallet zip */
+  private static final String README_FILE = "README";
+
+  /** Pattern to match the expiration date line in the README file */
+  private static final Pattern EXPIRY_PATTERN = Pattern.compile(
+    "The SSL certificates provided in this wallet will expire on ([\\d\\-\\.: ]+ UTC)\\.");
+
   /** Contents of the tnsnames.ora file */
   private final TNSNames tnsNames;
+
+  /** Expiration date of the wallet's certificates, extracted from the
+   * README file */
+  private final OffsetDateTime expirationDate;
 
   /**
    * An {@code SSLContext} initialized with key and trust material of the
@@ -83,9 +112,22 @@ public final class Wallet {
    */
   private final SSLContext sslContext;
 
-  private Wallet(TNSNames tnsNames, SSLContext sslContext) {
+  /**
+   * A static DateTimeFormatter used to parse expiration dates in the README.
+   */
+  private static final DateTimeFormatter EXPIRATION_DATE_FORMATTER =
+    new DateTimeFormatterBuilder()
+      .appendPattern("yyyy-MM-dd HH:mm:ss")
+      .optionalStart()
+      .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
+      .optionalEnd()
+      .appendPattern("X") // Accept 'Z' as offset
+      .toFormatter(Locale.ENGLISH);
+
+  private Wallet(TNSNames tnsNames, SSLContext sslContext, OffsetDateTime expirationDate) {
     this.tnsNames = tnsNames;
     this.sslContext = sslContext;
+    this.expirationDate = expirationDate;
   }
 
   /**
@@ -94,6 +136,13 @@ public final class Wallet {
    */
   public SSLContext getSSLContext() {
     return sslContext;
+  }
+
+  /**
+   * @return The expiration date of the wallet's certificates, or null if not available.
+   */
+  public OffsetDateTime getExpirationDate() {
+    return expirationDate;
   }
 
   /**
@@ -162,6 +211,9 @@ public final class Wallet {
   /**
    * Unzips the stream of a wallet directory, returning a {@code Wallet} that
    * retains the contents of any files relevant to Oracle JDBC.
+   * @param zipStream The input stream of the wallet zip file.
+   * @param password The password used to decrypt the keystore.
+   * @return A new {@code Wallet} instance containing the parsed wallet data.
    * @throws IllegalStateException If the files are not found or can not be
    * decoded.
    */
@@ -170,6 +222,7 @@ public final class Wallet {
     TNSNames tnsNames = null;
     KeyStore keyStore = null;
     KeyStore trustStore = null;
+    OffsetDateTime expirationDate = null;
 
     try {
       for (ZipEntry entry = zipStream.getNextEntry(); entry != null; entry = zipStream.getNextEntry()) {
@@ -184,6 +237,9 @@ public final class Wallet {
           case TRUST_STORE_FILE:
             trustStore =
               TlsUtils.loadKeyStore(zipStream, null, KEY_STORE_TYPE, null);
+            break;
+          case README_FILE:
+            expirationDate = parseExpirationDateFromReadme(zipStream);
             break;
           default:
             // Ignore other files
@@ -205,7 +261,8 @@ public final class Wallet {
 
     return new Wallet(
       tnsNames,
-      TlsUtils.createSSLContext(keyStore, trustStore, password));
+      TlsUtils.createSSLContext(keyStore, trustStore, password),
+      expirationDate);
   }
 
   /** Returns an exception for a missing file in the wallet ZIP */
@@ -213,4 +270,67 @@ public final class Wallet {
     return new IllegalStateException("Wallet ZIP did not contain: " + fileName);
   }
 
+  /**
+   * Reads an {@code InputStream} line by line to find and extract the expiration
+   * date of the wallet's certificates using a predefined pattern.
+   * Stops reading as soon as the expiration date is found.
+   *
+   * @param inputStream The input stream to read from. Not null.
+   * @return The extracted expiration date string, or {@code null}
+   * if no match is found.
+   * @throws IOException If an I/O error occurs while reading the stream.
+   */
+  private static String findExpirationDateInStream(InputStream inputStream)
+    throws IOException {
+    BufferedReader reader = new BufferedReader(
+            new InputStreamReader(inputStream, UTF_8));
+    String line;
+    while ((line = reader.readLine()) != null) {
+      Matcher matcher = EXPIRY_PATTERN.matcher(line);
+      if (matcher.find()) {
+        return matcher.group(1).trim().replace(" UTC", "Z");
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Parses the expiration date of the wallet's certificates from the
+   * content of a {@code README} file provided as an {@code InputStream}.
+   * The method stops reading the stream as soon as the expiration date
+   * is found and attempts to parse it into an {@code OffsetDateTime}.
+   *
+   * @param inputStream The input stream of the {@code README} file.
+   * @return The parsed expiration date as an {@code OffsetDateTime},
+   * or {@code null} if no expiration date is found or if parsing fails.
+   * @throws IOException If an I/O error occurs while reading the stream.
+   */
+  public static OffsetDateTime parseExpirationDateFromReadme(InputStream inputStream)
+          throws IOException {
+    if (inputStream == null) {
+      return null;
+    }
+    String expiryDateString = findExpirationDateInStream(inputStream);
+    if (expiryDateString == null) {
+      return null;
+    }
+    return parseOffsetDateTime(expiryDateString);
+  }
+
+  /**
+   * Parses a date-time string into an OffsetDateTime.
+   * The method uses the predefined {@code EXPIRATION_DATE_FORMATTER} to parse
+   * the given string. If parsing fails due to an invalid format or other reasons,
+   * the method returns {@code null}.
+   *
+   * @param dateTimeString The date-time string to parse.
+   * @return The parsed OffsetDateTime, or null if parsing fails.
+   */
+  private static OffsetDateTime parseOffsetDateTime(String dateTimeString) {
+    try {
+      return OffsetDateTime.parse(dateTimeString, EXPIRATION_DATE_FORMATTER);
+    } catch (DateTimeParseException e) {
+      return null;
+    }
+  }
 }

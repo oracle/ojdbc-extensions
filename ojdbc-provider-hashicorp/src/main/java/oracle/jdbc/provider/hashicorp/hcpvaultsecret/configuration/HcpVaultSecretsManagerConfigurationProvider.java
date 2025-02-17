@@ -38,8 +38,9 @@
 
 package oracle.jdbc.provider.hashicorp.hcpvaultsecret.configuration;
 
-import oracle.jdbc.driver.OracleConfigurationJsonProvider;
+import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.hashicorp.hcpvaultsecret.secrets.HcpVaultSecretsManagerFactory;
+import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 import oracle.jdbc.util.OracleConfigurationCache;
@@ -51,7 +52,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class HcpVaultSecretsManagerConfigurationProvider extends OracleConfigurationJsonProvider {
+public class HcpVaultSecretsManagerConfigurationProvider extends OracleConfigurationParsableProvider {
 
   static final ParameterSetParser PARAMETER_SET_PARSER =
     HcpVaultConfigurationParameters.configureBuilder(
@@ -61,10 +62,11 @@ public class HcpVaultSecretsManagerConfigurationProvider extends OracleConfigura
         .addParameter("HCP_PROJECT_ID", HcpVaultSecretsManagerFactory.HCP_PROJECT_ID)
         .addParameter("HCP_APP_NAME", HcpVaultSecretsManagerFactory.HCP_APP_NAME)
         .addParameter("KEY", HcpVaultSecretsManagerFactory.KEY))
-      .build();
+        .addParameter("type", Parameter.create())
+            .build();
 
   @Override
-  public InputStream getJson(String secretName) {
+  public InputStream getInputStream(String secretName) {
     final String valueField = "value";
     Map<String, String> optionsWithAppName = new HashMap<>(options);
     optionsWithAppName.put(valueField, secretName);
@@ -90,4 +92,8 @@ public class HcpVaultSecretsManagerConfigurationProvider extends OracleConfigura
     return CACHE;
   }
 
+  @Override
+  public String getParserType(String arg0) {
+    return "json";
+  }
 }

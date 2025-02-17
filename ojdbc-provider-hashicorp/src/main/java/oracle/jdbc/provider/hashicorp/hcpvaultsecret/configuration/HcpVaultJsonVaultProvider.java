@@ -38,21 +38,22 @@
 
 package oracle.jdbc.provider.hashicorp.hcpvaultsecret.configuration;
 
-import oracle.jdbc.provider.configuration.JsonSecretUtil;
 import oracle.jdbc.provider.hashicorp.hcpvaultsecret.secrets.HcpVaultSecretsManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
-import oracle.sql.json.OracleJsonObject;
+import oracle.jdbc.spi.OracleConfigurationSecretProvider;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Map;
 
 import static oracle.jdbc.provider.hashicorp.hcpvaultsecret.configuration.HcpVaultSecretsManagerConfigurationProvider.PARAMETER_SET_PARSER;
 
 /**
  * <p>
- * Implementation of {@link OracleConfigurationJsonSecretProvider} for
- * HCP Vault. This provider retrieves secrets stored in the HCP Vault using
+ * Implementation of {@link OracleConfigurationSecretProvider} for
+ * HCP Vault Secret. This provider retrieves secrets stored in the HCP Vault
+ * Secret using
  * the specified  {@code SECRET_NAME}.
  * </p>
  * <p>
@@ -72,14 +73,12 @@ import static oracle.jdbc.provider.hashicorp.hcpvaultsecret.configuration.HcpVau
  * character array.
  * </p>
  */
-public class HcpVaultJsonVaultProvider implements OracleConfigurationJsonSecretProvider {
+public class HcpVaultJsonVaultProvider implements OracleConfigurationSecretProvider {
+
 
   @Override
-  public char[] getSecret(OracleJsonObject jsonObject) {
-    ParameterSet parameterSet =
-      PARAMETER_SET_PARSER.parseNamedValues(
-        JsonSecretUtil.toNamedValues(jsonObject)
-            );
+  public char[] getSecret(Map<String, String> map) {
+    ParameterSet parameterSet = PARAMETER_SET_PARSER.parseNamedValues(map);
 
     String secretString = HcpVaultSecretsManagerFactory
       .getInstance()

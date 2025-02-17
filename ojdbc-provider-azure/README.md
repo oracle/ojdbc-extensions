@@ -44,7 +44,7 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-azure</artifactId>
-  <version>1.0.1</version>
+  <version>1.0.3</version>
 </dependency>
 ```
 
@@ -694,7 +694,7 @@ common set of parameters.
       </i></td>
     </tr>
     <tr>
-      <td>redirectUrl</td>
+      <td>redirectUri</td>
       <td>
       <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/reply-url">
       Redirect URL

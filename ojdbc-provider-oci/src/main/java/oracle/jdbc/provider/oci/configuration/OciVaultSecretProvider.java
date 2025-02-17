@@ -38,24 +38,34 @@
 
 package oracle.jdbc.provider.oci.configuration;
 
-import oracle.jdbc.provider.configuration.JsonSecretUtil;
+import java.util.Map;
+
 import oracle.jdbc.provider.oci.vault.SecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
-import oracle.sql.json.OracleJsonObject;
+import oracle.jdbc.spi.OracleConfigurationSecretProvider;
 
 /**
  * A provider of Secret values from OCI Vault.
  */
 public final class OciVaultSecretProvider
-    implements OracleConfigurationJsonSecretProvider {
+    implements OracleConfigurationSecretProvider {
+
 
   /**
    * {@inheritDoc}
+   *
+   * @return secret type. Not null.
+   */
+  @Override
+  public String getSecretType() {
+    return "ocivault";
+  }
+
+  /**
    * <p>
    *   Returns the password of the Secret that is retrieved from OCI Vault.
    * </p><p>
-   *   The {@code secretJsonObject} has the following form:
+   *   The JSON object has the following form:
    * </p><pre>{@code
    *   "password": {
    *       "type": "ocivault",
@@ -66,30 +76,21 @@ public final class OciVaultSecretProvider
    *   }
    * }</pre>
    *
-   * @param secretJsonObject json object to be parsed
+   * @param secretProperties a map containing the flattened key/value pairs of 
+   * the JSON object.
    * @return encoded char array in base64 format that represents the retrieved
    *         Secret.
    */
   @Override
-  public char[] getSecret(OracleJsonObject secretJsonObject) {
+  public char[] getSecret(Map<String, String> secretProperties) {
     ParameterSet parameters =
       OciConfigurationParameters.getParser()
-        .parseNamedValues(JsonSecretUtil.toNamedValues(secretJsonObject));
+        .parseNamedValues(secretProperties);
 
     return SecretFactory.getInstance()
       .request(parameters)
       .getContent()
       .getBase64Secret()
       .toCharArray();
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @return secret type. Not null.
-   */
-  @Override
-  public String getSecretType() {
-    return "ocivault";
   }
 }

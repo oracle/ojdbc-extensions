@@ -1,6 +1,6 @@
 package oracle.jdbc.provider.oci.configuration;
 
-import oracle.jdbc.driver.OracleConfigurationJsonProvider;
+import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.oci.vault.SecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.util.OracleConfigurationCache;
@@ -13,9 +13,9 @@ import java.util.Map;
 
 /**
  * A provider for JSON payload which contains configuration from OCI Vault.
- * See {@link #getJson(String)} for the spec of the JSON payload.
+ * See {@link #getInputStream(String)} for the spec of the JSON payload.
  **/
-public class OciVaultJsonProvider extends OracleConfigurationJsonProvider {
+public class OciVaultJsonProvider extends OracleConfigurationParsableProvider {
 
   /**
    * {@inheritDoc}
@@ -30,7 +30,7 @@ public class OciVaultJsonProvider extends OracleConfigurationJsonProvider {
    * @return JSON payload
    **/
   @Override
-  public InputStream getJson(String secretOcid) {
+  public InputStream getInputStream(String secretOcid) {
     final String valueFieldName = "value";
     Map<String, String> optionsWithOcid = new HashMap<>(options);
     optionsWithOcid.put(valueFieldName, secretOcid);
@@ -59,6 +59,11 @@ public class OciVaultJsonProvider extends OracleConfigurationJsonProvider {
   @Override
   public String getType() {
     return "ocivault";
+  }
+
+  @Override
+  public String getParserType(String arg0) {
+    return "json";
   }
 
   /**

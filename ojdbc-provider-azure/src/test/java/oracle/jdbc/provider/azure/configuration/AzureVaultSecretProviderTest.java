@@ -41,16 +41,16 @@ import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod;
 import oracle.jdbc.provider.azure.AzureTestProperty;
 import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
-import oracle.sql.json.OracleJsonFactory;
-import oracle.sql.json.OracleJsonObject;
+import oracle.jdbc.spi.OracleConfigurationSecretProvider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static oracle.jdbc.provider.TestProperties.getOrAbort;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AzureVaultSecretProviderTest {
-  private static final OracleConfigurationJsonSecretProvider PROVIDER =
-    OracleConfigurationJsonSecretProvider.find("azurevault");
+  private static final OracleConfigurationSecretProvider PROVIDER =
+    OracleConfigurationSecretProvider.find("azurevault");
 
   /**
    * Verifies {@link OracleConfigurationJsonSecretProvider} as implementing
@@ -61,7 +61,7 @@ public class AzureVaultSecretProviderTest {
   @Test
   public void test() {
     Assertions.assertNotNull(PROVIDER.getSecret(
-      constructJsonObject(
+      constructSecretProperties(
         TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL),
         TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_SECRET_NAME),
         TestProperties.getOrAbort(AzureTestProperty.AZURE_CLIENT_ID),
@@ -70,38 +70,16 @@ public class AzureVaultSecretProviderTest {
     )));
   }
 
-  /**
-   * Returns a JSON object in following format:
-   * <pre>
-   * {
-   *   "type": "azurevault",
-   *   "value": "{"uri":"https://ojdbc-plugin-test-vault.vault.azure.net/secrets/test-db-password"}",
-   *   "authentication": {
-   *     "method": "AZURE_SERVICE_PRINCIPAL",
-   *     "AZURE_CLIENT_ID": "<client-id>",
-   *     "AZURE_CLIENT_SECRET": "<client-secret>",
-   *     "AZURE_TENANT_ID": "<tenant-id>",
-   *   }
-   * }
-   * </pre>
-   */
-  private OracleJsonObject constructJsonObject(
+  private Map<String,String> constructSecretProperties(
     String vaultUrl, String secretName, String clientId, String clientSecret, String tenantId) {
-
-    OracleJsonFactory factory = new OracleJsonFactory();
-
-    OracleJsonObject auth = factory.createObject();
-    auth.put("method", "AZURE_SERVICE_PRINCIPAL");
-    auth.put("AZURE_CLIENT_ID", clientId);
-    auth.put("AZURE_CLIENT_SECRET", clientSecret);
-    auth.put("AZURE_TENANT_ID", tenantId);
-
-    OracleJsonObject password = factory.createObject();
-    password.put("type", "azurevault");
-    password.put("value", constructSecretUri(vaultUrl, secretName));
-    password.put("authentication", auth);
-
-    return password;
+    Map<String,String> secretProperties = new HashMap<>();
+    secretProperties.put("AUTHENTICATION", "AZURE_SERVICE_PRINCIPAL");
+    secretProperties.put("AZURE_CLIENT_ID", clientId);
+    secretProperties.put("AZURE_CLIENT_SECRET", clientSecret);
+    secretProperties.put("AZURE_TENANT_ID", tenantId);
+    secretProperties.put("type", "azurevault");
+    secretProperties.put("value", constructSecretUri(vaultUrl, secretName));
+    return secretProperties;
   }
 
   private String constructSecretUri(String vaultUrl, String secretName) {

@@ -38,8 +38,9 @@
 
 package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.configuration;
 
-import oracle.jdbc.driver.OracleConfigurationJsonProvider;
+import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.secrets.DedicatedVaultSecretsManagerFactory;
+import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 import oracle.jdbc.util.OracleConfigurationCache;
@@ -49,7 +50,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleConfigurationJsonProvider {
+public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleConfigurationParsableProvider {
 
   static final ParameterSetParser PARAMETER_SET_PARSER =
           DedicatedVaultConfigurationParameters.configureBuilder(
@@ -82,10 +83,11 @@ public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleCon
                  DedicatedVaultSecretsManagerFactory.GITHUB_TOKEN)
               .addParameter("GITHUB_AUTH_PATH",
                  DedicatedVaultSecretsManagerFactory.GITHUB_AUTH_PATH)
-            .build();
+              .addParameter("type", Parameter.create())
+                  .build();
 
   @Override
-  public InputStream getJson(String secretPath) {
+  public InputStream getInputStream(String secretPath) {
     final String valueFieldName = "value";
 
     Map<String, String> optionsWithSecret = new HashMap<>(options);
@@ -104,6 +106,11 @@ public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleCon
   @Override
   public String getType() {
     return "hcpvaultdedicated";
+  }
+
+  @Override
+  public String getParserType(String arg0) {
+    return "json";
   }
 
   @Override
