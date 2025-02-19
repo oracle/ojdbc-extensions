@@ -139,6 +139,11 @@ jobs:
           SECRET_NAME=${{ secrets.TEST_SECRET_NAME }}\n
           SECRET_NAME_WITH_MULTIPLE_KEYS=${{ secrets.TEST_SECRET_NAME_WITH_MULTIPLE_KEYS }}\n
           " >> ojdbc-provider-hashicorp/test.properties
+          
+      - name: Debug HashiCorp Test Properties
+        run: |
+          cat ojdbc-provider-hashicorp/test.properties
+          echo ${{ secrets.TEST_VAULT_ADDR }}
 
       - name: Run tests with Maven
         run: mvn -B test --file pom.xml
