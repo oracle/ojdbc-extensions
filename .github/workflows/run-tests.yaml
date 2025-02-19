@@ -121,7 +121,7 @@ jobs:
           
           
           # Generate ojdbc-provider-hashicorp/test.properties
-          echo -e "VAULT_ADDR=${{ secrets.TEST_VAULT_ADDR }}\n
+          echo -e "VAULT_ADDR=https://vault-cluster-public-vault-0c79cbc5.e3af93c6.z1.hashicorp.cloud:8200\n
           DEDICATED_VAULT_SECRET_PATH=${{ secrets.TEST_DEDICATED_VAULT_SECRET_PATH }}\n
           DEDICATED_VAULT_SECRET_PATH_WITH_MULTIPLE_KEYS=${{ secrets.TEST_DEDICATED_VAULT_SECRET_PATH_WITH_MULTIPLE_KEYS }}\n
           VAULT_USERNAME=${{ secrets.TEST_VAULT_USERNAME }}\n
