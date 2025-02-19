@@ -10,6 +10,7 @@ jobs:
       AZURE_USERNAME: ${{ secrets.TEST_AZURE_USERNAME }}
       AZURE_PASSWORD: ${{ secrets.TEST_AZURE_PASSWORD }}
       AZURE_CLIENT_CERTIFICATE_PATH: ${{ secrets.TEST_AZURE_CLIENT_CERTIFICATE_PATH }}
+      VAULT_ADDR: ${{ secrets.TEST_VAULT_ADDR }}
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
