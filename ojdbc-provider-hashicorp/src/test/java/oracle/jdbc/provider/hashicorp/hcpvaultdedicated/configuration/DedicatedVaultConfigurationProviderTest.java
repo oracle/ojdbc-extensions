@@ -40,10 +40,11 @@ package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.configuration;
 
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.spi.OracleConfigurationProvider;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -71,7 +72,8 @@ public class DedicatedVaultConfigurationProviderTest {
     String location =
       composeUrl(TestProperties.getOrAbort(DedicatedVaultTestProperty.DEDICATED_VAULT_SECRET_PATH),
         "VAULT_ADDR="+TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_ADDR),
-        "VAULT_TOKEN="+TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_TOKEN));
+        "VAULT_TOKEN="+TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_TOKEN),
+        "authentication=vault_token");
 
     Properties properties = PROVIDER.getConnectionProperties(location);
 
@@ -92,7 +94,8 @@ public class DedicatedVaultConfigurationProviderTest {
       composeUrl(TestProperties.getOrAbort(DedicatedVaultTestProperty.DEDICATED_VAULT_SECRET_PATH_WITH_MULTIPLE_KEYS),
         "key="+TestProperties.getOrAbort(DedicatedVaultTestProperty.KEY),
         "VAULT_ADDR="+TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_ADDR),
-        "VAULT_TOKEN="+TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_TOKEN));
+        "VAULT_TOKEN="+TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_TOKEN),
+        "authentication=vault_token");
 
 
     Properties properties = PROVIDER.getConnectionProperties(location);
@@ -197,10 +200,43 @@ public class DedicatedVaultConfigurationProviderTest {
    */
   @Test
   public void testAutoDetectAuthenticationWithKeyOption() throws SQLException {
-    String location = composeUrl(
-            TestProperties.getOrAbort(DedicatedVaultTestProperty.DEDICATED_VAULT_SECRET_PATH_WITH_MULTIPLE_KEYS),
-            "key=" + TestProperties.getOrAbort(DedicatedVaultTestProperty.KEY),
-            "VAULT_ADDR=" + TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_ADDR));
+    String baseUrl = TestProperties.getOrAbort(DedicatedVaultTestProperty.DEDICATED_VAULT_SECRET_PATH_WITH_MULTIPLE_KEYS);
+    String key = "key=" + TestProperties.getOrAbort(DedicatedVaultTestProperty.KEY);
+    String vaultAddr = "VAULT_ADDR=" + TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_ADDR);
+
+    List<String> params = new ArrayList<>();
+    params.add(vaultAddr);
+    params.add(key);
+
+    // Add available authentication methods dynamically
+    String vaultToken = TestProperties.getOptional(DedicatedVaultTestProperty.VAULT_TOKEN);
+    if (vaultToken != null) {
+      params.add("VAULT_TOKEN=" + vaultToken);
+    }
+
+    String vaultUsername = TestProperties.getOptional(DedicatedVaultTestProperty.VAULT_USERNAME);
+    String vaultPassword =
+            TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_PASSWORD);
+    if (vaultUsername != null && vaultPassword != null) {
+      params.add("VAULT_USERNAME=" + vaultUsername);
+      params.add("VAULT_PASSWORD=" + vaultPassword);
+    }
+
+    String roleId = TestProperties.getOptional(DedicatedVaultTestProperty.ROLE_ID);
+    String secretId = TestProperties.getOptional(DedicatedVaultTestProperty.SECRET_ID);
+    if (roleId != null && secretId != null) {
+      params.add("ROLE_ID=" + roleId);
+      params.add("SECRET_ID=" + secretId);
+    }
+
+    String githubToken = TestProperties.getOptional(DedicatedVaultTestProperty.GITHUB_TOKEN);
+    if (githubToken != null) {
+      params.add("GITHUB_TOKEN=" + githubToken);
+    }
+
+    params.add("authentication=auto_detect");
+
+    String location = composeUrl(baseUrl, params.toArray(new String[0]));
 
     Properties properties = PROVIDER.getConnectionProperties(location);
 

@@ -56,5 +56,7 @@ public enum HcpVaultTestProperty {
 
   SECRET_NAME_WITH_MULTIPLE_KEYS,
 
-  KEY
+  KEY,
+
+  HCP_CREDENTIALS_FILE
 }

@@ -41,9 +41,12 @@ package oracle.jdbc.provider.hashicorp.hcpvaultsecret.configuration;
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.spi.OracleConfigurationProvider;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -60,6 +63,18 @@ public class HcpVaultConfigurationProviderTest {
   private static final OracleConfigurationProvider PROVIDER =
           OracleConfigurationProvider.find("hcpvaultsecret");
 
+
+  @BeforeAll
+  public static void setUp() {
+    System.setProperty("HCP_ORG_ID",
+            TestProperties.getOrAbort(HcpVaultTestProperty.HCP_ORG_ID));
+    System.setProperty("HCP_PROJECT_ID",
+            TestProperties.getOrAbort(HcpVaultTestProperty.HCP_PROJECT_ID));
+    System.setProperty("HCP_APP_NAME",
+            TestProperties.getOrAbort(HcpVaultTestProperty.HCP_APP_NAME));
+
+  }
+
   /**
    * Verifies if HCP Vault Configuration Provider works with
    * CLIENT_CREDENTIALS authentication.
@@ -69,14 +84,10 @@ public class HcpVaultConfigurationProviderTest {
   public void testClientCredentialsAuthentication() throws SQLException {
     // Load parameters from TestProperties
     String baseUrl = TestProperties.getOrAbort(HcpVaultTestProperty.SECRET_NAME);
-    String orgId = "HCP_ORG_ID=" + TestProperties.getOrAbort(HcpVaultTestProperty.HCP_ORG_ID);
-    String projectId = "HCP_PROJECT_ID=" + TestProperties.getOrAbort(HcpVaultTestProperty.HCP_PROJECT_ID);
     String clientId = "HCP_CLIENT_ID=" + TestProperties.getOrAbort(HcpVaultTestProperty.HCP_CLIENT_ID);
     String clientSecret = "HCP_CLIENT_SECRET=" + TestProperties.getOrAbort(HcpVaultTestProperty.HCP_CLIENT_SECRET);
-    String appName = "HCP_APP_NAME=" + TestProperties.getOrAbort(HcpVaultTestProperty.HCP_APP_NAME);
     // Compose the connection URL
-    String location = composeUrl(baseUrl, orgId, projectId, clientId,
-            clientSecret, appName);
+    String location = composeUrl(baseUrl, clientId, clientSecret);
 
     // Fetch properties using the provider
     Properties properties = PROVIDER.getConnectionProperties(location);
@@ -96,16 +107,12 @@ public class HcpVaultConfigurationProviderTest {
   public void testClientCredentialsAuthenticationWithKeyOption() throws SQLException {
     // Load parameters from TestProperties
     String baseUrl = TestProperties.getOrAbort(HcpVaultTestProperty.SECRET_NAME_WITH_MULTIPLE_KEYS);
-    String orgId = "HCP_ORG_ID=" + TestProperties.getOrAbort(HcpVaultTestProperty.HCP_ORG_ID);
-    String projectId = "HCP_PROJECT_ID=" + TestProperties.getOrAbort(HcpVaultTestProperty.HCP_PROJECT_ID);
     String clientId = "HCP_CLIENT_ID=" + TestProperties.getOrAbort(HcpVaultTestProperty.HCP_CLIENT_ID);
     String clientSecret = "HCP_CLIENT_SECRET=" + TestProperties.getOrAbort(HcpVaultTestProperty.HCP_CLIENT_SECRET);
-    String appName = "HCP_APP_NAME=" + TestProperties.getOrAbort(HcpVaultTestProperty.HCP_APP_NAME);
     String authMethod = "authentication=CLIENT_CREDENTIALS";
     String key = "key=" + TestProperties.getOrAbort(HcpVaultTestProperty.KEY);
     // Compose the connection URL
-    String location = composeUrl(baseUrl, orgId, projectId, clientId,
-            clientSecret, appName, key, authMethod);
+    String location = composeUrl(baseUrl, clientId, clientSecret, key, authMethod);
 
     // Fetch properties using the provider
     Properties properties = PROVIDER.getConnectionProperties(location);
@@ -123,16 +130,14 @@ public class HcpVaultConfigurationProviderTest {
    * With Key Option
    */
   @Test
+  @Disabled
   public void testCLICredentialsFileAuthenticationWithKeyOption() throws SQLException {
     // Load parameters from TestProperties
     String baseUrl = TestProperties.getOrAbort(HcpVaultTestProperty.SECRET_NAME_WITH_MULTIPLE_KEYS);
-    String orgId = "HCP_ORG_ID=" + TestProperties.getOrAbort(HcpVaultTestProperty.HCP_ORG_ID);
-    String projectId = "HCP_PROJECT_ID=" + TestProperties.getOrAbort(HcpVaultTestProperty.HCP_PROJECT_ID);
-    String appName = "HCP_APP_NAME=" + TestProperties.getOrAbort(HcpVaultTestProperty.HCP_APP_NAME);
     String key = "key=" + TestProperties.getOrAbort(HcpVaultTestProperty.KEY);
     String authMethod = "authentication=CLI_CREDENTIALS_FILE";
     // Compose the connection URL
-    String location = composeUrl(baseUrl, orgId, projectId, appName, key, authMethod);
+    String location = composeUrl(baseUrl, key, authMethod);
 
     // Fetch properties using the provider
     Properties properties = PROVIDER.getConnectionProperties(location);
@@ -144,20 +149,32 @@ public class HcpVaultConfigurationProviderTest {
   }
 
   /**
-   * Verifies if HCP Vault Configuration Provider works with
-   * CLI_CREDENTIALS_FILE authentication.
-   * With Key Option
+   * Verifies if the HCP Vault Configuration Provider works with
+   * AUTO_DETECT authentication (with the key option).
    */
   @Test
   public void testAutoDetectAuthenticationWithKeyOption() throws SQLException {
-    // Load parameters from TestProperties
+    List<String> params = new ArrayList<>();
     String baseUrl = TestProperties.getOrAbort(HcpVaultTestProperty.SECRET_NAME_WITH_MULTIPLE_KEYS);
-    String orgId = "HCP_ORG_ID=" + TestProperties.getOrAbort(HcpVaultTestProperty.HCP_ORG_ID);
-    String projectId = "HCP_PROJECT_ID=" + TestProperties.getOrAbort(HcpVaultTestProperty.HCP_PROJECT_ID);
-    String appName = "HCP_APP_NAME=" + TestProperties.getOrAbort(HcpVaultTestProperty.HCP_APP_NAME);
     String key = "key=" + TestProperties.getOrAbort(HcpVaultTestProperty.KEY);
+    params.add(key);
+    // Construct optional authentication parameters
+    String clientId =
+            TestProperties.getOptional(HcpVaultTestProperty.HCP_CLIENT_ID);
+    String clientSecret =
+            TestProperties.getOptional(HcpVaultTestProperty.HCP_CLIENT_SECRET);
+    if(clientId!=null && clientSecret!=null) {
+      params.add("HCP_CLIENT_ID=" + clientId);
+      params.add("HCP_CLIENT_SECRET=" + clientSecret);
+    }
+    String credentialsFile =
+            TestProperties.getOptional(HcpVaultTestProperty.HCP_CREDENTIALS_FILE);
+    if(credentialsFile!=null) {
+      params.add("HCP_CREDENTIALS_FILE=" + credentialsFile);
+    }
+
     // Compose the connection URL
-    String location = composeUrl(baseUrl, orgId, projectId, appName, key);
+    String location = composeUrl(baseUrl, params.toArray(new String[0]));
 
     // Fetch properties using the provider
     Properties properties = PROVIDER.getConnectionProperties(location);

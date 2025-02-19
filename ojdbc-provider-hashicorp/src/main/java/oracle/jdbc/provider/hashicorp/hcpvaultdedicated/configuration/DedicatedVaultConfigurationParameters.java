@@ -95,7 +95,7 @@ public final class DedicatedVaultConfigurationParameters {
         return DedicatedVaultAuthenticationMethod.APPROLE;
       case "GITHUB":
         return DedicatedVaultAuthenticationMethod.GITHUB;
-      case "AUTO-DETECT":
+      case "AUTO_DETECT":
         return DedicatedVaultAuthenticationMethod.AUTO_DETECT;
       default:
         throw new IllegalArgumentException(
