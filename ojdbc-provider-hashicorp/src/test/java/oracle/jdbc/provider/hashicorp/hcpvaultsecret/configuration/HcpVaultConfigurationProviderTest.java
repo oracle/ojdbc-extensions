@@ -63,6 +63,17 @@ public class HcpVaultConfigurationProviderTest {
   private static final OracleConfigurationProvider PROVIDER =
           OracleConfigurationProvider.find("hcpvaultsecret");
 
+  @BeforeAll
+  public static void setUp() {
+    System.setProperty("HCP_ORG_ID",
+            TestProperties.getOrAbort(HcpVaultTestProperty.HCP_ORG_ID));
+    System.setProperty("HCP_PROJECT_ID",
+            TestProperties.getOrAbort(HcpVaultTestProperty.HCP_PROJECT_ID));
+    System.setProperty("HCP_APP_NAME",
+            TestProperties.getOrAbort(HcpVaultTestProperty.HCP_APP_NAME));
+
+  }
+
   /**
    * Verifies if HCP Vault Configuration Provider works with
    * CLIENT_CREDENTIALS authentication.
