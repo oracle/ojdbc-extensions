@@ -1,6 +1,6 @@
 package oracle.jdbc.provider.observability.configuration;
 
-import oracle.jdbc.provider.observability.tracers.Tracer;
+import oracle.jdbc.provider.observability.tracers.TracerType;
 
 /**
  * MBean that allows to configure the Oracle JDBC Observability Provider.
@@ -29,7 +29,7 @@ public interface ObservabilityConfigurationMBean {
   public String getEnabledTracers();
   
   /**
-   * Enables the tracers. Available tracers are defined in enum {@link Tracer}.
+   * Enables the tracers. Available tracers are defined in enum {@link TracerType}.
    *
    * @param tracers comma separated list of enabled tracers.
    */

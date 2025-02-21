@@ -2,7 +2,7 @@ package oracle.jdbc.provider.observability;
 
 import oracle.jdbc.TraceEventListener;
 import oracle.jdbc.provider.observability.configuration.ObservabilityConfiguration;
-import oracle.jdbc.provider.observability.tracers.Tracer;
+import oracle.jdbc.provider.observability.tracers.TracerType;
 
 /**
  * <p>
@@ -19,7 +19,7 @@ import oracle.jdbc.provider.observability.tracers.Tracer;
  * <li>VIP down event</li>
  * </ul>
  * <p>
- * The available tracers are defined in the enumeration {@link Tracer}, and
+ * The available tracers are defined in the enumeration {@link TracerType}, and
  * can be enabled using the method 
  * {@link ObservabilityConfiguration#setEnabledTracers(String)}. The method
  * {@link ObservabilityConfiguration#setSensitiveDataEnabled(boolean)} allows
@@ -51,7 +51,7 @@ public class ObservabilityTraceEventListener implements TraceEventListener {
   public Object roundTrip(Sequence sequence, TraceContext traceContext, Object userContext) {
     if (!ObservabilityConfiguration.getInstance().getEnabled()) { return null;}
     Object[] currentUserContext = getCurrentUserContext(userContext);
-    for (Tracer tracer : ObservabilityConfiguration.getInstance().getEnabledTracersSet()) {
+    for (TracerType tracer : ObservabilityConfiguration.getInstance().getEnabledTracersSet()) {
       Object newUserContext = tracer.getTracer().traceRoundtrip(sequence, traceContext, currentUserContext[tracer.ordinal()]);
       currentUserContext[tracer.ordinal()] = newUserContext;
     }
@@ -63,7 +63,7 @@ public class ObservabilityTraceEventListener implements TraceEventListener {
   public Object onExecutionEventReceived(JdbcExecutionEvent event, Object userContext, Object... params) {
     if (!ObservabilityConfiguration.getInstance().getEnabled()) { return null;}
     Object[] currentUserContext = getCurrentUserContext(userContext);
-    for (Tracer tracer : ObservabilityConfiguration.getInstance().getEnabledTracersSet()) {
+    for (TracerType tracer : ObservabilityConfiguration.getInstance().getEnabledTracersSet()) {
       Object newUserContext = tracer.getTracer().traceExecutionEvent(event, currentUserContext[tracer.ordinal()], params);
       currentUserContext[tracer.ordinal()] = newUserContext;
     }
@@ -82,7 +82,7 @@ public class ObservabilityTraceEventListener implements TraceEventListener {
     if (userContext != null && (userContext instanceof Object[])) {
       currentUserContext = (Object[]) userContext;
     } else {
-      currentUserContext = new Object[Tracer.values().length];
+      currentUserContext = new Object[TracerType.values().length];
     }
     return currentUserContext;
   }

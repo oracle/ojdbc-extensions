@@ -1,4 +1,4 @@
-package oracle.jdbc.provider.observability.tracers;
+package oracle.jdbc.provider.observability.tracers.otel;
 
 import java.sql.SQLException;
 import java.time.Instant;
@@ -23,6 +23,7 @@ import oracle.jdbc.TraceEventListener.JdbcExecutionEvent;
 import oracle.jdbc.TraceEventListener.Sequence;
 import oracle.jdbc.TraceEventListener.TraceContext;
 import oracle.jdbc.provider.observability.configuration.ObservabilityConfiguration;
+import oracle.jdbc.provider.observability.tracers.ObservabilityTracer;
 
 /**
  * Open Telemetry tracer. Exports round trip event and execution events to
@@ -30,9 +31,21 @@ import oracle.jdbc.provider.observability.configuration.ObservabilityConfigurati
  */
 public class OTelTracer implements ObservabilityTracer {
 
+  /**
+   * Key used to send the current Open Telemetry Trace Context to the server 
+   * using {@link TraceContext#setClientInfo(String, String)}.
+   */
   private static final String TRACE_KEY = "clientcontext.ora$opentelem$tracectx";
 
+  /**
+   * Open Telemetry tracer.
+   */
   private Tracer tracer;
+
+  /**
+   * Logger.
+   */
+  private static Logger logger = Logger.getLogger(OTelTracer.class.getName());
 
   /**
    * Constructor. Uses {@link GlobalOpenTelemetry} to get the tracer.
@@ -50,11 +63,10 @@ public class OTelTracer implements ObservabilityTracer {
   }
 
 
-  private static Logger logger = Logger.getLogger(OTelTracer.class.getName());
 
   @Override
   public Object traceRoundtrip(Sequence sequence, TraceContext traceContext, Object userContext) {
-if (sequence == Sequence.BEFORE) {
+    if (sequence == Sequence.BEFORE) {
       // Create the Span before the round-trip.
       final Span span = initAndGetSpan(traceContext, traceContext.databaseOperation());
       try (Scope ignored = span.makeCurrent()) {
@@ -71,7 +83,7 @@ if (sequence == Sequence.BEFORE) {
       if (userContext instanceof Span) {
         final Span span = (Span) userContext;
         span.setStatus(traceContext.isCompletedExceptionally() ? StatusCode.ERROR : StatusCode.OK);
-        endSpan(span);
+        span.end(Instant.now());
       }
       return null;
     }
@@ -138,16 +150,17 @@ if (sequence == Sequence.BEFORE) {
           .setAttribute("Actual SQL Text", traceContext.actualSqlText());
     }
 
-    // Indicates that the span covers server-side handling of an RPC or other remote
-    // request.
-    return spanBuilder.setSpanKind(SpanKind.SERVER).startSpan();
+    // According to the semantic conventions the Span Kind should be CLIENT,
+    // used to be SERVER.
+    return spanBuilder.setSpanKind(SpanKind.CLIENT).startSpan();
 
   }
 
-  private void endSpan(Span span) {
-    span.end(Instant.now());
-  }
-
+  /**
+   * Builds the Open Telemetry trace context to be sent to the database server.
+   * @param span the currect spans
+   * @return the current trace context formatted so that the server can read it.
+   */
   private String getTraceValue(Span span) {
     final String traceParent = initAndGetTraceParent(span);
     final String traceState = initAndGetTraceState(span);

@@ -1,4 +1,4 @@
-package oracle.jdbc.provider.observability.tracers;
+package oracle.jdbc.provider.observability.tracers.jfr;
 
 import jdk.jfr.Event;
 import jdk.jfr.Label;
@@ -10,7 +10,7 @@ import jdk.jfr.Category;
 import oracle.jdbc.TraceEventListener.JdbcExecutionEvent;
 import oracle.jdbc.TraceEventListener.TraceContext;
 import oracle.jdbc.provider.observability.configuration.ObservabilityConfiguration;
-import oracle.jdbc.provider.observability.tracers.JFREventFactory.ExecutionEvent;
+import oracle.jdbc.provider.observability.tracers.ObservabilityTracer;
 
 /**
  * Factory class for creating JFR events depending on the database function.

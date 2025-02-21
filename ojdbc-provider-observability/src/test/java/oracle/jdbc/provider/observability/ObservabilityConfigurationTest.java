@@ -11,7 +11,7 @@ import javax.management.ObjectName;
 import org.junit.jupiter.api.Test;
 
 import oracle.jdbc.provider.observability.configuration.ObservabilityConfiguration;
-import oracle.jdbc.provider.observability.tracers.Tracer;
+import oracle.jdbc.provider.observability.tracers.TracerType;
 import oracle.jdbc.spi.TraceEventListenerProvider;
 
 public class ObservabilityConfigurationTest {
@@ -30,7 +30,7 @@ public class ObservabilityConfigurationTest {
     assertEquals(true, ObservabilityConfiguration.getInstance().getSensitiveDataEnabled());
 
     assertEquals(1, ObservabilityConfiguration.getInstance().getEnabledTracersSet().size());
-    assertEquals(Tracer.JFR, ObservabilityConfiguration.getInstance().getEnabledTracersSet().get(0));
+    assertEquals(TracerType.JFR, ObservabilityConfiguration.getInstance().getEnabledTracersSet().get(0));
 
     // MBean
     ObjectName objectName = new ObjectName(
@@ -52,8 +52,8 @@ public class ObservabilityConfigurationTest {
     assertEquals(false, ObservabilityConfiguration.getInstance().getSensitiveDataEnabled());
 
     assertEquals(2, ObservabilityConfiguration.getInstance().getEnabledTracersSet().size());
-    assertEquals(Tracer.OTEL, ObservabilityConfiguration.getInstance().getEnabledTracersSet().get(0));
-    assertEquals(Tracer.JFR, ObservabilityConfiguration.getInstance().getEnabledTracersSet().get(1));
+    assertEquals(TracerType.OTEL, ObservabilityConfiguration.getInstance().getEnabledTracersSet().get(0));
+    assertEquals(TracerType.JFR, ObservabilityConfiguration.getInstance().getEnabledTracersSet().get(1));
 
     // Singleton
     ObservabilityConfiguration.getInstance().setEnabledTracers("OTEL");
@@ -66,7 +66,7 @@ public class ObservabilityConfigurationTest {
     assertEquals("true", sensitiveDataEnabled);
 
     assertEquals(1, ObservabilityConfiguration.getInstance().getEnabledTracersSet().size());
-    assertEquals(Tracer.OTEL, ObservabilityConfiguration.getInstance().getEnabledTracersSet().get(0));
+    assertEquals(TracerType.OTEL, ObservabilityConfiguration.getInstance().getEnabledTracersSet().get(0));
 
   }
 

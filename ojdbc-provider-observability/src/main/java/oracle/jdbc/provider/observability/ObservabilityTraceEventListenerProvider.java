@@ -31,7 +31,7 @@ public class ObservabilityTraceEventListenerProvider implements TraceEventListen
 
   /**
    * System property used to enabled/disable tracers. The value of this system property should be a comma separated list
-   * of {@link Tracer} to enable. By default all tracers will be enabled.
+   * of {@link TracerType} to enable. By default all tracers will be enabled.
    */
   private static final String ENABLED_TRACERS = "oracle.jdbc.provider.observability.enabledTracers";
 

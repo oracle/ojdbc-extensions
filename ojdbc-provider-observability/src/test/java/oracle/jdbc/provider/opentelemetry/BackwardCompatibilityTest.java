@@ -11,7 +11,7 @@ import javax.management.ObjectName;
 import org.junit.jupiter.api.Test;
 
 import oracle.jdbc.provider.observability.configuration.ObservabilityConfiguration;
-import oracle.jdbc.provider.observability.tracers.Tracer;
+import oracle.jdbc.provider.observability.tracers.TracerType;
 import oracle.jdbc.spi.TraceEventListenerProvider;
 
 public class BackwardCompatibilityTest {
@@ -30,7 +30,7 @@ public class BackwardCompatibilityTest {
     assertEquals(true, ObservabilityConfiguration.getInstance().getSensitiveDataEnabled());
 
     assertEquals(1, ObservabilityConfiguration.getInstance().getEnabledTracersSet().size());
-    assertEquals(Tracer.OTEL, ObservabilityConfiguration.getInstance().getEnabledTracersSet().get(0));
+    assertEquals(TracerType.OTEL, ObservabilityConfiguration.getInstance().getEnabledTracersSet().get(0));
 
     // MBean
     ObjectName objectName = new ObjectName(
@@ -54,7 +54,7 @@ public class BackwardCompatibilityTest {
     assertEquals(false, ObservabilityConfiguration.getInstance().getSensitiveDataEnabled());
 
     assertEquals(1, ObservabilityConfiguration.getInstance().getEnabledTracersSet().size());
-    assertEquals(Tracer.OTEL, ObservabilityConfiguration.getInstance().getEnabledTracersSet().get(0));
+    assertEquals(TracerType.OTEL, ObservabilityConfiguration.getInstance().getEnabledTracersSet().get(0));
 
     // Singleton
     ObservabilityConfiguration.getInstance().setEnabled(true);
@@ -69,7 +69,7 @@ public class BackwardCompatibilityTest {
     assertEquals("true", sensitiveDataEnabled);
 
     assertEquals(1, ObservabilityConfiguration.getInstance().getEnabledTracersSet().size());
-    assertEquals(Tracer.OTEL, ObservabilityConfiguration.getInstance().getEnabledTracersSet().get(0));
+    assertEquals(TracerType.OTEL, ObservabilityConfiguration.getInstance().getEnabledTracersSet().get(0));
 
   }
 }
