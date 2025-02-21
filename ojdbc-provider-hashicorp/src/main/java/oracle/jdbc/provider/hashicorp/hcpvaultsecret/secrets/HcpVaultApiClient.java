@@ -72,14 +72,8 @@ public final class HcpVaultApiClient {
    */
   public static String fetchSecrets(String urlStr, String token) {
     try {
-      HttpURLConnection conn = HttpUtil.createConnection(
-              urlStr,
-              "GET",
-              "application/json",
-              token, null
-      );
-
-      String jsonResponse = HttpUtil.sendGetRequestAndGetResponse(conn);
+      String jsonResponse = HttpUtil.sendGetRequestAndGetResponse(
+              HttpUtil.createConnection(urlStr, "GET", "application/json", token, null));
 
       OracleJsonFactory factory = new OracleJsonFactory();
       ByteArrayInputStream jsonInputStream = new ByteArrayInputStream(

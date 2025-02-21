@@ -53,8 +53,9 @@ import static oracle.jdbc.provider.util.ParameterUtil.getRequiredOrFallback;
 /**
  * A factory for creating {@link HcpVaultSecretToken} objects for HCP Vault Secrets.
  * <p>
- * This class implements the client_credentials flow for OAuth2 authentication, retrieving
- * an API token to interact with the HCP Vault Secrets API.
+ * Implements the client_credentials flow as well as file-based authentication.
+ * The auto-detect mode attempts file-based authentication first, then falls back
+ * to client credentials.
  * </p>
  */
 public final class HcpVaultTokenFactory implements ResourceFactory<HcpVaultSecretToken> {

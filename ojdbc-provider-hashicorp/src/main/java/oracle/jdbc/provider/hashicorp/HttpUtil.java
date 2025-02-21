@@ -38,12 +38,15 @@
 
 package oracle.jdbc.provider.hashicorp;
 
+import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 /**
  * Utility class for handling HTTP requests and responses.
@@ -79,6 +82,20 @@ public class HttpUtil {
   }
 
   /**
+   * Reads the full response from an InputStream as a String.
+   *
+   * @param in the input stream to read.
+   * @return the response string.
+   */
+  private static String readResponse(InputStream in) {
+    try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+      return reader.lines().collect(Collectors.joining("\n"));
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to read HTTP response", e);
+    }
+  }
+
+  /**
    * Sends a payload via the provided {@link HttpURLConnection} and retrieves
    * the response as a string.
    *
@@ -91,13 +108,19 @@ public class HttpUtil {
     try (OutputStream os = conn.getOutputStream()) {
       os.write(payload.getBytes(StandardCharsets.UTF_8));
     }
-    if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
-      throw new IllegalStateException("HTTP request failed. Status code: " + conn.getResponseCode());
+    int responseCode = conn.getResponseCode();
+    if (responseCode != HttpURLConnection.HTTP_OK) {
+      String errorResponse = "";
+      try {
+        errorResponse = readResponse(conn.getErrorStream());
+      } catch (Exception ignore) {
+      }
+      String errorMessage = String.format("HTTP request failed with status code %d. " +
+                      "Please verify any provided parameters. Error Response:" +
+              " %s ", responseCode, errorResponse);
+      throw new IllegalStateException(errorMessage);
     }
-    try (InputStream in = conn.getInputStream();
-         Scanner scanner = new Scanner(in, StandardCharsets.UTF_8.name())) {
-      return scanner.useDelimiter("\\A").hasNext() ? scanner.next() : "";
-    }
+    return readResponse(conn.getInputStream());
   }
 
   /**
@@ -109,12 +132,18 @@ public class HttpUtil {
    * @throws Exception if the request fails or the response cannot be read.
    */
   public static String sendGetRequestAndGetResponse(HttpURLConnection conn) throws Exception {
-    if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
-      throw new IllegalStateException("HTTP request failed. Status code: " + conn.getResponseCode());
+    int responseCode = conn.getResponseCode();
+    if (responseCode != HttpURLConnection.HTTP_OK) {
+      String errorResponse = "";
+      try {
+        errorResponse = readResponse(conn.getErrorStream());
+      } catch (Exception ignore) {
+      }
+      String errorMessage = String.format("HTTP request failed with status code %d. " +
+              "Please verify any provided parameters. Error Response:" +
+              " %s ", responseCode, errorResponse);
+      throw new IllegalStateException(errorMessage);
     }
-    try (InputStream in = conn.getInputStream();
-         Scanner scanner = new Scanner(in, StandardCharsets.UTF_8.name())) {
-      return scanner.useDelimiter("\\A").hasNext() ? scanner.next() : "";
-    }
+    return readResponse(conn.getInputStream());
   }
 }

@@ -40,7 +40,6 @@ package oracle.jdbc.provider.hashicorp.hcpvaultsecret.configuration;
 
 import oracle.jdbc.provider.hashicorp.hcpvaultsecret.secrets.HcpVaultSecretsManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
 import oracle.jdbc.spi.OracleConfigurationSecretProvider;
 
 import java.nio.charset.StandardCharsets;

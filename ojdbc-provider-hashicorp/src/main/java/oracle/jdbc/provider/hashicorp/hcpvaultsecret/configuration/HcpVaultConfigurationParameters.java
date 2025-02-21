@@ -55,6 +55,12 @@ public final class HcpVaultConfigurationParameters {
 
   private HcpVaultConfigurationParameters() {}
 
+  /**
+   * Configures a {@link ParameterSetParser.Builder} with HCP Vault Secrets parameters.
+   *
+   * @param builder the builder to configure.
+   * @return the configured builder.
+   */
   public static ParameterSetParser.Builder configureBuilder(ParameterSetParser.Builder builder) {
     return builder
       .addParameter(

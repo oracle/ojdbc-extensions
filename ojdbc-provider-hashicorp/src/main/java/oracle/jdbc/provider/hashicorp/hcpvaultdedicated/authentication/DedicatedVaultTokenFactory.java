@@ -169,25 +169,71 @@ public final class DedicatedVaultTokenFactory
           TokenGenerator generator
   ) {
     ParameterSet cacheKey = generateCacheKey(parameterSet, method);
-    synchronized (DedicatedVaultTokenFactory.class) {
-      CachedToken cachedToken = tokenCache.get(cacheKey);
-      long currentTime = System.currentTimeMillis();
+    long currentTime = System.currentTimeMillis();
 
+    CachedToken validCachedToken = tokenCache.compute(cacheKey, (k, cachedToken) -> {
       if (cachedToken == null || !cachedToken.isValid(currentTime, TOKEN_TTL_BUFFER)) {
-        CachedToken newToken = generator.generate(parameterSet);
-        tokenCache.put(cacheKey, newToken);
+        return generator.generate(parameterSet);
       }
+      return cachedToken;
+    });
 
-      CachedToken validCachedToken = tokenCache.get(cacheKey);
-      if (validCachedToken.getToken() instanceof OpaqueAccessToken) {
-        OpaqueAccessToken opaqueToken = (OpaqueAccessToken) validCachedToken.getToken();
-        return new DedicatedVaultToken(opaqueToken.token().get());
-      } else {
-        throw new IllegalStateException("Cached token is not an instance of OpaqueAccessToken");
-      }
+    if (validCachedToken.getToken() instanceof OpaqueAccessToken) {
+      OpaqueAccessToken opaqueToken = (OpaqueAccessToken) validCachedToken.getToken();
+      return new DedicatedVaultToken(opaqueToken.token().get());
+    } else {
+      throw new IllegalStateException("Cached token is not an instance of OpaqueAccessToken");
     }
   }
 
+  /**
+   * Helper method that consolidates the common authentication steps.
+   * <p>
+   * This method performs the following:
+   * <ol>
+   *   <li>Creates an HTTP connection to the specified authentication endpoint.</li>
+   *   <li>Sends the provided JSON payload.</li>
+   *   <li>Parses the JSON response to extract the client token and lease duration.</li>
+   *   <li>Constructs and returns a new {@link CachedToken} based on the response.</li>
+   * </ol>
+   * </p>
+   *
+   * @param authEndpoint the full URL of the Vault authentication endpoint.
+   * @param payload the JSON payload to send in the request.
+   * @param namespace the Vault namespace to include in the request headers.
+   * @param authToken an optional token to include in the "Authorization" header (used for GitHub authentication).
+   * @param failureMessage a descriptive error message used if authentication fails.
+   * @return a new {@link CachedToken} containing the client token and its expiration details.
+   * @throws IllegalStateException if the authentication request fails or if the response is malformed.
+   */
+  private static CachedToken performAuthentication(
+          String authEndpoint,
+          String payload,
+          String namespace,
+          String authToken,
+          String failureMessage) {
+    try {
+      HttpURLConnection conn = HttpUtil.createConnection(authEndpoint, "POST",
+              "application/json", authToken, namespace);
+      String jsonResponse = HttpUtil.sendPayloadAndGetResponse(conn, payload);
+      OracleJsonObject response = JsonUtil.parseJsonResponse(jsonResponse);
+      OracleJsonObject authObj = response.getObject("auth");
+      String clientToken = authObj.getString("client_token");
+      long leaseDurationInSeconds = authObj.getLong("lease_duration");
+      OffsetDateTime expiration = OffsetDateTime.now().plusSeconds(leaseDurationInSeconds);
+      return new CachedToken(OpaqueAccessToken.create(clientToken.toCharArray(), expiration), leaseDurationInSeconds);
+    } catch (Exception e) {
+      throw new IllegalStateException(failureMessage, e);
+    }
+  }
+
+  /**
+   * Authenticates with the Vault using the Userpass method.
+   *
+   * @param parameterSet the set of parameters for the request.
+   * @return a {@link CachedToken} containing the client token and its expiration details.
+   * @throws IllegalStateException if authentication fails.
+   */
   private static CachedToken createUserpassToken(ParameterSet parameterSet) {
     String vaultAddr = getRequiredOrFallback(parameterSet, VAULT_ADDR, "VAULT_ADDR");
     String authPath = getOptionalOrFallback(parameterSet, USERPASS_AUTH_PATH,
@@ -197,10 +243,17 @@ public final class DedicatedVaultTokenFactory
     String username = getRequiredOrFallback(parameterSet, USERNAME, "VAULT_USERNAME");
     String password = getRequiredOrFallback(parameterSet, PASSWORD, "VAULT_PASSWORD");
 
-    return authenticateWithUserpass(vaultAddr, authPath, namespace, username, password);
-  }
+    String authEndpoint = vaultAddr + "/v1/auth/" + authPath + "/login/" + username;
+    String payload = String.format("{\"password\": \"%s\"}", password);
+    return performAuthentication(authEndpoint, payload, namespace, null, "Failed to authenticate using Userpass");  }
 
-
+  /**
+   * Authenticates with the Vault using the AppRole method.
+   *
+   * @param parameterSet the set of parameters for the request.
+   * @return a {@link CachedToken} containing the client token and its expiration details.
+   * @throws IllegalStateException if authentication fails.
+   */
   private static CachedToken createAppRoleToken(ParameterSet parameterSet) {
     String vaultAddr = getRequiredOrFallback(parameterSet, VAULT_ADDR, "VAULT_ADDR");
     String namespace = getOptionalOrFallback(parameterSet, NAMESPACE,
@@ -210,143 +263,29 @@ public final class DedicatedVaultTokenFactory
     String authPath = getOptionalOrFallback(parameterSet, APPROLE_AUTH_PATH,
             "APPROLE_AUTH_PATH", "approle");
 
-    return authenticateWithAppRole(vaultAddr, namespace, roleId, secretId,authPath);
+    String authEndpoint = vaultAddr + "/v1/auth/" + authPath + "/login";
+    String payload = String.format("{\"role_id\":\"%s\", \"secret_id\":\"%s\"}", roleId, secretId);
+    return performAuthentication(authEndpoint, payload, namespace, null, "Failed to authenticate with AppRole");
   }
 
+  /**
+   * Authenticates with the Vault using the GitHub method.
+   *
+   * @param parameterSet the set of parameters for the request.
+   * @return a {@link CachedToken} containing the client token and its expiration details.
+   * @throws IllegalStateException if authentication fails.
+   */
   private static CachedToken createGitHubToken(ParameterSet parameterSet) {
     String vaultAddr = getRequiredOrFallback(parameterSet, VAULT_ADDR, "VAULT_ADDR");
     String githubToken = getRequiredOrFallback(parameterSet, GITHUB_TOKEN, "GITHUB_TOKEN");
     String namespace = getOptionalOrFallback(parameterSet, NAMESPACE,
             "VAULT_NAMESPACE", "admin");
-    String github_auth_path = getOptionalOrFallback(parameterSet,
+    String githubAuthPath = getOptionalOrFallback(parameterSet,
             GITHUB_AUTH_PATH, "GITHUB_AUTH_PATH", "github");
 
-    return authenticateWithGitHub(vaultAddr, namespace, githubToken, github_auth_path);
-  }
-
-  /**
-   * Authenticates with the HashiCorp Vault using the Userpass authentication method.
-   * <p>
-   * This method sends a POST request to the Vault's Userpass authentication
-   * endpoint and retrieves a client token that can be used for subsequent
-   * API requests.
-   * </p>
-   *
-   * @param vaultAddr the base URL of the HashiCorp Vault instance
-   * (e.g., "https://vault.example.com:8200"). Must not be null or empty.
-   * @param authPath  the path of the Userpass authentication mount in Vault
-   * (e.g., "userpass"). default value is "userpass".
-   * @param namespace the namespace for the Vault request.
-   * @param username  the username for Userpass authentication. Must not be null or empty.
-   * @param password  the password for Userpass authentication. Must not be null or empty.
-   * @return the client token as a {@link String}, which can be used for making authenticated
-   * requests to the Vault. Never null or empty if the request succeeds.
-   * @throws IllegalStateException if the authentication fails or if the Vault returns an error.
-   */
-  private static CachedToken authenticateWithUserpass(String vaultAddr, String authPath, String namespace, String username, String password) {
-    try {
-      String authEndpoint = vaultAddr + "/v1/auth/" + authPath + "/login/" + username;
-      HttpURLConnection conn = HttpUtil.createConnection(authEndpoint, "POST",
-              "application/json",
-              null,
-              namespace);
-      String payload = String.format("{\"password\": \"%s\"}", password);
-      String jsonResponse = HttpUtil.sendPayloadAndGetResponse(conn, payload);
-      OracleJsonObject response = JsonUtil.parseJsonResponse(jsonResponse);
-
-      String clientToken = response.getObject("auth").getString("client_token");
-      long leaseDurationInSeconds = response.getObject("auth").getLong("lease_duration");
-      OffsetDateTime expiration = OffsetDateTime.now().plusSeconds(leaseDurationInSeconds);
-
-      return new CachedToken(OpaqueAccessToken.create(clientToken.toCharArray(), expiration), leaseDurationInSeconds);
-    } catch (Exception e) {
-      throw new IllegalStateException("Failed to authenticate using Userpass", e);
-    }
-  }
-
-  /**
-   * Authenticates with HashiCorp Vault using the AppRole authentication method.
-   * <p>
-   * This method sends a POST request to the Vault's AppRole authentication endpoint
-   * and retrieves a client token that can be used for subsequent API requests.
-   * The endpoint path is dynamic and depends on the provided `authPath` parameter,
-   * which defaults to "approle" if not explicitly specified.
-   * </p>
-   *
-   * @param vaultAddr The base URL of the HashiCorp Vault instance
-   *  (e.g., "https://vault.example.com:8200"). Must not be null or empty.
-   * @param namespace The namespace for the Vault API request. Optional.
-   * @param roleId The Role ID used for AppRole authentication. Must not be null or empty.
-   * @param secretId The Secret ID used for AppRole authentication. Must not be null or empty.
-   * @param authPath The path where the AppRole authentication method is enabled. Optional.
-   *  Defaults to "approle" if not provided or empty.
-   * @return A {@link CachedToken} containing the client token and its expiration details.
-   * @throws IllegalStateException If authentication fails or if any required parameter is missing.
-   */
-  private static CachedToken authenticateWithAppRole(String vaultAddr, String namespace, String roleId, String secretId, String authPath) {
-    try {
-      String authEndpoint = vaultAddr + "/v1/auth/" + authPath + "/login";
-      HttpURLConnection conn = HttpUtil.createConnection(authEndpoint, "POST",
-              "application/json",
-              null,
-              namespace);
-      String payload = String.format("{\"role_id\":\"%s\", \"secret_id\":\"%s\"}", roleId, secretId);
-      String jsonResponse = HttpUtil.sendPayloadAndGetResponse(conn, payload);
-      OracleJsonObject response = JsonUtil.parseJsonResponse(jsonResponse);
-
-      String clientToken = response.getObject("auth").getString("client_token");
-      long leaseDurationInSeconds = response.getObject("auth").getLong("lease_duration");
-      OffsetDateTime expiration = OffsetDateTime.now().plusSeconds(leaseDurationInSeconds);
-
-      return new CachedToken(OpaqueAccessToken.create(clientToken.toCharArray(), expiration), leaseDurationInSeconds);
-    } catch (Exception e) {
-      throw new IllegalStateException("Failed to authenticate with AppRole", e);
-    }
-  }
-
-  /**
-   * Authenticates with the HashiCorp Vault using the GitHub authentication method.
-   * <p>
-   * This method sends a POST request to the Vault's GitHub authentication endpoint
-   * and retrieves a client token that can be used for subsequent API requests.
-   * The endpoint path is dynamic and depends on the provided {@code githubAuthPath},
-   * which defaults to "github" if not explicitly specified.
-   * </p>
-   *
-   * @param vaultAddr The base URL of the HashiCorp Vault instance
-   * (e.g., "https://vault.example.com:8200"). Must not be null or empty.
-   * @param namespace The namespace for the Vault API request. Optional, can be null or empty.
-   * @param githubToken The GitHub personal access token used for authentication. Must not be null or empty.
-   * @param githubAuthPath The path where the GitHub authentication method is enabled.
-   * Optional, defaults to "github" if not provided or empty.
-   * @return A {@link CachedToken} containing the client token and its expiration details.
-   * @throws IllegalStateException If authentication fails, the Vault returns an error,
-   * or the response does not contain the required fields.
-   */
-  private static CachedToken authenticateWithGitHub(String vaultAddr, String namespace, String githubToken, String githubAuthPath) {
-    try {
-      String authEndpoint = vaultAddr + "/v1/auth/" + githubAuthPath + "/login";
-      HttpURLConnection conn = HttpUtil.createConnection(authEndpoint, "POST",
-              "application/json",
-              githubToken,
-              namespace);
-      String payload = String.format("{\"token\": \"%s\"}", githubToken);
-      String jsonResponse = HttpUtil.sendPayloadAndGetResponse(conn, payload);
-      OracleJsonObject response = JsonUtil.parseJsonResponse(jsonResponse);
-
-      String clientToken = response.getObject("auth").getString("client_token");
-      long leaseDurationInSeconds = response.getObject("auth").getLong("lease_duration");
-      OffsetDateTime expiration = OffsetDateTime.now().plusSeconds(leaseDurationInSeconds);
-
-      return new CachedToken(OpaqueAccessToken.create(clientToken.toCharArray(), expiration), leaseDurationInSeconds);
-    } catch (Exception e) {
-      throw new IllegalStateException("Failed to authenticate with GitHub", e);
-    }
-  }
-
-  @FunctionalInterface
-  private interface TokenGenerator {
-    CachedToken generate(ParameterSet parameterSet);
+    String authEndpoint = vaultAddr + "/v1/auth/" + githubAuthPath + "/login";
+    String payload = String.format("{\"token\": \"%s\"}", githubToken);
+    return performAuthentication(authEndpoint, payload, namespace, githubToken, "Failed to authenticate with GitHub");
   }
 
   /**
@@ -465,6 +404,11 @@ public final class DedicatedVaultTokenFactory
 
     // If all methods fail, throw an error
     throw previousFailure;
+  }
+
+  @FunctionalInterface
+  private interface TokenGenerator {
+    CachedToken generate(ParameterSet parameterSet);
   }
 
 }

@@ -207,6 +207,7 @@ public final class HcpVaultCredentialsFileAuthenticator {
    *
    * @param token The JWT token
    * @return The extracted client ID
+   * @throws IllegalArgumentException if the token is invalid or client_id extraction fails.
    */
   public static String extractClientIdFromToken(String token) {
     try {
