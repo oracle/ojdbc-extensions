@@ -61,6 +61,7 @@
               <artifactId>maven-surefire-plugin</artifactId>
               <configuration>
                 <parallel>none</parallel>
+                <runOrder>alphabetical</runOrder>
               </configuration>
           </plugin>
       </plugins>
