@@ -30,18 +30,6 @@ public class ObservabilityTraceEventListenerProvider implements TraceEventListen
   private static ObjectName objectName;
 
   /**
-   * System property used to enabled/disable tracers. The value of this system property should be a comma separated list
-   * of {@link TracerType} to enable. By default all tracers will be enabled.
-   */
-  private static final String ENABLED_TRACERS = "oracle.jdbc.provider.observability.enabledTracers";
-
-  /**
-   * System property used to enable/disable exporting sensitive data. Set the property to true to enable sensitive data. 
-   * By default exporting sensitive data is disabled.
-   */
-  private static final String SENSITIVE_DATA_ENABLED = "oracle.jdbc.provider.observability.sensitiveDataEnabled";
-
-  /**
    * Logger
    */
   private Logger logger = Logger.getLogger(ObservabilityTraceEventListenerProvider.class.getName());
@@ -71,11 +59,6 @@ public class ObservabilityTraceEventListenerProvider implements TraceEventListen
   public TraceEventListener getTraceEventListener(Map<Parameter, CharSequence> map) {
     try {
       if (!server.isRegistered(objectName)) {
-        String enabledTracers = System.getProperty(ENABLED_TRACERS, "OTEL,JFR");
-        String sensitiveDataEnabled = System.getProperty(SENSITIVE_DATA_ENABLED, "false");
-        ObservabilityConfiguration.getInstance().setEnabledTracers(enabledTracers);
-        ObservabilityConfiguration.getInstance().setSensitiveDataEnabled(Boolean.parseBoolean(sensitiveDataEnabled));
-
         server.registerMBean(ObservabilityConfiguration.getInstance(), objectName);
       }
     } catch (InstanceAlreadyExistsException | MBeanRegistrationException | NotCompliantMBeanException e) {

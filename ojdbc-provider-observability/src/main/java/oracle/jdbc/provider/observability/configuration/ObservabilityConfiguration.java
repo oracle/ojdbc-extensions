@@ -13,23 +13,39 @@ import oracle.jdbc.provider.observability.tracers.TracerType;
  */
 public class ObservabilityConfiguration implements ObservabilityConfigurationMBean {
 
+  /**
+   * System property used to enabled/disable tracers. The value of this system property should be a comma separated list
+   * of {@link TracerType} to enable. By default all tracers will be enabled.
+   */
+  private static final String ENABLED_TRACERS = "oracle.jdbc.provider.observability.enabledTracers";
+
+  /**
+   * System property used to enable/disable exporting sensitive data. Set the property to true to enable sensitive data. 
+   * By default exporting sensitive data is disabled.
+   */
+  private static final String SENSITIVE_DATA_ENABLED = "oracle.jdbc.provider.observability.sensitiveDataEnabled";
+
   private static final ReentrantLock observabilityConfiguraitonLock = new ReentrantLock();
 
   private static final ObservabilityConfiguration INSTANCE;
-
-  static {
-    INSTANCE = new ObservabilityConfiguration();
-    //INSTANCE.setSensitiveDataEnabled(true);
-    INSTANCE.setEnabledTracers(System.getProperty("oracle.jdbc.provider.observability.tracer", "OTEL,JFR"));
-  }
-
-  private ObservabilityConfiguration() {  }
 
   private boolean enabled = true;
   private boolean sensitiveDataEnabled;
   private String tracers;
 
   private List<TracerType> enabledTracers = new ArrayList<>();
+
+
+  static {
+    INSTANCE = new ObservabilityConfiguration();
+  }
+
+  private ObservabilityConfiguration() {  
+    String enabledTracers = System.getProperty(ENABLED_TRACERS, "OTEL,JFR");
+    String sensitiveDataEnabled = System.getProperty(SENSITIVE_DATA_ENABLED, "false");
+    setEnabledTracers(enabledTracers);
+    setSensitiveDataEnabled(Boolean.valueOf(sensitiveDataEnabled));
+  }
 
   /**
    * Returns true if the provider is enabled, otherwise false.

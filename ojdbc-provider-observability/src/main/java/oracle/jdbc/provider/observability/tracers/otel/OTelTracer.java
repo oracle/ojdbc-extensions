@@ -37,10 +37,7 @@ public class OTelTracer implements ObservabilityTracer {
    */
   private static final String TRACE_KEY = "clientcontext.ora$opentelem$tracectx";
 
-  /**
-   * Open Telemetry tracer.
-   */
-  private Tracer tracer;
+
 
   /**
    * Logger.
@@ -48,21 +45,10 @@ public class OTelTracer implements ObservabilityTracer {
   private static Logger logger = Logger.getLogger(OTelTracer.class.getName());
 
   /**
-   * Constructor. Uses {@link GlobalOpenTelemetry} to get the tracer.
+   * Constructor. This tracer always uses {@link GlobalOpenTelemetry} to get 
+   * the Open Telemetry tracer.
    */
-  public OTelTracer() {
-    this(GlobalOpenTelemetry.get().getTracer(OTelTracer.class.getName()));
-  }
-
-  /**
-   * Constructor.
-   * @param tracer Open Telemetry tracer.
-   */
-  public OTelTracer(Tracer tracer) {
-    this.tracer = tracer;
-  }
-
-
+  public OTelTracer() { }
 
   @Override
   public Object traceRoundtrip(Sequence sequence, TraceContext traceContext, Object userContext) {
@@ -92,6 +78,7 @@ public class OTelTracer implements ObservabilityTracer {
   @Override
   public Object traceExecutionEvent(JdbcExecutionEvent event, Object userContext, Object... params) {
     if (EXECUTION_EVENTS_PARAMETERS.get(event) == params.length) {
+      Tracer tracer = GlobalOpenTelemetry.get().getTracer(OTelTracer.class.getName());
       if (event == TraceEventListener.JdbcExecutionEvent.VIP_RETRY) {
         SpanBuilder spanBuilder = tracer
             .spanBuilder(event.getDescription())
@@ -133,6 +120,7 @@ public class OTelTracer implements ObservabilityTracer {
      * child span to the current span. I.e. the current span in context becomes
      * parent to this child span.
      */
+    Tracer tracer = GlobalOpenTelemetry.get().getTracer(OTelTracer.class.getName());
     SpanBuilder spanBuilder = tracer
         .spanBuilder(spanName)
         .setAttribute("thread.id", Thread.currentThread().getId())
@@ -146,7 +134,8 @@ public class OTelTracer implements ObservabilityTracer {
     // Add sensitive information (URL and SQL) if it is enabled
     if (ObservabilityConfiguration.getInstance().getSensitiveDataEnabled()) {
       logger.log(Level.FINEST, "Sensitive information on");
-      spanBuilder.setAttribute("Original SQL Text", traceContext.originalSqlText())
+      spanBuilder
+          .setAttribute("Original SQL Text", traceContext.originalSqlText())
           .setAttribute("Actual SQL Text", traceContext.actualSqlText());
     }
 

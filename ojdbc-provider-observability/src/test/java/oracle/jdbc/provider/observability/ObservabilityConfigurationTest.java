@@ -16,13 +16,15 @@ import oracle.jdbc.spi.TraceEventListenerProvider;
 
 public class ObservabilityConfigurationTest {
 
+  // Set system properties before starting 
+  static {
+    System.setProperty("oracle.jdbc.provider.observability.enabledTracers", "JFR");
+    System.setProperty("oracle.jdbc.provider.observability.sensitiveDataEnabled", "true");
+  }
+
   @Test
   public void testConfiguration() throws Exception {
     
-    // System properties
-    System.setProperty("oracle.jdbc.provider.observability.enabledTracers", "JFR");
-    System.setProperty("oracle.jdbc.provider.observability.sensitiveDataEnabled", "true");
-
     TraceEventListenerProvider provider = new ObservabilityTraceEventListenerProvider();
     provider.getTraceEventListener(null);
 
