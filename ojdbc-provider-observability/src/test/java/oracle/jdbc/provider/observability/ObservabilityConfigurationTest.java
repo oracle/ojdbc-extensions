@@ -20,14 +20,17 @@ public class ObservabilityConfigurationTest {
   static {
     System.setProperty("oracle.jdbc.provider.observability.enabledTracers", "JFR");
     System.setProperty("oracle.jdbc.provider.observability.sensitiveDataEnabled", "true");
+    System.out.println(ObservabilityConfiguration.getInstance().getEnabledTracers());
   }
 
   @Test
   public void testConfiguration() throws Exception {
-    
+
+    System.out.println(ObservabilityConfiguration.getInstance().getEnabledTracers());
     TraceEventListenerProvider provider = new ObservabilityTraceEventListenerProvider();
     provider.getTraceEventListener(null);
 
+    System.out.println(ObservabilityConfiguration.getInstance().getEnabledTracers());
     assertEquals("JFR", ObservabilityConfiguration.getInstance().getEnabledTracers());
     assertEquals(true, ObservabilityConfiguration.getInstance().getSensitiveDataEnabled());
 
