@@ -60,6 +60,12 @@
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-surefire-plugin</artifactId>
               <configuration>
+              <!-- 
+                ObservabilityConfigurationTest must run first and alone since it depends on
+                ObservabilityConfiguration being started with system properties set on the 
+                test.
+                Running tests alphabetical and single threaded ensures that.
+              -->
                 <parallel>none</parallel>
                 <runOrder>alphabetical</runOrder>
               </configuration>
