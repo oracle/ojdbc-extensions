@@ -27,18 +27,13 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
 
   private static final ReentrantLock observabilityConfiguraitonLock = new ReentrantLock();
 
-  private static final ObservabilityConfiguration INSTANCE;
+  private static final ObservabilityConfiguration INSTANCE = new ObservabilityConfiguration();
 
   private boolean enabled = true;
   private boolean sensitiveDataEnabled;
   private String tracers;
 
   private List<TracerType> enabledTracers = new ArrayList<>();
-
-
-  static {
-    INSTANCE = new ObservabilityConfiguration();
-  }
 
   private ObservabilityConfiguration() {  
     String enabledTracers = System.getProperty(ENABLED_TRACERS, "OTEL,JFR");
