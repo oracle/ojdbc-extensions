@@ -33,7 +33,8 @@ The coordinates for the latest release are:
 
 Providers use the HashiCorp Vault API to retrieve secrets and configurations.
 The HashiCorp Vault Providers support two types of Vaults: **HCP Vault Dedicated** and **HCP Vault Secrets**.
-Each type has its own authentication method uses specific parameters. Choose the method that matches the type of Vault you are using.
+Each type supports multiple authentication methods, each requiring specific parameters.
+
 The provider searches for these parameters in the following locations in a predefined sequence:
 
 1. Explicitly provided in the URL
@@ -102,7 +103,7 @@ The provider searches for the following parameters:
 </tr>
 <tr>
 <td><code>VAULT_NAMESPACE</code></td>
-<td>The namespace in the Vault (default: <code>(default: `admin`)</code>)</td>
+<td>The namespace in the Vault (default: <code>admin</code>)</td>
 <td>No</td>
 </tr>
 <tr>
@@ -124,7 +125,7 @@ This minimizes API calls to the Vault and enhances performance.
 For more information, visit the official documentation: [Userpass Authentication](https://developer.hashicorp.com/vault/api-docs/auth/userpass).
 
 #### AppRole Authentication
-AppRole authentication is a method that relies on a role_id and a secret_id for secure authentication. It is based on the AppRole authentication backend in HashiCorp Vault,
+AppRole authentication is a method that relies on a `role_id` and a `secret_id for secure authentication. It is based on the AppRole authentication backend in HashiCorp Vault,
 which allows entities to authenticate and obtain a `client_token` by providing these identifiers.
 
 The provider searches for the following parameters:
@@ -150,7 +151,7 @@ The provider searches for the following parameters:
 </tr>
 <tr>
 <td><code>VAULT_NAMESPACE</code></td>
-<td>The namespace in the Vault (default: <code>(default: `admin`)</code>)</td>
+<td>The namespace in the Vault (default: <code>admin</code>)</td>
 <td>No</td>
 </tr>
 <tr>
@@ -202,7 +203,7 @@ The provider searches for the following parameters:
 </tr>
 <tr>
 <td><code>VAULT_NAMESPACE</code></td> 
-<td>The namespace in the Vault (default: <code>(default: `admin`)</code>)</td> 
+<td>The namespace in the Vault (default: <code>admin</code>)</td> 
 <td>No</td>
 </tr> 
 </tbody>
@@ -239,13 +240,13 @@ Below is an overview of the supported authentication methods:
     - The token is then used to retrieve secrets from HCP Vault Secrets API.
 
 2. **Credentials File Authentication**
-    - Uses a JSON file (`creds-cache.json`) containing authentication credentials (`access_token`, `refresh_token`, and `access_token_expiry`).    - If the access token is expired, it is automatically refreshed using the stored refresh token.
+    - Uses a JSON file (`creds-cache.json`) containing authentication credentials (`access_token`, `refresh_token`, and `access_token_expiry`).
+    - If the access token is expired, it is automatically refreshed using the stored refresh token.
     - If the access token is expired, it is **automatically refreshed** using the stored refresh token.
-    - This method allows authentication **without requiring direct API credentials**.
 
 The generated token is cached and reused until it expires, minimizing API calls to HCP Vault Secrets.
 
-Secrets can be retrieved from the following API endpoint:  
+Secrets are retrieved from the following API endpoint:  
 `https://api.cloud.hashicorp.com/secrets/2023-11-28/organizations/$HCP_ORG_ID/projects/$HCP_PROJECT_ID/apps/$APP_NAME/secrets`
 
 For more information, visit the official HashiCorp Vault documentation: [HCP Vault Secrets](https://developer.hashicorp.com/hcp/tutorials/get-started-hcp-vault-secrets/hcp-vault-secrets-retrieve-secret).
@@ -276,6 +277,9 @@ The provider searches for the following parameters:
 </tr>
 </tbody>
 </table>
+
+In addition to the above parameters, the <a href="#Common-Parameters-for-HCP-Vault-Secrets-authentication-methods">Common parameters </a>
+are also required.
 
 #### CLI CREDENTIALS FILE
 This method **retrieves authentication details** from a **JSON file (`creds-cache.json`)** that contains access tokens.
@@ -316,12 +320,14 @@ The provider searches for the following parameters:
 <tbody>
 <tr>
 <td><code>HCP_CREDENTIALS_FILE</code></td>
-<td>The path of the credentials file ( by default
-<code>~/.config/hcp/creds-cache.json</code></td>
+<td>The path of the credentials file ( by default <code>~/.config/hcp/creds-cache.json</code></td>
 <td>No</td>
 </tr>
 </tbody>
 </table>
+
+In addition to the above parameters, the <a href="#Common-Parameters-for-HCP-Vault-Secrets-authentication-methods">Common parameters </a>
+are also required.
 
 #### AUTO_DETECT Authentication
 
@@ -479,7 +485,6 @@ For the JSON type of provider (HCP Vault Dedicated, HCP Vault Secrets, HTTP/HTTP
         - ocivault
         - azurevault
         - base64
-        - gcpsecretmanager
         - hcpvaultdedicated
         - hcpvaultsecret
 - value
@@ -488,7 +493,6 @@ For the JSON type of provider (HCP Vault Dedicated, HCP Vault Secrets, HTTP/HTTP
         - OCID of the secret (if ocivault)
         - Azure Key Vault URI (if azurevault)
         - Base64 Encoded password (if base64)
-        - GCP resource name (if gcpsecretmanager)
         - Secret path (if hcpvaultdedicated)
         - Secret name (if hcpvaultsecret)
         - Text

@@ -139,8 +139,8 @@ For the JSON type of provider (OCI Object Storage, HTTP/HTTPS, File) the passwor
   - Possible values
     - ocivault
     - azurevault
-    - hcpdedicatedvault
-    - hcpvault
+    - hcpvaultdedicated
+    - hcpvaultsecret
     - base64
 - value
   - Mandatory
@@ -148,8 +148,8 @@ For the JSON type of provider (OCI Object Storage, HTTP/HTTPS, File) the passwor
     - OCID of the secret (if ocivault)
     - Azure Key Vault URI (if azurevault)
     - Base64 Encoded password (if base64)
-    - Secret path (if hcpdedicatedvault)
-    - Application name (if hcpvault)
+    - Secret path (if hcpvaultdedicated)
+    - Secret name (if hcpvaultsecret)
     - Text
 - authentication
   - Optional (it will apply defaults in the same way as described in [Configuring Authentication](#configuring-authentication)).
