@@ -1,0 +1,2 @@
+oracle.jdbc.provider.observability.ObservabilityTraceEventListenerProvider
+oracle.jdbc.provider.opentelemetry.OpenTelemetryTraceEventListenerProvider

@@ -53,6 +53,15 @@
         <maven.compiler.release>8</maven.compiler.release>
       </properties>
     </profile>
+    <profile>
+      <id>javac-release-jfr</id>
+      <activation>
+        <jdk>[9,)</jdk>
+      </activation>
+      <properties>
+        <maven.compiler.release>11</maven.compiler.release>
+      </properties>
+    </profile>
   </profiles>
 
   <modules>
@@ -62,6 +71,7 @@
     <module>ojdbc-provider-samples</module>
     <module>ojdbc-provider-opentelemetry</module>
     <module>ojdbc-provider-jackson-oson</module>
+    <module>ojdbc-provider-observability</module>
   </modules>
 
   <dependencyManagement>
@@ -74,6 +84,11 @@
       <dependency>
         <groupId>com.oracle.database.jdbc</groupId>
         <artifactId>ojdbc8</artifactId>
+        <version>${jdbc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.oracle.database.jdbc</groupId>
+        <artifactId>ojdbc11</artifactId>
         <version>${jdbc.version}</version>
       </dependency>
       <dependency>
