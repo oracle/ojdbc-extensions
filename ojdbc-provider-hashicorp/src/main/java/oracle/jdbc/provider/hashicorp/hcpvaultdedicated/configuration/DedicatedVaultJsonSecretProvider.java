@@ -70,7 +70,7 @@ import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.secrets.Dedicated
  *   }
  * }</pre>
  *
- * <h3>Behavior for Extracting the Secret</h3>
+ * <h2>Behavior for Extracting the Secret</h2>
  * <ul>
  *   <li> If {@code field_name} is provided, the corresponding value is
  *   extracted.</li>

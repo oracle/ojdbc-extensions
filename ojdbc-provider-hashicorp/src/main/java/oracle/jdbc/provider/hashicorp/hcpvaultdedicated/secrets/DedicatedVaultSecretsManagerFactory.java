@@ -80,9 +80,9 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
   public static final Parameter<String> VAULT_TOKEN = Parameter.create(REQUIRED);
 
   /**
-   *  The field name for extracting a specific value from the JSON. Required.
+   *  The field name for extracting a specific value from the JSON.
    */
-  public static final Parameter<String> FIELD_NAME = Parameter.create(REQUIRED);
+  public static final Parameter<String> FIELD_NAME = Parameter.create();
 
   /**
    * The username for Userpass authentication. Required for Userpass method.
@@ -111,7 +111,7 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
    * configured in Vault as part of the AppRole authentication setup.
    * </p>
    */
-  public static final Parameter<String> ROLE_ID = Parameter.create();
+  public static final Parameter<String> ROLE_ID = Parameter.create(REQUIRED);
 
   /**
    * The Secret ID for AppRole authentication. Required for AppRole method.
@@ -120,7 +120,7 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
    * conjunction with the Role ID for AppRole authentication.
    * </p>
    */
-  public static final Parameter<String> SECRET_ID = Parameter.create();
+  public static final Parameter<String> SECRET_ID = Parameter.create(REQUIRED);
 
   /**
    * The path for AppRole authentication. Optional.
