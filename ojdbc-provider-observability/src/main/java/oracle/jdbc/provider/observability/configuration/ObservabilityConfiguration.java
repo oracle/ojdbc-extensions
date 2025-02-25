@@ -49,8 +49,8 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
    */
   @Override
   public boolean getEnabled() {
+    observabilityConfiguraitonLock.lock();
     try {
-      observabilityConfiguraitonLock.lock();
       return  enabled;
     } finally {
       observabilityConfiguraitonLock.unlock();
@@ -64,8 +64,8 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
    */
   @Override
   public void setEnabled(boolean enabled) {
+    observabilityConfiguraitonLock.lock();
     try {
-      observabilityConfiguraitonLock.lock();
       this.enabled = enabled;
     } finally {
       observabilityConfiguraitonLock.unlock();
@@ -77,8 +77,8 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
    */
   @Override
   public String getEnabledTracers() {
+    observabilityConfiguraitonLock.lock();
     try {
-      observabilityConfiguraitonLock.lock();
       return tracers;
     } finally {
       observabilityConfiguraitonLock.unlock();
@@ -92,8 +92,8 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
    */
   @Override
   public void setEnabledTracers(String tracers) {
+    observabilityConfiguraitonLock.lock();
     try {
-      observabilityConfiguraitonLock.lock();
       enabledTracers.clear();
       String[] items = tracers.split(",");
       for (String item : items) {
@@ -113,8 +113,8 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
    */
   @Override
   public boolean getSensitiveDataEnabled() {
+    observabilityConfiguraitonLock.lock();
     try {
-      observabilityConfiguraitonLock.lock();
       return sensitiveDataEnabled;
     } finally {
       observabilityConfiguraitonLock.unlock();
@@ -128,8 +128,8 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
    */
   @Override
   public void setSensitiveDataEnabled(boolean sensitiveDataEnabled) {
+    observabilityConfiguraitonLock.lock();
     try {
-      observabilityConfiguraitonLock.lock();
       this.sensitiveDataEnabled = sensitiveDataEnabled;
     } finally {
       observabilityConfiguraitonLock.unlock();
@@ -141,8 +141,8 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
    * @return the singleton instance of {@link ObservabilityConfiguration}.
    */
   public static ObservabilityConfiguration getInstance() {
+    observabilityConfiguraitonLock.lock();
     try {
-      observabilityConfiguraitonLock.lock();
       return INSTANCE;
     } finally {
       observabilityConfiguraitonLock.unlock();
@@ -154,8 +154,8 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
    * @return then list of nabled {@link TracerType}.
    */
   public List<TracerType> getEnabledTracersSet() {
+    observabilityConfiguraitonLock.lock();
     try {
-      observabilityConfiguraitonLock.lock();
       return enabledTracers;
     } finally {
       observabilityConfiguraitonLock.unlock();

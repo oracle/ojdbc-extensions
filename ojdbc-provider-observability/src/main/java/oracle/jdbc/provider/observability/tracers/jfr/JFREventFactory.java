@@ -206,7 +206,7 @@ public class JFREventFactory {
   // Round-trip events
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.ADVANCED_QUEUING_12C_EMON_DEQUEUE")
-  @Label("Round trip")
+  @Label("AQ 12c emon dequeue")
   @Category({"Oracle JDBC", "Round trips"})
   static class AdvancedQueuing12cEminDequeueEvent extends RoundTripEvent{
     public AdvancedQueuing12cEminDequeueEvent(TraceContext traceContext) {
@@ -215,7 +215,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.ADVANCED_QUEUING_ARRAY_ENQUEUE_DEQUEUE")
-  @Label("Round trip")
+  @Label("AQ Array Enqueue/Dequeue")
   @Category({"Oracle JDBC", "Round trips"})
   static class AdvancedQueuingArrayEnqueueDequeue extends RoundTripEvent{
     public AdvancedQueuingArrayEnqueueDequeue(TraceContext traceContext) {
@@ -224,7 +224,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.ADVANCED_QUEUING_DEQUEUE_V8")
-  @Label("Round trip")
+  @Label("AQ Dequeue before 8.1")
   @Category({"Oracle JDBC", "Round trips"})
   static class AdvancedQueuingDequeueV8 extends RoundTripEvent{
     public AdvancedQueuingDequeueV8(TraceContext traceContext) {
@@ -233,7 +233,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.ADVANCED_QUEUING_ENQUEUE")
-  @Label("Round trip")
+  @Label("AQ EnQueue")
   @Category({"Oracle JDBC", "Round trips"})
   static class AdvancedQueuingEnqueue extends RoundTripEvent{
     public AdvancedQueuingEnqueue(TraceContext traceContext) {
@@ -242,7 +242,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.ADVANCED_QUEUING_GET_PROPAGATION_STATUS")
-  @Label("Round trip")
+  @Label("AQ get propagation status entries")
   @Category({"Oracle JDBC", "Round trips"})
   static class AdvancedQueuingGetPropagationStatus extends RoundTripEvent{
     public AdvancedQueuingGetPropagationStatus(TraceContext traceContext) {
@@ -251,7 +251,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.ADVANCED_QUEUING_LISTEN")
-  @Label("Round trip")
+  @Label("AQ Listen")
   @Category({"Oracle JDBC", "Round trips"})
   static class AdvancedQueuingListen extends RoundTripEvent{
     public AdvancedQueuingListen(TraceContext traceContext) {
@@ -260,7 +260,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.ADVANCED_QUEUING_SESSION_GET_RPC_1")
-  @Label("Round trip")
+  @Label("Session get RPC in server pool scenario")
   @Category({"Oracle JDBC", "Round trips"})
   static class AdvancedQueuingSessionGetRPC1 extends RoundTripEvent{
     public AdvancedQueuingSessionGetRPC1(TraceContext traceContext) {
@@ -269,7 +269,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.ADVANCED_QUEUING_SESSION_GET_RPC_2")
-  @Label("Round trip")
+  @Label("Session get RPC in server pool scenario")
   @Category({"Oracle JDBC", "Round trips"})
   static class AdvancedQueuingSessionGetRPC2 extends RoundTripEvent{
     public AdvancedQueuingSessionGetRPC2(TraceContext traceContext) {
@@ -278,7 +278,7 @@ public class JFREventFactory {
   }
   
   @Name("oracle.jdbc.provider.observability.RoundTrip.ADVANCED_QUEUING_SHARED_DEQUEUE")
-  @Label("Round trip")
+  @Label("AQ Sharded dequeue")
   @Category({"Oracle JDBC", "Round trips"})
   static class AdvancedQueuingSharedDequeue extends RoundTripEvent{
     public AdvancedQueuingSharedDequeue(TraceContext traceContext) {
@@ -287,7 +287,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.ADVANCED_QUEUING_SHARED_ENQUEUE")
-  @Label("Round trip")
+  @Label("AQ Sharded enqueue")
   @Category({"Oracle JDBC", "Round trips"})
   static class AdvancedQueuingSharedEnqueue extends RoundTripEvent{
     public AdvancedQueuingSharedEnqueue(TraceContext traceContext) {
@@ -296,7 +296,7 @@ public class JFREventFactory {
   }
   
   @Name("oracle.jdbc.provider.observability.RoundTrip.APP_REPLAY")
-  @Label("Round trip")
+  @Label("Application continuity REPLAY")
   @Category({"Oracle JDBC", "Round trips"})
   static class AppReplay extends RoundTripEvent{
     public AppReplay(TraceContext traceContext) {
@@ -305,7 +305,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.AUTH_CALL")
-  @Label("Round trip")
+  @Label("Generic authentication call")
   @Category({"Oracle JDBC", "Round trips"})
   static class AuthCall extends RoundTripEvent{
     public AuthCall(TraceContext traceContext) {
@@ -314,7 +314,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.AUTO_COMMIT_OFF")
-  @Label("Round trip")
+  @Label("Auto commit off")
   @Category({"Oracle JDBC", "Round trips"})
   static class AutoCommitOff extends RoundTripEvent{
     public AutoCommitOff(TraceContext traceContext) {
@@ -323,7 +323,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.AUTO_COMMIT_ON")
-  @Label("Round trip")
+  @Label("Auto commit on")
   @Category({"Oracle JDBC", "Round trips"})
   static class AutoCommitOn extends RoundTripEvent{
     public AutoCommitOn(TraceContext traceContext) {
@@ -332,7 +332,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.CANCEL_ALL")
-  @Label("Round trip")
+  @Label("Cancel All")
   @Category({"Oracle JDBC", "Round trips"})
   static class CancelAll extends RoundTripEvent{
     public CancelAll(TraceContext traceContext) {
@@ -341,7 +341,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.CANCEL_OPERATION")
-  @Label("Round trip")
+  @Label("Cancel the current operation")
   @Category({"Oracle JDBC", "Round trips"})
   static class CancelOperation extends RoundTripEvent{
     public CancelOperation(TraceContext traceContext) {
@@ -350,7 +350,7 @@ public class JFREventFactory {
   }
   
   @Name("oracle.jdbc.provider.observability.RoundTrip.CHUNCK_INFO")
-  @Label("Round trip")
+  @Label("Chunk info RPC")
   @Category({"Oracle JDBC", "Round trips"})
   static class ChunkInfo extends RoundTripEvent{
     public ChunkInfo(TraceContext traceContext) {
@@ -359,7 +359,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.CLIENT_FEATURES")
-  @Label("Round trip")
+  @Label("Client features")
   @Category({"Oracle JDBC", "Round trips"})
   static class ClientFeatures extends RoundTripEvent{
     public ClientFeatures(TraceContext traceContext) {
@@ -368,7 +368,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.CLIENT_QUERY_CACHE_IDS")
-  @Label("Round trip")
+  @Label("Client query cache IDs")
   @Category({"Oracle JDBC", "Round trips"})
   static class ClientQueryCacheIds extends RoundTripEvent{
     public ClientQueryCacheIds(TraceContext traceContext) {
@@ -377,7 +377,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.CLIENT_QUERY_CACHE_STATS_UPDATE")
-  @Label("Round trip")
+  @Label("Client query cache statistics update")
   @Category({"Oracle JDBC", "Round trips"})
   static class ClientQueryCacheStatsUpdate extends RoundTripEvent{
     public ClientQueryCacheStatsUpdate(TraceContext traceContext) {
@@ -386,7 +386,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.CLOSE_ALL_CURSOR")
-  @Label("Round trip")
+  @Label("Cursor close all")
   @Category({"Oracle JDBC", "Round trips"})
   static class CloseAllCursor extends RoundTripEvent{
     public CloseAllCursor(TraceContext traceContext) {
@@ -395,7 +395,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.CLOSE_CURSOR")
-  @Label("Round trip")
+  @Label("Close a cursor")
   @Category({"Oracle JDBC", "Round trips"})
   static class CloseCursor extends RoundTripEvent{
     public CloseCursor(TraceContext traceContext) {
@@ -404,7 +404,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.COMMIT")
-  @Label("Round trip")
+  @Label("Commit")
   @Category({"Oracle JDBC", "Round trips"})
   static class Commit extends RoundTripEvent{
     public Commit(TraceContext traceContext) {
@@ -413,7 +413,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.DB12C_NOTIFICATION_RCV")
-  @Label("Round trip")
+  @Label("12c notification receive")
   @Category({"Oracle JDBC", "Round trips"})
   static class DB12cNotificationRCV extends RoundTripEvent{
     public DB12cNotificationRCV(TraceContext traceContext) {
@@ -422,7 +422,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.DBNS_SAGAS")
-  @Label("Round trip")
+  @Label("DBMS Sagas")
   @Category({"Oracle JDBC", "Round trips"})
   static class DBNSSagas extends RoundTripEvent{
     public DBNSSagas(TraceContext traceContext) {
@@ -431,7 +431,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.DESCRIBE_ANY_V8")
-  @Label("Round trip")
+  @Label("V8 Describe Any")
   @Category({"Oracle JDBC", "Round trips"})
   static class DescribeAnyV8 extends RoundTripEvent{
     public DescribeAnyV8(TraceContext traceContext) {
@@ -440,7 +440,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.DESCRIBE_ARRAY")
-  @Label("Round trip")
+  @Label("Array describe")
   @Category({"Oracle JDBC", "Round trips"})
   static class DescribeArray extends RoundTripEvent{
     public DescribeArray(TraceContext traceContext) {
@@ -449,7 +449,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.DESCRIBE_QUERY_CALL")
-  @Label("Round trip")
+  @Label("New describe query call")
   @Category({"Oracle JDBC", "Round trips"})
   static class DescribeQueryCall extends RoundTripEvent{
     public DescribeQueryCall(TraceContext traceContext) {
@@ -458,7 +458,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.DIRECT_PATH_LOAD_STREAM")
-  @Label("Round trip")
+  @Label("Direct Path Load Stream")
   @Category({"Oracle JDBC", "Round trips"})
   static class DirectPathLoadStream extends RoundTripEvent{
     public DirectPathLoadStream(TraceContext traceContext) {
@@ -467,7 +467,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.DIRECT_PATH_MISC_OP")
-  @Label("Round trip")
+  @Label("Direct Path Misc Operations")
   @Category({"Oracle JDBC", "Round trips"})
   static class DirectPathMISCOp extends RoundTripEvent{
     public DirectPathMISCOp(TraceContext traceContext) {
@@ -476,7 +476,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.DIRECT_PATH_PREPARE")
-  @Label("Round trip")
+  @Label("Direct Path Prepare")
   @Category({"Oracle JDBC", "Round trips"})
   static class DirectPathPrepare extends RoundTripEvent{
     public DirectPathPrepare(TraceContext traceContext) {
@@ -485,7 +485,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.DISTRIBUTED_TRANS_MGR_RPC")
-  @Label("Round trip")
+  @Label("Distributed transaction manager RPC")
   @Category({"Oracle JDBC", "Round trips"})
   static class DistributedTransMGRRPC extends RoundTripEvent{
     public DistributedTransMGRRPC(TraceContext traceContext) {
@@ -494,7 +494,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.EXECUTE_QUERY")
-  @Label("Round trip")
+  @Label("Execute query")
   @Category({"Oracle JDBC", "Round trips"})
   static class ExecuteQuery extends RoundTripEvent{
     public ExecuteQuery(TraceContext traceContext) {
@@ -503,7 +503,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.EXTENSIBLE_SECURITY_SESSION_CREATE")
-  @Label("Round trip")
+  @Label("eXtensible Security Sessions Create Session")
   @Category({"Oracle JDBC", "Round trips"})
   static class ExtensibleSecuritySessionCreate extends RoundTripEvent{
     public ExtensibleSecuritySessionCreate(TraceContext traceContext) {
@@ -512,7 +512,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.EXTENSIBLE_SECURITY_SESSION_PIGGYBACK")
-  @Label("Round trip")
+  @Label("eXtensible Security Sessions Piggyback")
   @Category({"Oracle JDBC", "Round trips"})
   static class ExtensibleSecuritySessionPiggyback extends RoundTripEvent{
     public ExtensibleSecuritySessionPiggyback(TraceContext traceContext) {
@@ -521,7 +521,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.EXTENSIBLE_SECURITY_SESSION_ROUNDTRIP")
-  @Label("Round trip")
+  @Label("eXtensible Security  Session Roundtrip")
   @Category({"Oracle JDBC", "Round trips"})
   static class ExtensibleSecuritySessionRoundtrip extends RoundTripEvent{
     public ExtensibleSecuritySessionRoundtrip(TraceContext traceContext) {
@@ -530,7 +530,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.FAST_UPI_CALLS")
-  @Label("Round trip")
+  @Label("Fast UPI calls to opial7")
   @Category({"Oracle JDBC", "Round trips"})
   static class FastUPICalls extends RoundTripEvent{
     public FastUPICalls(TraceContext traceContext) {
@@ -539,7 +539,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.FETCH_ROW")
-  @Label("Round trip")
+  @Label("Fetch a row")
   @Category({"Oracle JDBC", "Round trips"})
   static class FetchRow extends RoundTripEvent{
     public FetchRow(TraceContext traceContext) {
@@ -548,7 +548,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.GET_VERSION")
-  @Label("Round trip")
+  @Label("Get Oracle version-date string in new format")
   @Category({"Oracle JDBC", "Round trips"})
   static class GetVersion extends RoundTripEvent{
     public GetVersion(TraceContext traceContext) {
@@ -557,7 +557,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.KERNEL_PROGRAMMATIC_NOTIFICATION")
-  @Label("Round trip")
+  @Label("Kernel Programmatic Notification")
   @Category({"Oracle JDBC", "Round trips"})
   static class KernelProgrammaticNotification extends RoundTripEvent{
     public KernelProgrammaticNotification(TraceContext traceContext) {
@@ -566,7 +566,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.KEY_VALUE")
-  @Label("Round trip")
+  @Label("Client app context, namespace, attribute, values")
   @Category({"Oracle JDBC", "Round trips"})
   static class KeyValue extends RoundTripEvent{
     public KeyValue(TraceContext traceContext) {
@@ -575,7 +575,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.LOB_FILE_CALL")
-  @Label("Round trip")
+  @Label("LOB and FILE related calls")
   @Category({"Oracle JDBC", "Round trips"})
   static class LOBFileCall extends RoundTripEvent{
     public LOBFileCall(TraceContext traceContext) {
@@ -584,7 +584,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.LOGOFF")
-  @Label("Round trip")
+  @Label("Logoff of Oracle")
   @Category({"Oracle JDBC", "Round trips"})
   static class LogOff extends RoundTripEvent{
     public LogOff(TraceContext traceContext) {
@@ -593,7 +593,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.LOGON_CHALLENGE_RESPONSE_1")
-  @Label("Round trip")
+  @Label("First half of challenge-response logon")
   @Category({"Oracle JDBC", "Round trips"})
   static class LogonChallengeResponse1 extends RoundTripEvent{
     public LogonChallengeResponse1(TraceContext traceContext) {
@@ -602,7 +602,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.LOGON_CHALLENGE_RESPONSE_2")
-  @Label("Round trip")
+  @Label("Second half of challenge-response logon")
   @Category({"Oracle JDBC", "Round trips"})
   static class LogonChallengeResponse2 extends RoundTripEvent{
     public LogonChallengeResponse2(TraceContext traceContext) {
@@ -611,7 +611,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.OEXFEN")
-  @Label("Round trip")
+  @Label("OEXFEN")
   @Category({"Oracle JDBC", "Round trips"})
   static class OEXFEN extends RoundTripEvent{
     public OEXFEN(TraceContext traceContext) {
@@ -620,7 +620,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.OPEN_CURSOR")
-  @Label("Round trip")
+  @Label("Open a cursor")
   @Category({"Oracle JDBC", "Round trips"})
   static class OpenCursor extends RoundTripEvent{
     public OpenCursor(TraceContext traceContext) {
@@ -629,7 +629,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.OSQL7")
-  @Label("Round trip")
+  @Label("OSQL7")
   @Category({"Oracle JDBC", "Round trips"})
   static class OSQL7 extends RoundTripEvent{
     public OSQL7(TraceContext traceContext) {
@@ -638,7 +638,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.OSTART")
-  @Label("Round trip")
+  @Label("Starts Oracle")
   @Category({"Oracle JDBC", "Round trips"})
   static class OStart extends RoundTripEvent{
     public OStart(TraceContext traceContext) {
@@ -647,7 +647,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.OSTOP")
-  @Label("Round trip")
+  @Label("Stops Oracle")
   @Category({"Oracle JDBC", "Round trips"})
   static class OStop extends RoundTripEvent{
     public OStop(TraceContext traceContext) {
@@ -656,7 +656,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.PARAMETER_PUT_SPFILE")
-  @Label("Round trip")
+  @Label("Put parameter using spfile (for startup)")
   @Category({"Oracle JDBC", "Round trips"})
   static class ParameterPutSPFile extends RoundTripEvent{
     public ParameterPutSPFile(TraceContext traceContext) {
@@ -665,7 +665,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.PING")
-  @Label("Round trip")
+  @Label("Ping")
   @Category({"Oracle JDBC", "Round trips"})
   static class Ping extends RoundTripEvent{
     public Ping(TraceContext traceContext) {
@@ -674,7 +674,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.PIPELINE_END")
-  @Label("Round trip")
+  @Label("Pipeline End")
   @Category({"Oracle JDBC", "Round trips"})
   static class PipelineEnd extends RoundTripEvent{
     public PipelineEnd(TraceContext traceContext) {
@@ -683,7 +683,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.PIPELINE_PIGGYBACK_BEGIN")
-  @Label("Round trip")
+  @Label("Pipeline Begin Piggyback")
   @Category({"Oracle JDBC", "Round trips"})
   static class PipelinePiggybackBegin extends RoundTripEvent{
     public PipelinePiggybackBegin(TraceContext traceContext) {
@@ -692,7 +692,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.PIPELINE_PIGGYBACK_OP")
-  @Label("Round trip")
+  @Label("Pipeline Operation Piggyback")
   @Category({"Oracle JDBC", "Round trips"})
   static class PipelinePiggybackOp extends RoundTripEvent{
     public PipelinePiggybackOp(TraceContext traceContext) {
@@ -701,7 +701,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.ROLLBACK")
-  @Label("Round trip")
+  @Label("Rollback")
   @Category({"Oracle JDBC", "Round trips"})
   static class Rollback extends RoundTripEvent{
     public Rollback(TraceContext traceContext) {
@@ -710,7 +710,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.SESSION_KEY")
-  @Label("Round trip")
+  @Label("Get the session key")
   @Category({"Oracle JDBC", "Round trips"})
   static class SessionKey extends RoundTripEvent{
     public SessionKey(TraceContext traceContext) {
@@ -719,7 +719,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.SESSION_STATE_OPS")
-  @Label("Round trip")
+  @Label("Session state ops")
   @Category({"Oracle JDBC", "Round trips"})
   static class SessionStateOps extends RoundTripEvent{
     public SessionStateOps(TraceContext traceContext) {
@@ -728,7 +728,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.SESSION_STATE_TEMPLATE")
-  @Label("Round trip")
+  @Label("Session state template")
   @Category({"Oracle JDBC", "Round trips"})
   static class SessionStateTemplate extends RoundTripEvent{
     public SessionStateTemplate(TraceContext traceContext) {
@@ -737,7 +737,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.SESSION_SWITCH_V8")
-  @Label("Round trip")
+  @Label("V8 session switching piggyback")
   @Category({"Oracle JDBC", "Round trips"})
   static class SessionSwitchV8 extends RoundTripEvent{
     public SessionSwitchV8(TraceContext traceContext) {
@@ -746,7 +746,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.TRACING_MESSAGE")
-  @Label("Round trip")
+  @Label("End to end tracing message")
   @Category({"Oracle JDBC", "Round trips"})
   static class TracingMessage extends RoundTripEvent{
     public TracingMessage(TraceContext traceContext) {
@@ -755,7 +755,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.TRANSACTION_COMMIT")
-  @Label("Round trip")
+  @Label("Transaction commit, rollback, recover")
   @Category({"Oracle JDBC", "Round trips"})
   static class TransactionCommit extends RoundTripEvent{
     public TransactionCommit(TraceContext traceContext) {
@@ -764,7 +764,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.TRANSACTION_START")
-  @Label("Round trip")
+  @Label("Transaction start, attach, detach")
   @Category({"Oracle JDBC", "Round trips"})
   static class TransactionStart extends RoundTripEvent{
     public TransactionStart(TraceContext traceContext) {
@@ -773,7 +773,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.TTC_DTY_ROUNDTRIP")
-  @Label("Round trip")
+  @Label("Data type message exchange")
   @Category({"Oracle JDBC", "Round trips"})
   static class TTCDTYRoundtrip extends RoundTripEvent{
     public TTCDTYRoundtrip(TraceContext traceContext) {
@@ -782,7 +782,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.TTC_PRO_ROUNDTRIP")
-  @Label("Round trip")
+  @Label("Protocol negotiation message exchange")
   @Category({"Oracle JDBC", "Round trips"})
   static class TTCPRORoundtrip extends RoundTripEvent{
     public TTCPRORoundtrip(TraceContext traceContext) {
@@ -791,7 +791,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.XS_ATTACH_SESSION")
-  @Label("Round trip")
+  @Label("XS Attach Session")
   @Category({"Oracle JDBC", "Round trips"})
   static class XSAttachSession extends RoundTripEvent{
     public XSAttachSession(TraceContext traceContext) {
@@ -800,7 +800,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.XS_CREATE_SESSION")
-  @Label("Round trip")
+  @Label("XS Create Session")
   @Category({"Oracle JDBC", "Round trips"})
   static class XSCreateSession extends RoundTripEvent{
     public XSCreateSession(TraceContext traceContext) {
@@ -809,7 +809,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.XS_DESTROY_SESSION")
-  @Label("Round trip")
+  @Label("XS Destroy Session")
   @Category({"Oracle JDBC", "Round trips"})
   static class XSDestroySession extends RoundTripEvent{
     public XSDestroySession(TraceContext traceContext) {
@@ -818,7 +818,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.XS_DETACH_SESSION")
-  @Label("Round trip")
+  @Label("XS Detach Session")
   @Category({"Oracle JDBC", "Round trips"})
   static class XSDetachSession extends RoundTripEvent{
     public XSDetachSession(TraceContext traceContext) {
@@ -827,7 +827,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.XS_NAMESPACE_OP")
-  @Label("Round trip")
+  @Label("XS Namespace OP")
   @Category({"Oracle JDBC", "Round trips"})
   static class XSNamespaceOp extends RoundTripEvent{
     public XSNamespaceOp(TraceContext traceContext) {
@@ -836,7 +836,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.XS_NAMESPACE_OPS")
-  @Label("Round trip")
+  @Label("XS namespace OPs")
   @Category({"Oracle JDBC", "Round trips"})
   static class XSNamespaceOps extends RoundTripEvent{
     public XSNamespaceOps(TraceContext traceContext) {
@@ -845,7 +845,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.XS_SET_SESSION_PARAMETER")
-  @Label("Round trip")
+  @Label("XS Set Session Parameter")
   @Category({"Oracle JDBC", "Round trips"})
   static class XSSetSessionParameter extends RoundTripEvent{
     public XSSetSessionParameter(TraceContext traceContext) {
@@ -854,7 +854,7 @@ public class JFREventFactory {
   }
 
   @Name("oracle.jdbc.provider.observability.RoundTrip.XS_STATE_SYNC_OP")
-  @Label("Round trip")
+  @Label("XS State Sync OP")
   @Category({"Oracle JDBC", "Round trips"})
   static class XSStateSyncOp extends RoundTripEvent{
     public XSStateSyncOp(TraceContext traceContext) {
