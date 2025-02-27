@@ -435,7 +435,6 @@ public enum DedicatedVaultAuthenticationMethod {
    *   <li>Parses the JSON response to extract the client token and lease duration.</li>
    *   <li>Constructs and returns a new {@link CachedToken} based on the response.</li>
    * </ol>
-   * </p>
    *
    * @param authEndpoint the full URL of the Vault authentication endpoint.
    * @param payload the JSON payload to send in the request.
