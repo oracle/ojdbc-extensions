@@ -45,11 +45,10 @@ import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
-import static oracle.jdbc.provider.util.ParameterUtil.getRequiredOrFallback;
-
 /**
  * A factory for creating {@link HcpVaultSecretToken} objects for HCP Vault Secrets.
  * <p>
@@ -84,10 +83,8 @@ public final class HcpVaultTokenFactory implements ResourceFactory<HcpVaultSecre
 
   private static final HcpVaultTokenFactory INSTANCE = new HcpVaultTokenFactory();
 
-  /**
-   * Cached supplier for tokens.
-   */
-  private static volatile Supplier<? extends AccessToken> cachedTokenSupplier;
+  private static final ConcurrentHashMap<ParameterSet, Supplier<? extends AccessToken>> tokenCache =
+          new ConcurrentHashMap<>();
 
   private HcpVaultTokenFactory() {}
 
@@ -109,110 +106,30 @@ public final class HcpVaultTokenFactory implements ResourceFactory<HcpVaultSecre
    */
   private HcpVaultSecretToken getCredential(ParameterSet parameterSet) {
     HcpVaultAuthenticationMethod method = parameterSet.getRequired(AUTHENTICATION_METHOD);
-
-    switch (method) {
-      case CLIENT_CREDENTIALS:
-        return getCachedToken(() -> createClientCredentials(parameterSet));
-      case CLI_CREDENTIALS_FILE:
-        return getCachedToken(() -> createFileBasedCredentials(parameterSet));
-      case AUTO_DETECT:
-        return getCachedToken(() -> autoDetectAuthentication(parameterSet));
-      default:
-        throw new IllegalArgumentException("Unrecognized HCP Vault Secret " +
-                "authentication method: " + method);
-    }
+    return createCachedToken(parameterSet, method);
   }
 
   /**
-   * Retrieves a cached token if available, otherwise creates a new one.
+   * Creates or retrieves a cached {@link HcpVaultSecretToken} for the specified
+   * authentication method.
    *
-   * @param tokenSupplier The supplier function to generate a new token.
-   * @return The cached or newly generated token.
+   * @param parameterSet the set of parameters for the request.
+   * @param method the authentication method being used.
+   * @return a {@code HcpVaultSecretToken} instance.
    */
-  private HcpVaultSecretToken getCachedToken(Supplier<HcpVaultSecretToken> tokenSupplier) {
-    if (cachedTokenSupplier == null) {
-      synchronized (HcpVaultTokenFactory.class) {
-        if (cachedTokenSupplier == null) {
-          cachedTokenSupplier = AccessToken.createJsonWebTokenCache(() -> {
-            HcpVaultSecretToken token = tokenSupplier.get();
-            return AccessToken.createJsonWebToken(token.getHcpApiToken().toCharArray());
-          });
-        }
-      }
-    }
+  private HcpVaultSecretToken createCachedToken(
+          ParameterSet parameterSet, HcpVaultAuthenticationMethod method) {
 
-    AccessToken cachedToken = cachedTokenSupplier.get();
+    ParameterSet cacheKey = method.generateCacheKey(parameterSet);
+
+    Supplier<? extends AccessToken> tokenSupplier = tokenCache.computeIfAbsent(cacheKey, k -> AccessToken.createJsonWebTokenCache(() -> {
+      HcpVaultSecretToken token = method.generateToken(parameterSet);
+      return AccessToken.createJsonWebToken(token.getHcpApiToken().toCharArray());
+    }));
+
+    AccessToken cachedToken = tokenSupplier.get();
     JsonWebToken jwt = (JsonWebToken) cachedToken;
     return new HcpVaultSecretToken(jwt.token().get());
-  }
-
-  /**
-   * Creates credentials using the OAuth2 client credentials flow.
-   *
-   * @param parameterSet The parameter set containing client credentials.
-   * @return The HCP Vault secret token.
-   */
-  private HcpVaultSecretToken createClientCredentials(ParameterSet parameterSet) {
-    String clientId = getRequiredOrFallback(parameterSet, HCP_CLIENT_ID, "HCP_CLIENT_ID");
-    String clientSecret = getRequiredOrFallback(parameterSet, HCP_CLIENT_SECRET, "HCP_CLIENT_SECRET");
-
-    String rawToken = HcpVaultOAuthClient.fetchHcpAccessToken(clientId, clientSecret);
-    return new HcpVaultSecretToken(rawToken);
-  }
-
-  /**
-   * Creates credentials using an existing credentials file.
-   *
-   * @param parameterSet The parameter set containing the file path.
-   * @return The HCP Vault secret token.
-   */
-  private HcpVaultSecretToken createFileBasedCredentials(ParameterSet parameterSet) {
-    try {
-      HcpVaultCredentialsFileAuthenticator fileAuthenticator = new HcpVaultCredentialsFileAuthenticator(parameterSet);
-      String token = fileAuthenticator.getValidAccessToken();
-      return new HcpVaultSecretToken(token);
-    } catch (Exception e) {
-      throw new IllegalStateException("Failed to retrieve HCP Vault token from credentials file", e);
-    }
-  }
-
-  /**
-   * Automatically detects the most appropriate authentication method
-   * based on available parameters.
-   *
-   * <p>The priority order is:</p>
-   * <ol>
-   *   <li>Use the HCP credentials file if available and valid.</li>
-   *   <li>Fallback to client credentials authentication.</li>
-   *   <li>Throw an error if no valid authentication method is found.</li>
-   * </ol>
-   *
-   * @param parameterSet The parameter set containing possible authentication details.
-   * @return The detected authentication token.
-   */
-  private HcpVaultSecretToken autoDetectAuthentication(ParameterSet parameterSet) {
-    IllegalStateException previousFailure;
-
-    // 1. Try CLI_CREDENTIALS_FILE authentication first
-    try {
-      return createFileBasedCredentials(parameterSet);
-    } catch (RuntimeException fileAuthFailed) {
-      previousFailure = new IllegalStateException(
-              "Failed to authenticate using credentials file",
-              fileAuthFailed);
-    }
-
-    // 2. If that fails, try CLIENT_CREDENTIALS
-    try {
-      return createClientCredentials(parameterSet);
-    } catch (RuntimeException clientAuthFailed) {
-      previousFailure.addSuppressed(new IllegalStateException(
-              "Failed to authenticate using client credentials",
-              clientAuthFailed));
-    }
-
-    // 3. If all methods fail, throw an error
-    throw previousFailure;
   }
 
 }

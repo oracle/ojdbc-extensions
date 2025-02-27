@@ -39,6 +39,7 @@
 package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.configuration;
 
 import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
+import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters;
 import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.secrets.DedicatedVaultSecretsManagerFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
@@ -47,6 +48,7 @@ import oracle.jdbc.util.OracleConfigurationCache;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,33 +58,33 @@ public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleCon
           DedicatedVaultConfigurationParameters.configureBuilder(
             ParameterSetParser.builder()
               .addParameter("value",
-                 DedicatedVaultSecretsManagerFactory.SECRET_PATH)
+                      DedicatedVaultParameters.SECRET_PATH)
               .addParameter("key",
-                 DedicatedVaultSecretsManagerFactory.KEY)
+                      DedicatedVaultParameters.KEY)
               .addParameter("VAULT_ADDR",
-                 DedicatedVaultSecretsManagerFactory.VAULT_ADDR)
+                      DedicatedVaultParameters.VAULT_ADDR)
               .addParameter("VAULT_TOKEN",
-                 DedicatedVaultSecretsManagerFactory.VAULT_TOKEN)
+                      DedicatedVaultParameters.VAULT_TOKEN)
               .addParameter("FIELD_NAME",
-                 DedicatedVaultSecretsManagerFactory.FIELD_NAME))
+                      DedicatedVaultParameters.FIELD_NAME))
               .addParameter("VAULT_USERNAME",
-                 DedicatedVaultSecretsManagerFactory.USERNAME)
+                      DedicatedVaultParameters.USERNAME)
               .addParameter("VAULT_PASSWORD",
-                 DedicatedVaultSecretsManagerFactory.PASSWORD)
+                      DedicatedVaultParameters.PASSWORD)
               .addParameter("USERPASS_AUTH_PATH",
-                 DedicatedVaultSecretsManagerFactory.USERPASS_AUTH_PATH)
+                      DedicatedVaultParameters.USERPASS_AUTH_PATH)
               .addParameter("VAULT_NAMESPACE",
-                 DedicatedVaultSecretsManagerFactory.NAMESPACE)
+                      DedicatedVaultParameters.NAMESPACE)
               .addParameter("ROLE_ID",
-                 DedicatedVaultSecretsManagerFactory.ROLE_ID)
+                      DedicatedVaultParameters.ROLE_ID)
               .addParameter("SECRET_ID",
-                 DedicatedVaultSecretsManagerFactory.SECRET_ID)
+                      DedicatedVaultParameters.SECRET_ID)
               .addParameter("APPROLE_AUTH_PATH",
-                 DedicatedVaultSecretsManagerFactory.APPROLE_AUTH_PATH)
+                      DedicatedVaultParameters.APPROLE_AUTH_PATH)
               .addParameter("GITHUB_TOKEN",
-                 DedicatedVaultSecretsManagerFactory.GITHUB_TOKEN)
+                      DedicatedVaultParameters.GITHUB_TOKEN)
               .addParameter("GITHUB_AUTH_PATH",
-                 DedicatedVaultSecretsManagerFactory.GITHUB_AUTH_PATH)
+                      DedicatedVaultParameters.GITHUB_AUTH_PATH)
               .addParameter("type", Parameter.create())
                   .build();
 
@@ -100,7 +102,7 @@ public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleCon
       .request(parameters)
       .getContent();
 
-    return new ByteArrayInputStream(secretString.getBytes());
+    return new ByteArrayInputStream(secretString.getBytes(StandardCharsets.UTF_8));
   }
 
   @Override
@@ -109,7 +111,7 @@ public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleCon
   }
 
   @Override
-  public String getParserType(String arg0) {
+  public String getParserType(String location) {
     return "json";
   }
 

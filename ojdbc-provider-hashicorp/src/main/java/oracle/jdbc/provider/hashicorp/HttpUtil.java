@@ -38,44 +38,105 @@
 
 package oracle.jdbc.provider.hashicorp;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Scanner;
 import java.util.stream.Collectors;
 
 /**
  * Utility class for handling HTTP requests and responses.
  */
 public class HttpUtil {
+  // HTTP methods
+  private static final String HTTP_METHOD_GET = "GET";
+  private static final String HTTP_METHOD_POST = "POST";
+
+  // HTTP headers
+  private static final String HEADER_ACCEPT = "Accept";
+  private static final String HEADER_AUTHORIZATION = "Authorization";
+  private static final String HEADER_CONTENT_TYPE = "Content-Type";
+  private static final String HEADER_VAULT_NAMESPACE = "X-Vault-Namespace";
+  private static final String ACCEPT_JSON = "application/json";
+
+  /**
+   * Sends a GET request to the specified URL and retrieves the response.
+   *
+   * @param urlStr The URL to send the request to. Must not be null.
+   * @param authToken The optional Bearer token for authorization. Can be null or empty.
+   * @param namespace The optional Vault namespace. Can be null or empty.
+   * @return The response as a UTF-8 encoded string. Never null.
+   * @throws Exception if the request fails or the response cannot be read.
+   */
+  public static String sendGetRequest(String urlStr, String authToken, String namespace)
+          throws Exception {
+    if (urlStr == null) {
+      throw new IllegalArgumentException("URL must not be null");
+    }
+
+    HttpURLConnection conn = createConnection(urlStr, HTTP_METHOD_GET, authToken, namespace);
+    try {
+      return sendGetRequestAndGetResponse(conn);
+    } finally {
+      conn.disconnect();
+    }
+  }
+
+  /**
+   * Sends a POST request with a payload to the specified URL and retrieves the response.
+   *
+   * @param urlStr The URL to send the request to. Must not be null.
+   * @param payload The payload to send in UTF-8 encoding. Must not be null.
+   * @param contentType The content type for the request payload (e.g., "application/json").
+   * @param authToken The optional Bearer token for authorization. Can be null or empty.
+   * @param namespace The optional Vault namespace. Can be null or empty.
+   * @return The response as a UTF-8 encoded string. Never null.
+   * @throws Exception if the request fails or the response cannot be read.
+   */
+  public static String sendPostRequest(String urlStr, String payload, String contentType,
+                                       String authToken, String namespace) throws Exception {
+    if (urlStr == null) {
+      throw new IllegalArgumentException("URL must not be null");
+    }
+    if (payload == null) {
+      throw new IllegalArgumentException("Payload must not be null");
+    }
+
+    HttpURLConnection conn = createConnection(urlStr, HTTP_METHOD_POST, authToken,
+            namespace);
+    try {
+      return sendPayloadAndGetResponse(conn, payload, contentType);
+    } finally {
+      conn.disconnect();
+    }
+  }
 
   /**
    * Creates an HTTP connection to the specified URL with the given settings.
    *
    * @param urlStr The URL to connect to. Must not be null.
    * @param method The HTTP method (e.g., "GET", "POST"). Must not be null.
-   * @param contentType The content type for the request (e.g., "application/json"). Must not be null.
    * @param authToken The optional Bearer token for authorization. Can be null or empty.
    * @param namespace The optional Vault namespace. Can be null or empty.
    * @return A configured {@link HttpURLConnection}. Never null.
-   * @throws Exception if the connection cannot be established.
+   * @throws IOException if an I/O error occurs while creating the connection
+   * @throws IllegalArgumentException if urlStr or method is null
+   * such as network failures, invalid configurations or authentication issues
    */
-  public static HttpURLConnection createConnection(String urlStr, String method, String contentType, String authToken, String namespace)
-          throws Exception {
+  public static HttpURLConnection createConnection(String urlStr, String method, String authToken, String namespace)
+          throws IOException {
+    if (method == null) {
+      throw new IllegalArgumentException("HTTP method must not be null");
+    }
     URL url = new URL(urlStr);
     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
     conn.setRequestMethod(method);
-    conn.setRequestProperty("Content-Type", contentType);
-    conn.setRequestProperty("Accept", "application/json");
+    conn.setRequestProperty(HEADER_ACCEPT, ACCEPT_JSON);
     if (authToken != null && !authToken.isEmpty()) {
-      conn.setRequestProperty("Authorization", "Bearer " + authToken);
+      conn.setRequestProperty(HEADER_AUTHORIZATION, "Bearer " + authToken);
     }
     if (namespace != null && !namespace.isEmpty()) {
-      conn.setRequestProperty("X-Vault-Namespace", namespace);
+      conn.setRequestProperty(HEADER_VAULT_NAMESPACE, namespace);
     }
     conn.setDoOutput(true);
     return conn;
@@ -100,26 +161,19 @@ public class HttpUtil {
    * the response as a string.
    *
    * @param conn The configured HTTP connection. Must not be null.
-   * @param payload The payload to send. Must not be null.
-   * @return The response as a string. Never null.
+   * @param payload The payload to send in UTF-8 encoding. Must not be null.
+   * @param contentType The content type for the request payload (e.g., "application/json").
+   * @return The response as a UTF-8 encoded string. Never null.
    * @throws Exception if the request fails or the response cannot be read.
    */
-  public static String sendPayloadAndGetResponse(HttpURLConnection conn, String payload) throws Exception {
+  public static String sendPayloadAndGetResponse(HttpURLConnection conn, String payload, String contentType) throws Exception {
+    if (contentType != null && !contentType.isEmpty()) {
+      conn.setRequestProperty(HEADER_CONTENT_TYPE, contentType);
+    }
     try (OutputStream os = conn.getOutputStream()) {
       os.write(payload.getBytes(StandardCharsets.UTF_8));
     }
-    int responseCode = conn.getResponseCode();
-    if (responseCode != HttpURLConnection.HTTP_OK) {
-      String errorResponse = "";
-      try {
-        errorResponse = readResponse(conn.getErrorStream());
-      } catch (Exception ignore) {
-      }
-      String errorMessage = String.format("HTTP request failed with status code %d. " +
-                      "Please verify any provided parameters. Error Response:" +
-              " %s ", responseCode, errorResponse);
-      throw new IllegalStateException(errorMessage);
-    }
+    handleErrorResponse(conn);
     return readResponse(conn.getInputStream());
   }
 
@@ -132,18 +186,32 @@ public class HttpUtil {
    * @throws Exception if the request fails or the response cannot be read.
    */
   public static String sendGetRequestAndGetResponse(HttpURLConnection conn) throws Exception {
-    int responseCode = conn.getResponseCode();
-    if (responseCode != HttpURLConnection.HTTP_OK) {
-      String errorResponse = "";
-      try {
-        errorResponse = readResponse(conn.getErrorStream());
-      } catch (Exception ignore) {
-      }
-      String errorMessage = String.format("HTTP request failed with status code %d. " +
-              "Please verify any provided parameters. Error Response:" +
-              " %s ", responseCode, errorResponse);
-      throw new IllegalStateException(errorMessage);
-    }
+    handleErrorResponse(conn);
     return readResponse(conn.getInputStream());
   }
+
+  /**
+   * Handles HTTP error responses.
+   *
+   * @param conn The HTTP connection. Must not be null.
+   * @throws IllegalStateException if the response indicates an error.
+   */
+  private static void handleErrorResponse(HttpURLConnection conn) {
+    try {
+      int responseCode = conn.getResponseCode();
+      if (responseCode != HttpURLConnection.HTTP_OK) {
+        String errorResponse = "";
+        try {
+          errorResponse = readResponse(conn.getErrorStream());
+        } catch (Exception ignore) { }
+        String errorMessage = String.format("HTTP request failed with status code %d. " +
+                "Please verify any provided parameters. Error Response:" +
+                " %s ", responseCode, errorResponse);
+        throw new IllegalStateException(errorMessage);
+      }
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to process HTTP response", e);
+    }
+  }
+
 }

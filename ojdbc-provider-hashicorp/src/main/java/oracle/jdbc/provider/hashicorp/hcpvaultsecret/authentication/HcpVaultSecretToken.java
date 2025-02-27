@@ -47,10 +47,26 @@ package oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication;
 public final class HcpVaultSecretToken {
   private final String hcpApiToken;
 
+  /**
+   * Constructs a new {@code HcpVaultSecretToken} object with
+   * the provided API token.
+   *
+   * @param hcpApiToken the token used to authenticate API requests to
+   *  the HCP Vault Secret. Must not be null or empty.
+   * @throws IllegalArgumentException if {@code hcpApiToken} is null or empty.
+   */
   public HcpVaultSecretToken(String hcpApiToken) {
+    if (hcpApiToken == null || hcpApiToken.isEmpty()) {
+      throw new IllegalArgumentException("HCP API token must not be null or empty.");
+    }
     this.hcpApiToken = hcpApiToken;
   }
 
+  /**
+   * Returns the HCP API token used for authentication.
+   *
+   * @return the HCP API token as a {@link String}.
+   */
   public String getHcpApiToken() {
     return hcpApiToken;
   }

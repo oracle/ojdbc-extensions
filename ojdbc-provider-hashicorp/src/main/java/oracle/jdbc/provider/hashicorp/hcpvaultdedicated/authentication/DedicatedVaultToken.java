@@ -57,8 +57,12 @@ public final class DedicatedVaultToken {
    *
    * @param vaultToken the token used to authenticate API requests to
    * the Vault. Must not be null or empty.
+   * @throws IllegalArgumentException if {@code vaultToken} is null or empty.
    */
   public DedicatedVaultToken(String vaultToken) {
+    if (vaultToken == null || vaultToken.isEmpty()) {
+      throw new IllegalArgumentException("Vault token must not be null or empty.");
+    }
     this.vaultToken = vaultToken;
   }
   /**

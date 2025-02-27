@@ -5,9 +5,9 @@ and HashiCorp Vault (HCP).
 
 ## Centralized Config Providers
 <dl>
-<dt><a href="#hcp-vault-secrets-config-provider">HashiCorp Vault Dedicated Config Provider</a></dt>
+<dt><a href="#hcp-vault-dedicated-config-provider">HashiCorp Vault Dedicated Config Provider</a></dt>
 <dd>Provides connection properties managed by the Vault Secrets service</dd>
-<dt><a href="#hcp-vault-dedicated-config-provider">HashiCorp Vault Secret Config Provider</a></dt>
+<dt><a href="#hcp-vault-secrets-config-provider">HashiCorp Vault Secret Config Provider</a></dt>
 <dd>Provides connection properties managed by the Dedicated Vault service</dd>
 <dt><a href="#caching-configuration">Caching configuration</a></dt>
 <dd>Caching mechanism adopted by Centralized Config Providers</dd>
@@ -125,7 +125,7 @@ This minimizes API calls to the Vault and enhances performance.
 For more information, visit the official documentation: [Userpass Authentication](https://developer.hashicorp.com/vault/api-docs/auth/userpass).
 
 #### AppRole Authentication
-AppRole authentication is a method that relies on a `role_id` and a `secret_id for secure authentication. It is based on the AppRole authentication backend in HashiCorp Vault,
+AppRole authentication is a method that relies on a `role_id` and a `secret_id` for secure authentication. It is based on the AppRole authentication backend in HashiCorp Vault,
 which allows entities to authenticate and obtain a `client_token` by providing these identifiers.
 
 The provider searches for the following parameters:
@@ -382,7 +382,18 @@ The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-hcpdedicatedva
 jdbc:oracle:thin:@config-hcpvaultdedicated://{secret-path}[?option1=value1&option2=value2...]
 </pre>
 
-The `secret-path` refers to the exact location of the secret within the HCP Vault Dedicated. 
+The `secret-path` refers to the exact location of the secret within the HCP Vault Dedicated.
+
+The query parameters (`option1=value1`, `option2=value2`, etc.) are optional key-value pairs that can be used to:
+
+- Specify authentication parameters (e.g., `VAULT_ADDR`, `VAULT_TOKEN`, `VAULT_USERNAME`)
+- Pass additional context to the provider (e.g., `KEY` for specifying which set of credentials to use)
+
+ All parameters that can be specified as environment variables or system properties can also be provided directly in the URL.
+ For example:
+```
+jdbc:oracle:thin:@config-hcpvaultdedicated:///v1/namespace/secret/data/secret_name?KEY=sales_app1&authentication=approle
+```
 
 ### HCP Vault Secrets Config Provider
 
@@ -393,6 +404,18 @@ jdbc:oracle:thin:@config-hcpvaultsecret://{secret-name}[?option1=value1&option2=
 </pre>
 
 The `secret-name` refers to the name of the secret to retrieve from HCP Vault Secrets
+
+The query parameters (`option1=value1`, `option2=value2`, etc.) are optional key-value pairs that can be used to:
+
+- Specify authentication parameters (e.g., `HCP_CLIENT_ID`, `HCP_ORG_ID`)
+- Pass additional context information required by the provider
+
+All parameters that can be specified as environment variables or system properties can also be provided directly in the URL.
+
+For example:
+```
+jdbc:oracle:thin:@config-hcpvaultsecret://secret-name?HCP_APP_NAME=app-name&key=sales_app1
+```
 
 ### JSON Payload format
 

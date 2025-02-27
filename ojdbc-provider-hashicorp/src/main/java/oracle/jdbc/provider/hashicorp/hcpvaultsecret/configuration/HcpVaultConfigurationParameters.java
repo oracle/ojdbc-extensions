@@ -88,15 +88,11 @@ public final class HcpVaultConfigurationParameters {
    * @throws IllegalArgumentException if the value is unrecognized.
    */
   private static HcpVaultAuthenticationMethod parseAuthMethod(String value) {
-    switch (value.toUpperCase()) {
-      case "CLIENT_CREDENTIALS":
-        return HcpVaultAuthenticationMethod.CLIENT_CREDENTIALS;
-      case "CLI_CREDENTIALS_FILE":
-        return HcpVaultAuthenticationMethod.CLI_CREDENTIALS_FILE;
-      case "AUTO_DETECT":
-        return HcpVaultAuthenticationMethod.AUTO_DETECT;
-      default:
-        throw new IllegalArgumentException("Unrecognized HCP auth method: " + value);
+    try {
+      return HcpVaultAuthenticationMethod.valueOf(value.toUpperCase());
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(
+              "Unrecognized HCP auth method: " + value, e);
     }
   }
 }

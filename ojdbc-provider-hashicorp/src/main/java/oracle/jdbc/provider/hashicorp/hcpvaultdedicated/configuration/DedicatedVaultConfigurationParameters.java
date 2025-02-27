@@ -39,7 +39,7 @@
 package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.configuration;
 
 import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultAuthenticationMethod;
-import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultTokenFactory;
+import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 
 /**
@@ -71,7 +71,7 @@ public final class DedicatedVaultConfigurationParameters {
             // The parameter name is "AUTHENTICATION"
             "AUTHENTICATION",
             // Tied to HashicorpCredentialsFactory.AUTHENTICATION_METHOD
-            DedicatedVaultTokenFactory.AUTHENTICATION_METHOD,
+            DedicatedVaultParameters.AUTHENTICATION_METHOD,
             // Default value if none is specified:
             DedicatedVaultAuthenticationMethod.AUTO_DETECT,
             DedicatedVaultConfigurationParameters::parseAuthentication)
@@ -86,20 +86,11 @@ public final class DedicatedVaultConfigurationParameters {
    * @throws IllegalArgumentException if the value is unrecognized.
    */
   private static DedicatedVaultAuthenticationMethod parseAuthentication(String value) {
-    switch (value.toUpperCase()) {
-      case "VAULT_TOKEN":
-        return DedicatedVaultAuthenticationMethod.VAULT_TOKEN;
-      case "USERPASS":
-        return DedicatedVaultAuthenticationMethod.USERPASS;
-      case "APPROLE":
-        return DedicatedVaultAuthenticationMethod.APPROLE;
-      case "GITHUB":
-        return DedicatedVaultAuthenticationMethod.GITHUB;
-      case "AUTO_DETECT":
-        return DedicatedVaultAuthenticationMethod.AUTO_DETECT;
-      default:
-        throw new IllegalArgumentException(
-                "Unrecognized Hashicorp authentication value: " + value);
+    try {
+      return DedicatedVaultAuthenticationMethod.valueOf(value.toUpperCase());
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(
+              "Unrecognized Hashicorp authentication value: " + value, e);
     }
   }
 }

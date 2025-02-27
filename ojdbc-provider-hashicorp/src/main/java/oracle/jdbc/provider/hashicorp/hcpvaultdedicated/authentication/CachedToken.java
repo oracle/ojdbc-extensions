@@ -38,30 +38,58 @@
 
 package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication;
 
-import oracle.jdbc.AccessToken;
+import oracle.jdbc.driver.oauth.OpaqueAccessToken;
+
+import java.time.OffsetDateTime;
 
 /**
  * Represents a cached Vault authentication token with its expiration time.
  * <p>
- * The cached token contains the {@link AccessToken} and its expiration time.
+ * The cached token contains the {@link OpaqueAccessToken} and its expiration time.
  * It is used to avoid redundant authentication requests by checking token validity
  * before re-authenticating.
  * </p>
  */
 public class CachedToken {
-  private final AccessToken token;
-  private final long expirationTime;
+  private static final long TOKEN_TTL_BUFFER = 60_000; // 1-minute buffer in milliseconds
 
-  public CachedToken(AccessToken token, long leaseDurationInSeconds) {
+  private final OpaqueAccessToken token;
+
+  /**
+   * Constructs a new {@code CachedToken} instance.
+   *
+   * @param token The {@link OpaqueAccessToken} to cache. Must not be null.
+   * @throws IllegalArgumentException if {@code token} is null.
+   */
+  public CachedToken(OpaqueAccessToken token) {
+    if (token == null) {
+      throw new IllegalArgumentException("Token must not be null.");
+    }
     this.token = token;
-    this.expirationTime = System.currentTimeMillis() + (leaseDurationInSeconds * 1000);
   }
 
-  public AccessToken getToken() {
+  /**
+   * Retrieves the cached access token.
+   *
+   * @return the cached {@link OpaqueAccessToken}.
+   */
+  public OpaqueAccessToken getToken() {
     return token;
   }
 
-  public boolean isValid(long currentTime, long ttlBuffer) {
-    return currentTime < expirationTime - ttlBuffer;
+  /**
+   * Checks if the cached token is still valid.
+   *
+   * @return {@code true} if the token is still valid; {@code false} otherwise.
+   */
+  public boolean isValid() {
+    OffsetDateTime expiration = this.token.expiration();
+    if (expiration == null) {
+      return false;
+    }
+    long currentTimeMillis = System.currentTimeMillis();
+    long expirationTimeMillis = token.expiration().toInstant().toEpochMilli();
+
+    return currentTimeMillis < (expirationTimeMillis - TOKEN_TTL_BUFFER);
   }
 }

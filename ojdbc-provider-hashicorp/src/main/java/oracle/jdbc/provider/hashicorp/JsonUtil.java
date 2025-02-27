@@ -42,6 +42,7 @@ import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonObject;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -50,19 +51,19 @@ import java.nio.charset.StandardCharsets;
 public class JsonUtil {
 
   /**
-   * Parses a JSON response string into an OracleJsonObject.
+   * Converts a JSON string into an {@link OracleJsonObject}.
    *
-   * @param jsonResponse the JSON response string to parse. Must not be null.
-   * @return the parsed OracleJsonObject. Never null.
-   * @throws IllegalStateException if parsing fails.
+   * @param jsonResponse the JSON response string to convert. Must not be null.
+   * @return the corresponding {@link OracleJsonObject}. Never null.
+   * @throws IllegalStateException if conversion fails due to invalid JSON.
    */
-  public static OracleJsonObject parseJsonResponse(String jsonResponse) {
+  public static OracleJsonObject convertJsonToOracleJsonObject(String jsonResponse) {
     try {
       return new OracleJsonFactory()
               .createJsonTextValue(new ByteArrayInputStream(jsonResponse.getBytes(StandardCharsets.UTF_8)))
               .asJsonObject();
     } catch (Exception e) {
-      throw new IllegalStateException("Failed to parse JSON response", e);
+      throw new IllegalStateException("Failed to convert JSON string to OracleJsonObject", e);
     }
   }
 

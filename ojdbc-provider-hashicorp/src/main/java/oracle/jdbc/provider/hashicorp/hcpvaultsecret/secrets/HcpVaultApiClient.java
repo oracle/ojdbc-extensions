@@ -39,13 +39,10 @@
 package oracle.jdbc.provider.hashicorp.hcpvaultsecret.secrets;
 
 import oracle.jdbc.provider.hashicorp.HttpUtil;
-import oracle.sql.json.OracleJsonFactory;
-import oracle.sql.json.OracleJsonParser;
-import oracle.sql.json.OracleJsonValue;
+import oracle.sql.json.OracleJsonException;
+import oracle.sql.json.OracleJsonObject;
 
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.nio.charset.StandardCharsets;
+import static oracle.jdbc.provider.hashicorp.JsonUtil.convertJsonToOracleJsonObject;
 
 /**
  * <p>
@@ -59,42 +56,42 @@ import java.nio.charset.StandardCharsets;
  */
 public final class HcpVaultApiClient {
 
-  private HcpVaultApiClient() {}
-
-  /**
-   * Fetches the secrets JSON from the HCP Vault Secrets API.
-   *
-   * @param urlStr The URL of the HCP Vault API endpoint. Not null.
-   * @param token  The Bearer token for authentication. Not null.
-   * @return The JSON response as a string. Not null.
-   * @throws IllegalStateException If the HTTP request fails or the response
-   * does not contain the required fields.
-   */
-  public static String fetchSecrets(String urlStr, String token) {
-    try {
-      String jsonResponse = HttpUtil.sendGetRequestAndGetResponse(
-              HttpUtil.createConnection(urlStr, "GET", "application/json", token, null));
-
-      OracleJsonFactory factory = new OracleJsonFactory();
-      ByteArrayInputStream jsonInputStream = new ByteArrayInputStream(
-              jsonResponse.getBytes(StandardCharsets.UTF_8));
-      OracleJsonParser parser = factory.createJsonTextParser(jsonInputStream);
-
-      while (parser.hasNext()) {
-        if (parser.next() == OracleJsonParser.Event.KEY_NAME && "value".equals(parser.getString())) {
-          parser.next();
-          OracleJsonValue value = parser.getValue();
-          if (value.getOracleJsonType() == OracleJsonValue.OracleJsonType.STRING) {
-            return value.asJsonString().getString();
-          }
-          throw new IllegalStateException("The 'value' field is not a string.");
-        }
-      }
-      throw new IllegalStateException("Missing 'value' field in the response JSON.");
-
-    } catch (Exception e) {
-      throw new IllegalArgumentException("Failed to fetch HCP secrets from URL: " + urlStr, e);
-    }
+  private HcpVaultApiClient() {
   }
 
+  /**
+   * Fetches the secret value from the HCP Vault Secrets API.
+   * <p>
+   * The API response contains metadata along with the secret. The expected format is:
+   * <pre>
+   * {
+   *   "secret": {
+   *     "static_version": {
+   *       "value": "OUR_SECRET"
+   *     }
+   *   }
+   * }
+   * </pre>
+   * This method extracts and returns the `value` field.
+   *
+   * @param urlStr The HCP Vault API endpoint.
+   * @param token  The Bearer token for authentication.
+   * @return The extracted secret value. Never null.
+   * @throws IllegalStateException If the request fails or JSON is invalid.
+   */
+  public static String fetchSecret(String urlStr, String token) {
+    try {
+      String jsonResponse = HttpUtil.sendGetRequest(urlStr, token, null);
+      OracleJsonObject jsonObject = convertJsonToOracleJsonObject(jsonResponse);
+
+      return jsonObject.getObject("secret")
+              .getObject("static_version")
+              .getString("value");
+
+    } catch (OracleJsonException e) {
+      throw new IllegalStateException("Invalid JSON structure or missing fields in response", e);
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to fetch HCP secrets from URL: " + urlStr, e);
+    }
+  }
 }

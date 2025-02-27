@@ -43,10 +43,8 @@ import oracle.jdbc.provider.hashicorp.JsonUtil;
 import oracle.sql.json.OracleJsonNumber;
 import oracle.sql.json.OracleJsonObject;
 import oracle.sql.json.OracleJsonValue;
-import oracle.jdbc.provider.parameter.ParameterSet;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -56,9 +54,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
-
-import static oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultTokenFactory.HCP_CREDENTIALS_FILE;
-import static oracle.jdbc.provider.util.ParameterUtil.getRequiredOrFallback;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Handles authentication using the HashiCorp CLI credentials cache.
@@ -80,6 +76,19 @@ import static oracle.jdbc.provider.util.ParameterUtil.getRequiredOrFallback;
 public final class HcpVaultCredentialsFileAuthenticator {
   private static final String TOKEN_URL = "https://auth.idp.hashicorp.com/oauth2/token";
   private static final String GRANT_TYPE = "refresh_token";
+  private static final String CONTENT_TYPE = "application/x-www-form-urlencoded";
+  private static final String TOKEN_REFRESH_PAYLOAD_FORMAT = "grant_type=%s&refresh_token=%s&client_id=%s";
+  private static final String CREDENTIALS_JSON_FORMAT =
+          "{ \"login\": { \"access_token\": \"%s\", \"refresh_token\": \"%s\", \"access_token_expiry\": \"%s\" } }";
+
+  // JSON field constants
+  public static final String ACCESS_TOKEN_FIELD = "access_token";
+  private static final String REFRESH_TOKEN_FIELD = "refresh_token";
+  private static final String ACCESS_TOKEN_EXPIRY_FIELD = "access_token_expiry";
+  private static final String EXPIRES_IN_FIELD = "expires_in";
+  private static final String CLIENT_ID_FIELD = "client_id";
+
+  private final ReentrantLock lock = new ReentrantLock();
 
   private volatile String accessToken;
   private volatile String refreshToken;
@@ -91,11 +100,10 @@ public final class HcpVaultCredentialsFileAuthenticator {
    * Creates an instance of {@link HcpVaultCredentialsFileAuthenticator} to handle authentication
    * via the HCP CLI credentials cache file.
    *
-   * @param parameterSet The set of parameters, including the path to the credentials file.
+   * @param credentialsFilePath The path to the credentials file.
    */
-  public HcpVaultCredentialsFileAuthenticator(ParameterSet parameterSet) {
-    String credsPath = getRequiredOrFallback(parameterSet, HCP_CREDENTIALS_FILE, "HCP_CREDENTIALS_FILE");
-    this.credsFilePath = Paths.get(credsPath);
+  public HcpVaultCredentialsFileAuthenticator(String credentialsFilePath) {
+    this.credsFilePath = Paths.get(credentialsFilePath);
   }
 
   /**
@@ -104,14 +112,19 @@ public final class HcpVaultCredentialsFileAuthenticator {
    * @return A valid access token.
    * @throws IOException if authentication fails.
    */
-  public synchronized String getValidAccessToken() throws Exception {
-    if (accessToken == null || isTokenExpired()) {
-      loadCredentials();
-      if (isTokenExpired()) {
-        refreshAccessToken();
+  public String getValidAccessToken() throws Exception {
+    lock.lock();
+    try {
+      if (accessToken == null || isTokenExpired()) {
+        loadCredentials();
+        if (isTokenExpired()) {
+          refreshAccessToken();
+        }
       }
+      return accessToken;
+    } finally {
+      lock.unlock();
     }
-    return accessToken;
   }
 
   /**
@@ -125,12 +138,23 @@ public final class HcpVaultCredentialsFileAuthenticator {
     }
 
     String content = new String(Files.readAllBytes(credsFilePath), StandardCharsets.UTF_8);
-    OracleJsonObject jsonObject = JsonUtil.parseJsonResponse(content).getObject("login");
 
-    accessToken = JsonUtil.extractField(jsonObject, "access_token");
-    refreshToken = JsonUtil.extractField(jsonObject, "refresh_token");
+    OracleJsonObject rootObject = JsonUtil.convertJsonToOracleJsonObject(content);
+    if (rootObject == null) {
+      throw new IOException("Failed to parse credentials file: invalid JSON format");
+    }
 
-    String expiryStr = JsonUtil.extractField(jsonObject, "access_token_expiry");
+    OracleJsonObject loginObject = null;
+    try {
+      loginObject = rootObject.getObject("login");
+    } catch (NullPointerException e) {
+      throw new IOException("Invalid credentials file format: missing 'login'" +
+              " object", e);
+    }
+    accessToken = JsonUtil.extractField(loginObject, ACCESS_TOKEN_FIELD);
+    refreshToken = JsonUtil.extractField(loginObject, REFRESH_TOKEN_FIELD);
+
+    String expiryStr = JsonUtil.extractField(loginObject, ACCESS_TOKEN_EXPIRY_FIELD);
     if (expiryStr != null && !expiryStr.isEmpty()) {
       tokenExpiry = OffsetDateTime.parse(expiryStr, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant();
     }
@@ -156,11 +180,11 @@ public final class HcpVaultCredentialsFileAuthenticator {
       throw new IllegalStateException("Missing required parameters for token refresh.");
     }
 
-    String payload = String.format("grant_type=%s&refresh_token=%s&client_id=%s", GRANT_TYPE, refreshToken, clientId);
-    HttpURLConnection conn = HttpUtil.createConnection(TOKEN_URL, "POST", "application/x-www-form-urlencoded", null, null);
-    String jsonResponse = HttpUtil.sendPayloadAndGetResponse(conn, payload);
+    String payload = String.format(TOKEN_REFRESH_PAYLOAD_FORMAT, GRANT_TYPE, refreshToken, clientId);
+    String jsonResponse = HttpUtil.sendPostRequest(TOKEN_URL, payload, CONTENT_TYPE, null
+            , null);
 
-    OracleJsonObject response = JsonUtil.parseJsonResponse(jsonResponse);
+    OracleJsonObject response = JsonUtil.convertJsonToOracleJsonObject(jsonResponse);
     updateTokensFromResponse(response);
     updateCredsFile();
   }
@@ -171,17 +195,17 @@ public final class HcpVaultCredentialsFileAuthenticator {
    * @param response The JSON response from the refresh request
    */
   private void updateTokensFromResponse(OracleJsonObject response) {
-    accessToken = JsonUtil.extractField(response, "access_token");
+    accessToken = JsonUtil.extractField(response, ACCESS_TOKEN_FIELD);
 
-    OracleJsonValue expiresInValue = response.get("expires_in");
-    if (expiresInValue instanceof OracleJsonNumber) {
-      tokenExpiry = Instant.now().plusSeconds(expiresInValue.asJsonNumber().longValue());
-    } else {
-      throw new IllegalStateException("Missing or invalid 'expires_in' field in token response.");
+    try {
+      long expiresInSeconds = response.getLong(EXPIRES_IN_FIELD);
+      tokenExpiry = Instant.now().plusSeconds(expiresInSeconds);
+    } catch (NullPointerException e) {
+      throw new IllegalStateException("Missing '" + EXPIRES_IN_FIELD + "' field in token response", e);
     }
 
     // Update refresh token if provided
-    String newRefreshToken = JsonUtil.extractField(response, "refresh_token");
+    String newRefreshToken = JsonUtil.extractField(response, REFRESH_TOKEN_FIELD);
     if (newRefreshToken != null && !newRefreshToken.isEmpty()) {
       refreshToken = newRefreshToken;
     }
@@ -193,10 +217,8 @@ public final class HcpVaultCredentialsFileAuthenticator {
    * @throws IOException if file writing fails
    */
   private void updateCredsFile() throws IOException {
-    String updatedContent = String.format(
-            "{ \"login\": { \"access_token\": \"%s\", \"refresh_token\": \"%s\", \"access_token_expiry\": \"%s\" } }",
-            accessToken, refreshToken,
-            OffsetDateTime.ofInstant(tokenExpiry, ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+    String updatedContent = String.format(CREDENTIALS_JSON_FORMAT, accessToken,
+            refreshToken, OffsetDateTime.ofInstant(tokenExpiry, ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
     );
 
     Files.write(credsFilePath, updatedContent.getBytes(StandardCharsets.UTF_8));
@@ -209,15 +231,15 @@ public final class HcpVaultCredentialsFileAuthenticator {
    * @return The extracted client ID
    * @throws IllegalArgumentException if the token is invalid or client_id extraction fails.
    */
-  public static String extractClientIdFromToken(String token) {
+  private static String extractClientIdFromToken(String token) {
     try {
       String[] parts = token.split("\\.");
       if (parts.length != 3) {
         throw new IllegalArgumentException("Invalid JWT token format.");
       }
       String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
-      OracleJsonObject payload = JsonUtil.parseJsonResponse(payloadJson);
-      return JsonUtil.extractField(payload, "client_id");
+      OracleJsonObject payload = JsonUtil.convertJsonToOracleJsonObject(payloadJson);
+      return JsonUtil.extractField(payload, CLIENT_ID_FIELD);
     } catch (Exception e) {
       throw new IllegalArgumentException("Failed to extract client_id from JWT token.", e);
     }

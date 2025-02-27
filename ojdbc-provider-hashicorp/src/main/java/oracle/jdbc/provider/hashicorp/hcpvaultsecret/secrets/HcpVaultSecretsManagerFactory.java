@@ -47,7 +47,6 @@ import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
-import static oracle.jdbc.provider.util.ParameterUtil.getRequiredOrFallback;
 
 /**
  * <p>
@@ -99,6 +98,11 @@ public final class HcpVaultSecretsManagerFactory extends HcpVaultResourceFactory
   private static final String HCP_SECRETS_API_URL_FORMAT =
           "https://api.cloud.hashicorp.com/secrets/2023-11-28/organizations/%s/projects/%s/apps/%s/secrets/%s:open";
 
+  private static final String ENV_HCP_ORG_ID = "HCP_ORG_ID";
+  private static final String ENV_HCP_PROJECT_ID = "HCP_PROJECT_ID";
+  private static final String ENV_HCP_APP_NAME = "HCP_APP_NAME";
+  private static final String ENV_HCP_SECRET_NAME = "SECRET_NAME";
+
 
   private static final ResourceFactory<String> INSTANCE =
           CachedResourceFactory.create(new HcpVaultSecretsManagerFactory());
@@ -111,17 +115,17 @@ public final class HcpVaultSecretsManagerFactory extends HcpVaultResourceFactory
 
   @Override
   public Resource<String> request(HcpVaultSecretToken credentials, ParameterSet parameterSet) {
-    String orgId = getRequiredOrFallback(parameterSet, HCP_ORG_ID,
-            "HCP_ORG_ID");
-    String projectId = getRequiredOrFallback(parameterSet, HCP_PROJECT_ID,
-            "HCP_PROJECT_ID");
-    String appName = getRequiredOrFallback(parameterSet, HCP_APP_NAME,
-            "HCP_APP_NAME");
-    String secretName = getRequiredOrFallback(parameterSet, SECRET_NAME, "SECRET_NAME");
+    String orgId = parameterSet.getRequiredWithFallback(HCP_ORG_ID,
+            ENV_HCP_ORG_ID);
+    String projectId = parameterSet.getRequiredWithFallback(HCP_PROJECT_ID,
+            ENV_HCP_PROJECT_ID);
+    String appName = parameterSet.getRequiredWithFallback(HCP_APP_NAME,
+            ENV_HCP_APP_NAME);
+    String secretName = parameterSet.getRequiredWithFallback(SECRET_NAME, ENV_HCP_SECRET_NAME);
 
     String hcpUrl = String.format(HCP_SECRETS_API_URL_FORMAT, orgId, projectId, appName, secretName);
 
-    String secretsJson = HcpVaultApiClient.fetchSecrets(hcpUrl, credentials.getHcpApiToken());
+    String secretsJson = HcpVaultApiClient.fetchSecret(hcpUrl, credentials.getHcpApiToken());
 
     return Resource.createPermanentResource(secretsJson, true);
   }

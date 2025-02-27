@@ -93,7 +93,7 @@ public class HcpVaultSecretsManagerConfigurationProvider extends OracleConfigura
   }
 
   @Override
-  public String getParserType(String arg0) {
+  public String getParserType(String location) {
     return "json";
   }
 }

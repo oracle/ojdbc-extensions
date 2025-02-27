@@ -159,4 +159,56 @@ public interface ParameterSet {
    */
   ParameterSetBuilder copyBuilder();
 
+  /**
+   * Returns the value of a parameter, falling back to system properties and
+   * environment variables if not found in the parameter set.
+   *
+   * @param <T> The type of value that is assigned to the parameter
+   * @param parameter Parameter to retrieve the value from
+   * @param envKey The key to look up in system properties and environment variables
+   * @return The parameter value, or value from system properties or environment variables
+   * @throws IllegalStateException if the value cannot be found anywhere
+   */
+  @SuppressWarnings("unchecked")
+  default <T> T getRequiredWithFallback(Parameter<T> parameter, String envKey) {
+    T value = getOptional(parameter);
+    if (value != null) {
+      return value;
+    }
+
+    String envValue = System.getProperty(envKey, System.getenv(envKey));
+    if (envValue == null || envValue.isEmpty()) {
+      String name = getName(parameter);
+      throw new IllegalStateException(
+              "Required configuration '" + (name != null ? name : envKey) +
+                      "' not found in ParameterSet, system properties, or environment variables.");
+    }
+
+    return (T) envValue;
+  }
+
+  /**
+   * Returns the value of a parameter, falling back to system properties,
+   * environment variables, and finally a default value.
+   *
+   * @param <T> The type of value that is assigned to the parameter
+   * @param parameter Parameter to retrieve the value from
+   * @param envKey The key to look up in system properties and environment variables
+   * @param defaultValue The default value to return if no value is found
+   * @return The parameter value, or value from system properties, environment variables, or the default
+   */
+  @SuppressWarnings("unchecked")
+  default <T> T getOptionalWithFallback(Parameter<T> parameter, String envKey, T defaultValue) {
+    T value = getOptional(parameter);
+    if (value != null) {
+      return value;
+    }
+
+    String envValue = System.getProperty(envKey, System.getenv(envKey));
+    if (envValue == null || envValue.isEmpty()) {
+      return defaultValue;
+    }
+
+    return (T) envValue;
+  }
 }
