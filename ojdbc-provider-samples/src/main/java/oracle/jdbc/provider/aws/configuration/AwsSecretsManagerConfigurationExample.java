@@ -38,7 +38,6 @@
 package oracle.jdbc.provider.aws.configuration;
 
 import oracle.jdbc.datasource.impl.OracleDataSource;
-import oracle.jdbc.provider.oci.configuration.ObjectStorageExample;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
