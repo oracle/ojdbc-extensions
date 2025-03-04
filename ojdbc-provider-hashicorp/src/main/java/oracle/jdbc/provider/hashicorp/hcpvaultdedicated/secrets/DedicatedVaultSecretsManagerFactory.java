@@ -48,10 +48,7 @@ import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.Dedicated
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.sql.json.OracleJsonObject;
 
-
-import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.SECRET_PATH;
-import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.VAULT_ADDR;
-import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultAuthenticationMethod.ENV_VAULT_ADDR;
+import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.*;
 
 public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultResourceFactory<String> {
   /**
@@ -69,7 +66,7 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
   @Override
   public Resource<String> request(DedicatedVaultToken credentials, ParameterSet parameterSet) {
     String secretPath = parameterSet.getRequired(SECRET_PATH);
-    String vaultAddr = parameterSet.getRequiredWithFallback(VAULT_ADDR, ENV_VAULT_ADDR);
+    String vaultAddr = getVaultAddress(parameterSet);
 
     if (credentials.getVaultToken() != null) {
       String secretString = fetchSecretFromVaultWithToken(vaultAddr + secretPath, credentials.getVaultToken());

@@ -87,6 +87,7 @@ public final class HcpVaultCredentialsFileAuthenticator {
   private static final String ACCESS_TOKEN_EXPIRY_FIELD = "access_token_expiry";
   private static final String EXPIRES_IN_FIELD = "expires_in";
   private static final String CLIENT_ID_FIELD = "client_id";
+  private static final String LOGIN_FIELD = "login";
 
   private final ReentrantLock lock = new ReentrantLock();
 
@@ -144,9 +145,9 @@ public final class HcpVaultCredentialsFileAuthenticator {
       throw new IOException("Failed to parse credentials file: invalid JSON format");
     }
 
-    OracleJsonObject loginObject = null;
+    OracleJsonObject loginObject;
     try {
-      loginObject = rootObject.getObject("login");
+      loginObject = rootObject.getObject(LOGIN_FIELD);
     } catch (NullPointerException e) {
       throw new IOException("Invalid credentials file format: missing 'login'" +
               " object", e);

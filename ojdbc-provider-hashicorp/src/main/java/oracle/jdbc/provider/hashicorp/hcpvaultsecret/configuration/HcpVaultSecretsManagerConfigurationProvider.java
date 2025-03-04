@@ -51,17 +51,19 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+import static oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultSecretParameters.*;
+
 
 public class HcpVaultSecretsManagerConfigurationProvider extends OracleConfigurationParsableProvider {
 
   static final ParameterSetParser PARAMETER_SET_PARSER =
     HcpVaultConfigurationParameters.configureBuilder(
       ParameterSetParser.builder()
-        .addParameter("value", HcpVaultSecretsManagerFactory.SECRET_NAME)
-        .addParameter("HCP_ORG_ID", HcpVaultSecretsManagerFactory.HCP_ORG_ID)
-        .addParameter("HCP_PROJECT_ID", HcpVaultSecretsManagerFactory.HCP_PROJECT_ID)
-        .addParameter("HCP_APP_NAME", HcpVaultSecretsManagerFactory.HCP_APP_NAME)
-        .addParameter("KEY", HcpVaultSecretsManagerFactory.KEY))
+        .addParameter("value", SECRET_NAME)
+        .addParameter("HCP_ORG_ID", HCP_ORG_ID)
+        .addParameter("HCP_PROJECT_ID", HCP_PROJECT_ID)
+        .addParameter("HCP_APP_NAME", HCP_APP_NAME)
+        .addParameter("KEY", KEY))
         .addParameter("type", Parameter.create())
             .build();
 

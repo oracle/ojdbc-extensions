@@ -48,6 +48,7 @@ import oracle.jdbc.provider.parameter.ParameterSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
+import static oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultSecretParameters.AUTHENTICATION_METHOD;
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
 /**
  * A factory for creating {@link HcpVaultSecretToken} objects for HCP Vault Secrets.
@@ -58,28 +59,6 @@ import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
  * </p>
  */
 public final class HcpVaultTokenFactory implements ResourceFactory<HcpVaultSecretToken> {
-
-  /**
-   * Parameter indicating the authentication method to use for HCP Vault Secrets.
-   */
-  public static final Parameter<HcpVaultAuthenticationMethod> AUTHENTICATION_METHOD = Parameter.create(REQUIRED);
-
-  /**
-   * Parameter for the OAuth2 client ID. Required.
-   */
-  public static final Parameter<String> HCP_CLIENT_ID = Parameter.create(REQUIRED);
-
-  /**
-   * Parameter for the OAuth2 client secret. Required.
-   */
-  public static final Parameter<String> HCP_CLIENT_SECRET = Parameter.create(REQUIRED);
-
-  /**
-   * Parameter for the credentials file path.
-   * By default, the credentials file is expected at:
-   * <code>System.getProperty("user.home") + "/.config/hcp/creds-cache.json"</code>.
-   */
-  public static final Parameter<String> HCP_CREDENTIALS_FILE = Parameter.create(REQUIRED);
 
   private static final HcpVaultTokenFactory INSTANCE = new HcpVaultTokenFactory();
 

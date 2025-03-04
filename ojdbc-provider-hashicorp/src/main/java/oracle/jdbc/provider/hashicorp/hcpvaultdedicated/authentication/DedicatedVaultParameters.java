@@ -46,11 +46,35 @@ import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
 /**
  * Contains parameter definitions for interacting with Dedicated HashiCorp Vault.
  * <p>
- * This class provides a centralized definition of parameters used across
- * different components when working with HashiCorp Vault Dedicated.
+ * This class provides a centralized definition of parameters used across different components
+ * when working with HashiCorp Vault Dedicated. It defines the parameter names, environment variable keys,
+ * and default values for various configuration settings such as the Vault address, token, namespace, and
+ * authentication credentials for multiple authentication methods (Vault token, Userpass, AppRole, and GitHub).
+ * In addition, it offers utility methods to retrieve these parameter values from a {@link ParameterSet}
+ * with appropriate fallbacks to system properties, environment variables, or default values.
  * </p>
- * */
+ */
+
 public class DedicatedVaultParameters {
+
+  // Common constants for System Properties and environment variable names
+  static final String ENV_VAULT_ADDR = "VAULT_ADDR";
+  static final String ENV_VAULT_TOKEN = "VAULT_TOKEN";
+  static final String ENV_VAULT_NAMESPACE = "VAULT_NAMESPACE";
+  static final String ENV_VAULT_USERNAME = "VAULT_USERNAME";
+  static final String ENV_VAULT_PASSWORD = "VAULT_PASSWORD";
+  static final String ENV_GITHUB_TOKEN = "GITHUB_TOKEN";
+  static final String ENV_USERPASS_AUTH_PATH = "USERPASS_AUTH_PATH";
+  static final String ENV_APPROLE_AUTH_PATH = "APPROLE_AUTH_PATH";
+  static final String ENV_GITHUB_AUTH_PATH = "GITHUB_AUTH_PATH";
+  static final String ENV_VAULT_ROLE_ID = "VAULT_ROLE_ID";
+  static final String ENV_VAULT_SECRET_ID = "VAULT_SECRET_ID";
+
+  // Default values
+  static final String DEFAULT_NAMESPACE = "admin";
+  static final String DEFAULT_USERPASS_PATH = "userpass";
+  static final String DEFAULT_APPROLE_PATH = "approle";
+  static final String DEFAULT_GITHUB_PATH = "github";
 
   /**
    * <p>
@@ -154,4 +178,114 @@ public class DedicatedVaultParameters {
    * </p>
    */
   public static final Parameter<String> GITHUB_AUTH_PATH = Parameter.create();
+
+  /**
+   * Retrieves the Vault server address.
+   *
+   * @param parameterSet the source parameter set.
+   * @return the Vault address.
+   */
+  public static String getVaultAddress(ParameterSet parameterSet) {
+    return parameterSet.getRequiredWithFallback(VAULT_ADDR, ENV_VAULT_ADDR);
+  }
+
+  /**
+   * Retrieves the Vault namespace.
+   *
+   * @param parameterSet the source parameter set.
+   * @return the namespace.
+   */
+  public static String getNamespace(ParameterSet parameterSet) {
+    return parameterSet.getOptionalWithFallback(NAMESPACE, ENV_VAULT_NAMESPACE, DEFAULT_NAMESPACE);
+  }
+
+  /**
+   * Retrieves the Vault token.
+   *
+   * @param parameterSet the source parameter set.
+   * @return the Vault token.
+   */
+  public static String getVaultToken(ParameterSet parameterSet) {
+    return parameterSet.getRequiredWithFallback(VAULT_TOKEN, ENV_VAULT_TOKEN);
+  }
+
+  /**
+   * Retrieves the username for Userpass authentication.
+   *
+   * @param parameterSet the source parameter set.
+   * @return the username.
+   */
+  public static String getUsername(ParameterSet parameterSet) {
+    return parameterSet.getRequiredWithFallback(USERNAME, ENV_VAULT_USERNAME);
+  }
+
+  /**
+   * Retrieves the password for Userpass authentication.
+   *
+   * @param parameterSet the source parameter set.
+   * @return the password.
+   */
+  public static String getPassword(ParameterSet parameterSet) {
+    return parameterSet.getRequiredWithFallback(PASSWORD, ENV_VAULT_PASSWORD);
+  }
+
+  /**
+   * Retrieves the GitHub personal access token.
+   *
+   * @param parameterSet the source parameter set.
+   * @return the GitHub token.
+   */
+  public static String getGitHubToken(ParameterSet parameterSet) {
+    return parameterSet.getRequiredWithFallback(GITHUB_TOKEN, ENV_GITHUB_TOKEN);
+  }
+
+  /**
+   * Retrieves the Role ID for AppRole authentication.
+   *
+   * @param parameterSet the source parameter set.
+   * @return the Role ID.
+   */
+  public static String getRoleId(ParameterSet parameterSet) {
+    return parameterSet.getRequiredWithFallback(ROLE_ID, ENV_VAULT_ROLE_ID);
+  }
+
+  /**
+   * Retrieves the Secret ID for AppRole authentication.
+   *
+   * @param parameterSet the source parameter set.
+   * @return the Secret ID.
+   */
+  public static String getSecretId(ParameterSet parameterSet) {
+    return parameterSet.getRequiredWithFallback(SECRET_ID, ENV_VAULT_SECRET_ID);
+  }
+
+  /**
+   * Retrieves the authentication path for Userpass.
+   *
+   * @param parameterSet the source parameter set.
+   * @return the Userpass authentication path.
+   */
+  public static String getUserpassAuthPath(ParameterSet parameterSet) {
+    return parameterSet.getOptionalWithFallback(USERPASS_AUTH_PATH, ENV_USERPASS_AUTH_PATH, DEFAULT_USERPASS_PATH);
+  }
+
+  /**
+   * Retrieves the authentication path for AppRole.
+   *
+   * @param parameterSet the source parameter set.
+   * @return the AppRole authentication path.
+   */
+  public static String getAppRoleAuthPath(ParameterSet parameterSet) {
+    return parameterSet.getOptionalWithFallback(APPROLE_AUTH_PATH, ENV_APPROLE_AUTH_PATH, DEFAULT_APPROLE_PATH);
+  }
+
+  /**
+   * Retrieves the authentication path for GitHub.
+   *
+   * @param parameterSet the source parameter set.
+   * @return the GitHub authentication path.
+   */
+  public static String getGitHubAuthPath(ParameterSet parameterSet) {
+    return parameterSet.getOptionalWithFallback(GITHUB_AUTH_PATH, ENV_GITHUB_AUTH_PATH, DEFAULT_GITHUB_PATH);
+  }
 }

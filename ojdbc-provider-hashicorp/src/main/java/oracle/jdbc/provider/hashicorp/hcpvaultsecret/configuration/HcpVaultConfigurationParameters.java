@@ -39,8 +39,10 @@
 package oracle.jdbc.provider.hashicorp.hcpvaultsecret.configuration;
 
 import oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultAuthenticationMethod;
-import oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultTokenFactory;
+import oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultSecretParameters;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
+
+import static oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultSecretParameters.*;
 
 /**
  * Defines the parameters for configuring HCP Vault Secrets in the JDBC URL
@@ -65,17 +67,17 @@ public final class HcpVaultConfigurationParameters {
     return builder
       .addParameter(
          "AUTHENTICATION",
-         HcpVaultTokenFactory.AUTHENTICATION_METHOD,
+              HcpVaultSecretParameters.AUTHENTICATION_METHOD,
          HcpVaultAuthenticationMethod.AUTO_DETECT,
          HcpVaultConfigurationParameters::parseAuthMethod)
       .addParameter(
          "HCP_CLIENT_ID",
-         HcpVaultTokenFactory.HCP_CLIENT_ID)
+        HCP_CLIENT_ID)
       .addParameter(
          "HCP_CLIENT_SECRET",
-         HcpVaultTokenFactory.HCP_CLIENT_SECRET)
+         HCP_CLIENT_SECRET)
       .addParameter("HCP_CREDENTIALS_FILE",
-         HcpVaultTokenFactory.HCP_CREDENTIALS_FILE,
+        HCP_CREDENTIALS_FILE,
               System.getProperty("user.home") + "/.config/hcp/creds-cache.json");
   }
 

@@ -56,6 +56,10 @@ import static oracle.jdbc.provider.hashicorp.JsonUtil.convertJsonToOracleJsonObj
  */
 public final class HcpVaultApiClient {
 
+  private static final String SECRET_FIELD = "secret";
+  private static final String STATIC_VERSION_FIELD = "static_version";
+  private static final String VALUE_FIELD = "value";
+
   private HcpVaultApiClient() {
   }
 
@@ -84,9 +88,9 @@ public final class HcpVaultApiClient {
       String jsonResponse = HttpUtil.sendGetRequest(urlStr, token, null);
       OracleJsonObject jsonObject = convertJsonToOracleJsonObject(jsonResponse);
 
-      return jsonObject.getObject("secret")
-              .getObject("static_version")
-              .getString("value");
+      return jsonObject.getObject(SECRET_FIELD)
+              .getObject(STATIC_VERSION_FIELD)
+              .getString(VALUE_FIELD);
 
     } catch (OracleJsonException e) {
       throw new IllegalStateException("Invalid JSON structure or missing fields in response", e);

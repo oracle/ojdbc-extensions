@@ -43,10 +43,9 @@ import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.hashicorp.hcpvaultsecret.HcpVaultResourceFactory;
 import oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultSecretToken;
-import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 
-import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
+import static oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultSecretParameters.*;
 
 /**
  * <p>
@@ -70,38 +69,8 @@ import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
  */
 public final class HcpVaultSecretsManagerFactory extends HcpVaultResourceFactory<String> {
 
-  /**
-   * Parameter for the organization ID. Required.
-   */
-  public static final Parameter<String> HCP_ORG_ID = Parameter.create(REQUIRED);
-
-  /**
-   * Parameter for the project ID. Required.
-   */
-  public static final Parameter<String> HCP_PROJECT_ID = Parameter.create(REQUIRED);
-
-  /**
-   * Parameter for the application name. Required.
-   */
-  public static final Parameter<String> HCP_APP_NAME = Parameter.create(REQUIRED);
-
-  /**
-   * Parameter for the secret name. Required.
-   */
-  public static final Parameter<String> SECRET_NAME = Parameter.create(REQUIRED);
-
-  /**
-   * Parameter for the optional key in the secret JSON.
-   */
-  public static final Parameter<String> KEY = Parameter.create();
-
   private static final String HCP_SECRETS_API_URL_FORMAT =
           "https://api.cloud.hashicorp.com/secrets/2023-11-28/organizations/%s/projects/%s/apps/%s/secrets/%s:open";
-
-  private static final String ENV_HCP_ORG_ID = "HCP_ORG_ID";
-  private static final String ENV_HCP_PROJECT_ID = "HCP_PROJECT_ID";
-  private static final String ENV_HCP_APP_NAME = "HCP_APP_NAME";
-  private static final String ENV_HCP_SECRET_NAME = "SECRET_NAME";
 
 
   private static final ResourceFactory<String> INSTANCE =
@@ -115,13 +84,10 @@ public final class HcpVaultSecretsManagerFactory extends HcpVaultResourceFactory
 
   @Override
   public Resource<String> request(HcpVaultSecretToken credentials, ParameterSet parameterSet) {
-    String orgId = parameterSet.getRequiredWithFallback(HCP_ORG_ID,
-            ENV_HCP_ORG_ID);
-    String projectId = parameterSet.getRequiredWithFallback(HCP_PROJECT_ID,
-            ENV_HCP_PROJECT_ID);
-    String appName = parameterSet.getRequiredWithFallback(HCP_APP_NAME,
-            ENV_HCP_APP_NAME);
-    String secretName = parameterSet.getRequiredWithFallback(SECRET_NAME, ENV_HCP_SECRET_NAME);
+    String orgId = getHcpOrgId(parameterSet);
+    String projectId = getHcpProjectId(parameterSet);
+    String appName = getHcpAppName(parameterSet);
+    String secretName = getSecretName(parameterSet);
 
     String hcpUrl = String.format(HCP_SECRETS_API_URL_FORMAT, orgId, projectId, appName, secretName);
 
