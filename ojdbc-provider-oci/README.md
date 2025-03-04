@@ -160,12 +160,14 @@ For the JSON type of provider (OCI Object Storage, HTTPS, File) the password is 
     - `ocivault`
     - `azurevault`
     - `base64`
+    - `awssecretsmanager`
 - `value`
   - Mandatory
   - Possible values:
     - OCID of the secret (if ocivault)
     - Azure Key Vault URI (if azurevault)
     - Base64 Encoded password (if base64)
+    - AWS resource name of the secret  (if awssecretsmanager)
 - `authentication`
   - Optional. It will apply defaults in the same way as described in [Configuring Authentication](#configuring-authentication)
   - Possible Values:
@@ -185,7 +187,6 @@ data:;base64,<Base64 representation of the bytes in cwallet.sso>
 ```
 
 <i>*Note: When storing a wallet as a secret in OCI Vault, choose the Plain-Text secret type template instead of Base64 to prevent double decoding when the provider retrieves the value.</i> 
-
 
 ## OCI Vault Config Provider
 Apart from OCI Object Storage, users can also store JSON Payload in the content of OCI Vault Secret. Users need to indicate the OCID of the Secret with the following syntax:
