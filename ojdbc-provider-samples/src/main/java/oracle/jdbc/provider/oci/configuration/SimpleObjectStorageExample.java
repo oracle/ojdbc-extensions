@@ -58,10 +58,6 @@ public class SimpleObjectStorageExample {
    * </p><p>
    * For the default authentication, the only required local configuration is
    * to have a valid OCI Config in ~/.oci/config.
-   * </p><p>
-   * If you are not sure about which parameter(s) to use in the URL, use
-   * {@link ObjectStorageExample} instead. You will need to fill in the fields
-   * in the configuration file, and the example will construct the URL for you.
    * </p>
    * @param args the command line arguments
    * @throws SQLException if an error occurs during the database calls
