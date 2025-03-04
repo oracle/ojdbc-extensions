@@ -13,6 +13,8 @@ Each module of this project contains a set of providers.
 <dd>Providers for integration with Oracle Cloud Infrastructure (OCI).</dd>
 <dt><a href="ojdbc-provider-azure/README.md">Oracle JDBC Azure Providers</a></dt>
 <dd>Providers for integration with Microsoft Azure</dd>
+<dt><a href="ojdbc-provider-hashicorp/README.md">Oracle JDBC HashiCorp Providers</a></dt>
+<dd>Providers for integration with Hashicorp</dd>
 </dl>
 <u>The next one contains a provider for Open Telemetry:</u>
 <dl>
