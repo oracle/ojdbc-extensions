@@ -256,7 +256,7 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
   public void setEnabledTracers(String tracers){
     observabilityConfigurationLock.lock();
     try {
-      String[] items = tracers.replaceAll("\\s", tracers).split(",");
+      String[] items = tracers.replaceAll("\\s", "").split(",");
       enabledTracers = Arrays.asList(items);
     } finally {
       observabilityConfigurationLock.unlock();

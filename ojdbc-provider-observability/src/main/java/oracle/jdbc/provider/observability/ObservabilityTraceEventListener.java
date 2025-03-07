@@ -99,13 +99,18 @@ public class ObservabilityTraceEventListener implements TraceEventListener {
   /**
    * MBean object name format
    */
-  private static final String MBEAN_OBJECT_NAME = "com.oracle.jdbc.provider.observability:type=ObservabilityConfiguration,name=%s";
-  private static final String MBEAN_OBJECT_NAME_OLD = "com.oracle.jdbc.extension.opentelemetry:type=OpenTelemetryTraceEventListener,name=%s";
+  private static final String MBEAN_OBJECT_NAME = "com.oracle.jdbc.provider.observability:type=ObservabilityConfiguration,uniqueIdentifier=%s";
+  private static final String MBEAN_OBJECT_NAME_OTEL = "com.oracle.jdbc.extension.opentelemetry:type=OpenTelemetryTraceEventListener,uniqueIdentifier=%s";
+
+  /**
+   * Default unique identifier, if parameter not set.
+   */
+  static final CharSequence DEFAULT_UNIQUE_IDENTIFIER = "default";
 
   /**
    * MBean server
    */
-  protected static final MBeanServer server = ManagementFactory.getPlatformMBeanServer();
+  private static final MBeanServer server = ManagementFactory.getPlatformMBeanServer();
 
   /**
    * Logger
@@ -118,24 +123,30 @@ public class ObservabilityTraceEventListener implements TraceEventListener {
    */
   private final ObservabilityConfiguration configuration;
 
+  /**
+   * Static map linking the name of the listener to its instance.
+   */
+  private static final Map<String, ObservabilityTraceEventListener> INSTANCES 
+      = new ConcurrentHashMap<>();
 
-  private final String mBeanObjectName;
+  private ObjectName mBeanObjectName;
 
   /**
    * Create a trace event listener identified by the given name. 
-   * @param name the name of the trace event listener.
+   * @param uniqueIdentifier the name of the trace event listener.
    * @param configurationType configuration type for backward compatibility.
    */
-  private ObservabilityTraceEventListener(String name, ObservabilityConfigurationType configurationType) { 
+  private ObservabilityTraceEventListener(String uniqueIdentifier, 
+      ObservabilityConfigurationType configurationType) { 
     // Create the  configuration for this instance and register MBean
-    mBeanObjectName = ObservabilityConfigurationType.OTEL.equals(configurationType) ?
-        String.format(MBEAN_OBJECT_NAME_OLD, name) :
-        String.format(MBEAN_OBJECT_NAME, name);
+    final String mBeanName = ObservabilityConfigurationType.OTEL.equals(configurationType) ?
+        String.format(MBEAN_OBJECT_NAME_OTEL, uniqueIdentifier) :
+        String.format(MBEAN_OBJECT_NAME, uniqueIdentifier);
     this.configuration = new ObservabilityConfiguration(configurationType);
     try {
-      final ObjectName objectName = new ObjectName(mBeanObjectName);
-      if (!server.isRegistered(objectName)) {
-        server.registerMBean(configuration, objectName);
+      mBeanObjectName = new ObjectName(mBeanName);
+      if (!server.isRegistered(mBeanObjectName)) {
+        server.registerMBean(configuration, mBeanObjectName);
         logger.log(Level.FINEST, "MBean and tracers registered");
       }
     } catch (InstanceAlreadyExistsException | MBeanRegistrationException | 
@@ -146,12 +157,6 @@ public class ObservabilityTraceEventListener implements TraceEventListener {
     configuration.registerTracer(new OTelTracer(configuration));
     configuration.registerTracer(new JFRTracer(configuration));
   }
-
-  /**
-   * Static map linking the name of the listener to its instance.
-   */
-  private static final Map<String, ObservabilityTraceEventListener> INSTANCES 
-      = new ConcurrentHashMap<>();
 
   @Override
   @SuppressWarnings("unchecked")
@@ -220,31 +225,6 @@ public class ObservabilityTraceEventListener implements TraceEventListener {
     return true;
   }
 
-  /**
-   * Returns the trace event listener identified by the given name.
-   * 
-   * @param name the name of the listener.
-   * @return the trace event listener identified by the given name, or {@code 
-   * null} if no trace event listener with that name was found.
-   */
-  public static ObservabilityTraceEventListener getTraceEventListener(String name) {
-    return INSTANCES.get(name);
-  }
-
-  /**
-   * Returns the configuration for a given listener.
-   * 
-   * @param name the name of the listener.
-   * @return then configuration instance associated to that listener, or {@code 
-   * null} if not trace event listener with that name was found.
-   */
-  public static ObservabilityConfiguration getObservabilityConfiguration(String name) {
-    ObservabilityTraceEventListener listener = INSTANCES.get(name);
-    if (listener != null) {
-      return listener.configuration;
-    }
-    return null;
-  }
 
   /**
    * Returns the MBean object name assiciated with the configuration of the 
@@ -252,21 +232,44 @@ public class ObservabilityTraceEventListener implements TraceEventListener {
    * 
    * @return the MBean object name.
    */
-  public String getMBeanObjectName() {
+  public ObjectName getMBeanObjectName() {
     return mBeanObjectName;
   }
 
-    /**
+  /**
+   * Returns the listener's configuration.
+   * 
+   * @return the configuration instance associated to the listener.
+   */
+  public ObservabilityConfiguration getObservabilityConfiguration() {
+    return configuration;
+  }
+
+
+  /**
+   * Returns the trace event listener identified by the given unique idetifier.
+   * 
+   * @param uniqueIdentifier the unique identifier, if no unique identifier was 
+   * provided as a connection property, the unique identifier is "default".
+   * @return the trace event listener identified by the given unique idetifier, 
+   * or {@code null} if no trace event listener with that unique idetifier was 
+   * found.
+   */
+  public static ObservabilityTraceEventListener getTraceEventListener(String uniqueIdentifier) {
+    return INSTANCES.get(uniqueIdentifier);
+  }
+
+  /**
    * Gets or creates an instance of {@link ObservabilityTraceEventListener} 
    * associated to the name.
-   * @param name the name of the listener instance.
+   * @param uniqueIdentifier the name of the listener instance.
    * @param configurationType configuration type for backward compatibility.
    * 
    * @return an instance of {@link ObservabilityTraceEventListener}.
    */
-  static ObservabilityTraceEventListener getOrCreateInstance(String name, 
+  static ObservabilityTraceEventListener getOrCreateInstance(String uniqueIdentifier, 
       ObservabilityConfigurationType configurationType) {
-    return INSTANCES.computeIfAbsent(name, n -> new ObservabilityTraceEventListener(n, configurationType));
+    return INSTANCES.computeIfAbsent(uniqueIdentifier, n -> new ObservabilityTraceEventListener(n, configurationType));
   }
 
 }

@@ -59,6 +59,16 @@ application's classpath and set the following connection property:
 oracle.jdbc.provider.traceEventListener=observability-trace-event-listener-provider
 ```
 
+A unique identifier connection property allows to identify the trace event 
+listener. Connections setting the same unique identifier use the same trace 
+event listener and share the same configuration. 
+
+```java
+oracle.jdbc.provider.traceEventListener.unique_identifier=<unique identifier>
+```
+
+If no unique identifier is provided, the unique idetifier "default" is used.
+
 ## Configuration
 
 The provider can be configured by: 
@@ -69,7 +79,7 @@ System.setProperty("oracle.jdbc.provider.observability.sensitiveDataEnabled", "t
 ```
 * or using the MBean.
 ```java
-ObservabilityTraceEventListener listener = ObservabilityTraceEventListener.getTraceEventListener("<name>");
+ObservabilityTraceEventListener listener = ObservabilityTraceEventListener.getTraceEventListener("<unique identifier>");
 ObjectName objectName = new ObjectName(listener.getMBeanObjectName());
 MBeanServer server = ManagementFactory.getPlatformMBeanServer();
 server.setAttribute(objectName, new Attribute("EnabledTracers", "OTEL,JFR"));

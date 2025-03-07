@@ -54,7 +54,9 @@ import oracle.jdbc.spi.OracleResourceProvider.Parameter;
 
 public class ObservabilityConfigurationTest {
 
-  private static final String INSTANCE_NAME = "configuration-test-instance";
+  private static final String INSTANCE_NAME = "configuration-single";
+  private static final String INSTANCE_NAME_1 = "configuration-test-one";
+  private static final String INSTANCE_NAME_2 = "configuration-test-two";
 
   MBeanServer server = ManagementFactory.getPlatformMBeanServer();
 
@@ -69,52 +71,132 @@ public class ObservabilityConfigurationTest {
     
     // Create a TraceEventListner named test-instance
     TraceEventListenerProvider provider = new ObservabilityTraceEventListenerProvider();
-    Map<Parameter, CharSequence> parameters = new HashMap<>();
-    provider.getParameters().forEach(parameter -> {
-      parameters.put(parameter, (CharSequence)INSTANCE_NAME);
-    });
-    ObservabilityTraceEventListener listener = (ObservabilityTraceEventListener)provider.getTraceEventListener(parameters);
+    ObservabilityTraceEventListener listener = createTraceEventListener(provider, INSTANCE_NAME);
 
     // Get the configuration object
-    ObservabilityConfiguration configuration = ObservabilityTraceEventListener.getObservabilityConfiguration(INSTANCE_NAME);
+    ObservabilityConfiguration configuration = listener.getObservabilityConfiguration();
 
-    // Verify that the configuration matches the configuration set using system properties
-    assertEquals("JFR", configuration.getEnabledTracers());
-    assertEquals(true, configuration.getSensitiveDataEnabled());
-    assertEquals(1, configuration.getEnabledTracersAsList().size());
-    assertEquals("JFR", configuration.getEnabledTracersAsList().get(0));
-
-    // Get the MBean for the configuration
-    ObjectName objectName = new ObjectName(listener.getMBeanObjectName());
-
-    // Get configuration using MBean and check that it matches the configuration set using system properties
-    String enabledTracers = server.getAttribute(objectName, "EnabledTracers").toString();
-    String sensitiveDataEnabled = server.getAttribute(objectName, "SensitiveDataEnabled").toString();
-    assertEquals(enabledTracers, "JFR");
-    assertEquals(sensitiveDataEnabled, "true");
+    // Verify that listener one is configured with values from system properties
+    verifyConfiguration(configuration, listener.getMBeanObjectName(), "JFR", 1, true);
 
     // Update configuration using MBean 
-    server.setAttribute(objectName, new Attribute("EnabledTracers", "OTEL,JFR"));
-    server.setAttribute(objectName, new Attribute("SensitiveDataEnabled", false));
+    server.setAttribute(listener.getMBeanObjectName(), new Attribute("EnabledTracers", "OTEL, JFR"));
+    server.setAttribute(listener.getMBeanObjectName(), new Attribute("SensitiveDataEnabled", false));
 
     // check that the values have been updated using the instance of the configuration
-    assertEquals("OTEL,JFR", configuration.getEnabledTracers());
-    assertEquals(false, configuration.getSensitiveDataEnabled());
-    assertEquals(2, configuration.getEnabledTracersAsList().size());
-    assertEquals("OTEL", configuration.getEnabledTracersAsList().get(0));
-    assertEquals("JFR", configuration.getEnabledTracersAsList().get(1));
+    verifyConfiguration(configuration, listener.getMBeanObjectName(), "OTEL,JFR", 2, false);
 
     // Update the configuration using the instance of the configuration
     configuration.setEnabledTracers("OTEL");
     configuration.setSensitiveDataEnabled(true);
 
     // Check  that the values returned by the MBean correspond to the values set using the instance
-    enabledTracers = server.getAttribute(objectName, "EnabledTracers").toString();
-    sensitiveDataEnabled = server.getAttribute(objectName, "SensitiveDataEnabled").toString();
-    assertEquals("OTEL", enabledTracers);
-    assertEquals("true", sensitiveDataEnabled);
-    assertEquals(1, configuration.getEnabledTracersAsList().size());
-    assertEquals("OTEL", configuration.getEnabledTracersAsList().get(0));
+    verifyConfiguration(configuration, listener.getMBeanObjectName(), "OTEL", 1, true);
+
+  }
+
+  @Test
+  public void testConfigurationWith2Instances() throws Exception {
+    
+    // Create a TraceEventListner named test-instance
+    TraceEventListenerProvider provider = new ObservabilityTraceEventListenerProvider();
+    ObservabilityTraceEventListener listener1 = createTraceEventListener(provider, INSTANCE_NAME_1);
+    ObservabilityTraceEventListener listener2 = createTraceEventListener(provider, INSTANCE_NAME_2);
+
+    // Verify that listener one is configured with values from system properties
+    verifyConfiguration(listener1.getObservabilityConfiguration(), 
+        listener1.getMBeanObjectName(), "JFR", 1, true);
+
+    // Verify that listener two is configured with values from system properties
+    verifyConfiguration(listener2.getObservabilityConfiguration(), 
+        listener2.getMBeanObjectName(), "JFR", 1, true);
+
+    // Update configuration one using MBean 
+    server.setAttribute(listener1.getMBeanObjectName(), new Attribute("EnabledTracers", "OTEL,JFR"));
+    server.setAttribute(listener1.getMBeanObjectName(), new Attribute("SensitiveDataEnabled", false));
+    
+    // Verify that listener one's configuration with the values set using the MBean
+    verifyConfiguration(listener1.getObservabilityConfiguration(), 
+        listener1.getMBeanObjectName(), "OTEL,JFR", 2, false);
+
+    // Verify that listener two's configuration did not change
+    verifyConfiguration(listener2.getObservabilityConfiguration(), 
+    listener2.getMBeanObjectName(), "JFR", 1, true);
+
+    // Update the configuration using the instance of the configuration
+    ObservabilityConfiguration configuration2 = listener2.getObservabilityConfiguration();
+    configuration2.setEnabledTracers("OTEL");
+    configuration2.setSensitiveDataEnabled(false);
+
+    // Verify that listener one's configuration did not change
+    verifyConfiguration(listener1.getObservabilityConfiguration(), 
+        listener1.getMBeanObjectName(), "OTEL,JFR", 2, false);
+
+    // Verify that listener two's configuration has been updated
+    verifyConfiguration(listener2.getObservabilityConfiguration(), 
+    listener2.getMBeanObjectName(), "OTEL", 1, false);
+
+  }
+
+  @Test
+  public void testDefaultUniqueIdentifier() throws Exception {
+    
+    // Create a TraceEventListner named test-instance
+    TraceEventListenerProvider provider = new ObservabilityTraceEventListenerProvider();
+    ObservabilityTraceEventListener listener = (ObservabilityTraceEventListener)provider.getTraceEventListener(new HashMap<>());
+
+    // Get the configuration object
+    ObservabilityConfiguration configuration = listener.getObservabilityConfiguration();
+
+    // Verify that listener one is configured with values from system properties
+    verifyConfiguration(configuration, listener.getMBeanObjectName(), "JFR", 1, true);
+
+    // Update configuration using MBean 
+    server.setAttribute(listener.getMBeanObjectName(), new Attribute("EnabledTracers", "OTEL, JFR"));
+    server.setAttribute(listener.getMBeanObjectName(), new Attribute("SensitiveDataEnabled", false));
+
+    // check that the values have been updated using the instance of the configuration
+    verifyConfiguration(configuration, listener.getMBeanObjectName(), "OTEL,JFR", 2, false);
+
+    // Update the configuration using the instance of the configuration
+    configuration.setEnabledTracers("OTEL");
+    configuration.setSensitiveDataEnabled(true);
+
+    // Check  that the values returned by the MBean correspond to the values set using the instance
+    verifyConfiguration(configuration, listener.getMBeanObjectName(), "OTEL", 1, true);
+
+  }
+
+  private ObservabilityTraceEventListener createTraceEventListener(TraceEventListenerProvider provider,
+      String instanceName) {
+    Map<Parameter, CharSequence> parameters = new HashMap<>();
+    provider.getParameters().forEach(parameter -> {
+      parameters.put(parameter, (CharSequence)instanceName);
+    });
+    return (ObservabilityTraceEventListener)provider.getTraceEventListener(parameters);
+  }
+
+  private void verifyConfiguration(ObservabilityConfiguration configuration, 
+      ObjectName mBeanObjectName,
+      String expectedTracers, 
+      int expectedTracerCount, 
+      boolean expectedSensitiveDataEnabled) throws Exception{
+
+    String[] expectedTracersArray = expectedTracers.split(",");
+    // Verify that the configuration matches the configuration set using system properties
+    assertEquals(expectedTracers, configuration.getEnabledTracers());
+    assertEquals(expectedSensitiveDataEnabled, configuration.getSensitiveDataEnabled());
+    assertEquals(expectedTracerCount, configuration.getEnabledTracersAsList().size());
+    assertEquals(expectedTracerCount, expectedTracersArray.length, "Wrong number of tracers.");
+    for (int i = 0; i < expectedTracerCount; i++) {
+      assertEquals(expectedTracersArray[i], configuration.getEnabledTracersAsList().get(i));
+    }
+
+    // Get configuration using MBean and check that it matches the configuration set using system properties
+    String enabledTracers = server.getAttribute(mBeanObjectName, "EnabledTracers").toString();
+    String sensitiveDataEnabled = server.getAttribute(mBeanObjectName, "SensitiveDataEnabled").toString();
+    assertEquals(enabledTracers, expectedTracers);
+    assertEquals(Boolean.parseBoolean(sensitiveDataEnabled), expectedSensitiveDataEnabled);
 
   }
 

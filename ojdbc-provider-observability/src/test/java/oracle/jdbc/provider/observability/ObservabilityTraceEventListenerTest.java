@@ -111,7 +111,7 @@ public class ObservabilityTraceEventListenerTest {
     String connectionId = null;
     try (Recording recording = new Recording(configuration)) {
       recording.start();
-      String jfrUrl = url + "?oracle.jdbc.provider.traceEventListener=observability-trace-event-listener-provider&oracle.jdbc.provider.traceEventListener.name=test-jfr" + sensitiveDataEnabled;
+      String jfrUrl = url + "?oracle.jdbc.provider.traceEventListener=observability-trace-event-listener-provider&oracle.jdbc.provider.traceEventListener.unique_identifier=test-jfr" + sensitiveDataEnabled;
       try (Connection connection = DriverManager.getConnection(jfrUrl, userName, password);
           Statement statement = connection.createStatement();
           ResultSet resultSet = statement.executeQuery("SELECT 'OK' FROM DUAL")) {
@@ -122,7 +122,7 @@ public class ObservabilityTraceEventListenerTest {
       }
       recording.stop();
       recording.dump(Path.of("dump" + sensitiveDataEnabled + ".jfr"));
-      
+
       try (RecordingFile recordingFile = new RecordingFile(Path.of("dump" + sensitiveDataEnabled + ".jfr"))) {
         int countRoundTrips = 0;
         while (recordingFile.hasMoreEvents()) {
@@ -171,7 +171,7 @@ public class ObservabilityTraceEventListenerTest {
         assertTrue(countRoundTrips > 0, "Application should have performed at least one round trip");
       }
     }
-      
+
   }
 
   @ParameterizedTest(name = "OTELTraceTest - {arguments}")
@@ -180,7 +180,7 @@ public class ObservabilityTraceEventListenerTest {
     Mockito.clearInvocations(tracer, spanBuilder);
     System.setProperty("oracle.jdbc.provider.observability.enabledTracers", "OTEL");
     System.setProperty("oracle.jdbc.provider.observability.sensitiveDataEnabled", String.valueOf(sensitiveDataEnabled));
-    String otelUrl = url + "?oracle.jdbc.provider.traceEventListener=observability-trace-event-listener-provider&oracle.jdbc.provider.traceEventListener.name=test-otel-" + sensitiveDataEnabled ;
+    String otelUrl = url + "?oracle.jdbc.provider.traceEventListener=observability-trace-event-listener-provider&oracle.jdbc.provider.traceEventListener.unique_identifier=test-otel-" + sensitiveDataEnabled ;
     String connectionId = null;
     try (Connection connection = DriverManager.getConnection(otelUrl, userName, password);
           Statement statement = connection.createStatement();
@@ -207,9 +207,12 @@ public class ObservabilityTraceEventListenerTest {
       Mockito.verify(spanBuilder, Mockito.times(4)).setAttribute("Database User", userName);
       Mockito.verify(spanBuilder, Mockito.times(1)).setAttribute("Original SQL Text", "SELECT 'OK' FROM DUAL");
       Mockito.verify(spanBuilder, Mockito.times(1)).setAttribute("Actual SQL Text", "SELECT 'OK' FROM DUAL");
+    } else {
+      Mockito.verify(spanBuilder, Mockito.times(0)).setAttribute("Database User", userName);
+      Mockito.verify(spanBuilder, Mockito.times(0)).setAttribute("Original SQL Text", "SELECT 'OK' FROM DUAL");
+      Mockito.verify(spanBuilder, Mockito.times(0)).setAttribute("Actual SQL Text", "SELECT 'OK' FROM DUAL");
     }
     Mockito.verify(span, atLeast(4)).end();
-
 
   }
 

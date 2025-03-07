@@ -68,8 +68,7 @@ public class BackwardCompatibilityTest {
       parameters.put(parameter, (CharSequence)INSTANCE_NAME);
     });
     ObservabilityTraceEventListener listener = (ObservabilityTraceEventListener)provider.getTraceEventListener(parameters);
-
-    ObservabilityConfiguration configuration = ObservabilityTraceEventListener.getObservabilityConfiguration(INSTANCE_NAME);
+    ObservabilityConfiguration configuration = listener.getObservabilityConfiguration();
 
     assertEquals(true, configuration.getEnabled());
     assertEquals("OTEL", configuration.getEnabledTracers());
@@ -79,7 +78,7 @@ public class BackwardCompatibilityTest {
     assertEquals("OTEL", configuration.getEnabledTracersAsList().get(0));
 
     // MBean
-    ObjectName objectName = new ObjectName(listener.getMBeanObjectName());
+    ObjectName objectName = listener.getMBeanObjectName();
     MBeanServer server = ManagementFactory.getPlatformMBeanServer();
     String enabled = server.getAttribute(objectName, "Enabled").toString();
     String enabledTracers = server.getAttribute(objectName, "EnabledTracers").toString();

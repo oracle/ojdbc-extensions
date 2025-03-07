@@ -37,6 +37,9 @@
  */
 package oracle.jdbc.provider.observability.tracers.jfr;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import jdk.jfr.Event;
 import oracle.jdbc.TraceEventListener.JdbcExecutionEvent;
 import oracle.jdbc.TraceEventListener.Sequence;
@@ -54,6 +57,11 @@ public class JFRTracer implements ObservabilityTracer{
    * Configuraiton
    */
   private final ObservabilityConfiguration configuration;
+
+  /**
+   * Logger.
+   */
+  private static Logger logger = Logger.getLogger(JFRTracer.class.getPackageName());
 
   /**
    * Creates a new instance.
@@ -83,9 +91,12 @@ public class JFRTracer implements ObservabilityTracer{
         event.setValues(traceContext, configuration);
         // stop the measuring event durating and commit
         event.commit();
+      } else {
+        logger.log(Level.WARNING, "Unknown or null user context received from the driver on " +
+            "database operation: " + traceContext.databaseOperation());
       }
+      return null;
     }
-    return null;
   }
 
   @Override

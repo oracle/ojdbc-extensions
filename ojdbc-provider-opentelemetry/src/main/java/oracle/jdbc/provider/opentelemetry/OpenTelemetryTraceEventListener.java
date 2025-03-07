@@ -107,7 +107,7 @@ public class OpenTelemetryTraceEventListener
     }
   };
 
-  private static Logger logger = Logger.getLogger(OpenTelemetryTraceEventListener.class.getName());
+  private static Logger logger = Logger.getLogger(OpenTelemetryTraceEventListener.class.getPackageName());
 
   private Tracer tracer;
 

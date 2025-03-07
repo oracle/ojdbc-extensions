@@ -37,13 +37,9 @@
  */
 package oracle.jdbc.provider.observability;
 
-import java.lang.management.ManagementFactory;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.logging.Logger;
-
-import javax.management.MBeanServer;
 
 import oracle.jdbc.TraceEventListener;
 import oracle.jdbc.provider.observability.ObservabilityConfiguration.ObservabilityConfigurationType;
@@ -63,13 +59,13 @@ public class ObservabilityTraceEventListenerProvider implements TraceEventListen
   /**
    * Name Parameter name, identifies the listener
    */
-  private static final String NAME_PARAMETER_NAME = "NAME";
+  private static final String UNIQUE_IDENTIFIER_PARAMETER_NAME = "UNIQUE_IDENTIFIER";
 
 
   /**
-   * Name Parameter, identifies the listener
+   * Unique identifier, identifies a {@link ObservabilityTraceEventListener}. 
    */
-  protected static final Parameter nameParameter = new Parameter() {
+  protected static final Parameter uniqueIdentifierParameter = new Parameter() {
 
     @Override
     public boolean isSensitive() {
@@ -78,26 +74,25 @@ public class ObservabilityTraceEventListenerProvider implements TraceEventListen
 
     @Override
     public String name() {
-      return NAME_PARAMETER_NAME;
+      return UNIQUE_IDENTIFIER_PARAMETER_NAME;
     }
     
   };
-
-
+  
   /**
    * Constructs a new instance of ObservabilityTraceEventListenerProvider. This
    * constructor will be called by the driver's service provider to create a new
    * instance.
    */
-  public ObservabilityTraceEventListenerProvider() { 
-
-
-  }
-
+  public ObservabilityTraceEventListenerProvider() { }
+  
   @Override
   public TraceEventListener getTraceEventListener(Map<Parameter, CharSequence> map) {
-    String name = map.get(nameParameter).toString();
-    return ObservabilityTraceEventListener.getOrCreateInstance(name, ObservabilityConfigurationType.OBSERVABILITY);
+    String uniqueIdentifier = 
+        map.getOrDefault(
+            uniqueIdentifierParameter, 
+            (CharSequence)ObservabilityTraceEventListener.DEFAULT_UNIQUE_IDENTIFIER).toString();
+    return ObservabilityTraceEventListener.getOrCreateInstance(uniqueIdentifier, ObservabilityConfigurationType.OBSERVABILITY);
   }
 
   @Override
@@ -107,7 +102,7 @@ public class ObservabilityTraceEventListenerProvider implements TraceEventListen
 
   @Override
   public Collection<? extends Parameter> getParameters() {
-    return Collections.singletonList(nameParameter);
+    return Collections.singletonList(uniqueIdentifierParameter);
   }
 
 }

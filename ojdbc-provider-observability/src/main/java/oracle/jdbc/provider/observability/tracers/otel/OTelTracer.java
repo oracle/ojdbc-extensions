@@ -89,7 +89,7 @@ public class OTelTracer implements ObservabilityTracer {
   /**
    * Logger.
    */
-  private static Logger logger = Logger.getLogger(OTelTracer.class.getName());
+  private static Logger logger = Logger.getLogger(OTelTracer.class.getPackageName());
 
   /**
    * Configuraiton
@@ -123,12 +123,14 @@ public class OTelTracer implements ObservabilityTracer {
       return span;
     } else {
       // End the Span after the round-trip.
-      if (userContext instanceof Span) {
+      if (userContext != null) {
         final Span span = (Span) userContext;
         span.setStatus(traceContext.isCompletedExceptionally() ? StatusCode.ERROR : StatusCode.OK);
         span.end();
+      } else {
+        logger.log(Level.WARNING, "Unknown or null user context received from the driver on " +
+            "database operation: " + traceContext.databaseOperation());
       }
-      logger.log(Level.WARNING, "Unknown or null user context received from the driver.");
       return null;
     }
   }
@@ -195,7 +197,6 @@ public class OTelTracer implements ObservabilityTracer {
         .setAttribute("thread.name", Thread.currentThread().getName())
         .setAttribute("Connection ID", traceContext.getConnectionId())
         .setAttribute("Database Operation", traceContext.databaseOperation())
-        .setAttribute("Database User", traceContext.user())
         .setAttribute("Database Tenant", traceContext.tenant())
         .setAttribute("SQL ID", traceContext.getSqlId());
 
@@ -203,6 +204,7 @@ public class OTelTracer implements ObservabilityTracer {
     if (configuration.getSensitiveDataEnabled()) {
       logger.log(Level.FINEST, "Sensitive information on");
       spanBuilder
+          .setAttribute("Database User", traceContext.user())
           .setAttribute("Original SQL Text", traceContext.originalSqlText())
           .setAttribute("Actual SQL Text", traceContext.actualSqlText());
     }
