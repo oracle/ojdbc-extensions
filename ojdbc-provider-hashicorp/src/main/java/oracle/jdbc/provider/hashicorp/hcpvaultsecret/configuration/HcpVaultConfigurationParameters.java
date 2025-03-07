@@ -69,16 +69,7 @@ public final class HcpVaultConfigurationParameters {
          "AUTHENTICATION",
               HcpVaultSecretParameters.AUTHENTICATION_METHOD,
          HcpVaultAuthenticationMethod.AUTO_DETECT,
-         HcpVaultConfigurationParameters::parseAuthMethod)
-      .addParameter(
-         "HCP_CLIENT_ID",
-        HCP_CLIENT_ID)
-      .addParameter(
-         "HCP_CLIENT_SECRET",
-         HCP_CLIENT_SECRET)
-      .addParameter("HCP_CREDENTIALS_FILE",
-        HCP_CREDENTIALS_FILE,
-              System.getProperty("user.home") + "/.config/hcp/creds-cache.json");
+         HcpVaultConfigurationParameters::parseAuthMethod);
   }
 
   /**

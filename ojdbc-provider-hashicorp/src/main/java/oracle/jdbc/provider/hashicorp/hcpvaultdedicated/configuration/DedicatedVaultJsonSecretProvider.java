@@ -48,7 +48,7 @@ import java.util.Base64;
 import java.util.Map;
 
 import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.FIELD_NAME;
-import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.configuration.DedicatedVaultSecretsManagerConfigurationProvider.PARAMETER_SET_PARSER;
+import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.PARAMETER_SET_PARSER;
 
 /**
  * <p>

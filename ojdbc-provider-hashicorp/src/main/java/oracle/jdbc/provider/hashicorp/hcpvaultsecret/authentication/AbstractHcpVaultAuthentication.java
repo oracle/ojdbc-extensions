@@ -39,6 +39,11 @@
 package oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication;
 
 import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.provider.parameter.ParameterSetImpl;
+
+import java.util.Arrays;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Base class for HCP Vault Secrets authentication strategies.
@@ -62,6 +67,24 @@ public abstract class AbstractHcpVaultAuthentication {
    * @param parameterSet the parameters for the authentication request.
    * @return a {@link ParameterSet} to be used as a cache key.
    */
-  public abstract ParameterSet generateCacheKey(ParameterSet parameterSet);
+  public abstract Map<String, Object> generateCacheKey(ParameterSet parameterSet);
+
+  /**
+   * Filters the parameters from the {@link ParameterSet} based on the provided relevant keys.
+   *
+   * This utility method extracts only the parameters relevant to a specific authentication method,
+   * ensuring that the generated cache key includes only necessary data.
+   *
+   * @param parameterSet the set of parameters to filter. Must not be null.
+   * @param relevantKeys an array of parameter keys relevant to the authentication method.
+   * @return a map containing only the filtered parameters.
+   */
+  protected static Map<String, Object> filterParameters(ParameterSet parameterSet, String[] relevantKeys) {
+    Map<String, Object> allParameters = ((ParameterSetImpl) parameterSet).getParameterKeyValuePairs();
+
+    return allParameters.entrySet().stream()
+            .filter(entry -> Arrays.asList(relevantKeys).contains(entry.getKey()))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+  }
 
 }

@@ -38,9 +38,12 @@
 
 package oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication;
 
+import oracle.jdbc.provider.hashicorp.hcpvaultsecret.configuration.HcpVaultConfigurationParameters;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.provider.parameter.ParameterSetParser;
 
+import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.ENV_OR_SYSTEM;
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
 
 /**
@@ -52,14 +55,20 @@ import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
  */
 public class HcpVaultSecretParameters {
 
-  // Constants for environment variable names
-  private static final String ENV_HCP_ORG_ID = "HCP_ORG_ID";
-  private static final String ENV_HCP_PROJECT_ID = "HCP_PROJECT_ID";
-  private static final String ENV_HCP_APP_NAME = "HCP_APP_NAME";
-  static final String ENV_HCP_CLIENT_ID = "HCP_CLIENT_ID";
-  static final String ENV_HCP_CLIENT_SECRET = "HCP_CLIENT_SECRET";
-  private static final String ENV_HCP_SECRET_NAME = "SECRET_NAME";
-  static final String ENV_HCP_CREDENTIALS_FILE = "HCP_CREDENTIALS_FILE";
+  /**
+   * Constants representing the configuration parameter names for HCP Vault Secrets.
+   * <p>
+   * These constants serve as both parameter names within the {@link ParameterSet}
+   * and as keys for environment variables or system properties.
+   * </p>
+   */
+  static final String PARAM_HCP_ORG_ID = "HCP_ORG_ID";
+  static final String PARAM_HCP_PROJECT_ID = "HCP_PROJECT_ID";
+  static final String PARAM_HCP_APP_NAME = "HCP_APP_NAME";
+  static final String PARAM_HCP_CLIENT_ID = "HCP_CLIENT_ID";
+  static final String PARAM_HCP_CLIENT_SECRET = "HCP_CLIENT_SECRET";
+  private static final String PARAM_HCP_SECRET_NAME = "SECRET_NAME";
+  static final String PARAM_HCP_CREDENTIALS_FILE = "HCP_CREDENTIALS_FILE";
   private static final String DEFAULT_CREDENTIALS_FILE_PATH =
           System.getProperty("user.home") + "/.config/hcp/creds-cache.json";
 
@@ -71,39 +80,39 @@ public class HcpVaultSecretParameters {
   /**
    * Parameter for the OAuth2 client ID. Required.
    */
-  public static final Parameter<String> HCP_CLIENT_ID = Parameter.create(REQUIRED);
+  public static final Parameter<String> HCP_CLIENT_ID = Parameter.create(REQUIRED, ENV_OR_SYSTEM);
 
   /**
    * Parameter for the OAuth2 client secret. Required.
    */
-  public static final Parameter<String> HCP_CLIENT_SECRET = Parameter.create(REQUIRED);
+  public static final Parameter<String> HCP_CLIENT_SECRET = Parameter.create(REQUIRED, ENV_OR_SYSTEM);
 
   /**
    * Parameter for the credentials file path.
    * By default, the credentials file is expected at:
    * <code>System.getProperty("user.home") + "/.config/hcp/creds-cache.json"</code>.
    */
-  public static final Parameter<String> HCP_CREDENTIALS_FILE = Parameter.create(REQUIRED);
+  public static final Parameter<String> HCP_CREDENTIALS_FILE = Parameter.create(REQUIRED, ENV_OR_SYSTEM);
 
   /**
    * Parameter for the organization ID. Required.
    */
-  public static final Parameter<String> HCP_ORG_ID = Parameter.create(REQUIRED);
+  public static final Parameter<String> HCP_ORG_ID = Parameter.create(REQUIRED, ENV_OR_SYSTEM);
 
   /**
    * Parameter for the project ID. Required.
    */
-  public static final Parameter<String> HCP_PROJECT_ID = Parameter.create(REQUIRED);
+  public static final Parameter<String> HCP_PROJECT_ID = Parameter.create(REQUIRED, ENV_OR_SYSTEM);
 
   /**
    * Parameter for the application name. Required.
    */
-  public static final Parameter<String> HCP_APP_NAME = Parameter.create(REQUIRED);
+  public static final Parameter<String> HCP_APP_NAME = Parameter.create(REQUIRED, ENV_OR_SYSTEM);
 
   /**
    * Parameter for the secret name. Required.
    */
-  public static final Parameter<String> SECRET_NAME = Parameter.create(REQUIRED);
+  public static final Parameter<String> SECRET_NAME = Parameter.create(REQUIRED, ENV_OR_SYSTEM);
 
   /**
    * Parameter for the optional key in the secret JSON.
@@ -117,7 +126,7 @@ public class HcpVaultSecretParameters {
    * @return the HCP client ID.
    */
   public static String getHcpClientId(ParameterSet parameterSet) {
-    return parameterSet.getRequiredWithFallback(HCP_CLIENT_ID, ENV_HCP_CLIENT_ID);
+    return parameterSet.getRequiredWithFallback(HCP_CLIENT_ID, PARAM_HCP_CLIENT_ID);
   }
 
   /**
@@ -127,7 +136,7 @@ public class HcpVaultSecretParameters {
    * @return the HCP client secret.
    */
   public static String getHcpClientSecret(ParameterSet parameterSet) {
-    return parameterSet.getRequiredWithFallback(HCP_CLIENT_SECRET, ENV_HCP_CLIENT_SECRET);
+    return parameterSet.getRequiredWithFallback(HCP_CLIENT_SECRET, PARAM_HCP_CLIENT_SECRET);
   }
 
   /**
@@ -138,7 +147,7 @@ public class HcpVaultSecretParameters {
    */
   public static String getHcpCredentialsFile(ParameterSet parameterSet) {
     return parameterSet.getOptionalWithFallback(HCP_CREDENTIALS_FILE,
-            ENV_HCP_CREDENTIALS_FILE, DEFAULT_CREDENTIALS_FILE_PATH);
+            PARAM_HCP_CREDENTIALS_FILE, DEFAULT_CREDENTIALS_FILE_PATH);
   }
 
   /**
@@ -148,7 +157,7 @@ public class HcpVaultSecretParameters {
    * @return the HCP organization ID.
    */
   public static String getHcpOrgId(ParameterSet parameterSet) {
-    return parameterSet.getRequiredWithFallback(HCP_ORG_ID, ENV_HCP_ORG_ID);
+    return parameterSet.getRequiredWithFallback(HCP_ORG_ID, PARAM_HCP_ORG_ID);
   }
 
   /**
@@ -158,7 +167,7 @@ public class HcpVaultSecretParameters {
    * @return the HCP project ID.
    */
   public static String getHcpProjectId(ParameterSet parameterSet) {
-    return parameterSet.getRequiredWithFallback(HCP_PROJECT_ID, ENV_HCP_PROJECT_ID);
+    return parameterSet.getRequiredWithFallback(HCP_PROJECT_ID, PARAM_HCP_PROJECT_ID);
   }
 
   /**
@@ -168,7 +177,7 @@ public class HcpVaultSecretParameters {
    * @return the HCP application name.
    */
   public static String getHcpAppName(ParameterSet parameterSet) {
-    return parameterSet.getRequiredWithFallback(HCP_APP_NAME, ENV_HCP_APP_NAME);
+    return parameterSet.getRequiredWithFallback(HCP_APP_NAME, PARAM_HCP_APP_NAME);
   }
 
   /**
@@ -178,7 +187,21 @@ public class HcpVaultSecretParameters {
    * @return the HCP application name.
    */
   public static String getSecretName(ParameterSet parameterSet) {
-    return parameterSet.getRequiredWithFallback(SECRET_NAME, ENV_HCP_SECRET_NAME);
+    return parameterSet.getRequiredWithFallback(SECRET_NAME, PARAM_HCP_SECRET_NAME);
   }
+
+  public static final ParameterSetParser PARAMETER_SET_PARSER =
+    HcpVaultConfigurationParameters.configureBuilder(
+      ParameterSetParser.builder()
+        .addParameter("value", SECRET_NAME)
+        .addParameter(PARAM_HCP_ORG_ID, HCP_ORG_ID)
+        .addParameter(PARAM_HCP_PROJECT_ID, HCP_PROJECT_ID)
+        .addParameter(PARAM_HCP_APP_NAME, HCP_APP_NAME)
+        .addParameter(PARAM_HCP_CLIENT_ID, HCP_CLIENT_ID)
+        .addParameter(PARAM_HCP_CLIENT_SECRET, HCP_CLIENT_SECRET)
+        .addParameter(PARAM_HCP_CREDENTIALS_FILE, HCP_CREDENTIALS_FILE, DEFAULT_CREDENTIALS_FILE_PATH)
+        .addParameter("KEY", KEY))
+        .addParameter("type", Parameter.create())
+      .build();
 
 }

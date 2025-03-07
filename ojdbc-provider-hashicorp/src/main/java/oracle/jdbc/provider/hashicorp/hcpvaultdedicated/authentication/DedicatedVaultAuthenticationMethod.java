@@ -40,7 +40,10 @@ package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication;
 
 import oracle.jdbc.driver.oauth.OpaqueAccessToken;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.provider.parameter.ParameterSetBuilder;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.*;
 
@@ -69,11 +72,8 @@ public enum DedicatedVaultAuthenticationMethod {
     }
 
     @Override
-    public ParameterSet generateCacheKey(ParameterSet parameterSet) {
-      ParameterSetBuilder keyBuilder = createCommonCacheKeyBuilder(parameterSet);
-      String vaultToken = getVaultToken(parameterSet);
-      keyBuilder.add(ENV_VAULT_TOKEN, DedicatedVaultParameters.VAULT_TOKEN, vaultToken);
-      return keyBuilder.build();
+    public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
+      return filterParameters(parameterSet, AUTH_METHOD_PARAMETERS.get(VAULT_TOKEN));
     }
   }),
 
@@ -102,16 +102,8 @@ public enum DedicatedVaultAuthenticationMethod {
     }
 
     @Override
-    public ParameterSet generateCacheKey(ParameterSet parameterSet) {
-      ParameterSetBuilder keyBuilder = createCommonCacheKeyBuilder(parameterSet);
-      String authPath = getUserpassAuthPath(parameterSet);
-      String username = getUsername(parameterSet);
-      String password = getPassword(parameterSet);
-
-      addNonDefaultPath(keyBuilder, authPath, DEFAULT_USERPASS_PATH, ENV_USERPASS_AUTH_PATH, USERPASS_AUTH_PATH);
-      keyBuilder.add(ENV_VAULT_USERNAME, USERNAME, username);
-      keyBuilder.add(ENV_VAULT_PASSWORD, PASSWORD, password);
-      return keyBuilder.build();
+    public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
+      return filterParameters(parameterSet, AUTH_METHOD_PARAMETERS.get(USERPASS));
     }
   }),
 
@@ -141,16 +133,8 @@ public enum DedicatedVaultAuthenticationMethod {
     }
 
     @Override
-    public ParameterSet generateCacheKey(ParameterSet parameterSet) {
-      ParameterSetBuilder keyBuilder = createCommonCacheKeyBuilder(parameterSet);
-      String authPath = getAppRoleAuthPath(parameterSet);
-      String roleId = getRoleId(parameterSet);
-      String secretId = getSecretId(parameterSet);
-
-      addNonDefaultPath(keyBuilder, authPath, DEFAULT_APPROLE_PATH, ENV_APPROLE_AUTH_PATH, APPROLE_AUTH_PATH);
-      keyBuilder.add(ENV_VAULT_ROLE_ID, ROLE_ID, roleId);
-      keyBuilder.add(ENV_VAULT_SECRET_ID, SECRET_ID, secretId);
-      return keyBuilder.build();
+    public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
+      return filterParameters(parameterSet, AUTH_METHOD_PARAMETERS.get(APPROLE));
     }
   }),
 
@@ -178,14 +162,8 @@ public enum DedicatedVaultAuthenticationMethod {
     }
 
     @Override
-    public ParameterSet generateCacheKey(ParameterSet parameterSet) {
-      ParameterSetBuilder keyBuilder = createCommonCacheKeyBuilder(parameterSet);
-      String githubToken = getGitHubToken(parameterSet);
-      String githubAuthPath = getGitHubAuthPath(parameterSet);
-
-      addNonDefaultPath(keyBuilder, githubAuthPath, DEFAULT_GITHUB_PATH, ENV_GITHUB_AUTH_PATH, GITHUB_AUTH_PATH);
-      keyBuilder.add(ENV_GITHUB_TOKEN, GITHUB_TOKEN, githubToken);
-      return keyBuilder.build();
+    public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
+      return filterParameters(parameterSet, AUTH_METHOD_PARAMETERS.get(GITHUB));
     }
   }),
 
@@ -242,42 +220,14 @@ public enum DedicatedVaultAuthenticationMethod {
     }
 
     @Override
-    public ParameterSet generateCacheKey(ParameterSet parameterSet) {
-      ParameterSetBuilder keyBuilder = createCommonCacheKeyBuilder(parameterSet);
-      try {
-        String vaultToken = getVaultToken(parameterSet);
-        keyBuilder.add(ENV_VAULT_TOKEN, DedicatedVaultParameters.VAULT_TOKEN, vaultToken);
-      } catch (Exception ignored) {}
-
-      // USERPASS
-      try {
-        String authPath = getUserpassAuthPath(parameterSet);
-        addNonDefaultPath(keyBuilder, authPath, DEFAULT_USERPASS_PATH, ENV_USERPASS_AUTH_PATH, USERPASS_AUTH_PATH);
-        String username = getUsername(parameterSet);
-        String password = getPassword(parameterSet);
-        keyBuilder.add(ENV_VAULT_USERNAME, USERNAME, username);
-        keyBuilder.add(ENV_VAULT_PASSWORD, PASSWORD, password);
-      } catch (Exception ignored) {}
-
-      // APPROLE
-      try {
-        String authPath = getAppRoleAuthPath(parameterSet);
-        addNonDefaultPath(keyBuilder, authPath, DEFAULT_APPROLE_PATH, ENV_APPROLE_AUTH_PATH, APPROLE_AUTH_PATH);
-        String roleId = getRoleId(parameterSet);
-        String secretId = getSecretId(parameterSet);
-        keyBuilder.add(ENV_VAULT_ROLE_ID, ROLE_ID, roleId);
-        keyBuilder.add(ENV_VAULT_SECRET_ID, SECRET_ID, secretId);
-      } catch (Exception ignored) {}
-
-      // GITHUB
-      try {
-        String authPath = getGitHubAuthPath(parameterSet);
-        addNonDefaultPath(keyBuilder, authPath, DEFAULT_GITHUB_PATH, ENV_GITHUB_AUTH_PATH, GITHUB_AUTH_PATH);
-        String githubToken = getGitHubToken(parameterSet);
-        keyBuilder.add(ENV_GITHUB_TOKEN, GITHUB_TOKEN, githubToken);
-      } catch (Exception ignored) {}
-
-      return keyBuilder.build();
+    public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
+      for (DedicatedVaultAuthenticationMethod method : AUTH_METHOD_PARAMETERS.keySet()) {
+        Map<String, Object> filteredParams = filterParameters(parameterSet, AUTH_METHOD_PARAMETERS.get(method));
+        if (!filteredParams.isEmpty()) {
+          return filteredParams;
+        }
+      }
+      return Collections.emptyMap();
     }
   });
 
@@ -304,7 +254,38 @@ public enum DedicatedVaultAuthenticationMethod {
    * @param parameterSet the authentication parameters.
    * @return a {@link ParameterSet} to be used as a cache key.
    */
-  public ParameterSet generateCacheKey(ParameterSet parameterSet) {
+  public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
     return delegate.generateCacheKey(parameterSet);
   }
+
+  /**
+   * Maps each {@link DedicatedVaultAuthenticationMethod} to its relevant parameter keys.
+   *
+   * This map is used to filter parameters for cache key generation, ensuring only
+   * necessary parameters are included for each authentication method. It is immutable.
+   */
+  private static final Map<DedicatedVaultAuthenticationMethod, String[]> AUTH_METHOD_PARAMETERS;
+  static {
+    Map<DedicatedVaultAuthenticationMethod, String[]> map = new HashMap<>();
+    map.put(VAULT_TOKEN, new String[]{
+            PARAM_VAULT_ADDR, PARAM_VAULT_TOKEN
+    });
+    map.put(USERPASS, new String[]{
+            PARAM_VAULT_ADDR, PARAM_VAULT_NAMESPACE, PARAM_USERPASS_AUTH_PATH, PARAM_VAULT_USERNAME, PARAM_VAULT_PASSWORD
+    });
+    map.put(APPROLE, new String[]{
+            PARAM_VAULT_ADDR, PARAM_VAULT_NAMESPACE, PARAM_APPROLE_AUTH_PATH, PARAM_VAULT_ROLE_ID, PARAM_VAULT_SECRET_ID
+    });
+    map.put(GITHUB, new String[]{
+            PARAM_VAULT_ADDR, PARAM_VAULT_NAMESPACE, PARAM_GITHUB_AUTH_PATH, PARAM_GITHUB_TOKEN
+    });
+    map.put(AUTO_DETECT, new String[]{
+            PARAM_VAULT_ADDR, PARAM_VAULT_NAMESPACE, PARAM_VAULT_TOKEN,
+            PARAM_USERPASS_AUTH_PATH, PARAM_VAULT_USERNAME, PARAM_VAULT_PASSWORD,
+            PARAM_APPROLE_AUTH_PATH, PARAM_VAULT_ROLE_ID, PARAM_VAULT_SECRET_ID,
+            PARAM_GITHUB_AUTH_PATH, PARAM_GITHUB_TOKEN
+    });
+    AUTH_METHOD_PARAMETERS = Collections.unmodifiableMap(map);
+  }
+
 }

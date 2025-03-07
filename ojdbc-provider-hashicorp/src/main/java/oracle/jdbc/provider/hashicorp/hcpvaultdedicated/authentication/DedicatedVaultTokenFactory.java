@@ -41,6 +41,8 @@ package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication;
 import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
+
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.AUTHENTICATION_METHOD;
@@ -58,7 +60,7 @@ public final class DedicatedVaultTokenFactory
         implements ResourceFactory<DedicatedVaultToken> {
 
   // Map to cache tokens based on generated cache keys
-  private static final ConcurrentHashMap<ParameterSet, CachedToken> tokenCache = new ConcurrentHashMap<>();
+  private static final ConcurrentHashMap<Map<String, Object>, CachedToken> tokenCache = new ConcurrentHashMap<>();
 
   private static final DedicatedVaultTokenFactory INSTANCE =
           new DedicatedVaultTokenFactory();
@@ -106,7 +108,7 @@ public final class DedicatedVaultTokenFactory
    */
   private static DedicatedVaultToken createCachedToken(
           ParameterSet parameterSet, DedicatedVaultAuthenticationMethod method) {
-    ParameterSet cacheKey = method.generateCacheKey(parameterSet);
+    Map<String, Object> cacheKey = method.generateCacheKey(parameterSet);
 
     CachedToken validCachedToken = tokenCache.compute(cacheKey, (k, cachedToken) -> {
       if (cachedToken == null || !cachedToken.isValid()) {

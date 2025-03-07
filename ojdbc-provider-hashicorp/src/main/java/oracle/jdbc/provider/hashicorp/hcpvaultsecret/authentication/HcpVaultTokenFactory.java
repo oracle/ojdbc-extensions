@@ -45,6 +45,7 @@ import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -62,7 +63,7 @@ public final class HcpVaultTokenFactory implements ResourceFactory<HcpVaultSecre
 
   private static final HcpVaultTokenFactory INSTANCE = new HcpVaultTokenFactory();
 
-  private static final ConcurrentHashMap<ParameterSet, Supplier<? extends AccessToken>> tokenCache =
+  private static final ConcurrentHashMap<Map<String, Object>, Supplier<? extends AccessToken>> tokenCache =
           new ConcurrentHashMap<>();
 
   private HcpVaultTokenFactory() {}
@@ -99,7 +100,7 @@ public final class HcpVaultTokenFactory implements ResourceFactory<HcpVaultSecre
   private HcpVaultSecretToken createCachedToken(
           ParameterSet parameterSet, HcpVaultAuthenticationMethod method) {
 
-    ParameterSet cacheKey = method.generateCacheKey(parameterSet);
+    Map<String, Object> cacheKey = method.generateCacheKey(parameterSet);
 
     Supplier<? extends AccessToken> tokenSupplier = tokenCache.computeIfAbsent(cacheKey, k -> AccessToken.createJsonWebTokenCache(() -> {
       HcpVaultSecretToken token = method.generateToken(parameterSet);

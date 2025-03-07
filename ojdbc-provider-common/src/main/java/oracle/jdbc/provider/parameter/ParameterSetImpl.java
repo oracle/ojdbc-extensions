@@ -43,7 +43,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-final class ParameterSetImpl implements ParameterSet {
+public final class ParameterSetImpl implements ParameterSet {
 
   /**
    * The values of each parameter. It is assumed that values in this map have
@@ -122,6 +122,18 @@ final class ParameterSetImpl implements ParameterSet {
   public boolean equals(Object other) {
     return other instanceof ParameterSetImpl
       && ((ParameterSetImpl)other).parameterValues.equals(parameterValues);
+  }
+
+  /**
+   * Retrieves the relevant parameter key-value pairs for cache key generation.
+   */
+  public Map<String, Object> getParameterKeyValuePairs() {
+    return parameterNames.entrySet().stream()
+            .filter(entry -> parameterValues.get(entry.getKey()) != null)
+            .collect(Collectors.toMap(
+                    Map.Entry::getValue,
+                    entry -> parameterValues.get(entry.getKey())
+            ));
   }
 
   /**

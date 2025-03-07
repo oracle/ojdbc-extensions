@@ -52,41 +52,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleConfigurationParsableProvider {
+import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.PARAMETER_SET_PARSER;
 
-  static final ParameterSetParser PARAMETER_SET_PARSER =
-          DedicatedVaultConfigurationParameters.configureBuilder(
-            ParameterSetParser.builder()
-              .addParameter("value",
-                      DedicatedVaultParameters.SECRET_PATH)
-              .addParameter("key",
-                      DedicatedVaultParameters.KEY)
-              .addParameter("VAULT_ADDR",
-                      DedicatedVaultParameters.VAULT_ADDR)
-              .addParameter("VAULT_TOKEN",
-                      DedicatedVaultParameters.VAULT_TOKEN)
-              .addParameter("FIELD_NAME",
-                      DedicatedVaultParameters.FIELD_NAME))
-              .addParameter("VAULT_USERNAME",
-                      DedicatedVaultParameters.USERNAME)
-              .addParameter("VAULT_PASSWORD",
-                      DedicatedVaultParameters.PASSWORD)
-              .addParameter("USERPASS_AUTH_PATH",
-                      DedicatedVaultParameters.USERPASS_AUTH_PATH)
-              .addParameter("VAULT_NAMESPACE",
-                      DedicatedVaultParameters.NAMESPACE)
-              .addParameter("ROLE_ID",
-                      DedicatedVaultParameters.ROLE_ID)
-              .addParameter("SECRET_ID",
-                      DedicatedVaultParameters.SECRET_ID)
-              .addParameter("APPROLE_AUTH_PATH",
-                      DedicatedVaultParameters.APPROLE_AUTH_PATH)
-              .addParameter("GITHUB_TOKEN",
-                      DedicatedVaultParameters.GITHUB_TOKEN)
-              .addParameter("GITHUB_AUTH_PATH",
-                      DedicatedVaultParameters.GITHUB_AUTH_PATH)
-              .addParameter("type", Parameter.create())
-                  .build();
+public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleConfigurationParsableProvider {
 
   @Override
   public InputStream getInputStream(String secretPath) {

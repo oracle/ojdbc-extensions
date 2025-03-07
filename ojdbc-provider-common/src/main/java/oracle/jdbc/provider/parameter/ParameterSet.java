@@ -160,55 +160,49 @@ public interface ParameterSet {
   ParameterSetBuilder copyBuilder();
 
   /**
-   * Returns the value of a parameter, falling back to system properties and
-   * environment variables if not found in the parameter set.
+   * Retrieves the value of this parameter with fallback to system properties
+   * or environment variables if allowed.
    *
    * @param <T> The type of value that is assigned to the parameter
    * @param parameter Parameter to retrieve the value from
-   * @param envKey The key to look up in system properties and environment variables
-   * @return The parameter value, or value from system properties or environment variables
-   * @throws IllegalStateException if the value cannot be found anywhere
+   * @param envKey The environment key to use as a fallback
+   * @param defaultValue The default value to return if not found
+   * @return The parameter value, or fallback value if not present
    */
-  @SuppressWarnings("unchecked")
-  default <T> T getRequiredWithFallback(Parameter<T> parameter, String envKey) {
-    T value = getOptional(parameter);
-    if (value != null) {
-      return value;
-    }
-
-    String envValue = System.getProperty(envKey, System.getenv(envKey));
-    if (envValue == null || envValue.isEmpty()) {
-      String name = getName(parameter);
-      throw new IllegalStateException(
-              "Required configuration '" + (name != null ? name : envKey) +
-                      "' not found in ParameterSet, system properties, or environment variables.");
-    }
-
-    return (T) envValue;
-  }
-
-  /**
-   * Returns the value of a parameter, falling back to system properties,
-   * environment variables, and finally a default value.
-   *
-   * @param <T> The type of value that is assigned to the parameter
-   * @param parameter Parameter to retrieve the value from
-   * @param envKey The key to look up in system properties and environment variables
-   * @param defaultValue The default value to return if no value is found
-   * @return The parameter value, or value from system properties, environment variables, or the default
-   */
-  @SuppressWarnings("unchecked")
   default <T> T getOptionalWithFallback(Parameter<T> parameter, String envKey, T defaultValue) {
     T value = getOptional(parameter);
     if (value != null) {
       return value;
     }
 
-    String envValue = System.getProperty(envKey, System.getenv(envKey));
-    if (envValue == null || envValue.isEmpty()) {
-      return defaultValue;
+    if (parameter.isEnvOrSystemAllowed()) {
+      String envValue = System.getProperty(envKey, System.getenv(envKey));
+      if (envValue != null && !envValue.isEmpty()) {
+        return (T) envValue;
+      }
+    }
+    return defaultValue;
+  }
+
+  /**
+   * Retrieves the value of this parameter with a required fallback to
+   * system properties or environment variables if allowed.
+   *
+   * @param <T> The type of value that is assigned to the parameter
+   * @param parameter Parameter to retrieve the value from
+   * @param envKey The environment key to use as a fallback
+   * @return The required parameter value or throws an exception if not found
+   */
+  default <T> T getRequiredWithFallback(Parameter<T> parameter, String envKey) {
+    T value = getOptionalWithFallback(parameter, envKey, null);
+    if (value != null) {
+      return value;
     }
 
-    return (T) envValue;
+    String name = getName(parameter);
+    throw new IllegalStateException(
+            String.format("Required parameter '%s' not found in ParameterSet, system properties, or environment variables.",
+                    name != null ? name : envKey)
+    );
   }
 }

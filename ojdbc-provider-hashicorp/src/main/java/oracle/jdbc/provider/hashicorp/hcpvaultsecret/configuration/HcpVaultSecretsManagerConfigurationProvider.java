@@ -40,9 +40,7 @@ package oracle.jdbc.provider.hashicorp.hcpvaultsecret.configuration;
 
 import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.hashicorp.hcpvaultsecret.secrets.HcpVaultSecretsManagerFactory;
-import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.provider.parameter.ParameterSetParser;
 import oracle.jdbc.util.OracleConfigurationCache;
 
 import java.io.ByteArrayInputStream;
@@ -55,17 +53,6 @@ import static oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVa
 
 
 public class HcpVaultSecretsManagerConfigurationProvider extends OracleConfigurationParsableProvider {
-
-  static final ParameterSetParser PARAMETER_SET_PARSER =
-    HcpVaultConfigurationParameters.configureBuilder(
-      ParameterSetParser.builder()
-        .addParameter("value", SECRET_NAME)
-        .addParameter("HCP_ORG_ID", HCP_ORG_ID)
-        .addParameter("HCP_PROJECT_ID", HCP_PROJECT_ID)
-        .addParameter("HCP_APP_NAME", HCP_APP_NAME)
-        .addParameter("KEY", KEY))
-        .addParameter("type", Parameter.create())
-            .build();
 
   @Override
   public InputStream getInputStream(String secretName) {

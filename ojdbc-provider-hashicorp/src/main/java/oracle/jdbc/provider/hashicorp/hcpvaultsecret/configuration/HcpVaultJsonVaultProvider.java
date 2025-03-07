@@ -46,8 +46,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
 
-import static oracle.jdbc.provider.hashicorp.hcpvaultsecret.configuration.HcpVaultSecretsManagerConfigurationProvider.PARAMETER_SET_PARSER;
-
+import static oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultSecretParameters.PARAMETER_SET_PARSER;
 /**
  * <p>
  * Implementation of {@link OracleConfigurationSecretProvider} for

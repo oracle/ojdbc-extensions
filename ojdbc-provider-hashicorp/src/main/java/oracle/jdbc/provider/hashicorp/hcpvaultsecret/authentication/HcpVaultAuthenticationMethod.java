@@ -39,11 +39,11 @@
 package oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication;
 
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.provider.parameter.ParameterSetBuilder;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import static oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultSecretParameters.*;
-import static oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultTokenFactory.*;
-
 /**
  * Enumeration of authentication methods supported by HCP Vault Secrets.
  * <p>
@@ -80,13 +80,8 @@ public enum HcpVaultAuthenticationMethod {
     }
 
     @Override
-    public ParameterSet generateCacheKey(ParameterSet parameterSet) {
-      ParameterSetBuilder keyBuilder = ParameterSet.builder();
-      String clientId = getHcpClientId(parameterSet);
-      keyBuilder.add(ENV_HCP_CLIENT_ID, HCP_CLIENT_ID, clientId);
-      String clientSecret = getHcpClientSecret(parameterSet);
-      keyBuilder.add(ENV_HCP_CLIENT_SECRET, HCP_CLIENT_SECRET, clientSecret);
-      return keyBuilder.build();
+    public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
+      return filterParameters(parameterSet, AUTH_METHOD_PARAMETERS.get(CLIENT_CREDENTIALS));
     }
   }),
 
@@ -130,12 +125,8 @@ public enum HcpVaultAuthenticationMethod {
     }
 
     @Override
-    public ParameterSet generateCacheKey(ParameterSet parameterSet) {
-      ParameterSetBuilder keyBuilder = ParameterSet.builder();
-      String credentialsFile = getHcpCredentialsFile(parameterSet);
-       keyBuilder.add(ENV_HCP_CREDENTIALS_FILE, HCP_CREDENTIALS_FILE, credentialsFile);
-
-      return keyBuilder.build();
+    public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
+      return filterParameters(parameterSet, AUTH_METHOD_PARAMETERS.get(CLI_CREDENTIALS_FILE));
     }
   }),
 
@@ -166,25 +157,14 @@ public enum HcpVaultAuthenticationMethod {
     }
 
     @Override
-    public ParameterSet generateCacheKey(ParameterSet parameterSet) {
-      ParameterSetBuilder keyBuilder = ParameterSet.builder();
-
-      // Include credentials file path in cache key if specified
-      try {
-        String credentialsFile = getHcpCredentialsFile(parameterSet);
-        keyBuilder.add(ENV_HCP_CREDENTIALS_FILE, HCP_CREDENTIALS_FILE, credentialsFile);
-
-      } catch (Exception ignored) {}
-
-      // Include client credentials in cache key if specified
-      try {
-        String clientId = getHcpClientId(parameterSet);
-        String clientSecret = getHcpClientSecret(parameterSet);
-        keyBuilder.add(ENV_HCP_CLIENT_ID, HCP_CLIENT_ID, clientId);
-        keyBuilder.add(ENV_HCP_CLIENT_SECRET, HCP_CLIENT_SECRET, clientSecret);
-      } catch (Exception ignored) {}
-
-      return keyBuilder.build();
+    public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
+      for (HcpVaultAuthenticationMethod method : AUTH_METHOD_PARAMETERS.keySet()) {
+        Map<String, Object> filteredParams = filterParameters(parameterSet, AUTH_METHOD_PARAMETERS.get(method));
+        if (!filteredParams.isEmpty()) {
+          return filteredParams;
+        }
+      }
+      return Collections.emptyMap();
     }
   });
 
@@ -210,7 +190,24 @@ public enum HcpVaultAuthenticationMethod {
    * @param parameterSet the authentication parameters.
    * @return a {@link ParameterSet} to be used as a cache key.
    */
-  public ParameterSet generateCacheKey(ParameterSet parameterSet) {
+  public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
     return delegate.generateCacheKey(parameterSet);
+  }
+
+  /**
+   * Maps each authentication method to its relevant parameters.
+   * Used to generate cache keys and filter parameters efficiently.
+   */
+  private static final Map<HcpVaultAuthenticationMethod, String[]> AUTH_METHOD_PARAMETERS;
+  static {
+    Map<HcpVaultAuthenticationMethod, String[]> map = new HashMap<>();
+    map.put(CLIENT_CREDENTIALS, new String[]{PARAM_HCP_CLIENT_ID, PARAM_HCP_CLIENT_SECRET
+    });
+    map.put(CLI_CREDENTIALS_FILE, new String[]{PARAM_HCP_CREDENTIALS_FILE
+    });
+    map.put(AUTO_DETECT, new String[]{PARAM_HCP_CLIENT_ID, PARAM_HCP_CLIENT_SECRET,
+            PARAM_HCP_CREDENTIALS_FILE
+    });
+    AUTH_METHOD_PARAMETERS = Collections.unmodifiableMap(map);
   }
 }

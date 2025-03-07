@@ -41,14 +41,14 @@ package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication;
 import oracle.jdbc.driver.oauth.OpaqueAccessToken;
 import oracle.jdbc.provider.hashicorp.HttpUtil;
 import oracle.jdbc.provider.hashicorp.JsonUtil;
-import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.provider.parameter.ParameterSetBuilder;
+import oracle.jdbc.provider.parameter.ParameterSetImpl;
 import oracle.sql.json.OracleJsonObject;
 
 import java.time.OffsetDateTime;
-
-import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.*;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Base class for Dedicated Vault authentication.
@@ -88,25 +88,7 @@ public abstract class AbstractDedicatedVaultAuthentication {
    * @param parameterSet the set of parameters for the request.
    * @return a ParameterSet to be used as a cache key.
    */
-  public abstract ParameterSet generateCacheKey(ParameterSet parameterSet);
-
-  /**
-   * Creates a ParameterSetBuilder with common cache key parameters.
-   *
-   * @param parameterSet the source parameter set
-   * @return a builder with common parameters added
-   */
-  protected ParameterSetBuilder createCommonCacheKeyBuilder(ParameterSet parameterSet) {
-    ParameterSetBuilder keyBuilder = ParameterSet.builder();
-
-    String vaultAddr = DedicatedVaultParameters.getVaultAddress(parameterSet);
-    keyBuilder.add(ENV_VAULT_ADDR, DedicatedVaultParameters.VAULT_ADDR, vaultAddr);
-
-    String namespace = DedicatedVaultParameters.getNamespace(parameterSet);
-    keyBuilder.add(ENV_VAULT_NAMESPACE, NAMESPACE, namespace);
-
-    return keyBuilder;
-  }
+  public abstract Map<String, Object> generateCacheKey(ParameterSet parameterSet);
 
   /**
    * Builds an authentication endpoint URL.
@@ -129,22 +111,6 @@ public abstract class AbstractDedicatedVaultAuthentication {
    */
   protected String createJsonPayload(String format, Object... args) {
     return String.format(format, args);
-  }
-
-  /**
-   * Adds a non-default path parameter to the cache key if it differs from the default.
-   *
-   * @param keyBuilder The key builder to add to
-   * @param path The path value
-   * @param defaultPath The default path value
-   * @param envVar The environment variable name
-   * @param parameter The parameter object
-   */
-  protected void addNonDefaultPath(ParameterSetBuilder keyBuilder, String path, String defaultPath,
-                                   String envVar, Parameter<String> parameter) {
-    if (path != null && !path.isEmpty() && !path.equals(defaultPath)) {
-      keyBuilder.add(envVar, parameter, path);
-    }
   }
 
   /**
@@ -185,6 +151,24 @@ public abstract class AbstractDedicatedVaultAuthentication {
     } catch (Exception e) {
       throw new IllegalStateException(failureMessage, e);
     }
+  }
+
+  /**
+   * Filters the parameters from the {@link ParameterSet} based on the provided relevant keys.
+   *
+   * This utility method extracts only the parameters relevant to a specific authentication method,
+   * ensuring that the generated cache key includes only necessary data.
+   *
+   * @param parameterSet the set of parameters to filter. Must not be null.
+   * @param relevantKeys an array of parameter keys relevant to the authentication method.
+   * @return a map containing only the filtered parameters.
+   */
+  protected static Map<String, Object> filterParameters(ParameterSet parameterSet, String[] relevantKeys) {
+    Map<String, Object> allParameters = ((ParameterSetImpl) parameterSet).getParameterKeyValuePairs();
+
+    return allParameters.entrySet().stream()
+            .filter(entry -> Arrays.asList(relevantKeys).contains(entry.getKey()))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 }
 
