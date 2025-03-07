@@ -13,7 +13,6 @@
   <name>Oracle JDBC Observability Provider</name>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-observability</artifactId>
-  <version>1.0.3</version>    
 
   <properties>
       <opentelemetry.version>1.44.1</opentelemetry.version>
@@ -49,7 +48,6 @@
     <dependency>
       <artifactId>ojdbc-provider-common</artifactId>
       <groupId>com.oracle.database.jdbc</groupId>
-      <version>1.0.2</version>
       <classifier>tests</classifier>
       <type>test-jar</type>
     </dependency>
