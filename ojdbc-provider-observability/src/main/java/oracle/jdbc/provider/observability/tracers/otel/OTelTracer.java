@@ -1,13 +1,45 @@
+/*
+ ** Copyright (c) 2025 Oracle and/or its affiliates.
+ **
+ ** The Universal Permissive License (UPL), Version 1.0
+ **
+ ** Subject to the condition set forth below, permission is hereby granted to any
+ ** person obtaining a copy of this software, associated documentation and/or data
+ ** (collectively the "Software"), free of charge and under any and all copyright
+ ** rights in the Software, and any and all patent rights owned or freely
+ ** licensable by each licensor hereunder covering either (i) the unmodified
+ ** Software as contributed to or provided by such licensor, or (ii) the Larger
+ ** Works (as defined below), to deal in both
+ **
+ ** (a) the Software, and
+ ** (b) any piece of software and/or hardware listed in the lrgrwrks.txt file if
+ ** one is included with the Software (each a "Larger Work" to which the Software
+ ** is contributed by such licensors),
+ **
+ ** without restriction, including without limitation the rights to copy, create
+ ** derivative works of, display, perform, and distribute the Software and make,
+ ** use, sell, offer for sale, import, export, have made, and have sold the
+ ** Software and the Larger Work(s), and to sublicense the foregoing rights on
+ ** either these or other terms.
+ **
+ ** This license is subject to the following condition:
+ ** The above copyright notice and either this complete permission notice or at
+ ** a minimum a reference to the UPL must be included in all copies or
+ ** substantial portions of the Software.
+ **
+ ** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ ** IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ ** FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ ** AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ ** LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ ** SOFTWARE.
+ */
 package oracle.jdbc.provider.observability.tracers.otel;
 
 import java.sql.SQLException;
-import java.time.Instant;
-import java.util.EnumMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.security.auth.login.Configuration;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
@@ -22,7 +54,7 @@ import oracle.jdbc.TraceEventListener;
 import oracle.jdbc.TraceEventListener.JdbcExecutionEvent;
 import oracle.jdbc.TraceEventListener.Sequence;
 import oracle.jdbc.TraceEventListener.TraceContext;
-import oracle.jdbc.provider.observability.configuration.ObservabilityConfiguration;
+import oracle.jdbc.provider.observability.ObservabilityConfiguration;
 import oracle.jdbc.provider.observability.tracers.ObservabilityTracer;
 
 /**
@@ -37,7 +69,22 @@ public class OTelTracer implements ObservabilityTracer {
    */
   private static final String TRACE_KEY = "clientcontext.ora$opentelem$tracectx";
 
+  /**
+   * The trace context is sent to the server in two lines, this is the first 
+   * line it contains the version and the span context.
+   */
+  private static final String TRACE_FORMAT = "traceparent: %s-%s-%s-%s\r\n";
 
+  /**
+   * Trace context version.
+   */
+  private static final String TRACE_VERSION = "00";
+
+  /**
+   * Format of the second line sent to the server containing the trace context.
+   * It contains the trace state.
+   */
+  private static final String TRACE_STATE_FORMAT = "tracestate: %s\r\n";
 
   /**
    * Logger.
@@ -45,32 +92,43 @@ public class OTelTracer implements ObservabilityTracer {
   private static Logger logger = Logger.getLogger(OTelTracer.class.getName());
 
   /**
+   * Configuraiton
+   */
+  private final ObservabilityConfiguration configuration;
+
+
+  /**
    * Constructor. This tracer always uses {@link GlobalOpenTelemetry} to get 
    * the Open Telemetry tracer.
+   * 
+   * @param configuration the configuration.
    */
-  public OTelTracer() { }
+  public OTelTracer(ObservabilityConfiguration configuration) {
+    this.configuration = configuration;
+  }
 
   @Override
-  public Object traceRoundtrip(Sequence sequence, TraceContext traceContext, Object userContext) {
+  public String getName() {
+    return "OTEL";
+  }
+
+  @Override
+  public Object traceRoundTrip(Sequence sequence, TraceContext traceContext, Object userContext) {
     if (sequence == Sequence.BEFORE) {
       // Create the Span before the round-trip.
       final Span span = initAndGetSpan(traceContext, traceContext.databaseOperation());
-      try (Scope ignored = span.makeCurrent()) {
-        traceContext.setClientInfo(TRACE_KEY, getTraceValue(span));
-      } catch (Exception ex) {
-        logger.log(Level.WARNING, ex.getMessage(), ex);
-      }
+      makeSpanCurrentAndSendContextToServer(traceContext, span);
       // Return the Span instance to the driver. The driver holds this instance and
-      // supplies it
-      // as user context parameter on the next round-trip call.
+      // supplies it as user context parameter on the next round-trip call.
       return span;
     } else {
       // End the Span after the round-trip.
       if (userContext instanceof Span) {
         final Span span = (Span) userContext;
         span.setStatus(traceContext.isCompletedExceptionally() ? StatusCode.ERROR : StatusCode.OK);
-        span.end(Instant.now());
+        span.end();
       }
+      logger.log(Level.WARNING, "Unknown or null user context received from the driver.");
       return null;
     }
   }
@@ -85,7 +143,7 @@ public class OTelTracer implements ObservabilityTracer {
             .setAttribute("Error message", params[0].toString())
             .setAttribute("VIP Address", params[7].toString());
         // Add sensitive information (URL and SQL) if it is enabled
-        if (ObservabilityConfiguration.getInstance().getSensitiveDataEnabled()) {
+        if (configuration.getSensitiveDataEnabled()) {
           logger.log(Level.FINEST, "Sensitive information on");
           spanBuilder.setAttribute("Protocol", params[1].toString())
               .setAttribute("Host", params[2].toString())
@@ -94,7 +152,8 @@ public class OTelTracer implements ObservabilityTracer {
               .setAttribute("SID", params[5].toString())
               .setAttribute("Connection data", params[6].toString());
         }
-        return spanBuilder.startSpan();
+        // start and end span.
+        spanBuilder.startSpan().end();
       } else if (event == TraceEventListener.JdbcExecutionEvent.AC_REPLAY_STARTED
           || event == TraceEventListener.JdbcExecutionEvent.AC_REPLAY_SUCCESSFUL) {
         SpanBuilder spanBuilder = tracer
@@ -103,7 +162,7 @@ public class OTelTracer implements ObservabilityTracer {
             .setAttribute("Error code", ((SQLException) params[1]).getErrorCode())
             .setAttribute("SQL state", ((SQLException) params[1]).getSQLState())
             .setAttribute("Current replay retry count", params[2].toString());
-        return spanBuilder.startSpan();
+        spanBuilder.startSpan().end();
       } else {
         logger.log(Level.WARNING, "Unknown event received : " + event.toString());
       }
@@ -111,9 +170,18 @@ public class OTelTracer implements ObservabilityTracer {
       // log wrong number of parameters returned for execution event
       logger.log(Level.WARNING, "Wrong number of parameters received for event " + event.toString());
     }
-    return null;
+    // return the previous userContext
+    return userContext;
   }
 
+  /**
+   * Creates a Open Telemetry Span and sets it's attributes according to the
+   * trace context and the configuration.
+   * 
+   * @param traceContext the trace context.
+   * @param spanName then span name.
+   * @return returns the Span.
+   */
   private Span initAndGetSpan(TraceContext traceContext, String spanName) {
     /*
      * If this is in the context of current span, the following becomes a nested or
@@ -132,7 +200,7 @@ public class OTelTracer implements ObservabilityTracer {
         .setAttribute("SQL ID", traceContext.getSqlId());
 
     // Add sensitive information (URL and SQL) if it is enabled
-    if (ObservabilityConfiguration.getInstance().getSensitiveDataEnabled()) {
+    if (configuration.getSensitiveDataEnabled()) {
       logger.log(Level.FINEST, "Sensitive information on");
       spanBuilder
           .setAttribute("Original SQL Text", traceContext.originalSqlText())
@@ -146,35 +214,57 @@ public class OTelTracer implements ObservabilityTracer {
   }
 
   /**
-   * Builds the Open Telemetry trace context to be sent to the database server.
+   * Sets the span as the current Open Telemetry Span and sends context information
+   * to the database server.
+   * 
+   * @param traceContext the trace context
    * @param span the currect spans
-   * @return the current trace context formatted so that the server can read it.
    */
-  private String getTraceValue(Span span) {
+  private void makeSpanCurrentAndSendContextToServer(TraceContext traceContext, Span span) {
     final String traceParent = initAndGetTraceParent(span);
     final String traceState = initAndGetTraceState(span);
-    return traceParent + traceState;
+
+    try (Scope ignored = span.makeCurrent()) {
+      // Send the current context to the server
+      traceContext.setClientInfo(TRACE_KEY, traceParent + traceState);
+    } catch (Exception ex) {
+      logger.log(Level.WARNING, "An error occured while sending the current Open Telemetry context to the server. " 
+          + ex.getMessage(), ex);
+    }
   }
 
+  /**
+   * Formats the current Open Telemetry context in a format that the server can
+   * understand.
+   * 
+   * @param span the current Span
+   * @return the current Open Telemetry context formatted so that the server
+   * can understand.
+   */
   private String initAndGetTraceParent(Span span) {
     final SpanContext spanContext = span.getSpanContext();
-    // The current specification assumes the version is set to 00.
-    final String version = "00";
     final String traceId = spanContext.getTraceId();
     // parent-id is known as the span-id
     final String parentId = spanContext.getSpanId();
     final String traceFlags = spanContext.getTraceFlags().toString();
 
-    return String.format("traceparent: %s-%s-%s-%s\r\n",
-        version, traceId, parentId, traceFlags);
+    return String.format(TRACE_FORMAT, TRACE_VERSION, traceId, parentId, traceFlags);
   }
 
+    /**
+   * Formats the current Open Telemetry Span state in a format that the server 
+   * can understand.
+   * 
+   * @param span the current Span
+   * @return the current Open Telemetry Span state formatted so that the server
+   * can understand.
+   */
   private String initAndGetTraceState(Span span) {
     final TraceState traceState = span.getSpanContext().getTraceState();
     final StringBuilder stringBuilder = new StringBuilder();
 
     traceState.forEach((k, v) -> stringBuilder.append(k).append("=").append(v));
-    return String.format("tracestate: %s\r\n", stringBuilder);
+    return String.format(TRACE_STATE_FORMAT, stringBuilder);
   }
 
 }

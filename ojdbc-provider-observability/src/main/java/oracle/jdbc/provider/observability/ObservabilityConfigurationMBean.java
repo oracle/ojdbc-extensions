@@ -37,8 +37,60 @@
  */
 package oracle.jdbc.provider.observability;
 
-public enum ObservabilityTestProperties {
-  OBSERVABILITY_URL,
-  OBSERVABILITY_USERNAME,
-  OBSERVABILITY_PASSWORD
+import oracle.jdbc.provider.observability.tracers.jfr.JFRTracer;
+import oracle.jdbc.provider.observability.tracers.otel.OTelTracer;
+
+/**
+ * MBean that allows to configure the Oracle JDBC Observability Provider.
+ */
+public interface ObservabilityConfigurationMBean {
+
+  /**
+   * Returns true if the provider is enabled, otherwise false.
+   * 
+   * @return true if the provider is enabled, otherwise false.
+   */
+  boolean getEnabled();
+
+  /**
+   * Enables/disables the provider.
+   * 
+   * @param enabled true to enable the provider, otherwise false.
+   */
+  void setEnabled(boolean enabled);
+
+  /**
+   * Returns a comma separated list of enabled tracers.
+   * 
+   * @return a comma separated list of enabled tracers.
+   */
+  String getEnabledTracers();
+  
+  /**
+   * Enables the tracers.
+   * <p>
+   * This extension implements two tracers:
+   * </p>
+   * <ul>
+   * <li>OTEL: which exports traces to Open Telemetry {@link OTelTracer}</li>
+   * <li>JFR: which exports traces to Java Flight recorder {@link JFRTracer}</li>
+   * </ul>
+   *
+   * @param tracers comma separated list of enabled tracers.
+   */
+  void setEnabledTracers(String tracers);
+
+  /**
+   * Returns true if sensitive data is enabled, otherwise false.
+   * 
+   * @return true if sensitive data is enabled, otherwise false.
+   */
+  boolean getSensitiveDataEnabled();
+
+  /**
+   * Enables/disables sensitive data.
+   * 
+   * @param sensitiveDataEnabled true to enable sensitive data, otherwise false.
+   */
+  void setSensitiveDataEnabled(boolean sensitiveDataEnabled);
 }

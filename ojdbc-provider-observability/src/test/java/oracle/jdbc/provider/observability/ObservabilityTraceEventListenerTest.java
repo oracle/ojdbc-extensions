@@ -1,8 +1,46 @@
+/*
+ ** Copyright (c) 2025 Oracle and/or its affiliates.
+ **
+ ** The Universal Permissive License (UPL), Version 1.0
+ **
+ ** Subject to the condition set forth below, permission is hereby granted to any
+ ** person obtaining a copy of this software, associated documentation and/or data
+ ** (collectively the "Software"), free of charge and under any and all copyright
+ ** rights in the Software, and any and all patent rights owned or freely
+ ** licensable by each licensor hereunder covering either (i) the unmodified
+ ** Software as contributed to or provided by such licensor, or (ii) the Larger
+ ** Works (as defined below), to deal in both
+ **
+ ** (a) the Software, and
+ ** (b) any piece of software and/or hardware listed in the lrgrwrks.txt file if
+ ** one is included with the Software (each a "Larger Work" to which the Software
+ ** is contributed by such licensors),
+ **
+ ** without restriction, including without limitation the rights to copy, create
+ ** derivative works of, display, perform, and distribute the Software and make,
+ ** use, sell, offer for sale, import, export, have made, and have sold the
+ ** Software and the Larger Work(s), and to sublicense the foregoing rights on
+ ** either these or other terms.
+ **
+ ** This license is subject to the following condition:
+ ** The above copyright notice and either this complete permission notice or at
+ ** a minimum a reference to the UPL must be included in all copies or
+ ** substantial portions of the Software.
+ **
+ ** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ ** IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ ** FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ ** AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ ** LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ ** SOFTWARE.
+ */
 package oracle.jdbc.provider.observability;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.atLeastOnce;
@@ -35,7 +73,6 @@ import jdk.jfr.consumer.RecordingFile;
 import oracle.jdbc.DatabaseFunction;
 import oracle.jdbc.driver.OracleConnection;
 import oracle.jdbc.provider.TestProperties;
-import oracle.jdbc.provider.observability.configuration.ObservabilityConfiguration;
 
 public class ObservabilityTraceEventListenerTest {
   String url = TestProperties.getOrAbort(ObservabilityTestProperties.OBSERVABILITY_URL);
@@ -68,13 +105,14 @@ public class ObservabilityTraceEventListenerTest {
   @ValueSource(booleans = {true, false})
   public void JFRTraceTest(boolean sensitiveDataEnabled) throws Exception {
 
-    ObservabilityConfiguration.getInstance().setEnabledTracers("JFR");
-    ObservabilityConfiguration.getInstance().setSensitiveDataEnabled(sensitiveDataEnabled);
+    System.setProperty("oracle.jdbc.provider.observability.enabledTracers", "JFR");
+    System.setProperty("oracle.jdbc.provider.observability.sensitiveDataEnabled", String.valueOf(sensitiveDataEnabled));
     Configuration configuration = Configuration.getConfiguration("default");
     String connectionId = null;
     try (Recording recording = new Recording(configuration)) {
       recording.start();
-      try (Connection connection = DriverManager.getConnection(url, userName, password);
+      String jfrUrl = url + "?oracle.jdbc.provider.traceEventListener=observability-trace-event-listener-provider&oracle.jdbc.provider.traceEventListener.name=test-jfr" + sensitiveDataEnabled;
+      try (Connection connection = DriverManager.getConnection(jfrUrl, userName, password);
           Statement statement = connection.createStatement();
           ResultSet resultSet = statement.executeQuery("SELECT 'OK' FROM DUAL")) {
         connectionId = ((OracleConnection)connection).getNetConnectionId();
@@ -84,16 +122,17 @@ public class ObservabilityTraceEventListenerTest {
       }
       recording.stop();
       recording.dump(Path.of("dump" + sensitiveDataEnabled + ".jfr"));
-
+      
       try (RecordingFile recordingFile = new RecordingFile(Path.of("dump" + sensitiveDataEnabled + ".jfr"))) {
+        int countRoundTrips = 0;
         while (recordingFile.hasMoreEvents()) {
           RecordedEvent event = recordingFile.readEvent();
           if (event.getEventType().getCategoryNames().contains("Round trips")) {
+            countRoundTrips++;
             switch (event.getEventType().getName()) {
               case SESSION_KEY:
                 assertEquals(connectionId, event.getString("connectionID"));
                 assertNotNull(event.getString("databaseOperation"));
-                assertNull(event.getString("tenant"));
                 assertNull(event.getString("sqlID"));
                 assertNull(event.getString("originalSQLText"));
                 assertNull(event.getString("actualSQLText"));
@@ -102,7 +141,6 @@ public class ObservabilityTraceEventListenerTest {
               case AUTH_CALL:
                 assertEquals(connectionId, event.getString("connectionID"));
                 assertNotNull(event.getString("databaseOperation"));
-                assertNull(event.getString("tenant"));
                 assertNull(event.getString("sqlID"));
                 assertNull(event.getString("originalSQLText"));
                 assertNull(event.getString("actualSQLText"));
@@ -112,7 +150,6 @@ public class ObservabilityTraceEventListenerTest {
               case EXECUTE_QUERY:
                 assertEquals(connectionId, event.getString("connectionID"));
                 assertNotNull(event.getString("databaseOperation"));
-                assertNotNull(event.getString("tenant"));
                 assertNotNull(event.getString("sqlID"));
                 assertEquals(sensitiveDataEnabled, event.getString("originalSQLText") != null);
                 assertEquals(sensitiveDataEnabled, event.getString("actualSQLText") != null);
@@ -121,7 +158,6 @@ public class ObservabilityTraceEventListenerTest {
               case LOGOFF:
                 assertEquals(connectionId, event.getString("connectionID"));
                 assertNotNull(event.getString("databaseOperation"));
-                assertNotNull(event.getString("tenant"));
                 assertNull(event.getString("sqlID"));
                 assertNull(event.getString("originalSQLText"));
                 assertNull(event.getString("actualSQLText"));
@@ -132,6 +168,7 @@ public class ObservabilityTraceEventListenerTest {
             }
           }
         }
+        assertTrue(countRoundTrips > 0, "Application should have performed at least one round trip");
       }
     }
       
@@ -141,9 +178,9 @@ public class ObservabilityTraceEventListenerTest {
   @ValueSource(booleans = {true, false})
   public void OTELTraceTest(boolean sensitiveDataEnabled) throws Exception {
     Mockito.clearInvocations(tracer, spanBuilder);
-    ObservabilityConfiguration.getInstance().setEnabledTracers("OTEL");
-    ObservabilityConfiguration.getInstance().setSensitiveDataEnabled(sensitiveDataEnabled);
-    String otelUrl = url + "?oracle.jdbc.provider.traceEventListener=observability-trace-event-listener-provider";
+    System.setProperty("oracle.jdbc.provider.observability.enabledTracers", "OTEL");
+    System.setProperty("oracle.jdbc.provider.observability.sensitiveDataEnabled", String.valueOf(sensitiveDataEnabled));
+    String otelUrl = url + "?oracle.jdbc.provider.traceEventListener=observability-trace-event-listener-provider&oracle.jdbc.provider.traceEventListener.name=test-otel-" + sensitiveDataEnabled ;
     String connectionId = null;
     try (Connection connection = DriverManager.getConnection(otelUrl, userName, password);
           Statement statement = connection.createStatement();
@@ -171,7 +208,7 @@ public class ObservabilityTraceEventListenerTest {
       Mockito.verify(spanBuilder, Mockito.times(1)).setAttribute("Original SQL Text", "SELECT 'OK' FROM DUAL");
       Mockito.verify(spanBuilder, Mockito.times(1)).setAttribute("Actual SQL Text", "SELECT 'OK' FROM DUAL");
     }
-    Mockito.verify(span, atLeast(4)).end(Mockito.any());
+    Mockito.verify(span, atLeast(4)).end();
 
 
   }

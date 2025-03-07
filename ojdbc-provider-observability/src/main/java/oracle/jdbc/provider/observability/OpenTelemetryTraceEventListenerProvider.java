@@ -37,8 +37,42 @@
  */
 package oracle.jdbc.provider.observability;
 
-public enum ObservabilityTestProperties {
-  OBSERVABILITY_URL,
-  OBSERVABILITY_USERNAME,
-  OBSERVABILITY_PASSWORD
+import java.util.Map;
+
+import oracle.jdbc.TraceEventListener;
+import oracle.jdbc.provider.observability.ObservabilityConfiguration.ObservabilityConfigurationType;
+
+/**
+ * <p>
+ * This class implements the TraceEventListenerProvider interface exposed by the
+ * Oracle JDBC driver. It provides TraceEventListeners of type {@link
+ * oracle.jdbc.provider.observability.ObservabilityTraceEventListener}.
+ * </p>
+ */
+public class OpenTelemetryTraceEventListenerProvider extends ObservabilityTraceEventListenerProvider {
+
+  /**
+   * Name of the provider
+   */
+  private static final String PROVIDER_NAME = "open-telemetry-trace-event-listener-provider";
+
+  /**
+   * Constructs a new instance of OpenTelemetryTraceEventListenerProvider. This
+   * constructor will be called by the driver's service provider to create a new
+   * instance.
+   */
+  public OpenTelemetryTraceEventListenerProvider() { }
+
+  @Override
+  public String getName() {
+    return PROVIDER_NAME;
+  }
+
+  @Override
+  public TraceEventListener getTraceEventListener(Map<Parameter, CharSequence> map) {
+    String name = map.get(nameParameter).toString();
+    return ObservabilityTraceEventListener.getOrCreateInstance(name, 
+        ObservabilityConfigurationType.OTEL);
+  }
+
 }

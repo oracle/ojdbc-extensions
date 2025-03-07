@@ -9,10 +9,10 @@ This provider implements the TraceEventListener interface provided by the JDBC
 driver which will be notified whenever events are generated in the driver and 
 will publish these events into Open Telemetry. These events include:
  * roundtrips to the database server
- * AC begin and sucess
+ * AC begin and success
  * VIP down event
 
-The following attributes are added the the traces for each event:
+The following attributes are added the traces for each event:
  * **Roundtrips**
     * Connection ID
     * Database Operation
@@ -39,7 +39,7 @@ The following attributes are added the the traces for each event:
 ## Installation
 
 This provider is distributed as single jar on the Maven Central Repository. The 
-jar is compiled for JDK 8, and is forward compatible with later JDK versions. 
+jar is compiled for JDK 11, and is forward compatible with later JDK versions. 
 The coordinates for the latest release are:
 
 ```xml
@@ -62,11 +62,6 @@ oracle.jdbc.provider.traceEventListener=observability-trace-event-listener-provi
 ## Configuration
 
 The provider can be configured by: 
-* using the singleton configuration class,
-```java
-ObservabilityConfiguration.getInstance().setEnabledTracers("OTEL,JFR");
-ObservabilityConfiguration.getInstance().setSensitiveDataEnabled(true);
-```
 * using system properties,
 ```java
 System.setProperty("oracle.jdbc.provider.observability.enabledTracers", "OTEL,JFR");
@@ -74,11 +69,18 @@ System.setProperty("oracle.jdbc.provider.observability.sensitiveDataEnabled", "t
 ```
 * or using the MBean.
 ```java
-ObjectName objectName = new ObjectName(
-    "com.oracle.jdbc.provider.observability:type=ObservabilityConfiguration");
+ObservabilityTraceEventListener listener = ObservabilityTraceEventListener.getTraceEventListener("<name>");
+ObjectName objectName = new ObjectName(listener.getMBeanObjectName());
 MBeanServer server = ManagementFactory.getPlatformMBeanServer();
 server.setAttribute(objectName, new Attribute("EnabledTracers", "OTEL,JFR"));
 server.setAttribute(objectName, new Attribute("SensitiveDataEnabled", "true"));
+```
+* it is also possible to use the ObservabilityConfiguration object directly by
+calling the 
+```java
+ObservabilityConfiguration configuration = ObservabilityTraceEventListener.getObservabilityConfiguration("<name>");
+configuration.setEnabledTracers("OTEL,JFR");
+configuration.setSensitiveDataEnabled(true);
 ```
 
 ## Backward compatibility
@@ -109,13 +111,12 @@ or a MBean. Two parameters can be configured:
 
 The system properties are "oracle.jdbc.provider.opentelemetry.enabled" and 
 "oracle.jdbc.provider.opentelemetry.sensitive-enabled" respectively and the MBean 
-with object name "com.oracle.jdbc.extension.opentelemetry:type=OpenTelemetryTraceEventListener"
 exposes two attributes "Enabled" and "SensitiveDataEnabled".
 
  The sample code below shows how to retrieve the value of an attribute:
 ```java
-ObjectName objectName = new ObjectName(
-    "com.oracle.jdbc.extension.opentelemetry:type=OpenTelemetryTraceEventListener");
+ObservabilityTraceEventListener listener = ObservabilityTraceEventListener.getTraceEventListener("<name>");
+ObjectName objectName = new ObjectName(listener.getMBeanObjectName());
 MBeanServer server = ManagementFactory.getPlatformMBeanServer();
 boolean isEnabled = Boolean.valueOf(server.getAttribute(objectName, "Enabled").toString())
     .booleanValue(); 

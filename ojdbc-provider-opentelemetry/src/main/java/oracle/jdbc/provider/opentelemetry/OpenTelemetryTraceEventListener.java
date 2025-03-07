@@ -73,9 +73,9 @@ import io.opentelemetry.context.Scope;
  * </ul>
  *
  * The system properties
- * {@value #OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_ENABLED}
+ * {@value #OPEN_TELEMETRY_TRACE_EVENT_LISTENER_ENABLED}
  * and
- * {@value #OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED}
+ * {@value #OPEN_TELEMETRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED}
  * can be used
  * to enable/disable this listener and the use of sensitive data by this
  * listener. A MBean registered by the {@link
@@ -88,12 +88,12 @@ public class OpenTelemetryTraceEventListener
   /**
    * Name of the property used to enable or disable this listener.
    */
-  public static final String OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_ENABLED = "oracle.jdbc.provider.opentelemetry.enabled";
+  public static final String OPEN_TELEMETRY_TRACE_EVENT_LISTENER_ENABLED = "oracle.jdbc.provider.opentelemetry.enabled";
   /**
    * Name of the property used to enable or disable sensitive data for this
    * listener.
    */
-  public static final String OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED = "oracle.jdbc.provider.opentelemetry.sensitive-enabled";
+  public static final String OPEN_TELEMETRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED = "oracle.jdbc.provider.opentelemetry.sensitive-enabled";
 
   private static final String TRACE_KEY = "clientcontext.ora$opentelem$tracectx";
 
@@ -132,8 +132,8 @@ public class OpenTelemetryTraceEventListener
     private AtomicBoolean sensitiveDataEnabled;
 
     private Configuration(boolean enabled, boolean sensitiveDataEnabled) {
-      String enabledStr = System.getProperty(OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_ENABLED);
-      String sensitiveStr = System.getProperty(OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED);
+      String enabledStr = System.getProperty(OPEN_TELEMETRY_TRACE_EVENT_LISTENER_ENABLED);
+      String sensitiveStr = System.getProperty(OPEN_TELEMETRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED);
       this.enabled = new AtomicBoolean(enabledStr == null ? enabled : Boolean.parseBoolean(enabledStr));
       this.sensitiveDataEnabled = new AtomicBoolean(
           sensitiveStr == null ? sensitiveDataEnabled : Boolean.parseBoolean(sensitiveStr));

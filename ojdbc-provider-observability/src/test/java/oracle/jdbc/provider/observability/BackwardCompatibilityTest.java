@@ -49,74 +49,72 @@ import javax.management.ObjectName;
 
 import org.junit.jupiter.api.Test;
 
-import oracle.jdbc.TraceEventListener;
-import oracle.jdbc.spi.TraceEventListenerProvider;
 import oracle.jdbc.spi.OracleResourceProvider.Parameter;
+import oracle.jdbc.spi.TraceEventListenerProvider;
 
-public class ObservabilityConfigurationTest {
-
+public class BackwardCompatibilityTest {
   private static final String INSTANCE_NAME = "test-instance";
-
-  MBeanServer server = ManagementFactory.getPlatformMBeanServer();
-
-  // Set system properties before starting 
-  static {
-    System.setProperty("oracle.jdbc.provider.observability.enabledTracers", "JFR");
-    System.setProperty("oracle.jdbc.provider.observability.sensitiveDataEnabled", "true");
-  }
-
-  @Test
+  
+ @Test
   public void testConfiguration() throws Exception {
     
-    // Create a TraceEventListner named test-instance
-    TraceEventListenerProvider provider = new ObservabilityTraceEventListenerProvider();
+    // System properties
+    System.setProperty("oracle.jdbc.provider.opentelemetry.enabled", "true");
+    System.setProperty("oracle.jdbc.provider.opentelemetry.sensitive-enabled", "true");
+
+    TraceEventListenerProvider provider = new OpenTelemetryTraceEventListenerProvider();
     Map<Parameter, CharSequence> parameters = new HashMap<>();
     provider.getParameters().forEach(parameter -> {
       parameters.put(parameter, (CharSequence)INSTANCE_NAME);
     });
     ObservabilityTraceEventListener listener = (ObservabilityTraceEventListener)provider.getTraceEventListener(parameters);
 
-    // Get the configuration object
     ObservabilityConfiguration configuration = ObservabilityTraceEventListener.getObservabilityConfiguration(INSTANCE_NAME);
 
-    // Verify that the configuration matches the configuration set using system properties
-    assertEquals("JFR", configuration.getEnabledTracers());
+    assertEquals(true, configuration.getEnabled());
+    assertEquals("OTEL", configuration.getEnabledTracers());
     assertEquals(true, configuration.getSensitiveDataEnabled());
+
     assertEquals(1, configuration.getEnabledTracersAsList().size());
-    assertEquals("JFR", configuration.getEnabledTracersAsList().get(0));
+    assertEquals("OTEL", configuration.getEnabledTracersAsList().get(0));
 
-    // Get the MBean for the configuration
+    // MBean
     ObjectName objectName = new ObjectName(listener.getMBeanObjectName());
-
-    // Get configuration using MBean and check that it matches the configuration set using system properties
+    MBeanServer server = ManagementFactory.getPlatformMBeanServer();
+    String enabled = server.getAttribute(objectName, "Enabled").toString();
     String enabledTracers = server.getAttribute(objectName, "EnabledTracers").toString();
     String sensitiveDataEnabled = server.getAttribute(objectName, "SensitiveDataEnabled").toString();
-    assertEquals(enabledTracers, "JFR");
+
+    assertEquals(enabled, "true");
+    assertEquals(enabledTracers, "OTEL");
     assertEquals(sensitiveDataEnabled, "true");
 
-    // Update configuration using MBean 
-    server.setAttribute(objectName, new Attribute("EnabledTracers", "OTEL,JFR"));
+    server.setAttribute(objectName, new Attribute("Enabled", false));
     server.setAttribute(objectName, new Attribute("SensitiveDataEnabled", false));
 
-    // check that the values have been updated using the instance of the configuration
-    assertEquals("OTEL,JFR", configuration.getEnabledTracers());
+    assertEquals(false, configuration.getEnabled());
     assertEquals(false, configuration.getSensitiveDataEnabled());
-    assertEquals(2, configuration.getEnabledTracersAsList().size());
-    assertEquals("OTEL", configuration.getEnabledTracersAsList().get(0));
-    assertEquals("JFR", configuration.getEnabledTracersAsList().get(1));
 
-    // Update the configuration using the instance of the configuration
-    configuration.setEnabledTracers("OTEL");
+    assertEquals("OTEL", configuration.getEnabledTracers());
+    assertEquals(false, configuration.getSensitiveDataEnabled());
+
+    assertEquals(1, configuration.getEnabledTracersAsList().size());
+    assertEquals("OTEL", configuration.getEnabledTracersAsList().get(0));
+
+    // Singleton
+    configuration.setEnabled(true);
     configuration.setSensitiveDataEnabled(true);
 
-    // Check  that the values returned by the MBean correspond to the values set using the instance
+    enabled = server.getAttribute(objectName, "Enabled").toString();
     enabledTracers = server.getAttribute(objectName, "EnabledTracers").toString();
     sensitiveDataEnabled = server.getAttribute(objectName, "SensitiveDataEnabled").toString();
+
+    assertEquals("true", enabled);
     assertEquals("OTEL", enabledTracers);
     assertEquals("true", sensitiveDataEnabled);
+
     assertEquals(1, configuration.getEnabledTracersAsList().size());
     assertEquals("OTEL", configuration.getEnabledTracersAsList().get(0));
 
   }
-
 }
