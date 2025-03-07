@@ -39,34 +39,63 @@
 package oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication;
 
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.provider.parameter.ParameterSetImpl;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
- * Base class for HCP Vault Secrets authentication strategies.
+ * Automatically selects the best authentication method based on available parameters.
  * <p>
- * Subclasses must implement methods to generate an access token and a cache key.
- * </p>
+ * The priority order is:
+ * <ol>
+ *   <li>CLI_CREDENTIALS_FILE</li>
+ *   <li>CLIENT_CREDENTIALS</li>
+ * </ol>
  */
-public abstract class AbstractHcpVaultAuthentication {
+public class AutoDetectAuthentication extends AbstractHcpVaultAuthentication {
 
   /**
-   * Generates an HCP Vault Secrets token based on the provided parameters.
-   *
-   * @param parameterSet the parameters for the authentication request.
-   * @return the generated {@link HcpVaultSecretToken}.
+   * Singleton instance of {@link AutoDetectAuthentication}.
    */
-  public abstract HcpVaultSecretToken generateToken(ParameterSet parameterSet);
+  public static final AutoDetectAuthentication INSTANCE = new AutoDetectAuthentication();
 
-  /**
-   * Generates a cache key for the authentication request.
-   *
-   * @param parameterSet the parameters for the authentication request.
-   * @return a {@link ParameterSet} to be used as a cache key.
-   */
-  public abstract Map<String, Object> generateCacheKey(ParameterSet parameterSet);
+  private AutoDetectAuthentication() {
+    // Private constructor to enforce singleton
+  }
+
+  @Override
+  public HcpVaultSecretToken generateToken(ParameterSet parameterSet) {
+    IllegalStateException previousFailure;
+
+    try {
+      return CliCredentialsFileAuthentication.INSTANCE.generateToken(parameterSet);
+    } catch (RuntimeException fileAuthFailed) {
+      previousFailure = new IllegalStateException("Failed to authenticate using CLI credentials file", fileAuthFailed);
+    }
+
+    try {
+      return ClientCredentialsAuthentication.INSTANCE.generateToken(parameterSet);
+    } catch (RuntimeException clientAuthFailed) {
+      previousFailure.addSuppressed(new IllegalStateException("Failed to authenticate using client credentials", clientAuthFailed));
+    }
+
+    throw previousFailure;
+  }
+
+  @Override
+  public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
+    AbstractHcpVaultAuthentication[] authenticationMethods = {
+            CliCredentialsFileAuthentication.INSTANCE,
+            ClientCredentialsAuthentication.INSTANCE
+    };
+
+    for (AbstractHcpVaultAuthentication authentication : authenticationMethods) {
+      Map<String, Object> cacheKey = authentication.generateCacheKey(parameterSet);
+      if (!cacheKey.isEmpty()) {
+        return cacheKey;
+      }
+    }
+    return Collections.emptyMap();
+  }
 
 }

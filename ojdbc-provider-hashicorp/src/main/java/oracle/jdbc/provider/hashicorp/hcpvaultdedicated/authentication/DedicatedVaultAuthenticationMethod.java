@@ -38,22 +38,9 @@
 
 package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication;
 
-import oracle.jdbc.driver.oauth.OpaqueAccessToken;
-import oracle.jdbc.provider.parameter.ParameterSet;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
-import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.*;
-
 /**
  * Enumeration of authentication methods supported by Dedicated HashiCorp Vault.
- * <p>
- * The enum handles token generation and caching to improve performance and
- * reduce the number of authentication requests to the Vault server.
- * </p>
- * */
+ */
 public enum DedicatedVaultAuthenticationMethod {
 
   /**
@@ -64,18 +51,7 @@ public enum DedicatedVaultAuthenticationMethod {
    * environment variables, or system properties.
    * </p>
    */
-  VAULT_TOKEN(new AbstractDedicatedVaultAuthentication() {
-    @Override
-    public CachedToken generateToken(ParameterSet parameterSet) {
-      String vaultToken = getVaultToken(parameterSet);
-      return new CachedToken(OpaqueAccessToken.create(vaultToken.toCharArray(), null));
-    }
-
-    @Override
-    public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
-      return filterParameters(parameterSet, AUTH_METHOD_PARAMETERS.get(VAULT_TOKEN));
-    }
-  }),
+  VAULT_TOKEN,
 
   /**
    * Authentication using the Userpass method.
@@ -87,25 +63,7 @@ public enum DedicatedVaultAuthenticationMethod {
    * Userpass Authentication API</a>.
    * </p>
    */
-  USERPASS(new AbstractDedicatedVaultAuthentication() {
-    @Override
-    public CachedToken generateToken(ParameterSet parameterSet) {
-      String vaultAddr = getVaultAddress(parameterSet);
-      String authPath = getUserpassAuthPath(parameterSet);
-      String namespace = getNamespace(parameterSet);
-      String username = getUsername(parameterSet);
-      String password = getPassword(parameterSet);
-
-      String authEndpoint = buildAuthEndpoint(vaultAddr, USERPASS_LOGIN_TEMPLATE, authPath, username);
-      String payload = createJsonPayload(USERPASS_PAYLOAD_TEMPLATE, password);
-      return performAuthentication(authEndpoint, payload, namespace, null, "Failed to authenticate using Userpass");
-    }
-
-    @Override
-    public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
-      return filterParameters(parameterSet, AUTH_METHOD_PARAMETERS.get(USERPASS));
-    }
-  }),
+  USERPASS,
 
   /**
    * Authentication using the AppRole method.
@@ -118,25 +76,7 @@ public enum DedicatedVaultAuthenticationMethod {
    * AppRole Authentication API</a>.
    * </p>
    */
-  APPROLE(new AbstractDedicatedVaultAuthentication() {
-    @Override
-    public CachedToken generateToken(ParameterSet parameterSet) {
-      String vaultAddr = getVaultAddress(parameterSet);
-      String namespace = getNamespace(parameterSet);
-      String roleId = getRoleId(parameterSet);
-      String secretId = getSecretId(parameterSet);
-      String authPath = getAppRoleAuthPath(parameterSet);
-
-      String authEndpoint = buildAuthEndpoint(vaultAddr, APPROLE_LOGIN_TEMPLATE, authPath);
-      String payload = createJsonPayload(APPROLE_PAYLOAD_TEMPLATE, roleId, secretId);
-      return performAuthentication(authEndpoint, payload, namespace, null, "Failed to authenticate with AppRole");
-    }
-
-    @Override
-    public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
-      return filterParameters(parameterSet, AUTH_METHOD_PARAMETERS.get(APPROLE));
-    }
-  }),
+  APPROLE,
 
   /**
    * Authentication using the GitHub method.
@@ -148,24 +88,7 @@ public enum DedicatedVaultAuthenticationMethod {
    * GitHub Authentication API</a>.
    * </p>
    */
-  GITHUB(new AbstractDedicatedVaultAuthentication() {
-    @Override
-    public CachedToken generateToken(ParameterSet parameterSet) {
-      String vaultAddr = getVaultAddress(parameterSet);
-      String githubToken = getGitHubToken(parameterSet);
-      String namespace = getNamespace(parameterSet);
-      String githubAuthPath = getGitHubAuthPath(parameterSet);
-
-      String authEndpoint = buildAuthEndpoint(vaultAddr, GITHUB_LOGIN_TEMPLATE, githubAuthPath);
-      String payload = createJsonPayload(GITHUB_PAYLOAD_TEMPLATE, githubToken);
-      return performAuthentication(authEndpoint, payload, namespace, githubToken, "Failed to authenticate with GitHub");
-    }
-
-    @Override
-    public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
-      return filterParameters(parameterSet, AUTH_METHOD_PARAMETERS.get(GITHUB));
-    }
-  }),
+  GITHUB,
 
   /**
    * Automatically selects the best authentication method based on available parameters.
@@ -178,114 +101,6 @@ public enum DedicatedVaultAuthenticationMethod {
    *   <li>Finally, tries GitHub authentication.</li>
    * </ol>
    */
-  AUTO_DETECT(new AbstractDedicatedVaultAuthentication() {
-    @Override
-    public CachedToken generateToken(ParameterSet parameterSet) {
-      IllegalStateException previousFailure;
-
-      // Attempt VAULT_TOKEN authentication first
-      try {
-        return VAULT_TOKEN.generateToken(parameterSet);
-      } catch (RuntimeException noVaultToken) {
-        previousFailure = new IllegalStateException(
-                "Failed to authenticate using a Vault token", noVaultToken);
-      }
-
-      // Attempt USERPASS authentication
-      try {
-        return USERPASS.generateToken(parameterSet);
-      } catch (RuntimeException noUserpass) {
-        previousFailure.addSuppressed(new IllegalStateException(
-                "Failed to authenticate using Userpass credentials", noUserpass));
-      }
-
-      // Attempt APPROLE authentication
-      try {
-        return APPROLE.generateToken(parameterSet);
-      } catch (RuntimeException noAppRole) {
-        previousFailure.addSuppressed(new IllegalStateException(
-                "Failed to authenticate using AppRole credentials", noAppRole));
-      }
-
-      // Attempt GITHUB authentication
-      try {
-        return GITHUB.generateToken(parameterSet);
-      } catch (RuntimeException noGitHub) {
-        previousFailure.addSuppressed(new IllegalStateException(
-                "Failed to authenticate using GitHub credentials", noGitHub));
-      }
-
-      // If all methods fail, throw an error
-      throw previousFailure;
-    }
-
-    @Override
-    public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
-      for (DedicatedVaultAuthenticationMethod method : AUTH_METHOD_PARAMETERS.keySet()) {
-        Map<String, Object> filteredParams = filterParameters(parameterSet, AUTH_METHOD_PARAMETERS.get(method));
-        if (!filteredParams.isEmpty()) {
-          return filteredParams;
-        }
-      }
-      return Collections.emptyMap();
-    }
-  });
-
-
-  private final AbstractDedicatedVaultAuthentication delegate;
-
-  DedicatedVaultAuthenticationMethod(AbstractDedicatedVaultAuthentication delegate) {
-    this.delegate = delegate;
-  }
-
-  /**
-   * Delegates token generation to the underlying authentication strategy.
-   *
-   * @param parameterSet the authentication parameters.
-   * @return the generated {@link CachedToken}.
-   */
-  public CachedToken generateToken(ParameterSet parameterSet) {
-    return delegate.generateToken(parameterSet);
-  }
-
-  /**
-   * Delegates cache key generation to the underlying authentication strategy.
-   *
-   * @param parameterSet the authentication parameters.
-   * @return a {@link ParameterSet} to be used as a cache key.
-   */
-  public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
-    return delegate.generateCacheKey(parameterSet);
-  }
-
-  /**
-   * Maps each {@link DedicatedVaultAuthenticationMethod} to its relevant parameter keys.
-   *
-   * This map is used to filter parameters for cache key generation, ensuring only
-   * necessary parameters are included for each authentication method. It is immutable.
-   */
-  private static final Map<DedicatedVaultAuthenticationMethod, String[]> AUTH_METHOD_PARAMETERS;
-  static {
-    Map<DedicatedVaultAuthenticationMethod, String[]> map = new HashMap<>();
-    map.put(VAULT_TOKEN, new String[]{
-            PARAM_VAULT_ADDR, PARAM_VAULT_TOKEN
-    });
-    map.put(USERPASS, new String[]{
-            PARAM_VAULT_ADDR, PARAM_VAULT_NAMESPACE, PARAM_USERPASS_AUTH_PATH, PARAM_VAULT_USERNAME, PARAM_VAULT_PASSWORD
-    });
-    map.put(APPROLE, new String[]{
-            PARAM_VAULT_ADDR, PARAM_VAULT_NAMESPACE, PARAM_APPROLE_AUTH_PATH, PARAM_VAULT_ROLE_ID, PARAM_VAULT_SECRET_ID
-    });
-    map.put(GITHUB, new String[]{
-            PARAM_VAULT_ADDR, PARAM_VAULT_NAMESPACE, PARAM_GITHUB_AUTH_PATH, PARAM_GITHUB_TOKEN
-    });
-    map.put(AUTO_DETECT, new String[]{
-            PARAM_VAULT_ADDR, PARAM_VAULT_NAMESPACE, PARAM_VAULT_TOKEN,
-            PARAM_USERPASS_AUTH_PATH, PARAM_VAULT_USERNAME, PARAM_VAULT_PASSWORD,
-            PARAM_APPROLE_AUTH_PATH, PARAM_VAULT_ROLE_ID, PARAM_VAULT_SECRET_ID,
-            PARAM_GITHUB_AUTH_PATH, PARAM_GITHUB_TOKEN
-    });
-    AUTH_METHOD_PARAMETERS = Collections.unmodifiableMap(map);
-  }
+  AUTO_DETECT;
 
 }

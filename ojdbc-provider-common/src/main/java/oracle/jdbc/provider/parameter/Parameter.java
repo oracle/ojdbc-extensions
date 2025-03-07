@@ -79,15 +79,23 @@ public interface Parameter<T> {
   }
 
   /**
-   * Checks if the parameter supports fallback to environment variables
-   * or system properties.
+   * Checks if the parameter supports fallback to environment variables.
    *
    * @return {@code true} if the parameter can be configured using environment
-   * variables or system properties, {@code false} otherwise.
+   * variables, {@code false} otherwise.
    */
-  default boolean isEnvOrSystemAllowed() {
-    return getAttributes()
-      .contains(CommonAttribute.ENV_OR_SYSTEM);
+  default boolean isEnvAllowed() {
+    return getAttributes().contains(CommonAttribute.ALLOW_ENV);
+  }
+
+  /**
+   * Checks if the parameter supports fallback to system properties.
+   *
+   * @return {@code true} if the parameter can be configured using system
+   * properties, {@code false} otherwise.
+   */
+  default boolean isSystemPropertyAllowed() {
+    return getAttributes().contains(CommonAttribute.ALLOW_SYSTEM_PROPERTY);
   }
 
   /**
@@ -135,21 +143,16 @@ public interface Parameter<T> {
     REQUIRED,
 
     /**
-     * Attribute of a parameter that allows it to be configured using system properties
-     * or environment variables as a fallback mechanism.
-     * <p>
-     * When a parameter has this attribute, its value can be automatically retrieved
-     * from a system property or an environment variable if it is not explicitly provided
-     * in the {@link ParameterSet}. The priority order is:
-     * </p>
-     * <ol>
-     *   <li>Explicitly set value in the {@link ParameterSet}</li>
-     *   <li>System property (via {@code System.getProperty()})</li>
-     *   <li>Environment variable (via {@code System.getenv()})</li>
-     *   <li>Default value, if provided</li>
-     * </ol>
+     * Allows a parameter to retrieve its value from an environment variable
+     * as a fallback mechanism if not explicitly set.
      */
-    ENV_OR_SYSTEM
+    ALLOW_ENV,
+
+    /**
+     * Allows a parameter to retrieve its value from a system property
+     * as a fallback mechanism if not explicitly set.
+     */
+    ALLOW_SYSTEM_PROPERTY
   }
 
 }

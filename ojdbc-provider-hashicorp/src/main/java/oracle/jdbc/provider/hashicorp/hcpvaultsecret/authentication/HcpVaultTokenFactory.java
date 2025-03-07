@@ -86,7 +86,8 @@ public final class HcpVaultTokenFactory implements ResourceFactory<HcpVaultSecre
    */
   private HcpVaultSecretToken getCredential(ParameterSet parameterSet) {
     HcpVaultAuthenticationMethod method = parameterSet.getRequired(AUTHENTICATION_METHOD);
-    return createCachedToken(parameterSet, method);
+    AbstractHcpVaultAuthentication authentication = getAuthentication(method);
+    return createCachedToken(parameterSet, authentication);
   }
 
   /**
@@ -94,22 +95,41 @@ public final class HcpVaultTokenFactory implements ResourceFactory<HcpVaultSecre
    * authentication method.
    *
    * @param parameterSet the set of parameters for the request.
-   * @param method the authentication method being used.
+   * @param authentication the authentication method being used.
    * @return a {@code HcpVaultSecretToken} instance.
    */
   private HcpVaultSecretToken createCachedToken(
-          ParameterSet parameterSet, HcpVaultAuthenticationMethod method) {
+          ParameterSet parameterSet, AbstractHcpVaultAuthentication authentication) {
 
-    Map<String, Object> cacheKey = method.generateCacheKey(parameterSet);
+    Map<String, Object> cacheKey = authentication.generateCacheKey(parameterSet);
 
     Supplier<? extends AccessToken> tokenSupplier = tokenCache.computeIfAbsent(cacheKey, k -> AccessToken.createJsonWebTokenCache(() -> {
-      HcpVaultSecretToken token = method.generateToken(parameterSet);
+      HcpVaultSecretToken token = authentication.generateToken(parameterSet);
       return AccessToken.createJsonWebToken(token.getHcpApiToken().toCharArray());
     }));
 
     AccessToken cachedToken = tokenSupplier.get();
     JsonWebToken jwt = (JsonWebToken) cachedToken;
     return new HcpVaultSecretToken(jwt.token().get());
+  }
+
+  /**
+   * Returns the appropriate authentication strategy for the specified method.
+   *
+   * @param method the authentication method
+   * @return the corresponding {@link AbstractHcpVaultAuthentication} instance
+   */
+  private AbstractHcpVaultAuthentication getAuthentication(HcpVaultAuthenticationMethod method) {
+    switch (method) {
+      case CLIENT_CREDENTIALS:
+        return ClientCredentialsAuthentication.INSTANCE;
+      case CLI_CREDENTIALS_FILE:
+        return CliCredentialsFileAuthentication.INSTANCE;
+      case AUTO_DETECT:
+        return AutoDetectAuthentication.INSTANCE;
+      default:
+        throw new IllegalArgumentException("Unsupported authentication method: " + method);
+    }
   }
 
 }

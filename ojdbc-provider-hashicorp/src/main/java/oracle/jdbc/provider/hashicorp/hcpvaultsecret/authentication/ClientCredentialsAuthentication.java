@@ -39,34 +39,36 @@
 package oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication;
 
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.provider.parameter.ParameterSetImpl;
-
-import java.util.Arrays;
 import java.util.Map;
-import java.util.stream.Collectors;
+
+import static oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultSecretParameters.*;
 
 /**
- * Base class for HCP Vault Secrets authentication strategies.
- * <p>
- * Subclasses must implement methods to generate an access token and a cache key.
- * </p>
+ * Handles authentication using the OAuth2 client_credentials flow for HCP Vault Secrets.
  */
-public abstract class AbstractHcpVaultAuthentication {
+public class ClientCredentialsAuthentication extends AbstractHcpVaultAuthentication {
 
   /**
-   * Generates an HCP Vault Secrets token based on the provided parameters.
-   *
-   * @param parameterSet the parameters for the authentication request.
-   * @return the generated {@link HcpVaultSecretToken}.
+   * Singleton instance of {@link ClientCredentialsAuthentication}.
    */
-  public abstract HcpVaultSecretToken generateToken(ParameterSet parameterSet);
+  public static final ClientCredentialsAuthentication INSTANCE = new ClientCredentialsAuthentication();
 
-  /**
-   * Generates a cache key for the authentication request.
-   *
-   * @param parameterSet the parameters for the authentication request.
-   * @return a {@link ParameterSet} to be used as a cache key.
-   */
-  public abstract Map<String, Object> generateCacheKey(ParameterSet parameterSet);
+  private ClientCredentialsAuthentication() {
+    // Private constructor to enforce singleton
+  }
 
+  @Override
+  public HcpVaultSecretToken generateToken(ParameterSet parameterSet) {
+    String clientId = getHcpClientId(parameterSet);
+    String clientSecret = getHcpClientSecret(parameterSet);
+    String rawToken = HcpVaultOAuthClient.fetchHcpAccessToken(clientId, clientSecret);
+    return new HcpVaultSecretToken(rawToken);
+  }
+
+  @Override
+  public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
+    return parameterSet.filterParameters(new String[]{
+            PARAM_HCP_CLIENT_ID, PARAM_HCP_CLIENT_SECRET
+    });
+  }
 }

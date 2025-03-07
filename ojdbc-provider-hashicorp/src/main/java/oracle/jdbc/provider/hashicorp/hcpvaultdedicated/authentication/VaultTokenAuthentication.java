@@ -36,37 +36,37 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication;
+package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication;
 
+import oracle.jdbc.driver.oauth.OpaqueAccessToken;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.provider.parameter.ParameterSetImpl;
 
-import java.util.Arrays;
 import java.util.Map;
-import java.util.stream.Collectors;
+
+import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.*;
 
 /**
- * Base class for HCP Vault Secrets authentication strategies.
- * <p>
- * Subclasses must implement methods to generate an access token and a cache key.
- * </p>
+ * Handles authentication using a Vault token for HashiCorp Vault.
  */
-public abstract class AbstractHcpVaultAuthentication {
+public class VaultTokenAuthentication extends AbstractDedicatedVaultAuthentication {
 
   /**
-   * Generates an HCP Vault Secrets token based on the provided parameters.
-   *
-   * @param parameterSet the parameters for the authentication request.
-   * @return the generated {@link HcpVaultSecretToken}.
+   * Singleton instance of {@link VaultTokenAuthentication}.
    */
-  public abstract HcpVaultSecretToken generateToken(ParameterSet parameterSet);
+  public static final VaultTokenAuthentication INSTANCE = new VaultTokenAuthentication();
 
-  /**
-   * Generates a cache key for the authentication request.
-   *
-   * @param parameterSet the parameters for the authentication request.
-   * @return a {@link ParameterSet} to be used as a cache key.
-   */
-  public abstract Map<String, Object> generateCacheKey(ParameterSet parameterSet);
+  private VaultTokenAuthentication() {
+    // Private constructor to prevent external instantiation
+  }
 
+  @Override
+  public CachedToken generateToken(ParameterSet parameterSet) {
+    String vaultToken = getVaultToken(parameterSet);
+    return new CachedToken(OpaqueAccessToken.create(vaultToken.toCharArray(), null));
+  }
+
+  @Override
+  public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
+    return parameterSet.filterParameters(new String[]{PARAM_VAULT_ADDR, PARAM_VAULT_TOKEN});
+  }
 }

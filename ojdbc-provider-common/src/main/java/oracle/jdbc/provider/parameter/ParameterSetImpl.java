@@ -86,7 +86,7 @@ public final class ParameterSetImpl implements ParameterSet {
   }
 
   @Override
-  public <T> T getOptional(Parameter<T> parameter) {
+  public <T> T getOptionalFromParameterSet(Parameter<T> parameter) {
     @SuppressWarnings("unchecked")
     T value = (T) parameterValues.get(parameter);
     return value;

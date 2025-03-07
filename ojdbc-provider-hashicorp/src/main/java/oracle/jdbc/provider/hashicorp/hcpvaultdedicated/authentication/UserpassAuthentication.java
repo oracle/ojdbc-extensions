@@ -36,37 +36,45 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication;
+package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication;
 
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.provider.parameter.ParameterSetImpl;
-
-import java.util.Arrays;
 import java.util.Map;
-import java.util.stream.Collectors;
+
+import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.*;
 
 /**
- * Base class for HCP Vault Secrets authentication strategies.
- * <p>
- * Subclasses must implement methods to generate an access token and a cache key.
- * </p>
+ * Handles authentication using the Userpass method for HashiCorp Vault
+ * DEDICATED
  */
-public abstract class AbstractHcpVaultAuthentication {
+public class UserpassAuthentication extends AbstractDedicatedVaultAuthentication {
 
   /**
-   * Generates an HCP Vault Secrets token based on the provided parameters.
-   *
-   * @param parameterSet the parameters for the authentication request.
-   * @return the generated {@link HcpVaultSecretToken}.
+   * Singleton instance of {@link UserpassAuthentication}.
    */
-  public abstract HcpVaultSecretToken generateToken(ParameterSet parameterSet);
+  public static final UserpassAuthentication INSTANCE = new UserpassAuthentication();
 
-  /**
-   * Generates a cache key for the authentication request.
-   *
-   * @param parameterSet the parameters for the authentication request.
-   * @return a {@link ParameterSet} to be used as a cache key.
-   */
-  public abstract Map<String, Object> generateCacheKey(ParameterSet parameterSet);
+  private UserpassAuthentication() {
+    // Private constructor to prevent external instantiation
+  }
 
+  @Override
+  public CachedToken generateToken(ParameterSet parameterSet) {
+    String vaultAddr = getVaultAddress(parameterSet);
+    String authPath = getUserpassAuthPath(parameterSet);
+    String namespace = getNamespace(parameterSet);
+    String username = getUsername(parameterSet);
+    String password = getPassword(parameterSet);
+
+    String authEndpoint = buildAuthEndpoint(vaultAddr, USERPASS_LOGIN_TEMPLATE, authPath, username);
+    String payload = createJsonPayload(USERPASS_PAYLOAD_TEMPLATE, password);
+    return performAuthentication(authEndpoint, payload, namespace, null, "Failed to authenticate using Userpass");
+  }
+
+  @Override
+  public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
+    return parameterSet.filterParameters(new String[]{
+            PARAM_VAULT_ADDR, PARAM_VAULT_NAMESPACE, PARAM_USERPASS_AUTH_PATH, PARAM_VAULT_USERNAME, PARAM_VAULT_PASSWORD
+    });
+  }
 }

@@ -152,23 +152,5 @@ public abstract class AbstractDedicatedVaultAuthentication {
       throw new IllegalStateException(failureMessage, e);
     }
   }
-
-  /**
-   * Filters the parameters from the {@link ParameterSet} based on the provided relevant keys.
-   *
-   * This utility method extracts only the parameters relevant to a specific authentication method,
-   * ensuring that the generated cache key includes only necessary data.
-   *
-   * @param parameterSet the set of parameters to filter. Must not be null.
-   * @param relevantKeys an array of parameter keys relevant to the authentication method.
-   * @return a map containing only the filtered parameters.
-   */
-  protected static Map<String, Object> filterParameters(ParameterSet parameterSet, String[] relevantKeys) {
-    Map<String, Object> allParameters = ((ParameterSetImpl) parameterSet).getParameterKeyValuePairs();
-
-    return allParameters.entrySet().stream()
-            .filter(entry -> Arrays.asList(relevantKeys).contains(entry.getKey()))
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-  }
 }
 

@@ -40,6 +40,10 @@ package  oracle.jdbc.provider.parameter;
 
 import oracle.jdbc.provider.factory.ResourceFactory;
 
+import java.util.Arrays;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
 
@@ -107,7 +111,47 @@ public interface ParameterSet {
    * @return The value of a {@code parameter}, or {@code null} if the
    *         {@code parameter} is not contained in this set
    */
-  <T> T getOptional(Parameter<T> parameter);
+  default <T> T getOptional(Parameter<T> parameter) {
+    return getOptional(parameter, null, null);
+  }
+
+  /**
+   * Returns the value of a {@code parameter}, or the specified default value
+   * if the {@code parameter} is not contained in this set or if no value is
+   * found through system properties or environment variables.
+   *
+   * @param <T> The type of value that is assigned to the parameter
+   * @param parameter Parameter to retrieve the value from
+   * @param envKey The environment key to use as a fallback, if not provided,
+   * uses the parameter name
+   * @param defaultValue The default value to return if the parameter is not present
+   * @return The value of a {@code parameter}, or the default value if not present
+   */
+  default <T> T getOptional(Parameter<T> parameter, String envKey, T defaultValue) {
+    // First attempt to get the parameter directly from the ParameterSet
+    T value = getOptionalFromParameterSet(parameter);
+    if (value != null) {
+      return value;
+    }
+
+    // Fallback to system property if allowed
+    if (parameter.isSystemPropertyAllowed()) {
+      String systemValue = System.getProperty(envKey);
+      if (systemValue != null && !systemValue.isEmpty()) {
+        return (T) systemValue;
+      }
+    }
+
+    // Fallback to environment variable if allowed
+    if (parameter.isEnvAllowed()) {
+      String envValue = System.getenv(envKey);
+      if (envValue != null && !envValue.isEmpty()) {
+        return (T) envValue;
+      }
+    }
+
+    return defaultValue;
+  }
 
   /**
    * Returns the name of a {@code parameter}, or {@code null} if the
@@ -130,19 +174,42 @@ public interface ParameterSet {
    *         {@code IllegalStateException} if the {@code parameter} is not
    *         contained in this set
    */
-  default <T> T getRequired(Parameter<T> parameter)
-    throws IllegalStateException {
+  default <T> T getRequired(Parameter<T> parameter) throws IllegalStateException {
+    return getRequired(parameter, null);
+  }
 
-    T value = getOptional(parameter);
 
-    if (value != null)
+  /**
+   * Returns the value of a {@code parameter} using an explicit {@code envKey},
+   * or throws {@code IllegalStateException} if the {@code parameter} is not found
+   * in the set, system properties, or environment variables.
+   *
+   * @param <T> The type of value that is assigned to the parameter
+   * @param parameter Parameter to retrieve the value from
+   * @param envKey The environment key to use as a fallback
+   * @return The value of a {@code parameter}, or throws an exception if not present
+   * @throws IllegalStateException if the required parameter is not found
+   */
+  default <T> T getRequired(Parameter<T> parameter, String envKey) throws IllegalStateException {
+    T value = getOptional(parameter, envKey, null); // No default value provided
+    if (value != null) {
       return value;
+    }
 
     String name = getName(parameter);
     throw new IllegalStateException(format(
-      "No value defined for parameter \"%s\"",
-      name != null ? name : parameter.toString()));
+            "No value defined for parameter \"%s\"",
+            name != null ? name : parameter.toString()));
   }
+
+  /**
+   * Retrieves the direct value of a parameter from the internal parameter set.
+   *
+   * @param <T> The type of value that is assigned to the parameter
+   * @param parameter Parameter to retrieve the value from
+   * @return The parameter value, or {@code null} if not present
+   */
+  <T> T getOptionalFromParameterSet(Parameter<T> parameter);
 
   /**
    * <p>
@@ -160,49 +227,19 @@ public interface ParameterSet {
   ParameterSetBuilder copyBuilder();
 
   /**
-   * Retrieves the value of this parameter with fallback to system properties
-   * or environment variables if allowed.
+   * Filters the parameters from the {@link ParameterSet} based on the provided relevant keys.
    *
-   * @param <T> The type of value that is assigned to the parameter
-   * @param parameter Parameter to retrieve the value from
-   * @param envKey The environment key to use as a fallback
-   * @param defaultValue The default value to return if not found
-   * @return The parameter value, or fallback value if not present
-   */
-  default <T> T getOptionalWithFallback(Parameter<T> parameter, String envKey, T defaultValue) {
-    T value = getOptional(parameter);
-    if (value != null) {
-      return value;
-    }
-
-    if (parameter.isEnvOrSystemAllowed()) {
-      String envValue = System.getProperty(envKey, System.getenv(envKey));
-      if (envValue != null && !envValue.isEmpty()) {
-        return (T) envValue;
-      }
-    }
-    return defaultValue;
-  }
-
-  /**
-   * Retrieves the value of this parameter with a required fallback to
-   * system properties or environment variables if allowed.
+   * This utility method extracts only the parameters relevant to a specific authentication method,
+   * ensuring that the generated cache key includes only necessary data.
    *
-   * @param <T> The type of value that is assigned to the parameter
-   * @param parameter Parameter to retrieve the value from
-   * @param envKey The environment key to use as a fallback
-   * @return The required parameter value or throws an exception if not found
+   * @param relevantKeys An array of parameter keys relevant to the authentication method.
+   * @return A map containing only the filtered parameters.
    */
-  default <T> T getRequiredWithFallback(Parameter<T> parameter, String envKey) {
-    T value = getOptionalWithFallback(parameter, envKey, null);
-    if (value != null) {
-      return value;
-    }
+  default Map<String, Object> filterParameters(String[] relevantKeys) {
+    Map<String, Object> allParameters = ((ParameterSetImpl) this).getParameterKeyValuePairs();
 
-    String name = getName(parameter);
-    throw new IllegalStateException(
-            String.format("Required parameter '%s' not found in ParameterSet, system properties, or environment variables.",
-                    name != null ? name : envKey)
-    );
+    return allParameters.entrySet().stream()
+            .filter(entry -> Arrays.asList(relevantKeys).contains(entry.getKey()))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 }

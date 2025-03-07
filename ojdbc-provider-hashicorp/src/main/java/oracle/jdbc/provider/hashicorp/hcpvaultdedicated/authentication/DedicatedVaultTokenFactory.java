@@ -87,15 +87,13 @@ public final class DedicatedVaultTokenFactory
    * Determines the appropriate credentials based on the provided parameters.
    *
    * @param parameterSet the set of parameters configuring the request. Must
-   *                     not be null.
+   * not be null.
    * @return the created {@code DedicatedVaultToken} instance.
    */
   private static DedicatedVaultToken getCredential(ParameterSet parameterSet) {
-    // Check which authentication method is requested
-    DedicatedVaultAuthenticationMethod method =
-            parameterSet.getRequired(AUTHENTICATION_METHOD);
-
-    return createCachedToken(parameterSet, method);
+    DedicatedVaultAuthenticationMethod method = parameterSet.getRequired(AUTHENTICATION_METHOD);
+    AbstractDedicatedVaultAuthentication authentication = getAuthenticationInstance(method);
+    return createCachedToken(parameterSet, authentication);
   }
 
   /**
@@ -103,20 +101,42 @@ public final class DedicatedVaultTokenFactory
    * authentication method.
    *
    * @param parameterSet the set of parameters for the request.
-   * @param method the authentication method being used.
+   * @param authentication the authentication method to generate the token.
    * @return a {@code DedicatedVaultToken} instance.
    */
   private static DedicatedVaultToken createCachedToken(
-          ParameterSet parameterSet, DedicatedVaultAuthenticationMethod method) {
-    Map<String, Object> cacheKey = method.generateCacheKey(parameterSet);
-
+          ParameterSet parameterSet, AbstractDedicatedVaultAuthentication authentication) {
+    Map<String, Object> cacheKey = authentication.generateCacheKey(parameterSet);
     CachedToken validCachedToken = tokenCache.compute(cacheKey, (k, cachedToken) -> {
       if (cachedToken == null || !cachedToken.isValid()) {
-        return method.generateToken(parameterSet);
+        return authentication.generateToken(parameterSet);
       }
       return cachedToken;
     });
     return new DedicatedVaultToken(validCachedToken.getToken().token().get());
+  }
+
+  /**
+   * Returns an instance of the appropriate authentication class based on the method.
+   *
+   * @param method The selected authentication method.
+   * @return An instance of {@link AbstractDedicatedVaultAuthentication}.
+   */
+  private static AbstractDedicatedVaultAuthentication getAuthenticationInstance(DedicatedVaultAuthenticationMethod method) {
+    switch (method) {
+      case VAULT_TOKEN:
+        return VaultTokenAuthentication.INSTANCE;
+      case USERPASS:
+        return UserpassAuthentication.INSTANCE;
+      case APPROLE:
+        return AppRoleAuthentication.INSTANCE;
+      case GITHUB:
+        return GitHubAuthentication.INSTANCE;
+      case AUTO_DETECT:
+        return AutoDetectAuthentication.INSTANCE;
+      default:
+        throw new IllegalArgumentException("Unsupported authentication method: " + method);
+    }
   }
 
 }
