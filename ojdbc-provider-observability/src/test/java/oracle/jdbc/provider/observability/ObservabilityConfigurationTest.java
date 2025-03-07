@@ -49,13 +49,12 @@ import javax.management.ObjectName;
 
 import org.junit.jupiter.api.Test;
 
-import oracle.jdbc.TraceEventListener;
 import oracle.jdbc.spi.TraceEventListenerProvider;
 import oracle.jdbc.spi.OracleResourceProvider.Parameter;
 
 public class ObservabilityConfigurationTest {
 
-  private static final String INSTANCE_NAME = "test-instance";
+  private static final String INSTANCE_NAME = "configuration-test-instance";
 
   MBeanServer server = ManagementFactory.getPlatformMBeanServer();
 
