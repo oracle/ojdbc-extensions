@@ -63,38 +63,48 @@ JDK versions. The coordinates for the latest release are:
 ## OCI Database Tools Connections Config Provider
 
 The OCI Database Tools Connections is a managed service that can be used to configure connections to a database.
-The created resource stores connection properties, including user, password and wallets (these last two optionally as references to a secret in OCI Vault).
-Each configuration has an identifier (OCID) that is used to identify which connection is requested by the driver.
+The created resource stores connection properties, including user, password and wallet (these last two optionally as references to a secret in OCI Vault).
 
-JDBC URL Sample that uses the OCI DBTools provider:
+Users only need to indicate the OCID of the resource using the following syntax, where option-value pairs separated by `&` are optional authentication parameters that vary by provider:
 
 <pre>
-jdbc:oracle:thin:@config-ocidbtools://ocid1.databasetoolsconnection.oc1.phx.ama ...
+jdbc:oracle:thin:@config-ocidbtools://{oci-database-tools-ocid}[?option1=value1&option2=value2...]
+</pre> 
+
+For more details about the option-value pairs, see [Common Parameters for Centralized Config Providers](#common-parameters-for-centralized-config-providers).
+
+For example:
+
+<pre>
+jdbc:oracle:thin:@config-ocidbtools:ocid1.databasetoolsconnection.oc1.phx.ama...
 </pre>
 
 Provider can now support Database Tools Connections with Proxy Authentication,
 only if username is provided in Proxy Authentication Info, without the password and roles.
 
 ## OCI Object Storage Config Provider
-The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-ociobject://` to be able to identify that the configuration parameters should be loaded using OCI Object Storage. Users only need to indicate the URL Path of the Object containing the JSON payload, with the following syntax:
+The Oracle Data Source uses a new prefix `jdbc:oracle:thin:@config-ociobject://` to be able to identify that the configuration parameters should be loaded using OCI Object Storage. Users only need to indicate the URL Path of the Object containing the JSON payload using the following syntax, where option-value pairs separated by `&` are optional authentication parameters that vary by provider:
 
 <pre>
 jdbc:oracle:thin:@config-ociobject://{url_path}[?option1=value1&option2=value2...]
 </pre>
 
-The insturctions of obtaining a URL Path can be found in [Get the URI or Pre-Authenticated Request URL to Access the Object Store](https://docs.oracle.com/en/cloud/paas/autonomous-database/csgru/get-uri-access-object-store.html).
+The instructions of obtaining a URL Path can be found in [Get the URI or Pre-Authenticated Request URL to Access the Object Store](https://docs.oracle.com/en/cloud/paas/autonomous-database/csgru/get-uri-access-object-store.html).
+
+For more details about the option-value pairs, see [Common Parameters for Centralized Config Providers](#common-parameters-for-centralized-config-providers).
 
 ### JSON Payload format
 
-There are 3 fixed values that are looked at the root level.
+There are 4 fixed values that are looked at the root level.
 
 - connect_descriptor (required)
 - user (optional)
 - password (optional)
+- wallet_location (optional)
 
-The rest are dependent on the driver, in our case `/jdbc`. The key-value pairs that are with sub-prefix `/jdbc` will be applied to a DataSource. The key values are constant keys which are equivalent to the properties defined in the [OracleConnection](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html) interface.
+The rest are dependent on the driver, in our case `/jdbc`. The key-value pairs that are with sub-prefix `/jdbc` will be applied to a Data Source. The key values are constant keys which are equivalent to the properties defined in the [OracleConnection](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html) interface.
 
-For example, let's suppose an url like:
+For example, let's suppose a URL like:
 
 <pre>
 jdbc:oracle:thin:@config-ociobject://mytenancy.objectstorage.us-phoenix-1.oci.customer-oci.com/n/mytenancy/b/bucket1/o/payload_ojdbc_objectstorage.json
@@ -104,11 +114,21 @@ And the JSON Payload for the file **payload_ojdbc_objectstorage.json** in the **
 
 ```json
 {
-  "connect_descriptor": "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=adb.us-phoenix-1.oraclecloud.com))(connect_data=(service_name=xsxsxs_dbtest_medium.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))",
+  "connect_descriptor": "(description=...)",
   "user": "scott",
-  "password": { 
+  "password": {
     "type": "ocivault",
-    "value": "ocid1.vaultsecret.oc1.phx.amaaaaaxxxx"
+    "value": "ocid1.vaultsecret.oc1.phx.amaaaaaxxxx",
+    "authentication": {
+      "method": "OCI_INSTANCE_PRINCIPAL"
+    }
+  },
+  "wallet_location": {
+    "type": "ocivault",
+    "value": "ocid1.vaultsecret.oc1.phx.amaaaaY",
+    "authentication": {
+      "method": "OCI_INSTANCE_PRINCIPAL"
+    }
   },
   "jdbc": {
     "oracle.jdbc.ReadTimeout": 1000,
@@ -132,26 +152,41 @@ The sample code below executes as expected with the previous configuration.
 
 ### Password JSON Object
 
-For the JSON type of provider (OCI Object Storage, HTTP/HTTPS, File) the password is an object itself with the following spec:
+For the JSON type of provider (OCI Object Storage, HTTPS, File) the password is an object itself with the following spec:
 
-- type
+- `type`
   - Mandatory
-  - Possible values
-    - ocivault
-    - azurevault
-    - base64
-- value
+  - Possible values:
+    - `ocivault`
+    - `azurevault`
+    - `base64`
+    - `awssecretsmanager`
+- `value`
   - Mandatory
-  - Possible values
+  - Possible values:
     - OCID of the secret (if ocivault)
     - Azure Key Vault URI (if azurevault)
     - Base64 Encoded password (if base64)
-    - Text
-- authentication
-  - Optional (it will apply defaults in the same way as described in [Configuring Authentication](#configuring-authentication)).
-  - Possible Values
-    - method
-    - optional parameters (depends on the cloud provider, applies the same logic as [Config Provider for Azure](../ojdbc-provider-azure/README.md#config-provider-for-azure)).
+    - AWS resource name of the secret  (if awssecretsmanager)
+- `authentication`
+  - Optional. It will apply defaults in the same way as described in [Configuring Authentication](#configuring-authentication)
+  - Possible Values:
+    - `method`: equivalent to the 'AUTHENTICATION' Param Value in [Configuring Authentication](#configuring-authentication)
+    - Optional parameters: depends on the cloud provider. Equivalent to the Optional Parameters in [Configuring Authentication](#configuring-authentication)
+
+### Wallet_location JSON Object
+
+The "oracle.net.wallet_location" connection property is not allowed in the "jdbc" object due to security reasons. Instead, users should use the "wallet_location" object to specify the wallet in the configuration.
+
+For the JSON type of provider (OCI Object Storage, HTTPS, File) the wallet_location is an object itself with the same spec as the [password JSON object](#password-json-object) mentioned above.
+
+The value stored in the secret should be the Base64 representation of the bytes in cwallet.sso. This is equivalent to setting the "oracle.net.wallet_location" connection property in a regular JDBC application using the following format:
+
+```
+data:;base64,<Base64 representation of the bytes in cwallet.sso>
+```
+
+<i>*Note: When storing a wallet as a secret in OCI Vault, choose the Plain-Text secret type template instead of Base64 to prevent double decoding when the provider retrieves the value.</i> 
 
 ## OCI Vault Config Provider
 Apart from OCI Object Storage, users can also store JSON Payload in the content of OCI Vault Secret. Users need to indicate the OCID of the Secret with the following syntax:
@@ -224,9 +259,36 @@ in Optional Parameters</td>
 ## Caching configuration
 
 Config providers in this module store the configuration in caches to minimize
-the number of RPC requests to remote location. See
-[Caching configuration](../ojdbc-provider-azure/README.md#caching-configuration) for more
-details of the caching mechanism.
+the number of RPC requests to remote location. Every stored items has a property
+that defines the time-to-live (TTL) value. When TTL expires, the configuration
+becomes "softly expired" and the stored configuration will be refreshed by a
+background thread. If configuration cannot be refreshed, it can still be used
+for another 30 minutes until it becomes "hardly expired". In other words, it takes
+24 hours and 30 minutes for configuration before it becomes completely expired.
+
+The default value of TTL is 24 hours, and it can be configured using the
+"config_time_to_live" property in the unit of seconds.
+An example of App Configuration in Azure with TTL of 60 seconds is listed below.
+
+<table>
+<thead><tr>
+<th>Key</th>
+<th>Value</th>
+</tr></thead>
+<tbody><tr>
+<td>user</td>
+<td>myUsername</td>
+</tr><tr>
+<td>password</td>
+<td>myPassword</td>
+</tr><tr>
+<td>connect_descriptor</td>
+<td>myHost:5521/myService</td>
+</tr><tr>
+<td>config_time_to_live</td>
+<td>60</td>
+</tr></tbody>
+</table>
 
 ## Database Connection String Provider
 The Database Connection String Provider provides Oracle JDBC with the connection string of an

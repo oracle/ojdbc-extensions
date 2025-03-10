@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2023 Oracle and/or its affiliates.
+ ** Copyright (c) 2025 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -35,52 +35,13 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.oci.configuration;
-
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
-import oracle.jdbc.datasource.impl.OracleDataSource;
-
+package oracle.jdbc.provider.aws.authentication;
 
 /**
- * A standalone example that configures Oracle JDBC to be provided with the
- * connection properties retrieved from OCI Object Storage.
+ * A method of authentication using the AWS SDK.
  */
-public class SimpleObjectStorageExample {
-  private static String url;
+public enum AwsAuthenticationMethod {
 
-  /**
-   * <p>
-   * Simple example to retrieve connection properties from OCI Object Storage.
-   * </p><p>
-   * For the default authentication, the only required local configuration is
-   * to have a valid OCI Config in ~/.oci/config.
-   * </p>
-   * @param args the command line arguments
-   * @throws SQLException if an error occurs during the database calls
-   */
-  public static void main(String[] args) throws SQLException {
-
-    // Sample default URL if non present
-    if (args.length == 0) {
-      url = "jdbc:oracle:thin:@config-ociobject://mytenancy.objectstorage.us-phoenix-1.oci.customer-oci.com/n/mytenancy/b/bucket1/o/payload_ojdbc_objectstorage.json";
-    } else {
-      url = args[0];
-    }
-
-    // No changes required, configuration provider is loaded at runtime
-    OracleDataSource ds = new OracleDataSource();
-    ds.setURL(url);
-
-    // Standard JDBC code
-    Connection cn = ds.getConnection();
-    Statement st = cn.createStatement();
-    ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
-    if (rs.next())
-      System.out.println(rs.getString(1));
-  }
-
+  /** Authentication using {@link software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider} */
+  DEFAULT,
 }
