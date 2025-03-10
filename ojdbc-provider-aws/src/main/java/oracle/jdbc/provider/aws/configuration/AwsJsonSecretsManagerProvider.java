@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2023 Oracle and/or its affiliates.
+ ** Copyright (c) 2025 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -35,52 +35,56 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.oci.configuration;
+package oracle.jdbc.provider.aws.configuration;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import oracle.jdbc.provider.aws.secrets.SecretsManagerFactory;
+import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.spi.OracleConfigurationSecretProvider;
+import oracle.sql.json.OracleJsonObject;
 
-import oracle.jdbc.datasource.impl.OracleDataSource;
+import java.util.Base64;
+import java.util.Map;
 
+import static oracle.jdbc.provider.aws.configuration.AwsSecretsManagerConfigurationProvider.PARAMETER_SET_PARSER;
 
-/**
- * A standalone example that configures Oracle JDBC to be provided with the
- * connection properties retrieved from OCI Object Storage.
- */
-public class SimpleObjectStorageExample {
-  private static String url;
-
+public class AwsJsonSecretsManagerProvider
+    implements OracleConfigurationSecretProvider {
   /**
+   * {@inheritDoc}
    * <p>
-   * Simple example to retrieve connection properties from OCI Object Storage.
-   * </p><p>
-   * For the default authentication, the only required local configuration is
-   * to have a valid OCI Config in ~/.oci/config.
+   * Returns the password of the Secret that is retrieved from AWS Secrets
+   * Manager secret.
    * </p>
-   * @param args the command line arguments
-   * @throws SQLException if an error occurs during the database calls
+   * <p>
+   * The {@code jsonObject} has the following form:
+   * </p>
+   *
+   * <pre>{@code
+   *   "password": {
+   *       "type": "awssecretsmanager",
+   *       "value": "<secret-name>"
+   *   }
+   * }</pre>
+   *
+   * @param map Map object to be parsed
+   * @return encoded char array in base64 format that represents the retrieved
+   *         Secret.
    */
-  public static void main(String[] args) throws SQLException {
+  @Override
+  public char[] getSecret(Map<String, String> map) {
+    ParameterSet parameterSet = PARAMETER_SET_PARSER.parseNamedValues(map);
 
-    // Sample default URL if non present
-    if (args.length == 0) {
-      url = "jdbc:oracle:thin:@config-ociobject://mytenancy.objectstorage.us-phoenix-1.oci.customer-oci.com/n/mytenancy/b/bucket1/o/payload_ojdbc_objectstorage.json";
-    } else {
-      url = args[0];
-    }
+    String secretString = SecretsManagerFactory.getInstance()
+        .request(parameterSet)
+        .getContent();
 
-    // No changes required, configuration provider is loaded at runtime
-    OracleDataSource ds = new OracleDataSource();
-    ds.setURL(url);
-
-    // Standard JDBC code
-    Connection cn = ds.getConnection();
-    Statement st = cn.createStatement();
-    ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
-    if (rs.next())
-      System.out.println(rs.getString(1));
+    return Base64.getEncoder()
+        .encodeToString(secretString.getBytes())
+        .toCharArray();
   }
 
+  @Override
+  public String getSecretType() {
+    return "awssecretsmanager";
+  }
 }

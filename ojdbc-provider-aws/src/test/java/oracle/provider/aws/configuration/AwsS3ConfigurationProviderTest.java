@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2023 Oracle and/or its affiliates.
+ ** Copyright (c) 2025 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -35,52 +35,47 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.oci.configuration;
+package oracle.provider.aws.configuration;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
+import oracle.jdbc.provider.TestProperties;
+import oracle.jdbc.spi.OracleConfigurationProvider;
+import org.junit.jupiter.api.Test;
+
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.Properties;
 
-import oracle.jdbc.datasource.impl.OracleDataSource;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+public class AwsS3ConfigurationProviderTest {
 
-/**
- * A standalone example that configures Oracle JDBC to be provided with the
- * connection properties retrieved from OCI Object Storage.
- */
-public class SimpleObjectStorageExample {
-  private static String url;
-
-  /**
-   * <p>
-   * Simple example to retrieve connection properties from OCI Object Storage.
-   * </p><p>
-   * For the default authentication, the only required local configuration is
-   * to have a valid OCI Config in ~/.oci/config.
-   * </p>
-   * @param args the command line arguments
-   * @throws SQLException if an error occurs during the database calls
-   */
-  public static void main(String[] args) throws SQLException {
-
-    // Sample default URL if non present
-    if (args.length == 0) {
-      url = "jdbc:oracle:thin:@config-ociobject://mytenancy.objectstorage.us-phoenix-1.oci.customer-oci.com/n/mytenancy/b/bucket1/o/payload_ojdbc_objectstorage.json";
-    } else {
-      url = args[0];
-    }
-
-    // No changes required, configuration provider is loaded at runtime
-    OracleDataSource ds = new OracleDataSource();
-    ds.setURL(url);
-
-    // Standard JDBC code
-    Connection cn = ds.getConnection();
-    Statement st = cn.createStatement();
-    ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
-    if (rs.next())
-      System.out.println(rs.getString(1));
+  static {
+    OracleConfigurationProvider.allowedProviders.add("awss3");
   }
 
+  private static final OracleConfigurationProvider PROVIDER =
+      OracleConfigurationProvider.find("awss3");
+
+  /**
+   * Verifies if AWS S3 Configuration Provider works with default authentication
+   * @throws SQLException
+   */
+  @Test
+  public void testDefaultAuthentication() throws SQLException {
+    final String prefix = "jdbc:oracle:thin:@config-awss3://";
+
+    String url =
+        TestProperties.getOrAbort(
+            AwsTestProperty.AWS_S3_URL);
+
+    assertTrue(
+        url.startsWith(prefix),
+        "AWS_S3_URL should start with " + prefix);
+
+    Properties properties = PROVIDER
+        .getConnectionProperties(url.substring(prefix.length()));
+
+    assertTrue(properties.containsKey("URL"), "Contains property URL");
+    assertTrue(properties.containsKey("user"), "Contains property user");
+    assertTrue(properties.containsKey("password"), "Contains property password");
+  }
 }
