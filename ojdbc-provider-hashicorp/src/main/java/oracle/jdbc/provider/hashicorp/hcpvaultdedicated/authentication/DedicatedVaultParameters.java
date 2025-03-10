@@ -199,7 +199,7 @@ public class DedicatedVaultParameters {
    * @return the namespace.
    */
   public static String getNamespace(ParameterSet parameterSet) {
-    return parameterSet.getOptional(NAMESPACE, PARAM_VAULT_NAMESPACE, DEFAULT_NAMESPACE);
+    return parameterSet.getOptional(NAMESPACE, PARAM_VAULT_NAMESPACE);
   }
 
   /**
@@ -269,7 +269,7 @@ public class DedicatedVaultParameters {
    * @return the Userpass authentication path.
    */
   public static String getUserpassAuthPath(ParameterSet parameterSet) {
-    return parameterSet.getOptional(USERPASS_AUTH_PATH, PARAM_USERPASS_AUTH_PATH, DEFAULT_USERPASS_PATH);
+    return parameterSet.getOptional(USERPASS_AUTH_PATH, PARAM_USERPASS_AUTH_PATH);
   }
 
   /**
@@ -279,8 +279,7 @@ public class DedicatedVaultParameters {
    * @return the AppRole authentication path.
    */
   public static String getAppRoleAuthPath(ParameterSet parameterSet) {
-    return parameterSet.getOptional(APPROLE_AUTH_PATH, PARAM_APPROLE_AUTH_PATH,
-            DEFAULT_APPROLE_PATH);
+    return parameterSet.getOptional(APPROLE_AUTH_PATH, PARAM_APPROLE_AUTH_PATH);
   }
 
   /**
@@ -290,7 +289,7 @@ public class DedicatedVaultParameters {
    * @return the GitHub authentication path.
    */
   public static String getGitHubAuthPath(ParameterSet parameterSet) {
-    return parameterSet.getOptional(GITHUB_AUTH_PATH, PARAM_GITHUB_AUTH_PATH, DEFAULT_GITHUB_PATH);
+    return parameterSet.getOptional(GITHUB_AUTH_PATH, PARAM_GITHUB_AUTH_PATH);
   }
 
   public static final ParameterSetParser PARAMETER_SET_PARSER =
@@ -302,13 +301,13 @@ public class DedicatedVaultParameters {
         .addParameter(PARAM_VAULT_TOKEN, VAULT_TOKEN)
         .addParameter(PARAM_VAULT_USERNAME, USERNAME)
         .addParameter(PARAM_VAULT_PASSWORD, PASSWORD)
-        .addParameter(PARAM_USERPASS_AUTH_PATH, USERPASS_AUTH_PATH)
-        .addParameter(PARAM_VAULT_NAMESPACE, NAMESPACE)
+        .addParameter(PARAM_USERPASS_AUTH_PATH, USERPASS_AUTH_PATH, DEFAULT_USERPASS_PATH)
+        .addParameter(PARAM_VAULT_NAMESPACE, NAMESPACE, DEFAULT_NAMESPACE)
         .addParameter(PARAM_VAULT_ROLE_ID, ROLE_ID)
         .addParameter(PARAM_VAULT_SECRET_ID, SECRET_ID)
-        .addParameter(PARAM_APPROLE_AUTH_PATH, APPROLE_AUTH_PATH)
+        .addParameter(PARAM_APPROLE_AUTH_PATH, APPROLE_AUTH_PATH, DEFAULT_APPROLE_PATH)
         .addParameter(PARAM_GITHUB_TOKEN, GITHUB_TOKEN)
-        .addParameter(PARAM_GITHUB_AUTH_PATH, GITHUB_AUTH_PATH)
+        .addParameter(PARAM_GITHUB_AUTH_PATH, GITHUB_AUTH_PATH, DEFAULT_GITHUB_PATH)
         .addParameter("FIELD_NAME", FIELD_NAME))
         .addParameter("type", Parameter.create())
       .build();

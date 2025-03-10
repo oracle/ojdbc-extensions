@@ -67,7 +67,6 @@ public class HcpVaultSecretParameters {
   static final String PARAM_HCP_APP_NAME = "HCP_APP_NAME";
   static final String PARAM_HCP_CLIENT_ID = "HCP_CLIENT_ID";
   static final String PARAM_HCP_CLIENT_SECRET = "HCP_CLIENT_SECRET";
-  private static final String PARAM_HCP_SECRET_NAME = "SECRET_NAME";
   static final String PARAM_HCP_CREDENTIALS_FILE = "HCP_CREDENTIALS_FILE";
   private static final String DEFAULT_CREDENTIALS_FILE_PATH =
           System.getProperty("user.home") + "/.config/hcp/creds-cache.json";
@@ -146,8 +145,7 @@ public class HcpVaultSecretParameters {
    * @return the credentials file path.
    */
   public static String getHcpCredentialsFile(ParameterSet parameterSet) {
-    return parameterSet.getOptional(HCP_CREDENTIALS_FILE,
-            PARAM_HCP_CREDENTIALS_FILE, DEFAULT_CREDENTIALS_FILE_PATH);
+    return parameterSet.getOptional(HCP_CREDENTIALS_FILE, PARAM_HCP_CREDENTIALS_FILE);
   }
 
   /**

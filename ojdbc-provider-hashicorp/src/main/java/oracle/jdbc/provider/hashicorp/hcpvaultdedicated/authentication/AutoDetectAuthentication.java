@@ -62,44 +62,36 @@ public class AutoDetectAuthentication extends AbstractDedicatedVaultAuthenticati
    */
   public static final AutoDetectAuthentication INSTANCE = new AutoDetectAuthentication();
 
+  /**
+   * Ordered list of authentication methods by priority.
+   */
+  private static final AbstractDedicatedVaultAuthentication[] AUTHENTICATION_METHODS = {
+          VaultTokenAuthentication.INSTANCE,
+          UserpassAuthentication.INSTANCE,
+          AppRoleAuthentication.INSTANCE,
+          GitHubAuthentication.INSTANCE
+  };
+
   private AutoDetectAuthentication() {
     // Private constructor to prevent external instantiation
   }
 
   @Override
   public CachedToken generateToken(ParameterSet parameterSet) {
-    IllegalStateException previousFailure;
+    IllegalStateException previousFailure = null;
 
-    try {
-      return VaultTokenAuthentication.INSTANCE.generateToken(parameterSet);
-    } catch (RuntimeException noVaultToken) {
-      previousFailure = new IllegalStateException(
-              "Failed to authenticate using a Vault token", noVaultToken
-      );
-    }
-
-    try {
-      return UserpassAuthentication.INSTANCE.generateToken(parameterSet);
-    } catch (RuntimeException noUserpass) {
-      previousFailure.addSuppressed(new IllegalStateException(
-              "Failed to authenticate using Userpass credentials", noUserpass
-      ));
-    }
-
-    try {
-      return AppRoleAuthentication.INSTANCE.generateToken(parameterSet);
-    } catch (RuntimeException noAppRole) {
-      previousFailure.addSuppressed(new IllegalStateException(
-              "Failed to authenticate using AppRole credentials", noAppRole
-      ));
-    }
-
-    try {
-      return GitHubAuthentication.INSTANCE.generateToken(parameterSet);
-    } catch (RuntimeException noGitHub) {
-      previousFailure.addSuppressed(new IllegalStateException(
-              "Failed to authenticate using GitHub credentials", noGitHub
-      ));
+    for (AbstractDedicatedVaultAuthentication authentication : AUTHENTICATION_METHODS) {
+      try {
+        return authentication.generateToken(parameterSet);
+      } catch (RuntimeException e) {
+        IllegalStateException failure = new IllegalStateException(
+                "Failed to authenticate using " + authentication.getClass().getSimpleName(), e);
+        if (previousFailure == null) {
+          previousFailure = failure;
+        } else {
+          previousFailure.addSuppressed(failure);
+        }
+      }
     }
 
     throw previousFailure;
@@ -107,14 +99,7 @@ public class AutoDetectAuthentication extends AbstractDedicatedVaultAuthenticati
 
   @Override
   public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
-    AbstractDedicatedVaultAuthentication[] authenticationMethods = {
-      VaultTokenAuthentication.INSTANCE,
-      UserpassAuthentication.INSTANCE,
-      AppRoleAuthentication.INSTANCE,
-      GitHubAuthentication.INSTANCE
-    };
-
-    for (AbstractDedicatedVaultAuthentication authentication : authenticationMethods) {
+    for (AbstractDedicatedVaultAuthentication authentication : AUTHENTICATION_METHODS) {
       Map<String, Object> cacheKey = authentication.generateCacheKey(parameterSet);
       if (!cacheKey.isEmpty()) {
         return cacheKey;

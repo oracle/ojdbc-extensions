@@ -112,7 +112,7 @@ public interface ParameterSet {
    *         {@code parameter} is not contained in this set
    */
   default <T> T getOptional(Parameter<T> parameter) {
-    return getOptional(parameter, null, null);
+    return getOptional(parameter, null);
   }
 
   /**
@@ -122,12 +122,10 @@ public interface ParameterSet {
    *
    * @param <T> The type of value that is assigned to the parameter
    * @param parameter Parameter to retrieve the value from
-   * @param envKey The environment key to use as a fallback, if not provided,
-   * uses the parameter name
-   * @param defaultValue The default value to return if the parameter is not present
+   * @param envKey The exact system/env property name to look up.
    * @return The value of a {@code parameter}, or the default value if not present
    */
-  default <T> T getOptional(Parameter<T> parameter, String envKey, T defaultValue) {
+  default <T> T getOptional(Parameter<T> parameter, String envKey) {
     // First attempt to get the parameter directly from the ParameterSet
     T value = getOptionalFromParameterSet(parameter);
     if (value != null) {
@@ -150,7 +148,15 @@ public interface ParameterSet {
       }
     }
 
-    return defaultValue;
+    // If we're in a ParameterSetImpl, fall back to parser default
+    if (this instanceof ParameterSetImpl) {
+      T defVal = ((ParameterSetImpl) this).getDefault(parameter);
+      if (defVal != null) {
+        return defVal;
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -191,7 +197,7 @@ public interface ParameterSet {
    * @throws IllegalStateException if the required parameter is not found
    */
   default <T> T getRequired(Parameter<T> parameter, String envKey) throws IllegalStateException {
-    T value = getOptional(parameter, envKey, null); // No default value provided
+    T value = getOptional(parameter, envKey);
     if (value != null) {
       return value;
     }

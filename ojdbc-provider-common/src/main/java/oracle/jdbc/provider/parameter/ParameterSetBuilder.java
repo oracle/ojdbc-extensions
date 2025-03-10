@@ -56,6 +56,16 @@ public interface ParameterSetBuilder {
   <T> ParameterSetBuilder add(String name, Parameter<T> parameter, T value);
 
   /**
+   * Adds a fallback default value for the specified parameter.
+   *
+   * @param <T> The parameter's value type.
+   * @param parameter The parameter.
+   * @param defaultValue The default value used if no other source provides one.
+   * @return This builder for chaining.
+   */
+  <T> ParameterSetBuilder addDefault(Parameter<T> parameter, T defaultValue);
+
+  /**
    * Returns a {@code ParameterSet} populated with all parameter values added
    * to this builder.
    *

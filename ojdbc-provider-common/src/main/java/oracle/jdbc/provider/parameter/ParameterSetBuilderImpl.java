@@ -47,6 +47,9 @@ final class ParameterSetBuilderImpl implements ParameterSetBuilder {
   /** Values of parameters added to this builder */
   private final Map<Parameter<?>, Object> parameterValues = new HashMap<>();
 
+  /** defaults values of parameters added to this builder */
+  private final Map<Parameter<?>, Object> parameterDefaults = new HashMap<>();
+
   /** Names of parameters added to this builder */
   private final Map<Parameter<?>, String> parameterNames = new HashMap<>();
 
@@ -58,7 +61,13 @@ final class ParameterSetBuilderImpl implements ParameterSetBuilder {
   }
 
   @Override
+  public <T> ParameterSetBuilder addDefault(Parameter<T> parameter, T defaultValue) {
+    parameterDefaults.put(parameter, defaultValue);
+    return this;
+  }
+
+  @Override
   public ParameterSet build() {
-    return new ParameterSetImpl(parameterValues, parameterNames);
+    return new ParameterSetImpl(parameterValues, parameterDefaults, parameterNames);
   }
 }

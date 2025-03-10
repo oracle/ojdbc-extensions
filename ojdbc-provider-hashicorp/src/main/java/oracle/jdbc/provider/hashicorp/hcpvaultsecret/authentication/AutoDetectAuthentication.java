@@ -59,24 +59,34 @@ public class AutoDetectAuthentication extends AbstractHcpVaultAuthentication {
    */
   public static final AutoDetectAuthentication INSTANCE = new AutoDetectAuthentication();
 
+  /**
+   * Ordered list of authentication methods by priority.
+   */
+  private static final AbstractHcpVaultAuthentication[] AUTHENTICATION_METHODS = {
+          CliCredentialsFileAuthentication.INSTANCE,
+          ClientCredentialsAuthentication.INSTANCE
+  };
+
   private AutoDetectAuthentication() {
     // Private constructor to enforce singleton
   }
 
   @Override
   public HcpVaultSecretToken generateToken(ParameterSet parameterSet) {
-    IllegalStateException previousFailure;
+    IllegalStateException previousFailure = null;
 
-    try {
-      return CliCredentialsFileAuthentication.INSTANCE.generateToken(parameterSet);
-    } catch (RuntimeException fileAuthFailed) {
-      previousFailure = new IllegalStateException("Failed to authenticate using CLI credentials file", fileAuthFailed);
-    }
-
-    try {
-      return ClientCredentialsAuthentication.INSTANCE.generateToken(parameterSet);
-    } catch (RuntimeException clientAuthFailed) {
-      previousFailure.addSuppressed(new IllegalStateException("Failed to authenticate using client credentials", clientAuthFailed));
+    for (AbstractHcpVaultAuthentication authentication : AUTHENTICATION_METHODS) {
+      try {
+        return authentication.generateToken(parameterSet);
+      } catch (RuntimeException e) {
+        IllegalStateException failure = new IllegalStateException(
+                "Failed to authenticate using " + authentication.getClass().getSimpleName(), e);
+        if (previousFailure == null) {
+          previousFailure = failure;
+        } else {
+          previousFailure.addSuppressed(failure);
+        }
+      }
     }
 
     throw previousFailure;
@@ -84,12 +94,7 @@ public class AutoDetectAuthentication extends AbstractHcpVaultAuthentication {
 
   @Override
   public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
-    AbstractHcpVaultAuthentication[] authenticationMethods = {
-            CliCredentialsFileAuthentication.INSTANCE,
-            ClientCredentialsAuthentication.INSTANCE
-    };
-
-    for (AbstractHcpVaultAuthentication authentication : authenticationMethods) {
+    for (AbstractHcpVaultAuthentication authentication : AUTHENTICATION_METHODS) {
       Map<String, Object> cacheKey = authentication.generateCacheKey(parameterSet);
       if (!cacheKey.isEmpty()) {
         return cacheKey;
