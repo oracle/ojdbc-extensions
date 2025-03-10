@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2023 Oracle and/or its affiliates.
+ ** Copyright (c) 2025 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -35,16 +35,9 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-
-package oracle.jdbc.provider.opentelemetry;
-
-import oracle.jdbc.TraceEventListener;
+package oracle.jdbc.provider.observability.tracers.otel;
 
 import java.sql.SQLException;
-import java.time.Instant;
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,193 +50,102 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
+import oracle.jdbc.TraceEventListener;
+import oracle.jdbc.TraceEventListener.JdbcExecutionEvent;
+import oracle.jdbc.TraceEventListener.Sequence;
+import oracle.jdbc.TraceEventListener.TraceContext;
+import oracle.jdbc.provider.observability.ObservabilityConfiguration;
+import oracle.jdbc.provider.observability.tracers.ObservabilityTracer;
 
 /**
- * <p>
- * TraceEventListener implementaiton that receives notifications whenever events
- * are generated in the driver and publishes these events into Open Telemetry.
- * </p>
- * <p>
- * These events include:
- * </p>
- * <ul>
- * <li>roundtrips to the database server</li>
- * <li>AC begin and success</li>
- * <li>VIP down event</li>
- * </ul>
- *
- * The system properties
- * {@value #OPEN_TELEMETRY_TRACE_EVENT_LISTENER_ENABLED}
- * and
- * {@value #OPEN_TELEMETRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED}
- * can be used
- * to enable/disable this listener and the use of sensitive data by this
- * listener. A MBean registered by the {@link
- * OpenTelemetryTraceEventListenerProvider} can be used to change these values
- * at runtime.
+ * Open Telemetry tracer. Exports round trip event and execution events to
+ * Open Telemetry.
  */
-public class OpenTelemetryTraceEventListener
-    implements TraceEventListener, OpenTelemetryTraceEventListenerMBean {
+public class OTelTracer implements ObservabilityTracer {
 
   /**
-   * Name of the property used to enable or disable this listener.
+   * Key used to send the current Open Telemetry Trace Context to the server 
+   * using {@link TraceContext#setClientInfo(String, String)}.
    */
-  public static final String OPEN_TELEMETRY_TRACE_EVENT_LISTENER_ENABLED = "oracle.jdbc.provider.opentelemetry.enabled";
-  /**
-   * Name of the property used to enable or disable sensitive data for this
-   * listener.
-   */
-  public static final String OPEN_TELEMETRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED = "oracle.jdbc.provider.opentelemetry.sensitive-enabled";
-
   private static final String TRACE_KEY = "clientcontext.ora$opentelem$tracectx";
 
-  // Number of parameters expected for each execution event
-  private static final Map<JdbcExecutionEvent, Integer> EXECUTION_EVENTS_PARAMETERS = new EnumMap<JdbcExecutionEvent, Integer>(
-      JdbcExecutionEvent.class) {
-    {
-      put(JdbcExecutionEvent.AC_REPLAY_STARTED, 3);
-      put(JdbcExecutionEvent.AC_REPLAY_SUCCESSFUL, 3);
-      put(JdbcExecutionEvent.VIP_RETRY, 8);
-    }
-  };
-
-  private static Logger logger = Logger.getLogger(OpenTelemetryTraceEventListener.class.getPackageName());
-
-  private Tracer tracer;
+  /**
+   * The trace context is sent to the server in two lines, this is the first 
+   * line it contains the version and the span context.
+   */
+  private static final String TRACE_FORMAT = "traceparent: %s-%s-%s-%s\r\n";
 
   /**
-   * <p>
-   * Singleton enumeration containing the TraceEventListener's configuration. Two
-   * configuration parameters are available:
-   * <ul>
-   * <li><b>enabled</b> - enables/disables the traces,</li>
-   * <li><b>sensitive data enabled</b> - enables/disables sensitive data like SQL
-   * statements in the traces.</li>
-   * </ul>
-   * </p>
-   * <p>
-   * By default traces are enabled and sensitive data is disabled.
-   * </p>
+   * Trace context version.
    */
-  private enum Configuration {
-    INSTANCE(true, false);
+  private static final String TRACE_VERSION = "00";
 
-    private AtomicBoolean enabled;
-    private AtomicBoolean sensitiveDataEnabled;
+  /**
+   * Format of the second line sent to the server containing the trace context.
+   * It contains the trace state.
+   */
+  private static final String TRACE_STATE_FORMAT = "tracestate: %s\r\n";
 
-    private Configuration(boolean enabled, boolean sensitiveDataEnabled) {
-      String enabledStr = System.getProperty(OPEN_TELEMETRY_TRACE_EVENT_LISTENER_ENABLED);
-      String sensitiveStr = System.getProperty(OPEN_TELEMETRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED);
-      this.enabled = new AtomicBoolean(enabledStr == null ? enabled : Boolean.parseBoolean(enabledStr));
-      this.sensitiveDataEnabled = new AtomicBoolean(
-          sensitiveStr == null ? sensitiveDataEnabled : Boolean.parseBoolean(sensitiveStr));
-    }
+  /**
+   * Logger.
+   */
+  private static Logger logger = Logger.getLogger(OTelTracer.class.getPackageName());
 
-    private boolean isEnabled() {
-      return enabled.get();
-    }
+  /**
+   * Configuraiton
+   */
+  private final ObservabilityConfiguration configuration;
 
-    private void setEnabled(boolean enabled) {
-      this.enabled.set(enabled);
-    }
 
-    private boolean isSensitiveDataEnabled() {
-      return sensitiveDataEnabled.get();
-    }
-
-    private void setSensitiveDataEnabled(boolean enabled) {
-      this.sensitiveDataEnabled.set(enabled);
-    }
-  }
-
-  public OpenTelemetryTraceEventListener() {
-    this(GlobalOpenTelemetry.get().getTracer(OpenTelemetryTraceEventListener.class.getName()));
-  }
-
-  public OpenTelemetryTraceEventListener(Tracer tracer) {
-    this.tracer = tracer;
+  /**
+   * Constructor. This tracer always uses {@link GlobalOpenTelemetry} to get 
+   * the Open Telemetry tracer.
+   * 
+   * @param configuration the configuration.
+   */
+  public OTelTracer(ObservabilityConfiguration configuration) {
+    this.configuration = configuration;
   }
 
   @Override
-  /**
-   * Indicates whether traces will be exported by the TraceEventListener.
-   */
-  public boolean isEnabled() {
-    return Configuration.INSTANCE.isEnabled();
+  public String getName() {
+    return "OTEL";
   }
 
   @Override
-  /**
-   * Sets whether the TraceEventListener should export traces
-   */
-  public void setEnabled(boolean enabled) {
-    Configuration.INSTANCE.setEnabled(enabled);
-  }
-
-  @Override
-  /**
-   * Indicates whether the traces should contain sensitive data.
-   */
-  public boolean isSensitiveDataEnabled() {
-    return Configuration.INSTANCE.isSensitiveDataEnabled();
-  }
-
-  @Override
-  /**
-   * Sets whether the traces should contain sensitive data.
-   */
-  public void setSensitiveDataEnabled(boolean enabled) {
-    Configuration.INSTANCE.setSensitiveDataEnabled(enabled);
-  }
-
-  @Override
-  /**
-   * If traces are enabled, exports traces to Open Telemetry for every round
-   * trip.
-   */
-  public Object roundTrip(Sequence sequence, TraceContext traceContext, Object userContext) {
-    if (!isEnabled())
-      return null;
+  public Object traceRoundTrip(Sequence sequence, TraceContext traceContext, Object userContext) {
     if (sequence == Sequence.BEFORE) {
       // Create the Span before the round-trip.
       final Span span = initAndGetSpan(traceContext, traceContext.databaseOperation());
-      try (Scope ignored = span.makeCurrent()) {
-        traceContext.setClientInfo(TRACE_KEY, getTraceValue(span));
-      } catch (Exception ex) {
-        logger.log(Level.WARNING, ex.getMessage(), ex);
-      }
+      makeSpanCurrentAndSendContextToServer(traceContext, span);
       // Return the Span instance to the driver. The driver holds this instance and
-      // supplies it
-      // as user context parameter on the next round-trip call.
+      // supplies it as user context parameter on the next round-trip call.
       return span;
     } else {
       // End the Span after the round-trip.
-      if (userContext instanceof Span) {
+      if (userContext != null) {
         final Span span = (Span) userContext;
         span.setStatus(traceContext.isCompletedExceptionally() ? StatusCode.ERROR : StatusCode.OK);
-        endSpan(span);
+        span.end();
+      } else {
+        logger.log(Level.WARNING, "Unknown or null user context received from the driver on " +
+            "database operation: " + traceContext.databaseOperation());
       }
       return null;
     }
-
   }
 
   @Override
-  /**
-   * If traces are enabled, exports execution event to Open Telemetry
-   */
-  public Object onExecutionEventReceived(JdbcExecutionEvent event, Object userContext, Object... params) {
-    // Noop if not enabled or parameter count is not correct
-    if (!isEnabled())
-      return null;
+  public Object traceExecutionEvent(JdbcExecutionEvent event, Object userContext, Object... params) {
     if (EXECUTION_EVENTS_PARAMETERS.get(event) == params.length) {
+      Tracer tracer = GlobalOpenTelemetry.get().getTracer(OTelTracer.class.getName());
       if (event == TraceEventListener.JdbcExecutionEvent.VIP_RETRY) {
         SpanBuilder spanBuilder = tracer
             .spanBuilder(event.getDescription())
             .setAttribute("Error message", params[0].toString())
             .setAttribute("VIP Address", params[7].toString());
         // Add sensitive information (URL and SQL) if it is enabled
-        if (Configuration.INSTANCE.isSensitiveDataEnabled()) {
+        if (configuration.getSensitiveDataEnabled()) {
           logger.log(Level.FINEST, "Sensitive information on");
           spanBuilder.setAttribute("Protocol", params[1].toString())
               .setAttribute("Host", params[2].toString())
@@ -252,7 +154,8 @@ public class OpenTelemetryTraceEventListener
               .setAttribute("SID", params[5].toString())
               .setAttribute("Connection data", params[6].toString());
         }
-        return spanBuilder.startSpan();
+        // start and end span.
+        spanBuilder.startSpan().end();
       } else if (event == TraceEventListener.JdbcExecutionEvent.AC_REPLAY_STARTED
           || event == TraceEventListener.JdbcExecutionEvent.AC_REPLAY_SUCCESSFUL) {
         SpanBuilder spanBuilder = tracer
@@ -261,7 +164,7 @@ public class OpenTelemetryTraceEventListener
             .setAttribute("Error code", ((SQLException) params[1]).getErrorCode())
             .setAttribute("SQL state", ((SQLException) params[1]).getSQLState())
             .setAttribute("Current replay retry count", params[2].toString());
-        return spanBuilder.startSpan();
+        spanBuilder.startSpan().end();
       } else {
         logger.log(Level.WARNING, "Unknown event received : " + event.toString());
       }
@@ -269,73 +172,101 @@ public class OpenTelemetryTraceEventListener
       // log wrong number of parameters returned for execution event
       logger.log(Level.WARNING, "Wrong number of parameters received for event " + event.toString());
     }
-    return null;
+    // return the previous userContext
+    return userContext;
   }
 
-  @Override
-  public boolean isDesiredEvent(JdbcExecutionEvent event) {
-    // Accept all events
-    return true;
-  }
-
+  /**
+   * Creates a Open Telemetry Span and sets it's attributes according to the
+   * trace context and the configuration.
+   * 
+   * @param traceContext the trace context.
+   * @param spanName then span name.
+   * @return returns the Span.
+   */
   private Span initAndGetSpan(TraceContext traceContext, String spanName) {
     /*
      * If this is in the context of current span, the following becomes a nested or
      * child span to the current span. I.e. the current span in context becomes
      * parent to this child span.
      */
+    Tracer tracer = GlobalOpenTelemetry.get().getTracer(OTelTracer.class.getName());
     SpanBuilder spanBuilder = tracer
         .spanBuilder(spanName)
         .setAttribute("thread.id", Thread.currentThread().getId())
         .setAttribute("thread.name", Thread.currentThread().getName())
         .setAttribute("Connection ID", traceContext.getConnectionId())
         .setAttribute("Database Operation", traceContext.databaseOperation())
-        .setAttribute("Database User", traceContext.user())
         .setAttribute("Database Tenant", traceContext.tenant())
         .setAttribute("SQL ID", traceContext.getSqlId());
 
     // Add sensitive information (URL and SQL) if it is enabled
-    if (this.isSensitiveDataEnabled()) {
+    if (configuration.getSensitiveDataEnabled()) {
       logger.log(Level.FINEST, "Sensitive information on");
-      spanBuilder.setAttribute("Original SQL Text", traceContext.originalSqlText())
+      spanBuilder
+          .setAttribute("Database User", traceContext.user())
+          .setAttribute("Original SQL Text", traceContext.originalSqlText())
           .setAttribute("Actual SQL Text", traceContext.actualSqlText());
     }
 
-    // Indicates that the span covers server-side handling of an RPC or other remote
-    // request.
-    return spanBuilder.setSpanKind(SpanKind.SERVER).startSpan();
+    // According to the semantic conventions the Span Kind should be CLIENT,
+    // used to be SERVER.
+    return spanBuilder.setSpanKind(SpanKind.CLIENT).startSpan();
 
   }
 
-  private void endSpan(Span span) {
-    span.end(Instant.now());
-  }
-
-  private String getTraceValue(Span span) {
+  /**
+   * Sets the span as the current Open Telemetry Span and sends context information
+   * to the database server.
+   * 
+   * @param traceContext the trace context
+   * @param span the currect spans
+   */
+  private void makeSpanCurrentAndSendContextToServer(TraceContext traceContext, Span span) {
     final String traceParent = initAndGetTraceParent(span);
     final String traceState = initAndGetTraceState(span);
-    return traceParent + traceState;
+
+    try (Scope ignored = span.makeCurrent()) {
+      // Send the current context to the server
+      traceContext.setClientInfo(TRACE_KEY, traceParent + traceState);
+    } catch (Exception ex) {
+      logger.log(Level.WARNING, "An error occured while sending the current Open Telemetry context to the server. " 
+          + ex.getMessage(), ex);
+    }
   }
 
+  /**
+   * Formats the current Open Telemetry context in a format that the server can
+   * understand.
+   * 
+   * @param span the current Span
+   * @return the current Open Telemetry context formatted so that the server
+   * can understand.
+   */
   private String initAndGetTraceParent(Span span) {
     final SpanContext spanContext = span.getSpanContext();
-    // The current specification assumes the version is set to 00.
-    final String version = "00";
     final String traceId = spanContext.getTraceId();
     // parent-id is known as the span-id
     final String parentId = spanContext.getSpanId();
     final String traceFlags = spanContext.getTraceFlags().toString();
 
-    return String.format("traceparent: %s-%s-%s-%s\r\n",
-        version, traceId, parentId, traceFlags);
+    return String.format(TRACE_FORMAT, TRACE_VERSION, traceId, parentId, traceFlags);
   }
 
+    /**
+   * Formats the current Open Telemetry Span state in a format that the server 
+   * can understand.
+   * 
+   * @param span the current Span
+   * @return the current Open Telemetry Span state formatted so that the server
+   * can understand.
+   */
   private String initAndGetTraceState(Span span) {
     final TraceState traceState = span.getSpanContext().getTraceState();
     final StringBuilder stringBuilder = new StringBuilder();
 
     traceState.forEach((k, v) -> stringBuilder.append(k).append("=").append(v));
-    return String.format("tracestate: %s\r\n", stringBuilder);
+    return String.format(TRACE_STATE_FORMAT, stringBuilder);
   }
 
 }
