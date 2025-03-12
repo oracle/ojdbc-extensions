@@ -59,10 +59,10 @@ public class GitHubAuthentication extends AbstractDedicatedVaultAuthentication {
 
   @Override
   public CachedToken generateToken(ParameterSet parameterSet) {
-    String vaultAddr = getVaultAddress(parameterSet);
-    String githubToken = getGitHubToken(parameterSet);
-    String namespace = getNamespace(parameterSet);
-    String githubAuthPath = getGitHubAuthPath(parameterSet);
+    String vaultAddr = parameterSet.getRequired(VAULT_ADDR);
+    String githubToken = parameterSet.getRequired(GITHUB_TOKEN);
+    String namespace = parameterSet.getOptional(NAMESPACE);
+    String githubAuthPath = parameterSet.getOptional(GITHUB_AUTH_PATH);
 
     String authEndpoint = buildAuthEndpoint(vaultAddr, GITHUB_LOGIN_TEMPLATE, githubAuthPath);
     String payload = createJsonPayload(GITHUB_PAYLOAD_TEMPLATE, githubToken);

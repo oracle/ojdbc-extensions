@@ -59,8 +59,8 @@ public class ClientCredentialsAuthentication extends AbstractHcpVaultAuthenticat
 
   @Override
   public HcpVaultSecretToken generateToken(ParameterSet parameterSet) {
-    String clientId = getHcpClientId(parameterSet);
-    String clientSecret = getHcpClientSecret(parameterSet);
+    String clientId = parameterSet.getRequired(HCP_CLIENT_ID);
+    String clientSecret = parameterSet.getRequired(HCP_CLIENT_SECRET);
     String rawToken = HcpVaultOAuthClient.fetchHcpAccessToken(clientId, clientSecret);
     return new HcpVaultSecretToken(rawToken);
   }

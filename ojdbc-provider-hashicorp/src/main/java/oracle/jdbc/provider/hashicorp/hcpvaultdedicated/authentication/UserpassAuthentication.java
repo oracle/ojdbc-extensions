@@ -60,11 +60,11 @@ public class UserpassAuthentication extends AbstractDedicatedVaultAuthentication
 
   @Override
   public CachedToken generateToken(ParameterSet parameterSet) {
-    String vaultAddr = getVaultAddress(parameterSet);
-    String authPath = getUserpassAuthPath(parameterSet);
-    String namespace = getNamespace(parameterSet);
-    String username = getUsername(parameterSet);
-    String password = getPassword(parameterSet);
+    String vaultAddr = parameterSet.getRequired(VAULT_ADDR);
+    String authPath = parameterSet.getOptional(USERPASS_AUTH_PATH);
+    String namespace = parameterSet.getOptional(NAMESPACE);
+    String username = parameterSet.getRequired(USERNAME);
+    String password = parameterSet.getRequired(PASSWORD);
 
     String authEndpoint = buildAuthEndpoint(vaultAddr, USERPASS_LOGIN_TEMPLATE, authPath, username);
     String payload = createJsonPayload(USERPASS_PAYLOAD_TEMPLATE, password);

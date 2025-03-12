@@ -59,11 +59,11 @@ public class AppRoleAuthentication extends AbstractDedicatedVaultAuthentication 
 
   @Override
   public CachedToken generateToken(ParameterSet parameterSet) {
-    String vaultAddr = getVaultAddress(parameterSet);
-    String namespace = getNamespace(parameterSet);
-    String roleId = getRoleId(parameterSet);
-    String secretId = getSecretId(parameterSet);
-    String authPath = getAppRoleAuthPath(parameterSet);
+    String vaultAddr = parameterSet.getRequired(VAULT_ADDR);
+    String namespace = parameterSet.getOptional(NAMESPACE);
+    String roleId = parameterSet.getRequired(ROLE_ID);
+    String secretId = parameterSet.getRequired(SECRET_ID);
+    String authPath = parameterSet.getOptional(APPROLE_AUTH_PATH);
 
     String authEndpoint = buildAuthEndpoint(vaultAddr, APPROLE_LOGIN_TEMPLATE, authPath);
     String payload = createJsonPayload(APPROLE_PAYLOAD_TEMPLATE, roleId, secretId);

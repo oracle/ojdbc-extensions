@@ -53,11 +53,6 @@ public final class ParameterSetImpl implements ParameterSet {
   private final Map<Parameter<?>, Object> parameterValues;
 
   /**
-   * the default value of each parameter.
-   */
-  private final Map<Parameter<?>, Object> parameterDefaults;
-
-  /**
    * The names of each parameter. Names are defined when a parameter is added to
    * a {@link ParameterSetBuilder}.
    */
@@ -83,26 +78,6 @@ public final class ParameterSetImpl implements ParameterSet {
     HashMap<Parameter<?>, String> parameterNamesCopy =
       new HashMap<>(parameterNames);
     this.parameterNames = Collections.unmodifiableMap(parameterNamesCopy);
-
-    this.parameterDefaults = Collections.emptyMap();
-  }
-
-  /**
-   * Constructs a set of parameters having the given {@code parameterValues},
-   * {@code parameterDefaults} and {@code parameterNames}
-   *
-   * @param parameterValues The explicitly supplied parameter values.
-   * @param parameterDefaults The fallback defaults if no other source provides a value.
-   * @param parameterNames The parameter name mappings.
-   */
-  ParameterSetImpl(
-    Map<Parameter<?>, Object> parameterValues,
-    Map<Parameter<?>, Object> parameterDefaults,
-    Map<Parameter<?>, String> parameterNames) {
-
-    this.parameterValues   = Collections.unmodifiableMap(new HashMap<>(parameterValues));
-    this.parameterDefaults = Collections.unmodifiableMap(new HashMap<>(parameterDefaults));
-    this.parameterNames    = Collections.unmodifiableMap(new HashMap<>(parameterNames));
   }
 
   @Override
@@ -111,15 +86,9 @@ public final class ParameterSetImpl implements ParameterSet {
   }
 
   @Override
-  public <T> T getOptionalFromParameterSet(Parameter<T> parameter) {
+  public <T> T getOptional(Parameter<T> parameter) {
     @SuppressWarnings("unchecked")
     T value = (T) parameterValues.get(parameter);
-    return value;
-  }
-
-  public <T> T getDefault(Parameter<T> parameter) {
-    @SuppressWarnings("unchecked")
-    T value = (T) parameterDefaults.get(parameter);
     return value;
   }
 
@@ -131,17 +100,15 @@ public final class ParameterSetImpl implements ParameterSet {
   @Override
   public ParameterSetBuilder copyBuilder() {
     ParameterSetBuilder builder = ParameterSet.builder();
-    parameterValues.forEach((param, value) -> {
-      @SuppressWarnings("unchecked")
-      Parameter<Object> typedParam = (Parameter<Object>) param;
-      builder.add(parameterNames.get(param), typedParam, value);
-    });
 
-    parameterDefaults.forEach((param, defaultValue) -> {
+    for (Map.Entry<Parameter<?>, Object> parameterValue
+            : parameterValues.entrySet()) {
       @SuppressWarnings("unchecked")
-      Parameter<Object> typedParam = (Parameter<Object>) param;
-      builder.addDefault(typedParam, defaultValue);
-    });
+      Parameter<Object> parameter = (Parameter<Object>) parameterValue.getKey();
+      Object value = parameterValue.getValue();
+      String parameterName = parameterNames.get(parameter);
+      builder.add(parameterName, parameter, value);
+    }
 
     return builder;
   }
@@ -158,7 +125,7 @@ public final class ParameterSetImpl implements ParameterSet {
   }
 
   /**
-   * Retrieves the relevant parameter key-value pairs for cache key generation.
+   * Retrieves the relevant parameter key-value pairs.
    */
   public Map<String, Object> getParameterKeyValuePairs() {
     return parameterNames.entrySet().stream()

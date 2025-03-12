@@ -39,11 +39,8 @@
 package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.configuration;
 
 import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
-import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters;
 import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.secrets.DedicatedVaultSecretsManagerFactory;
-import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.provider.parameter.ParameterSetParser;
 import oracle.jdbc.util.OracleConfigurationCache;
 
 import java.io.ByteArrayInputStream;
@@ -52,7 +49,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.PARAMETER_SET_PARSER;
+import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.*;
 
 public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleConfigurationParsableProvider {
 
@@ -63,11 +60,11 @@ public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleCon
     Map<String, String> optionsWithSecret = new HashMap<>(options);
     optionsWithSecret.put(valueFieldName, secretPath);
 
-    ParameterSet parameters = PARAMETER_SET_PARSER.parseNamedValues(optionsWithSecret);
+    ParameterSet finalParameters = buildResolvedParameterSet(optionsWithSecret);
 
     String secretString = DedicatedVaultSecretsManagerFactory
       .getInstance()
-      .request(parameters)
+      .request(finalParameters)
       .getContent();
 
     return new ByteArrayInputStream(secretString.getBytes(StandardCharsets.UTF_8));
@@ -87,4 +84,5 @@ public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleCon
   public OracleConfigurationCache getCache() {
     return CACHE;
   }
+
 }

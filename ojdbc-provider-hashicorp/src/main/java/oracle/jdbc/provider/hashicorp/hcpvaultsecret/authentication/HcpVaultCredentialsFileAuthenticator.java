@@ -38,11 +38,9 @@
 
 package oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication;
 
-import oracle.jdbc.provider.hashicorp.HttpUtil;
-import oracle.jdbc.provider.hashicorp.JsonUtil;
-import oracle.sql.json.OracleJsonNumber;
+import oracle.jdbc.provider.hashicorp.util.HttpUtil;
+import oracle.jdbc.provider.hashicorp.util.JsonUtil;
 import oracle.sql.json.OracleJsonObject;
-import oracle.sql.json.OracleJsonValue;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

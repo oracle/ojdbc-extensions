@@ -84,10 +84,10 @@ public final class HcpVaultSecretsManagerFactory extends HcpVaultResourceFactory
 
   @Override
   public Resource<String> request(HcpVaultSecretToken credentials, ParameterSet parameterSet) {
-    String orgId = getHcpOrgId(parameterSet);
-    String projectId = getHcpProjectId(parameterSet);
-    String appName = getHcpAppName(parameterSet);
-    String secretName = getSecretName(parameterSet);
+    String orgId = parameterSet.getRequired(HCP_ORG_ID);
+    String projectId = parameterSet.getRequired(HCP_PROJECT_ID);
+    String appName = parameterSet.getRequired(HCP_APP_NAME);
+    String secretName = parameterSet.getRequired(SECRET_NAME);
 
     String hcpUrl = String.format(HCP_SECRETS_API_URL_FORMAT, orgId, projectId, appName, secretName);
 

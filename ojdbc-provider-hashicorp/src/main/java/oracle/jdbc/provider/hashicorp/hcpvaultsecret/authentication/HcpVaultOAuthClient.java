@@ -38,8 +38,8 @@
 
 package oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication;
 
-import oracle.jdbc.provider.hashicorp.HttpUtil;
-import oracle.jdbc.provider.hashicorp.JsonUtil;
+import oracle.jdbc.provider.hashicorp.util.HttpUtil;
+import oracle.jdbc.provider.hashicorp.util.JsonUtil;
 import oracle.sql.json.OracleJsonObject;
 
 import static oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultCredentialsFileAuthenticator.ACCESS_TOKEN_FIELD;

@@ -36,7 +36,7 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.hashicorp;
+package oracle.jdbc.provider.hashicorp.util;
 
 import java.io.*;
 import java.net.HttpURLConnection;

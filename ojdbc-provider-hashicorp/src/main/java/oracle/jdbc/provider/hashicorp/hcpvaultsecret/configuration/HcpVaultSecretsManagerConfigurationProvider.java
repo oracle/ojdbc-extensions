@@ -60,11 +60,11 @@ public class HcpVaultSecretsManagerConfigurationProvider extends OracleConfigura
     Map<String, String> optionsWithAppName = new HashMap<>(options);
     optionsWithAppName.put(valueField, secretName);
 
-    ParameterSet parameterSet = PARAMETER_SET_PARSER.parseNamedValues(optionsWithAppName);
+    ParameterSet finalParams = buildResolvedParameterSet(optionsWithAppName);
 
     String secretsJson = HcpVaultSecretsManagerFactory
       .getInstance()
-      .request(parameterSet)
+      .request(finalParams)
       .getContent();
 
     return new ByteArrayInputStream(secretsJson.getBytes(StandardCharsets.UTF_8));

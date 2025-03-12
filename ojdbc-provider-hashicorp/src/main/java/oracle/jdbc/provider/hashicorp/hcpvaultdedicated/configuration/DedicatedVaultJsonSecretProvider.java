@@ -38,7 +38,7 @@
 
 package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.configuration;
 
-import oracle.jdbc.provider.hashicorp.JsonUtil;
+import oracle.jdbc.provider.hashicorp.util.JsonUtil;
 import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.secrets.DedicatedVaultSecretsManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.spi.OracleConfigurationSecretProvider;

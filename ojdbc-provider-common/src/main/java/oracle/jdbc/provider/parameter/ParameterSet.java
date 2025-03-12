@@ -111,53 +111,7 @@ public interface ParameterSet {
    * @return The value of a {@code parameter}, or {@code null} if the
    *         {@code parameter} is not contained in this set
    */
-  default <T> T getOptional(Parameter<T> parameter) {
-    return getOptional(parameter, null);
-  }
-
-  /**
-   * Returns the value of a {@code parameter}, or the specified default value
-   * if the {@code parameter} is not contained in this set or if no value is
-   * found through system properties or environment variables.
-   *
-   * @param <T> The type of value that is assigned to the parameter
-   * @param parameter Parameter to retrieve the value from
-   * @param envKey The exact system/env property name to look up.
-   * @return The value of a {@code parameter}, or the default value if not present
-   */
-  default <T> T getOptional(Parameter<T> parameter, String envKey) {
-    // First attempt to get the parameter directly from the ParameterSet
-    T value = getOptionalFromParameterSet(parameter);
-    if (value != null) {
-      return value;
-    }
-
-    // Fallback to system property if allowed
-    if (parameter.isSystemPropertyAllowed()) {
-      String systemValue = System.getProperty(envKey);
-      if (systemValue != null && !systemValue.isEmpty()) {
-        return (T) systemValue;
-      }
-    }
-
-    // Fallback to environment variable if allowed
-    if (parameter.isEnvAllowed()) {
-      String envValue = System.getenv(envKey);
-      if (envValue != null && !envValue.isEmpty()) {
-        return (T) envValue;
-      }
-    }
-
-    // If we're in a ParameterSetImpl, fall back to parser default
-    if (this instanceof ParameterSetImpl) {
-      T defVal = ((ParameterSetImpl) this).getDefault(parameter);
-      if (defVal != null) {
-        return defVal;
-      }
-    }
-
-    return null;
-  }
+  <T> T getOptional(Parameter<T> parameter);
 
   /**
    * Returns the name of a {@code parameter}, or {@code null} if the
@@ -180,42 +134,18 @@ public interface ParameterSet {
    *         {@code IllegalStateException} if the {@code parameter} is not
    *         contained in this set
    */
-  default <T> T getRequired(Parameter<T> parameter) throws IllegalStateException {
-    return getRequired(parameter, null);
-  }
+  default <T> T getRequired(Parameter<T> parameter)
+    throws IllegalStateException {
 
+    T value = getOptional(parameter);
 
-  /**
-   * Returns the value of a {@code parameter} using an explicit {@code envKey},
-   * or throws {@code IllegalStateException} if the {@code parameter} is not found
-   * in the set, system properties, or environment variables.
-   *
-   * @param <T> The type of value that is assigned to the parameter
-   * @param parameter Parameter to retrieve the value from
-   * @param envKey The environment key to use as a fallback
-   * @return The value of a {@code parameter}, or throws an exception if not present
-   * @throws IllegalStateException if the required parameter is not found
-   */
-  default <T> T getRequired(Parameter<T> parameter, String envKey) throws IllegalStateException {
-    T value = getOptional(parameter, envKey);
-    if (value != null) {
+    if (value != null)
       return value;
-    }
-
     String name = getName(parameter);
     throw new IllegalStateException(format(
             "No value defined for parameter \"%s\"",
             name != null ? name : parameter.toString()));
   }
-
-  /**
-   * Retrieves the direct value of a parameter from the internal parameter set.
-   *
-   * @param <T> The type of value that is assigned to the parameter
-   * @param parameter Parameter to retrieve the value from
-   * @return The parameter value, or {@code null} if not present
-   */
-  <T> T getOptionalFromParameterSet(Parameter<T> parameter);
 
   /**
    * <p>
@@ -233,10 +163,11 @@ public interface ParameterSet {
   ParameterSetBuilder copyBuilder();
 
   /**
-   * Filters the parameters from the {@link ParameterSet} based on the provided relevant keys.
+   * Filters the parameters from the {@link ParameterSet} based on the provided
+   * relevant keys.
    *
-   * This utility method extracts only the parameters relevant to a specific authentication method,
-   * ensuring that the generated cache key includes only necessary data.
+   * This utility method extracts only the parameters relevant to a specific
+   * authentication method,
    *
    * @param relevantKeys An array of parameter keys relevant to the authentication method.
    * @return A map containing only the filtered parameters.

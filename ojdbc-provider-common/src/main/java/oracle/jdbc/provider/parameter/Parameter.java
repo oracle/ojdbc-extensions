@@ -79,26 +79,6 @@ public interface Parameter<T> {
   }
 
   /**
-   * Checks if the parameter supports fallback to environment variables.
-   *
-   * @return {@code true} if the parameter can be configured using environment
-   * variables, {@code false} otherwise.
-   */
-  default boolean isEnvAllowed() {
-    return getAttributes().contains(CommonAttribute.ALLOW_ENV);
-  }
-
-  /**
-   * Checks if the parameter supports fallback to system properties.
-   *
-   * @return {@code true} if the parameter can be configured using system
-   * properties, {@code false} otherwise.
-   */
-  default boolean isSystemPropertyAllowed() {
-    return getAttributes().contains(CommonAttribute.ALLOW_SYSTEM_PROPERTY);
-  }
-
-  /**
    * Creates a new parameter with the specified attributes. The parameter is
    * security insensitive unless {@link CommonAttribute#SENSITIVE} is specified,
    * and is optional unless {@link CommonAttribute#REQUIRED} is specified.
@@ -142,17 +122,6 @@ public interface Parameter<T> {
      */
     REQUIRED,
 
-    /**
-     * Allows a parameter to retrieve its value from an environment variable
-     * as a fallback mechanism if not explicitly set.
-     */
-    ALLOW_ENV,
-
-    /**
-     * Allows a parameter to retrieve its value from a system property
-     * as a fallback mechanism if not explicitly set.
-     */
-    ALLOW_SYSTEM_PROPERTY
   }
 
 }

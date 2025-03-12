@@ -39,21 +39,19 @@
 package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication;
 
 import oracle.jdbc.driver.oauth.OpaqueAccessToken;
-import oracle.jdbc.provider.hashicorp.HttpUtil;
-import oracle.jdbc.provider.hashicorp.JsonUtil;
+import oracle.jdbc.provider.hashicorp.util.HttpUtil;
+import oracle.jdbc.provider.hashicorp.util.JsonUtil;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.provider.parameter.ParameterSetImpl;
 import oracle.sql.json.OracleJsonObject;
 
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Base class for Dedicated Vault authentication.
  * <p>
- * Provides helper methods and shared constants for building endpoints, creating JSON payloads,
+ * Provides helper methods and shared constants for building endpoints,
+ * creating JSON payloads,
  * and performing HTTP authentication requests to Vault.
  * </p>
  */

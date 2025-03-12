@@ -36,13 +36,12 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.hashicorp;
+package oracle.jdbc.provider.hashicorp.util;
 
 import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonObject;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 /**

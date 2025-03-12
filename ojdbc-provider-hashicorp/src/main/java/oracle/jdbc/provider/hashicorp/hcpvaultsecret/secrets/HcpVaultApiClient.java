@@ -38,11 +38,11 @@
 
 package oracle.jdbc.provider.hashicorp.hcpvaultsecret.secrets;
 
-import oracle.jdbc.provider.hashicorp.HttpUtil;
+import oracle.jdbc.provider.hashicorp.util.HttpUtil;
 import oracle.sql.json.OracleJsonException;
 import oracle.sql.json.OracleJsonObject;
 
-import static oracle.jdbc.provider.hashicorp.JsonUtil.convertJsonToOracleJsonObject;
+import static oracle.jdbc.provider.hashicorp.util.JsonUtil.convertJsonToOracleJsonObject;
 
 /**
  * <p>
