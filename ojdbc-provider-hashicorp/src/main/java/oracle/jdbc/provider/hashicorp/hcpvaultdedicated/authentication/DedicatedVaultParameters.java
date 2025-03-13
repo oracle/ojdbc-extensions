@@ -38,7 +38,6 @@
 
 package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication;
 
-import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.configuration.DedicatedVaultConfigurationParameters;
 import oracle.jdbc.provider.hashicorp.util.Parameterutil;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
@@ -76,6 +75,8 @@ public class DedicatedVaultParameters {
   public static final String PARAM_GITHUB_AUTH_PATH = "GITHUB_AUTH_PATH";
   public static final String PARAM_VAULT_ROLE_ID = "ROLE_ID";
   public static final String PARAM_VAULT_SECRET_ID = "SECRET_ID";
+  private static final String PARAM_AUTHENTICATION = "authentication";
+
 
   // Default values
   static final String DEFAULT_NAMESPACE = "admin";
@@ -201,8 +202,8 @@ public class DedicatedVaultParameters {
   public static ParameterSet buildResolvedParameterSet(Map<String, String> inputOpts) {
     Map<String, String> opts = new HashMap<>(inputOpts);
 
-    opts.putIfAbsent("authentication", "auto_detect");
-    String authStr = opts.get("authentication");
+    opts.putIfAbsent(PARAM_AUTHENTICATION, DedicatedVaultAuthenticationMethod.AUTO_DETECT.name());
+    String authStr = opts.get(PARAM_AUTHENTICATION);
     DedicatedVaultAuthenticationMethod authMethod =
             DedicatedVaultAuthenticationMethod.valueOf(authStr.toUpperCase());
 
@@ -245,8 +246,43 @@ public class DedicatedVaultParameters {
     return PARAMETER_SET_PARSER.parseNamedValues(opts);
   }
 
+  /**
+   * Configures a {@link ParameterSetParser.Builder} with parameters used for
+   * Dedicated Vault authentication.
+   *
+   * @param builder the builder to configure. Must not be null.
+   * @return the configured builder. Not null.
+   */
+  private static ParameterSetParser.Builder configureBuilder(ParameterSetParser.Builder builder) {
+    return builder.addParameter(
+            // The parameter name is "AUTHENTICATION"
+            "AUTHENTICATION",
+            // Tied to HashicorpCredentialsFactory.AUTHENTICATION_METHOD
+            DedicatedVaultParameters.AUTHENTICATION_METHOD,
+            // Default value if none is specified:
+            DedicatedVaultAuthenticationMethod.AUTO_DETECT,
+            DedicatedVaultParameters::parseAuthentication)
+            ;
+  }
+
+  /**
+   * Parses the authentication method from a string value.
+   * @param value the string value representing the authentication method. Must
+   * not be null.
+   * @return the parsed {@link DedicatedVaultAuthenticationMethod}.
+   * @throws IllegalArgumentException if the value is unrecognized.
+   */
+  private static DedicatedVaultAuthenticationMethod parseAuthentication(String value) {
+    try {
+      return DedicatedVaultAuthenticationMethod.valueOf(value.toUpperCase());
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(
+              "Unrecognized Hashicorp authentication value: " + value, e);
+    }
+  }
+
   public static final ParameterSetParser PARAMETER_SET_PARSER =
-    DedicatedVaultConfigurationParameters.configureBuilder(
+    DedicatedVaultParameters.configureBuilder(
       ParameterSetParser.builder()
         .addParameter("value", SECRET_PATH)
         .addParameter("key", KEY)

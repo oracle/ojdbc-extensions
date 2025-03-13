@@ -38,7 +38,6 @@
 
 package oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication;
 
-import oracle.jdbc.provider.hashicorp.hcpvaultsecret.configuration.HcpVaultConfigurationParameters;
 import oracle.jdbc.provider.hashicorp.util.Parameterutil;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
@@ -74,6 +73,7 @@ public class HcpVaultSecretParameters {
           "HCP_CREDENTIALS_FILE";
   private static final String DEFAULT_CREDENTIALS_FILE_PATH =
           System.getProperty("user.home") + "/.config/hcp/creds-cache.json";
+  private static final String PARAM_AUTHENTICATION = "authentication";
 
   /**
    * Parameter indicating the authentication method to use for HCP Vault Secrets.
@@ -137,8 +137,8 @@ public class HcpVaultSecretParameters {
   public static ParameterSet buildResolvedParameterSet(Map<String, String> inputOpts) {
     Map<String, String> opts = new HashMap<>(inputOpts);
 
-    opts.putIfAbsent("authentication", "auto_detect");
-    String authStr = opts.get("authentication");
+    opts.putIfAbsent(PARAM_AUTHENTICATION, HcpVaultAuthenticationMethod.AUTO_DETECT.name());
+    String authStr = opts.get(PARAM_AUTHENTICATION);
     HcpVaultAuthenticationMethod authMethod =
             HcpVaultAuthenticationMethod.valueOf(authStr.toUpperCase());
 
@@ -165,8 +165,40 @@ public class HcpVaultSecretParameters {
     return  PARAMETER_SET_PARSER.parseNamedValues(opts);
   }
 
+  /**
+   * Configures a {@link ParameterSetParser.Builder} with HCP Vault Secrets parameters.
+   *
+   * @param builder the builder to configure.
+   * @return the configured builder.
+   */
+  private static ParameterSetParser.Builder configureBuilder(ParameterSetParser.Builder builder) {
+    return builder
+      .addParameter(
+        "AUTHENTICATION",
+        HcpVaultSecretParameters.AUTHENTICATION_METHOD,
+        HcpVaultAuthenticationMethod.AUTO_DETECT,
+        HcpVaultSecretParameters::parseAuthMethod);
+  }
+
+  /**
+   * Parses the authentication method from a string value.
+   *
+   * @param value the string value representing the authentication method. Must
+   * not be null.
+   * @return the parsed {@link HcpVaultAuthenticationMethod}.
+   * @throws IllegalArgumentException if the value is unrecognized.
+   */
+  private static HcpVaultAuthenticationMethod parseAuthMethod(String value) {
+    try {
+      return HcpVaultAuthenticationMethod.valueOf(value.toUpperCase());
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(
+              "Unrecognized HCP auth method: " + value, e);
+    }
+  }
+
   public static final ParameterSetParser PARAMETER_SET_PARSER =
-    HcpVaultConfigurationParameters.configureBuilder(
+    HcpVaultSecretParameters.configureBuilder(
       ParameterSetParser.builder()
         .addParameter("value", SECRET_NAME)
         .addParameter(PARAM_HCP_ORG_ID, HCP_ORG_ID)

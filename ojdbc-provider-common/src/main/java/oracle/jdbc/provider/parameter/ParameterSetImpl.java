@@ -38,9 +38,7 @@
 
 package  oracle.jdbc.provider.parameter;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public final class ParameterSetImpl implements ParameterSet {
@@ -127,13 +125,23 @@ public final class ParameterSetImpl implements ParameterSet {
   /**
    * Retrieves the relevant parameter key-value pairs.
    */
-  public Map<String, Object> getParameterKeyValuePairs() {
+  private Map<String, Object> getParameterKeyValuePairs() {
     return parameterNames.entrySet().stream()
             .filter(entry -> parameterValues.get(entry.getKey()) != null)
             .collect(Collectors.toMap(
                     Map.Entry::getValue,
                     entry -> parameterValues.get(entry.getKey())
             ));
+  }
+
+  @Override
+  public Map<String, Object> filterParameters(String[] relevantKeys) {
+    Map<String, Object> allParameters = getParameterKeyValuePairs();
+    List<String> relevantKeysList = Arrays.asList(relevantKeys);
+
+    return allParameters.entrySet().stream()
+            .filter(entry -> relevantKeysList.contains(entry.getKey()))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 
   /**

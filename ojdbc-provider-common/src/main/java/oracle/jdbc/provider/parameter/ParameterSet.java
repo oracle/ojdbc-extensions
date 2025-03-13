@@ -172,11 +172,6 @@ public interface ParameterSet {
    * @param relevantKeys An array of parameter keys relevant to the authentication method.
    * @return A map containing only the filtered parameters.
    */
-  default Map<String, Object> filterParameters(String[] relevantKeys) {
-    Map<String, Object> allParameters = ((ParameterSetImpl) this).getParameterKeyValuePairs();
+   Map<String, Object> filterParameters(String[] relevantKeys);
 
-    return allParameters.entrySet().stream()
-            .filter(entry -> Arrays.asList(relevantKeys).contains(entry.getKey()))
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-  }
 }
