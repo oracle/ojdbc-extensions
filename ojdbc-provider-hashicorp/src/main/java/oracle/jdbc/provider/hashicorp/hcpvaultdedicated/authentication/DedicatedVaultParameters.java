@@ -46,6 +46,7 @@ import oracle.jdbc.provider.parameter.ParameterSetParser;
 import java.util.HashMap;
 import java.util.Map;
 
+import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultAuthenticationMethod.AUTO_DETECT;
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.*;
 
 /**
@@ -75,7 +76,8 @@ public class DedicatedVaultParameters {
   public static final String PARAM_GITHUB_AUTH_PATH = "GITHUB_AUTH_PATH";
   public static final String PARAM_VAULT_ROLE_ID = "ROLE_ID";
   public static final String PARAM_VAULT_SECRET_ID = "SECRET_ID";
-  private static final String PARAM_AUTHENTICATION = "authentication";
+  private static final String PARAM_AUTHENTICATION = "AUTHENTICATION";
+  private static final String PARAM_FIELD_NAME = "FIELD_NAME";
 
 
   // Default values
@@ -202,8 +204,12 @@ public class DedicatedVaultParameters {
   public static ParameterSet buildResolvedParameterSet(Map<String, String> inputOpts) {
     Map<String, String> opts = new HashMap<>(inputOpts);
 
-    opts.putIfAbsent(PARAM_AUTHENTICATION, DedicatedVaultAuthenticationMethod.AUTO_DETECT.name());
-    String authStr = opts.get(PARAM_AUTHENTICATION);
+    String authStr = opts.entrySet().stream()
+      .filter(entry -> entry.getKey().equalsIgnoreCase(PARAM_AUTHENTICATION))
+      .map(Map.Entry::getValue)
+      .findFirst()
+      .orElse(DedicatedVaultAuthenticationMethod.AUTO_DETECT.name());
+
     DedicatedVaultAuthenticationMethod authMethod =
             DedicatedVaultAuthenticationMethod.valueOf(authStr.toUpperCase());
 
@@ -247,25 +253,6 @@ public class DedicatedVaultParameters {
   }
 
   /**
-   * Configures a {@link ParameterSetParser.Builder} with parameters used for
-   * Dedicated Vault authentication.
-   *
-   * @param builder the builder to configure. Must not be null.
-   * @return the configured builder. Not null.
-   */
-  private static ParameterSetParser.Builder configureBuilder(ParameterSetParser.Builder builder) {
-    return builder.addParameter(
-            // The parameter name is "AUTHENTICATION"
-            "AUTHENTICATION",
-            // Tied to HashicorpCredentialsFactory.AUTHENTICATION_METHOD
-            DedicatedVaultParameters.AUTHENTICATION_METHOD,
-            // Default value if none is specified:
-            DedicatedVaultAuthenticationMethod.AUTO_DETECT,
-            DedicatedVaultParameters::parseAuthentication)
-            ;
-  }
-
-  /**
    * Parses the authentication method from a string value.
    * @param value the string value representing the authentication method. Must
    * not be null.
@@ -282,10 +269,11 @@ public class DedicatedVaultParameters {
   }
 
   public static final ParameterSetParser PARAMETER_SET_PARSER =
-    DedicatedVaultParameters.configureBuilder(
       ParameterSetParser.builder()
         .addParameter("value", SECRET_PATH)
         .addParameter("key", KEY)
+        .addParameter(PARAM_AUTHENTICATION, AUTHENTICATION_METHOD, AUTO_DETECT,
+           DedicatedVaultParameters::parseAuthentication)
         .addParameter(PARAM_VAULT_ADDR, VAULT_ADDR)
         .addParameter(PARAM_VAULT_TOKEN, VAULT_TOKEN)
         .addParameter(PARAM_VAULT_USERNAME, USERNAME)
@@ -297,7 +285,7 @@ public class DedicatedVaultParameters {
         .addParameter(PARAM_APPROLE_AUTH_PATH, APPROLE_AUTH_PATH, DEFAULT_APPROLE_PATH)
         .addParameter(PARAM_GITHUB_TOKEN, GITHUB_TOKEN)
         .addParameter(PARAM_GITHUB_AUTH_PATH, GITHUB_AUTH_PATH, DEFAULT_GITHUB_PATH)
-        .addParameter("FIELD_NAME", FIELD_NAME))
+        .addParameter(PARAM_FIELD_NAME, FIELD_NAME)
         .addParameter("type", Parameter.create())
       .build();
 

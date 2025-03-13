@@ -41,7 +41,7 @@ package  oracle.jdbc.provider.parameter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public final class ParameterSetImpl implements ParameterSet {
+final class ParameterSetImpl implements ParameterSet {
 
   /**
    * The values of each parameter. It is assumed that values in this map have

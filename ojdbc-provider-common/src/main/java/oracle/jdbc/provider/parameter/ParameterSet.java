@@ -166,10 +166,11 @@ public interface ParameterSet {
    * Filters the parameters from the {@link ParameterSet} based on the provided
    * relevant keys.
    *
-   * This utility method extracts only the parameters relevant to a specific
-   * authentication method,
+   * This method extracts only the parameters whose names are included
+   * in the specified array.
    *
-   * @param relevantKeys An array of parameter keys relevant to the authentication method.
+   * @param relevantKeys An array of parameter names to include in the filtered
+   * result.
    * @return A map containing only the filtered parameters.
    */
    Map<String, Object> filterParameters(String[] relevantKeys);
