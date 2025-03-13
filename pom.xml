@@ -61,6 +61,7 @@
     <module>ojdbc-provider-oci</module>
     <module>ojdbc-provider-samples</module>
     <module>ojdbc-provider-opentelemetry</module>
+    <module>ojdbc-provider-aws</module>
     <module>ojdbc-provider-jackson-oson</module>
     <module>ojdbc-provider-hashicorp</module>
   </modules>

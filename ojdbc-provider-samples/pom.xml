@@ -37,6 +37,11 @@
     </dependency>
     <dependency>
       <groupId>com.oracle.database.jdbc</groupId>
+      <artifactId>ojdbc-provider-aws</artifactId>
+      <version>${project.parent.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.oracle.database.jdbc</groupId>
       <artifactId>ojdbc-provider-hashicorp</artifactId>
       <version>${project.parent.version}</version>
     </dependency>

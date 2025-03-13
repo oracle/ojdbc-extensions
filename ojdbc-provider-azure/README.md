@@ -53,23 +53,26 @@ JDK versions. The coordinates for the latest release are:
 The Config Provider for Azure is a Centralized Config Provider that provides Oracle JDBC with
 connection properties from the App Configuration service and the Key Vault service.
 
-A new prefix of the JDBC URL `jdbc:oracle:thin:@config-azure://` is used by the Oracle DataSource to be able to identify that the configuration parameters should be loaded using Azure App Configuration. Users only need to indicate the App Config's name, a prefix for the key-names and a label (both optional) with the following syntax:
+A new prefix of the JDBC URL `jdbc:oracle:thin:@config-azure://` is used by the Oracle Data Source to be able to identify that the configuration parameters should be loaded using Azure App Configuration. Users only need to indicate the App Config's name, a prefix for the key-names and a label (both optional) using the following syntax, where option-value pairs separated by `&` are optional authentication parameters that vary by provider:
 
 <pre>
 jdbc:oracle:thin:@config-azure://{appconfig-name}[?key=prefix&label=value&option1=value1&option2=value2...]
 </pre>
 
+For more details about the option-value pairs, see [Common Parameters for Centralized Config Providers](#common-parameters-for-centralized-config-providers).
+
 If prefix and label are not informed, the provider will retrieve all the values that are not labeled or prefixed.
 
-There are 3 fixed values that are looked at by the provider in the retrieved configuration:
+There are 4 fixed values that are looked at by the provider in the retrieved configuration:
 
 - connect_descriptor (required)
 - user (optional)
 - password (optional)
+- wallet_location (optional)
 
 The rest are dependent on the driver, in our case `/jdbc`. The key-value pairs that are with sub-prefix `/jdbc` will be applied to a DataSource. The key values are constant keys which are equivalent to the properties defined in the [OracleConnection](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html) interface.
 
-For example, let's suppose an url like:
+For example, let's suppose a URL like:
 
 <pre>
 jdbc:oracle:thin:@config-azure://myappconfig?key=/sales_app1/&label=dev
@@ -78,15 +81,16 @@ jdbc:oracle:thin:@config-azure://myappconfig?key=/sales_app1/&label=dev
 And the configuration in App Configuration '**myappconfig**' as follows (note that some values such as password can be a reference to a Key Vault secret):
 
 | Key                                       | Value                                                                                                                                                                    | Label |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----- |
+|-------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------| ----- |
 | /sales_app1/user                          | scott                                                                                                                                                                    | dev   |
 | /sales_app1/connect_descriptor            | (description=(address=(protocol=tcps)(port=1521)(host=adb.us-phoenix-1.oraclecloud.com))(connect_data=(service_name=gebqqvpozhjbqbs_dbtest_medium.adb.oraclecloud.com))) | dev   |
 | /sales_app1/password                      | {"uri":"myvault.vault.azure.net/secrets/mysecret"}                                                                                                                       | dev   |
+| /sales_app1/wallet_location               | {"uri":"myvault.vault.azure.net/secrets/mywallet"}                                                                                                                       | dev   |
 | /sales_app1/jdbc/autoCommit               | false                                                                                                                                                                    | dev   |
 | /sales_app1/jdbc/oracle.jdbc.fanEnabled   | true                                                                                                                                                                     | dev   |
 | /sales_app1/jdbc/oracle.jdbc.loginTimeout | 20                                                                                                                                                                       | dev   |
 
-In this case the OracleDataSource that gets generated uses the above values as its properties.
+In this case the Oracle Data Source that gets generated uses the above values as its properties.
 
 The sample code below executes as expected with the previous configuration (and the Azure Credentials set as explained below).
 
@@ -101,15 +105,15 @@ The sample code below executes as expected with the previous configuration (and 
 ```
 ## Azure Vault Config Provider
 Similar to [OCI Vault Config Provider](../ojdbc-provider-oci/README.md#oci-vault-config-provider), JSON Payload can also be stored in the content of Azure Key Vault Secret.
-The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-azurevault://`. Users only need to indicate the Vault Secret’s secret identifier, with the following syntax:
+The Oracle Data Source uses a new prefix `jdbc:oracle:thin:@config-azurevault://`. Users only need to indicate the Vault Secret’s secret identifier using the following syntax, where option-value pairs separated by `&` are optional authentication parameters that vary by provider:
 
 <pre>
-jdbc:oracle:thin:@config-azurevault://{secret-identifier}
+jdbc:oracle:thin:@config-azurevault://{secret-identifier}[?option1=value1&option2=value2...]
 </pre>
 
-To view an example format of JSON Payload, please refer to [JSON Payload format](../ojdbc-provider-oci/README.md#json-payload-format). 
+For more details about the option-value pairs, see [Common Parameters for Centralized Config Providers](#common-parameters-for-centralized-config-providers).
 
-
+To view an example format of JSON Payload, please refer to [JSON Payload format](../ojdbc-provider-oci/README.md#json-payload-format).
 
 ## Common Parameters for Centralized Config Providers
 Provider that are classified as Centralized Config Providers in this module share the same sets of parameters for authentication configuration.
@@ -183,36 +187,9 @@ The Azure SDK `DefaultAzureCredential` class tries the following flow in order t
 ## Caching configuration
 
 Config providers in this module store the configuration in caches to minimize
-the number of RPC requests to remote location. Every stored items has a property
-that defines the time-to-live (TTL) value. When TTL expires, the configuration
-becomes "softly expired" and the stored configuration will be refreshed by a
-background thread. If configuration cannot be refreshed, it can still be used 
-for another 30 minutes until it becomes "hardly expired". In other words, it takes
-24 hours and 30 minutes for configuration before it becomes completely expired. 
-
-The default value of TTL is 24 hours and it can be configured using the
-"config_time_to_live" property in the unit of seconds.
-An example of App Configuration in Azure with TTL of 60 seconds is listed below.
-
-<table>
-<thead><tr>
-<th>Key</th>
-<th>Value</th>
-</tr></thead>
-<tbody><tr>
-<td>user</td>
-<td>myUsername</td>
-</tr><tr>
-<td>password</td>
-<td>myPassword</td>
-</tr><tr>
-<td>connect_descriptor</td>
-<td>myHost:5521/myService</td>
-</tr><tr>
-<td>config_time_to_live</td>
-<td>60</td>
-</tr></tbody>
-</table>
+the number of RPC requests to remote location. See
+[Caching configuration](../ojdbc-provider-oci/README.md#caching-configuration) for more
+details of the caching mechanism.
 
 ## Access Token Provider
 The Access Token Provider provides Oracle JDBC with an access token that authorizes 
