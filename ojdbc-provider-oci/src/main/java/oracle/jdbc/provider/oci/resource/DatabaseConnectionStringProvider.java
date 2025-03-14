@@ -67,7 +67,7 @@ public final class DatabaseConnectionStringProvider
   private static final ResourceParameter[] PARAMETERS =
     new ResourceParameter[] {
       new ResourceParameter("ocid", WalletFactory.OCID),
-      new ResourceParameter("consumer-group", CONSUMER_GROUP, "MEDIUM")
+      new ResourceParameter("consumerGroup", CONSUMER_GROUP, "MEDIUM")
     };
 
   /**

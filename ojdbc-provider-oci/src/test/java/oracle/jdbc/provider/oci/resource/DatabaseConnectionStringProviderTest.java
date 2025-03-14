@@ -76,4 +76,22 @@ public class DatabaseConnectionStringProviderTest {
     String descriptor = PROVIDER.getConnectionString(parameterValues);
     assertNotNull(descriptor);
   }
+
+  @Test
+  public void testWithConsumerGroup() {
+    Map<String, CharSequence> testParameters = new HashMap<>();
+    testParameters.put("authenticationMethod", "config-file");
+    testParameters.put("configFile", TestProperties.getOrAbort(
+      OciTestProperty.OCI_CONFIG_FILE));
+    testParameters.put("profile", TestProperties.getOrAbort(
+      OciTestProperty.OCI_CONFIG_PROFILE));
+    testParameters.put("ocid", TestProperties.getOrAbort(
+      OciTestProperty.OCI_DATABASE_OCID));
+    testParameters.put("consumerGroup", "HIGH");
+
+    Map<Parameter, CharSequence> parameterValues =
+      createParameterValues(PROVIDER, testParameters);
+    String descriptor = PROVIDER.getConnectionString(parameterValues);
+    assertNotNull(descriptor);
+  }
 }
