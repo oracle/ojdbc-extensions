@@ -10,6 +10,9 @@ jobs:
       AZURE_USERNAME: ${{ secrets.TEST_AZURE_USERNAME }}
       AZURE_PASSWORD: ${{ secrets.TEST_AZURE_PASSWORD }}
       AZURE_CLIENT_CERTIFICATE_PATH: ${{ secrets.TEST_AZURE_CLIENT_CERTIFICATE_PATH }}
+      AWS_REGION: ${{ secrets.TEST_AWS_REGION }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.TEST_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.TEST_AWS_SECRET_ACCESS_KEY }}
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
@@ -18,7 +21,7 @@ jobs:
         with:
           java-version: 11
       - name: Cache Maven packages
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
@@ -123,7 +126,12 @@ jobs:
           JACKSON_OSON_USERNAME=${{ secrets.TEST_JACKSON_OSON_USERNAME }}\n
           JACKSON_OSON_PASSWORD=${{ secrets.TEST_JACKSON_OSON_PASSWORD }}\n
           " >> ojdbc-provider-jackson-oson/test.properties
-
+          
+          # Generate ojdbc-provider-aws/test.properties
+          echo -e "AWS_S3_URL=${{ secrets.TEST_AWS_S3_URL }}\n
+          AWS_SECRETS_MANAGER_URL=${{ secrets.TEST_AWS_SECRETS_MANAGER_URL }}\n
+          " >> ojdbc-provider-aws/test.properties
+          
           # Generate GCP config
           echo "${{ secrets.TEST_GCP_CONFIG }}" > $HOME/.gcp/config.json
           echo "${{ secrets.GCP_TEST_PROPERTIES }}" > ojdbc-provider-gcp/test.properties
@@ -145,3 +153,5 @@ jobs:
           rm ojdbc-provider-gcp/test.properties
           
           rm ojdbc-provider-jackson-oson/test.properties
+          
+          rm ojdbc-provider-aws/test.properties
