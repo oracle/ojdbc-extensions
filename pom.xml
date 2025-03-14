@@ -64,6 +64,7 @@
     <module>ojdbc-provider-aws</module>
     <module>ojdbc-provider-gcp</module>
     <module>ojdbc-provider-jackson-oson</module>
+    <module>ojdbc-provider-hashicorp</module>
   </modules>
 
   <dependencyManagement>

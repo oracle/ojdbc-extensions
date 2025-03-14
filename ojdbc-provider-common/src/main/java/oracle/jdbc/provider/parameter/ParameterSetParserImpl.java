@@ -113,11 +113,11 @@ final class ParameterSetParserImpl implements ParameterSetParser {
 
     @Override
     public Builder addParameter(
-      String name, Parameter<String> parameter, String defaultValue) {
+            String name, Parameter<String> parameter, String defaultValue) {
       addParameterParser(
-          name,
-          (builder) -> builder.add(name, parameter, defaultValue),
-          (value, builder) -> builder.add(name, parameter, value));
+              name,
+              (builder) -> builder.add(name, parameter, defaultValue),
+              (value, builder) -> builder.add(name, parameter, value));
       return this;
     }
 
