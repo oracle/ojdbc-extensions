@@ -38,6 +38,7 @@
 package oracle.jdbc.provider.gcp.configuration;
 
 import oracle.jdbc.datasource.impl.OracleDataSource;
+import oracle.jdbc.provider.Configuration;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -49,6 +50,14 @@ import java.sql.Statement;
  * connection properties retrieved from OCI Cloud Storage.
  */
 public class SimpleCloudStorageExample {
+
+  /**
+   * An GCP Storage object properties as a JVM system property,
+   * environment variable, or configuration.properties file entry named
+   * "gcp_cloud_storage_properties".
+   */
+  private static final String STORAGE_OBJECT = Configuration
+      .getRequired("gcp_cloud_storage_properties");
 
   /**
    * <p>
@@ -69,7 +78,7 @@ public class SimpleCloudStorageExample {
    * @throws SQLException if an error occurs during the database calls
    */
   public static void main(String[] args) throws SQLException {
-    String url = "jdbc:oracle:thin:@config-gcpstorage://project=onyx-eye-426013-i5;bucket=fm-test-bucket-123564;object=testObjectStorage.json";
+    String url = "jdbc:oracle:thin:@config-gcpstorage://" + STORAGE_OBJECT;
 
     // Standard JDBC code
     OracleDataSource ds = new OracleDataSource();
