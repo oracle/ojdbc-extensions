@@ -80,7 +80,7 @@ A sign-in screen appears. After you sign in, your credentials are stored in the 
 The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-gcpstorage:` to be able to identify that the configuration parameters should be loaded using GCP Object Storage. Users only need to indicate the project, bucket and object containing the JSON payload, with the following syntax:
 
 <pre>
-jdbc:oracle:thin:@config-gcpstorage://project={project};bucket={bucket};object={object}]
+jdbc:oracle:thin:@config-gcpstorage://project={project};bucket={bucket};object={object}
 </pre>
 
 ### JSON Payload format
