@@ -84,7 +84,9 @@ public abstract class OciResourceProvider
         "region",
         AuthenticationDetailsFactory.REGION,
         null, // no default
-        Region::fromRegionCodeOrId)
+        regionCodeOrId -> {
+          return regionCodeOrId == null ? null : Region.fromRegionCodeOrId(regionCodeOrId);
+        })
     };
 
   /**

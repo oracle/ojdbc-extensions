@@ -68,6 +68,10 @@ final class ParameterSetParserImpl implements ParameterSetParser {
     for (ParameterParser parameterParser : parameterParsers.values())
       parameterParser.setDefaultValue(builder);
 
+    for (Map.Entry<String, ParameterParser> entry : parameterParsers.entrySet()) {
+      entry.getValue().setValue(builder, namedValues.get(entry.getKey()));        
+    }
+/*
     for (Map.Entry<String, String> namedValue : namedValues.entrySet()) {
 
       String name = namedValue.getKey();
@@ -81,6 +85,7 @@ final class ParameterSetParserImpl implements ParameterSetParser {
 
       parameterParser.setValue(builder, namedValue.getValue());
     }
+*/
 
     return builder.build();
   }
