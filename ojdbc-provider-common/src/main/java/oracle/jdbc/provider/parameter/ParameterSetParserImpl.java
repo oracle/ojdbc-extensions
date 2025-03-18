@@ -38,7 +38,6 @@
 
 package  oracle.jdbc.provider.parameter;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -46,7 +45,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 final class ParameterSetParserImpl implements ParameterSetParser {

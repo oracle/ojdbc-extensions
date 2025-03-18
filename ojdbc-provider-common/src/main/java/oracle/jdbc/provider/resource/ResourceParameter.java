@@ -140,8 +140,12 @@ public final class ResourceParameter
         ? builder -> { }
         : builder ->
              builder.add(name, providerParameter, parser.apply(defaultValue)),
-      (value, builder) ->
-        builder.add(name, providerParameter, parser.apply(value)));
+      (value, builder) -> {
+        if (value != null) 
+          builder.add(name, providerParameter, parser.apply(value));
+        else
+          builder.add(name, providerParameter, null);
+      });
   }
 
   /**
