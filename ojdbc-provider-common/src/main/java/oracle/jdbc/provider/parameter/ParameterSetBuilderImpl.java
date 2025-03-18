@@ -52,7 +52,9 @@ final class ParameterSetBuilderImpl implements ParameterSetBuilder {
 
   @Override
   public <T> ParameterSetBuilder add(String name, Parameter<T> parameter, T value) {
-    parameterValues.put(parameter, value);
+    if (value != null) {
+      parameterValues.put(parameter, value);
+    }
     parameterNames.put(parameter, name);
     return this;
   }
