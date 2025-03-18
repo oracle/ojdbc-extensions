@@ -144,7 +144,7 @@ public final class ResourceParameter
         if (value != null) 
           builder.add(name, providerParameter, parser.apply(value));
         else
-          builder.add(name, providerParameter, null);
+          builder.add(name, providerParameter, parser.apply(defaultValue));
       });
   }
 

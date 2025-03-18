@@ -41,11 +41,15 @@ package  oracle.jdbc.provider.parameter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.Map.Entry;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
+
+import java.util.Arrays;
 
 final class ParameterSetParserImpl implements ParameterSetParser {
 
@@ -66,24 +70,37 @@ final class ParameterSetParserImpl implements ParameterSetParser {
     for (ParameterParser parameterParser : parameterParsers.values())
       parameterParser.setDefaultValue(builder);
 
-    for (Map.Entry<String, ParameterParser> entry : parameterParsers.entrySet()) {
-      entry.getValue().setValue(builder, namedValues.get(entry.getKey()));        
-    }
-/*
     for (Map.Entry<String, String> namedValue : namedValues.entrySet()) {
 
       String name = namedValue.getKey();
       ParameterParser parameterParser = parameterParsers.get(name);
 
       if (parameterParser == null) {
-        throw new IllegalArgumentException(format(
+        throw new IllegalArgumentException(String.format(
           "Unrecognized parameter name: \"%s\". Valid parameter names are: %s",
           name, Arrays.toString(parameterParsers.keySet().toArray())));
       }
 
       parameterParser.setValue(builder, namedValue.getValue());
     }
-*/
+
+    Map<String, ParameterParser> missingParameters = 
+      parameterParsers
+          .entrySet()
+          .stream()
+          .filter(entry -> {
+            for (String key : namedValues.keySet()) {
+              if (entry.getKey().equalsIgnoreCase(key)) {
+                return false;
+              }
+            }
+            return true;
+          })
+          .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()));
+    
+    for (Entry<String, ParameterParser> missingEntry : missingParameters.entrySet()) {
+      missingEntry.getValue().setValue(builder, null);
+    }
 
     return builder.build();
   }
@@ -142,8 +159,12 @@ final class ParameterSetParserImpl implements ParameterSetParser {
       addParameterParser(
           name,
           builder -> builder.add(name, parameter, defaultValue),
-          (value, builder) ->
-              builder.add(name, parameter, valueParser.apply(value)));
+          (value, builder) -> {
+            if (value != null) 
+              builder.add(name, parameter, valueParser.apply(value));
+            else
+              builder.add(name, parameter, defaultValue);
+          });
       return this;
     }
 
