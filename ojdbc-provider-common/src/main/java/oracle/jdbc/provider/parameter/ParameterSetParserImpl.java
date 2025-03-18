@@ -165,7 +165,8 @@ final class ParameterSetParserImpl implements ParameterSetParser {
           name,
           builder -> builder.add(name, parameter, defaultValue),
           (value, builder) -> {
-            // Some parsers cannot handle null values
+            // Do not parse null values, null values are set so that parameter 
+            // name will be added. Keep the default value if there is one.
             if (value != null)
               builder.add(name, parameter, valueParser.apply(value));
             else
