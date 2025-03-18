@@ -47,6 +47,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 import java.util.Arrays;
@@ -76,7 +77,7 @@ final class ParameterSetParserImpl implements ParameterSetParser {
       ParameterParser parameterParser = parameterParsers.get(name);
 
       if (parameterParser == null) {
-        throw new IllegalArgumentException(String.format(
+        throw new IllegalArgumentException(format(
           "Unrecognized parameter name: \"%s\". Valid parameter names are: %s",
           name, Arrays.toString(parameterParsers.keySet().toArray())));
       }
@@ -84,6 +85,8 @@ final class ParameterSetParserImpl implements ParameterSetParser {
       parameterParser.setValue(builder, namedValue.getValue());
     }
 
+    // Filter all parameter that are not present in namedValues, parameterParsers
+    // is case insensitive, but namedValues is not.
     Map<String, ParameterParser> missingParameters = 
       parameterParsers
           .entrySet()
@@ -98,6 +101,8 @@ final class ParameterSetParserImpl implements ParameterSetParser {
           })
           .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()));
     
+    // Set value null to parameters that were not set (either by namedValues or 
+    // using the default values)
     for (Entry<String, ParameterParser> missingEntry : missingParameters.entrySet()) {
       missingEntry.getValue().setValue(builder, null);
     }
@@ -160,7 +165,8 @@ final class ParameterSetParserImpl implements ParameterSetParser {
           name,
           builder -> builder.add(name, parameter, defaultValue),
           (value, builder) -> {
-            if (value != null) 
+            // Some parsers cannot handle null values
+            if (value != null)
               builder.add(name, parameter, valueParser.apply(value));
             else
               builder.add(name, parameter, defaultValue);
