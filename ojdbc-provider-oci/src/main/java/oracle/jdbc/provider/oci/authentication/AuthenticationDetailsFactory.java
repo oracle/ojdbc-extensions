@@ -248,12 +248,12 @@ public final class AuthenticationDetailsFactory
    */
   private static AuthenticationDetailsProvider
     apiKeyBasedAuthentication(ParameterSet parameters) {
-    if (parameters.contains(TENANT_ID)
-      || parameters.contains(USER_ID)
-      || parameters.contains(FINGERPRINT)
-      || parameters.contains(PRIVATE_KEY)
-      || parameters.contains(PASS_PHRASE)
-      || parameters.contains(REGION)) {
+    if (!parameters.getOptional(TENANT_ID).isEmpty()
+      || !parameters.getOptional(USER_ID).isEmpty()
+      || !parameters.getOptional(FINGERPRINT).isEmpty()
+      || !parameters.getOptional(PRIVATE_KEY).isEmpty()
+      || !parameters.getOptional(PASS_PHRASE).isEmpty()
+      || parameters.getOptional(REGION) != null) {
       return simpleAuthentication(parameters);
     }
     return configFileAuthentication(parameters);
