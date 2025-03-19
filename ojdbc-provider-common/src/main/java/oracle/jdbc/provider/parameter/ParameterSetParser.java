@@ -212,52 +212,5 @@ public interface ParameterSetParser {
     Builder addParameter(
       String name, BiConsumer<String, ParameterSetBuilder> valueSetter);
 
-    /**
-     * <p>
-     * Adds a parameter that a parser identifies by a given
-     * {@code name}, and invokes a {@code defaultValueSetter} to assign a value
-     * if the name is not present, or invokes a {@code valueSetter} function for
-     * assigning the value if the name is present. The input to the
-     * {@code defaultValueSetter} function is a {@link ParameterSetBuilder} that
-     * builds the parsed {@link ParameterSet}. The input to the
-     * {@code valueSetter} is the value as it appears in text form, and a
-     * {@link ParameterSetBuilder} that builds the parsed {@link ParameterSet}. If
-     * the name passed to this method is "x", and the parsed input includes an
-     * assignment such as "x=0", then "0" is input to the {@code valueSetter}.
-     * </p><p>
-     * This method is designed for cases where a single parameter in text format
-     * may map to multiple {@link Parameter} objects. The
-     * {@code defaultValueSetter} and {@code valueSetter} functions can perform
-     * multiple calls to set each parameter, as in this example:
-     * </p>
-     * <pre>{@code
-     * builder.addParameter(
-     *   "coordinate",
-     *   (parameterSetBuilder) -> {
-     *     // Assign the default value of 0 to X, Y, and Z
-     *     parameterSetBuilder.add("coordinate", X, 0);
-     *     parameterSetBuilder.add("coordinate", Y, 0);
-     *     parameterSetBuilder.add("coordinate", Z, 0);
-     *   },
-     *   (value, parameterSetBuilder) -> {
-     *     // Split "x,y,z" formatted value
-     *     String[] xyz = value.split(",");
-     *     parameterSetBuilder.add("coordinate", X, xyz[0]);
-     *     parameterSetBuilder.add("coordinate", Y, xyz[1]);
-     *     parameterSetBuilder.add("coordinate", Z, xyz[2]);
-     * });
-     * }</pre>
-     *
-     * @param name Name of the parsed parameter. Not null.
-     * @param defaultValueSetter Parses and sets the default value of
-     *        parameter(s). Not null.
-     * @param valueSetter Parses and sets the value of parameter(s) from text
-     *        input. Not null.
-     * @return This builder
-     */
-    Builder addParameter(
-      String name,
-      Consumer<ParameterSetBuilder> defaultValueSetter,
-      BiConsumer<String, ParameterSetBuilder> valueSetter);
   }
 }

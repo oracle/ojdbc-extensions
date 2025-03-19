@@ -43,7 +43,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -67,9 +66,6 @@ final class ParameterSetParserImpl implements ParameterSetParser {
     requireNonNull(namedValues, "namedValues is null");
 
     ParameterSetBuilder builder = ParameterSet.builder();
-
-    for (ParameterParser parameterParser : parameterParsers.values())
-      parameterParser.setDefaultValue(builder);
 
     for (Map.Entry<String, String> namedValue : namedValues.entrySet()) {
 
@@ -131,7 +127,6 @@ final class ParameterSetParserImpl implements ParameterSetParser {
     public Builder addParameter(String name, Parameter<String> parameter) {
       addParameterParser(
           name,
-          ParameterParser.SET_NO_DEFAULT,
           (value, builder) -> builder.add(name, parameter, value));
       return this;
     }
@@ -141,7 +136,6 @@ final class ParameterSetParserImpl implements ParameterSetParser {
       String name, Parameter<String> parameter, String defaultValue) {
       addParameterParser(
           name,
-          (builder) -> builder.add(name, parameter, defaultValue),
           (value, builder) -> builder.add(name, parameter, value));
       return this;
     }
@@ -151,7 +145,6 @@ final class ParameterSetParserImpl implements ParameterSetParser {
       String name, Parameter<T> parameter, Function<String, T> valueParser) {
       addParameterParser(
           name,
-          ParameterParser.SET_NO_DEFAULT,
           (value, builder) ->
               builder.add(name, parameter, valueParser.apply(value)));
       return this;
@@ -163,10 +156,8 @@ final class ParameterSetParserImpl implements ParameterSetParser {
       Function<String, T> valueParser) {
       addParameterParser(
           name,
-          builder -> builder.add(name, parameter, defaultValue),
           (value, builder) -> {
-            // Do not parse null values, null values are set so that parameter 
-            // name will be added. Keep the default value if there is one.
+            // If the value is null set the default value.
             if (value != null)
               builder.add(name, parameter, valueParser.apply(value));
             else
@@ -178,28 +169,16 @@ final class ParameterSetParserImpl implements ParameterSetParser {
     @Override
     public Builder addParameter(
       String name, BiConsumer<String, ParameterSetBuilder> valueSetter) {
-      addParameterParser(
-          name, ParameterParser.SET_NO_DEFAULT, valueSetter);
-      return this;
-    }
-
-    @Override
-    public Builder addParameter(
-      String name,
-      Consumer<ParameterSetBuilder> defaultValueSetter,
-      BiConsumer<String, ParameterSetBuilder> valueSetter) {
-
-      addParameterParser(name, defaultValueSetter, valueSetter);
+      addParameterParser(name, valueSetter);
       return this;
     }
 
     private void addParameterParser(
         String name,
-        Consumer<ParameterSetBuilder> defaultValueSetter,
         BiConsumer<String, ParameterSetBuilder> valueSetter) {
 
       ParameterParser parameterParser =
-        new ParameterParser(defaultValueSetter, valueSetter);
+        new ParameterParser(valueSetter);
       parameterParsers.put(name, parameterParser);
     }
 
@@ -211,25 +190,12 @@ final class ParameterSetParserImpl implements ParameterSetParser {
    */
   private static final class ParameterParser {
 
-    /** A consumer that sets no default value for a parameter */
-    private static final Consumer<ParameterSetBuilder> SET_NO_DEFAULT =
-        builder -> { };
-
-    /** A consumer that sets a default value for a parameter */
-    private final Consumer<ParameterSetBuilder> defaultValueSetter;
-
     /** A consumer that parses and sets a value for a parameter */
     private final BiConsumer<String, ParameterSetBuilder> valueSetter;
 
     private ParameterParser(
-        Consumer<ParameterSetBuilder> defaultValueSetter,
         BiConsumer<String, ParameterSetBuilder> valueSetter) {
-      this.defaultValueSetter = defaultValueSetter;
       this.valueSetter = valueSetter;
-    }
-
-    void setDefaultValue(ParameterSetBuilder builder) {
-      defaultValueSetter.accept(builder);
     }
 
     void setValue(ParameterSetBuilder builder, String value) {

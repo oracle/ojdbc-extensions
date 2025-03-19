@@ -43,7 +43,6 @@ import oracle.jdbc.provider.parameter.ParameterSetParser;
 import oracle.jdbc.spi.OracleResourceProvider;
 
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -70,11 +69,6 @@ public final class ResourceParameter
    * if not.
    */
   private final boolean isRequired;
-
-  /**
-   * Configures a {@code ParameterSetBuilder} with a default value, if any.
-   */
-  private final Consumer<ParameterSetBuilder> defaultValueSetter;
 
   /**
    * Configures a {@code ParameterSetBuilder} with a value parsed from a
@@ -111,9 +105,6 @@ public final class ResourceParameter
     this(name, defaultValue,
       providerParameter.isRequired(),
       providerParameter.isSensitive(),
-      defaultValue == null
-        ? builder -> { }
-        : builder -> builder.add(name, providerParameter, defaultValue),
       (value, builder) -> builder.add(name, providerParameter, value));
   }
 
@@ -136,16 +127,12 @@ public final class ResourceParameter
     this(name, defaultValue,
       providerParameter.isRequired(),
       providerParameter.isSensitive(),
-      defaultValue == null
-        ? builder -> { }
-        : builder ->
-             builder.add(name, providerParameter, parser.apply(defaultValue)),
       (value, builder) -> {
         if (value != null) 
           builder.add(name, providerParameter, parser.apply(value));
         else
-          // Do not parse null values, null values are set so that parameter 
-          // name will be added
+          // If no value is set, set default value or null. Default value needs
+          // to be parsed, null should not be parsed.
           if (defaultValue != null) 
             builder.add(name, providerParameter, parser.apply(defaultValue));
           else 
@@ -166,20 +153,16 @@ public final class ResourceParameter
    * parameter, or {@code false} if not.
    * @param isSensitive {@code true} if value of the parameter is security
    * sensitive, or {@code false} if not.
-   * @param defaultValueSetter Configures the default value of the parameter,
-   * if any.
    * @param parser Parses the value of the parameter. Not null.
    */
   public ResourceParameter(
     String name, String defaultValue, boolean isRequired,
     boolean isSensitive,
-    Consumer<ParameterSetBuilder> defaultValueSetter,
     BiConsumer<String, ParameterSetBuilder> parser) {
     this.name = name;
     this.defaultValue = defaultValue;
     this.isRequired = isRequired;
     this.isSensitive = isSensitive;
-    this.defaultValueSetter = defaultValueSetter;
     this.parser = parser;
   }
 
@@ -210,7 +193,6 @@ public final class ResourceParameter
   void configureParser(ParameterSetParser.Builder builder) {
     builder.addParameter(
       name,
-      defaultValueSetter,
       parser);
   }
 
