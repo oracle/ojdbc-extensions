@@ -41,7 +41,9 @@ package  oracle.jdbc.provider.parameter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -67,10 +69,18 @@ final class ParameterSetParserImpl implements ParameterSetParser {
 
     ParameterSetBuilder builder = ParameterSet.builder();
 
+    // Make a copy of the keyset containing lower case keys, from which we will
+    // remove those present in the namedValues map
+    Set<String> missingKeys = parameterParsers
+        .keySet().stream().map(String::toLowerCase).collect(Collectors.toSet());
+
     for (Map.Entry<String, String> namedValue : namedValues.entrySet()) {
 
       String name = namedValue.getKey();
       ParameterParser parameterParser = parameterParsers.get(name);
+
+      // remove key from missing keys
+      missingKeys.remove(name.toLowerCase());
 
       if (parameterParser == null) {
         throw new IllegalArgumentException(format(
@@ -81,26 +91,9 @@ final class ParameterSetParserImpl implements ParameterSetParser {
       parameterParser.setValue(builder, namedValue.getValue());
     }
 
-    // Filter all parameter that are not present in namedValues, parameterParsers
-    // is case insensitive, but namedValues is not.
-    Map<String, ParameterParser> missingParameters = 
-      parameterParsers
-          .entrySet()
-          .stream()
-          .filter(entry -> {
-            for (String key : namedValues.keySet()) {
-              if (entry.getKey().equalsIgnoreCase(key)) {
-                return false;
-              }
-            }
-            return true;
-          })
-          .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()));
-    
-    // Set value null to parameters that were not set (either by namedValues or 
-    // using the default values)
-    for (Entry<String, ParameterParser> missingEntry : missingParameters.entrySet()) {
-      missingEntry.getValue().setValue(builder, null);
+    // Set value null to parameters that were not present in namedValues
+    for (String missingKey : missingKeys) {
+      parameterParsers.get(missingKey).setValue(builder, null);
     }
 
     return builder.build();
