@@ -105,7 +105,12 @@ public final class ResourceParameter
     this(name, defaultValue,
       providerParameter.isRequired(),
       providerParameter.isSensitive(),
-      (value, builder) -> builder.add(name, providerParameter, value));
+      (value, builder) -> {
+        if (value != null)
+          builder.add(name, providerParameter, value);
+        else
+          builder.add(name, providerParameter, defaultValue);
+      });
   }
 
   /**
