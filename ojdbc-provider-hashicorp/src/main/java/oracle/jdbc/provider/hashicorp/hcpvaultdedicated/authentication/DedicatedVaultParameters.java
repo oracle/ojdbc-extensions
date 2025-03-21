@@ -81,10 +81,10 @@ public class DedicatedVaultParameters {
 
 
   // Default values
-  static final String DEFAULT_NAMESPACE = "admin";
-  static final String DEFAULT_USERPASS_PATH = "userpass";
-  static final String DEFAULT_APPROLE_PATH = "approle";
-  static final String DEFAULT_GITHUB_PATH = "github";
+  public static final String DEFAULT_NAMESPACE = "admin";
+  public static final String DEFAULT_USERPASS_PATH = "userpass";
+  public static final String DEFAULT_APPROLE_PATH = "approle";
+  public static final String DEFAULT_GITHUB_PATH = "github";
 
   /**
    * <p>
@@ -93,7 +93,7 @@ public class DedicatedVaultParameters {
    * </p>
    */
   public static final Parameter<DedicatedVaultAuthenticationMethod> AUTHENTICATION_METHOD =
-          Parameter.create(REQUIRED);
+          Parameter.create();
 
   /** The path of the secret in Vault. Required. */
   public static final Parameter<String> SECRET_PATH = Parameter.create(REQUIRED);
@@ -112,7 +112,7 @@ public class DedicatedVaultParameters {
   /**
    * The Vault token. If not specified, fallback to system property or environment var.
    */
-  public static final Parameter<String> VAULT_TOKEN = Parameter.create(REQUIRED);
+  public static final Parameter<String> VAULT_TOKEN = Parameter.create();
 
   /**
    *  The field name for extracting a specific value from the JSON.
@@ -122,12 +122,12 @@ public class DedicatedVaultParameters {
   /**
    * The username for Userpass authentication. Required for Userpass method.
    */
-  public static final Parameter<String> USERNAME = Parameter.create(REQUIRED);
+  public static final Parameter<String> USERNAME = Parameter.create();
 
   /**
    *  The password for Userpass authentication. Required for Userpass method.
    */
-  public static final Parameter<String> PASSWORD = Parameter.create(REQUIRED);
+  public static final Parameter<String> PASSWORD = Parameter.create();
 
   /**
    *  The path for Userpass authentication. Optional.
@@ -146,7 +146,7 @@ public class DedicatedVaultParameters {
    * configured in Vault as part of the AppRole authentication setup.
    * </p>
    */
-  public static final Parameter<String> ROLE_ID = Parameter.create(REQUIRED);
+  public static final Parameter<String> ROLE_ID = Parameter.create();
 
   /**
    * The Secret ID for AppRole authentication. Required for AppRole method.
@@ -155,7 +155,7 @@ public class DedicatedVaultParameters {
    * conjunction with the Role ID for AppRole authentication.
    * </p>
    */
-  public static final Parameter<String> SECRET_ID = Parameter.create(REQUIRED);
+  public static final Parameter<String> SECRET_ID = Parameter.create();
 
   /**
    * The path for AppRole authentication. Optional.
@@ -176,7 +176,7 @@ public class DedicatedVaultParameters {
    * the Vault policy.
    * </p>
    */
-  public static final Parameter<String> GITHUB_TOKEN = Parameter.create(REQUIRED);
+  public static final Parameter<String> GITHUB_TOKEN = Parameter.create();
 
   /**
    * The path for GitHub authentication. Optional.
@@ -259,7 +259,7 @@ public class DedicatedVaultParameters {
    * @return the parsed {@link DedicatedVaultAuthenticationMethod}.
    * @throws IllegalArgumentException if the value is unrecognized.
    */
-  private static DedicatedVaultAuthenticationMethod parseAuthentication(String value) {
+  public static DedicatedVaultAuthenticationMethod parseAuthentication(String value) {
     try {
       return DedicatedVaultAuthenticationMethod.valueOf(value.toUpperCase());
     } catch (IllegalArgumentException e) {

@@ -39,6 +39,7 @@
 package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.configuration;
 
 import oracle.jdbc.provider.TestProperties;
+import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.DedicatedVaultTestProperty;
 import oracle.jdbc.spi.OracleConfigurationProvider;
 import org.junit.jupiter.api.Test;
 

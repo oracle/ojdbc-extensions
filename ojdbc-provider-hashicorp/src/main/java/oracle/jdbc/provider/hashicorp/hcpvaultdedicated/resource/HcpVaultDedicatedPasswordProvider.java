@@ -36,31 +36,36 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.configuration;
+package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.resource;
+
+import oracle.jdbc.spi.PasswordProvider;
+
+import java.util.Map;
 
 /**
- * Enumeration of test properties for Dedicated Vault.
+ * <p>
+ * A provider for retrieving passwords securely stored in HashiCorp Vault Dedicated.
+ * This provider fetches the password from the Vault and returns it as a character array.
+ * </p>
+ * <p>
+ * This class implements the {@link PasswordProvider} SPI defined by Oracle JDBC
+ * and is designed to be instantiated via {@link java.util.ServiceLoader}.
+ * </p>
  */
-public enum DedicatedVaultTestProperty {
-  DEDICATED_VAULT_SECRET_PATH,
+public class HcpVaultDedicatedPasswordProvider
+        extends HcpVaultDedicatedSecretProvider
+        implements PasswordProvider {
 
-  DEDICATED_VAULT_SECRET_PATH_WITH_MULTIPLE_KEYS,
+  /**
+   * A public no-arg constructor used by {@link java.util.ServiceLoader} to
+   * construct an instance of this provider.
+   */
+  public HcpVaultDedicatedPasswordProvider() {
+    super("password");
+  }
 
-  KEY,
-
-  VAULT_TOKEN,
-
-  VAULT_ADDR,
-
-  VAULT_USERNAME,
-
-  VAULT_PASSWORD,
-
-  VAULT_NAMESPACE,
-
-  ROLE_ID,
-
-  SECRET_ID,
-
-  GITHUB_TOKEN
+  @Override
+  public char[] getPassword(Map<Parameter, CharSequence> parameterValues) {
+    return getSecret(parameterValues).toCharArray();
+  }
 }
