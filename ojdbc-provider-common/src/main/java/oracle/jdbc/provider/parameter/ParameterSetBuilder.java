@@ -44,13 +44,17 @@ package  oracle.jdbc.provider.parameter;
 public interface ParameterSetBuilder {
 
   /**
-   * Adds a parameter with a given name and value.
+   * Adds a parameter with a given name and value. If the value is null, the 
+   * ParameterSet will behave as if no value has been set for the parameter. 
+   * Calling this method with a null value allows the ParameterSet to create 
+   * error messages that identify the {@code name} of missing parameters.
    *
    * @param <T> The type of value that is assigned to the parameter
-   * @param name The parameter name
+   * @param name The parameter name. Not null.
    * @param parameter The parameter that is assigned with the {@code name} and
-   *                  {@code value} in this set
-   * @param value The value
+   *                  {@code value} in this set. Not null.
+   * @param value The value, or null if the parameter is not configured with a 
+   *              value.
    * @return A reference to this object
    */
   <T> ParameterSetBuilder add(String name, Parameter<T> parameter, T value);

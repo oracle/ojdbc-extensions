@@ -189,6 +189,11 @@ public interface ParameterSetParser {
      * the parsed input includes an assignment such as "x=0", then "0" is input
      * to the {@code valueSetter}.
      * </p><p>
+     * The {@code valueSetter} must be able to handle a null input. A null input will occur
+     * when no value is set for the parameter. The {@code valueSetter} may simply pass
+     * the null value onto the {@code ParameterSetBuilder}, or it may pass in a default
+     * value.
+     * </p><p>
      * This method is designed for cases where a single parameter in text format
      * may map to multiple {@link Parameter} objects. The {@code valueSetter}
      * function can perform multiple calls to set each parameter, as in this

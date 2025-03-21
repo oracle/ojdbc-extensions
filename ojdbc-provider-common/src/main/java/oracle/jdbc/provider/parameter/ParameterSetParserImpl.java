@@ -129,7 +129,8 @@ final class ParameterSetParserImpl implements ParameterSetParser {
       String name, Parameter<String> parameter, String defaultValue) {
       addParameterParser(
           name,
-          (value, builder) -> builder.add(name, parameter, value));
+          (value, builder) -> builder.add(name, parameter, 
+                              value == null ? defaultValue : value));
       return this;
     }
 
