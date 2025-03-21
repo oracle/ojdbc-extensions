@@ -161,6 +161,8 @@ For the JSON type of provider (OCI Object Storage, HTTPS, File) the password is 
     - `azurevault`
     - `base64`
     - `awssecretsmanager`
+    - `hcpvaultdedicated`
+    - `hcpvaultsecret`
 - `value`
   - Mandatory
   - Possible values:
@@ -168,6 +170,8 @@ For the JSON type of provider (OCI Object Storage, HTTPS, File) the password is 
     - Azure Key Vault URI (if azurevault)
     - Base64 Encoded password (if base64)
     - AWS resource name of the secret  (if awssecretsmanager)
+    - Secret path (if hcpvaultdedicated)
+    - Secret name (if hcpvaultsecret)
 - `authentication`
   - Optional. It will apply defaults in the same way as described in [Configuring Authentication](#configuring-authentication)
   - Possible Values:
