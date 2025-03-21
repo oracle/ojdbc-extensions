@@ -33,11 +33,16 @@ jobs:
 
       - name: Install dependencies
         run: mvn install -DskipTests
+      
+      - name: Set GCP environment variables
+        run : |
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/.gcp/config.json" >> $GITHUB_ENV
 
       - name: Prepare certificate and properties files
         run: |
           mkdir -p $HOME/.azure
           mkdir -p $HOME/.oci
+          mkdir -p $HOME/.gcp
           
           # Prepare certificate
           echo "${{ secrets.TEST_AZURE_CERTIFICATE }}" > $HOME/.azure/ojdbc-plugin-test-app.pem
@@ -131,6 +136,9 @@ jobs:
           AWS_SECRETS_MANAGER_URL=${{ secrets.TEST_AWS_SECRETS_MANAGER_URL }}\n
           " >> ojdbc-provider-aws/test.properties
           
+          # Generate GCP config
+          echo "${{ secrets.TEST_GCP_CONFIG }}" > $HOME/.gcp/config.json
+          echo "${{ secrets.GCP_TEST_PROPERTIES }}" > ojdbc-provider-gcp/test.properties
           
           # Generate ojdbc-provider-hashicorp/test.properties
           echo -e "VAULT_ADDR=${{ secrets.TEST_VAULT_ADDR }}\n
@@ -164,6 +172,9 @@ jobs:
           rm $HOME/.azure/ojdbc-plugin-test-app.pem
           rm ojdbc-provider-azure/ojdbc-provider-test-app.pfx
           rm ojdbc-provider-azure/test.properties
+          
+          rm $HOME/.gcp/config.json
+          rm ojdbc-provider-gcp/test.properties
           
           rm ojdbc-provider-jackson-oson/test.properties
           
