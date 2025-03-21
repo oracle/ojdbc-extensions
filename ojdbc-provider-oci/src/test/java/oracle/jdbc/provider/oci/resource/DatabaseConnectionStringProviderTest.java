@@ -47,10 +47,11 @@ import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-import static oracle.jdbc.provider.TestProperties.getOrAbort;
 import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.createParameterValues;
 import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.findProvider;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /** Verifies {@link DatabaseConnectionStringProvider} */
 public class DatabaseConnectionStringProviderTest {
@@ -75,6 +76,20 @@ public class DatabaseConnectionStringProviderTest {
       createParameterValues(PROVIDER, testParameters);
     String descriptor = PROVIDER.getConnectionString(parameterValues);
     assertNotNull(descriptor);
+  }
+
+  @Test
+  public void missingOCIDTest() {
+    Map<String, CharSequence> testParameters = new HashMap<>();
+    testParameters.put("authenticationMethod", "config-file");
+
+    Map<Parameter, CharSequence> parameterValues =
+      createParameterValues(PROVIDER, testParameters);
+    IllegalStateException illegalStateException = assertThrows(IllegalStateException.class, () -> {
+      PROVIDER.getConnectionString(parameterValues);
+    });
+    assertEquals("No value defined for parameter \"ocid\"", 
+    illegalStateException.getCause().getMessage(), "Wrong error message");
   }
 
   @Test
