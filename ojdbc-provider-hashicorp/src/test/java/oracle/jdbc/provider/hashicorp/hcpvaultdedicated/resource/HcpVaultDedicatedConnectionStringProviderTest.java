@@ -73,7 +73,6 @@ public class HcpVaultDedicatedConnectionStringProviderTest {
         .findFirst()
         .orElseThrow(AssertionError::new);
     assertFalse(vaultAddrParameter.isSensitive());
-    assertTrue(vaultAddrParameter.isRequired());
     assertNull(vaultAddrParameter.defaultValue());
 
     Parameter secretPathParameter =

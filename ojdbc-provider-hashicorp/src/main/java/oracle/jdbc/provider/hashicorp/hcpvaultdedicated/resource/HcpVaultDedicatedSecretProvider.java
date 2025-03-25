@@ -92,7 +92,8 @@ public class HcpVaultDedicatedSecretProvider extends HcpVaultDedicatedResourcePr
    * @return The extracted secret value as a {@code String}.
    */
   protected final String getSecret(Map<Parameter, CharSequence> parameterValues) {
-    Map<Parameter, CharSequence> resolvedValues = resolveMissingParameters(parameterValues);
+    Map<Parameter, CharSequence> resolvedValues =
+      resolveMissingParameters(parameterValues, HcpVaultDedicatedResourceProvider.PARAMETERS);
     String secretJson = getResource(
       DedicatedVaultSecretsManagerFactory.getInstance(), resolvedValues);
     OracleJsonObject secretJsonObj = JsonUtil.convertJsonToOracleJsonObject(secretJson);

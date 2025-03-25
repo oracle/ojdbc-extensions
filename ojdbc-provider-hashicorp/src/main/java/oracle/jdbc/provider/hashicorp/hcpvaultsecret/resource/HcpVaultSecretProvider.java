@@ -36,27 +36,53 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.hashicorp.hcpvaultsecret.configuration;
+package oracle.jdbc.provider.hashicorp.hcpvaultsecret.resource;
+
+import oracle.jdbc.provider.hashicorp.hcpvaultsecret.secrets.HcpVaultSecretsManagerFactory;
+import oracle.jdbc.provider.resource.ResourceParameter;
+import oracle.jdbc.provider.util.ResourceParameterUtils;
+
+import java.util.Map;
+
+import static oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultSecretParameters.*;
 
 /**
- * Enumeration of test properties for HCP Vault.
+ * <p>
+ * A provider of secrets from HashiCorp HCP Vault Secrets. This class is designed
+ * for inheritance by subclasses that implement an
+ * {@link oracle.jdbc.spi.OracleResourceProvider} SPI defined by the Oracle JDBC
+ * driver.
+ * </p>
  */
-public enum HcpVaultTestProperty {
-  HCP_APP_NAME,
+public class HcpVaultSecretProvider extends HcpVaultSecretResourceProvider {
 
-  HCP_ORG_ID,
+  private static final ResourceParameter[] PARAMETERS = {
+    new ResourceParameter("secretName", SECRET_NAME),
+  };
 
-  HCP_PROJECT_ID,
+  protected HcpVaultSecretProvider(String valueType) {
+    super(valueType, PARAMETERS);
+  }
 
-  HCP_CLIENT_ID,
+  protected HcpVaultSecretProvider(String valueType, ResourceParameter[] additionalParameters) {
+    super(valueType, ResourceParameterUtils.combineParameters(PARAMETERS, additionalParameters));
+  }
 
-  HCP_CLIENT_SECRET,
-
-  SECRET_NAME,
-
-  SECRET_NAME_WITH_MULTIPLE_KEYS,
-
-  KEY,
-
-  HCP_CREDENTIALS_FILE
+  /**
+   * <p>
+   * Retrieves a secret from HashiCorp HCP Vault Secrets based on parameters
+   * provided in {@code parameterValues}. This method centralizes secret
+   * retrieval logic and is used by subclasses implementing
+   * the {@link oracle.jdbc.spi.OracleResourceProvider} SPI.
+   * </p>
+   *
+   * @param parameterValues A map of parameter names and their corresponding
+   * -values required for secret retrieval. Must not be null.
+   * @return The raw secret value as a {@code String}.
+   */
+  protected final String getSecret(Map<Parameter, CharSequence> parameterValues) {
+    Map<Parameter, CharSequence> resolvedValues =
+      resolveMissingParameters(parameterValues, HcpVaultSecretResourceProvider.PARAMETERS);
+    return getResource(HcpVaultSecretsManagerFactory.getInstance(), resolvedValues);
+  }
 }

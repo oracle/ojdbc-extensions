@@ -107,7 +107,7 @@ public class DedicatedVaultParameters {
   /**
    * The Vault address. If not specified, fallback to system property or environment var.
    */
-  public static final Parameter<String> VAULT_ADDR = Parameter.create(REQUIRED);
+  public static final Parameter<String> VAULT_ADDR = Parameter.create();
 
   /**
    * The Vault token. If not specified, fallback to system property or environment var.

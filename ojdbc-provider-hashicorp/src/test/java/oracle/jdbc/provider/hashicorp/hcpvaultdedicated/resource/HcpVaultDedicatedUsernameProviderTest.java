@@ -73,7 +73,6 @@ public class HcpVaultDedicatedUsernameProviderTest {
         .filter(parameter -> "vaultAddr".equals(parameter.name()))
         .findFirst()
         .orElseThrow(AssertionError::new);
-    assertTrue(vaultAddrParameter.isRequired());
     assertNull(vaultAddrParameter.defaultValue());
 
     Parameter secretPathParameter =

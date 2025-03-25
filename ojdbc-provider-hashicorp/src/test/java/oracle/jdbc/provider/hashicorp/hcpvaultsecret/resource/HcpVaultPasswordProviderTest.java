@@ -36,16 +36,15 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.resource;
+package oracle.jdbc.provider.hashicorp.hcpvaultsecret.resource;
 
 import oracle.jdbc.provider.TestProperties;
-import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.DedicatedVaultTestProperty;
-import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.HcpVaultDedicatedTestUtil;
+import oracle.jdbc.provider.hashicorp.hcpvaultsecret.HcpVaultTestUtil;
+import oracle.jdbc.provider.hashicorp.hcpvaultsecret.HcpVaultTestProperty;
 import oracle.jdbc.spi.OracleResourceProvider.Parameter;
 import oracle.jdbc.spi.PasswordProvider;
 import oracle.jdbc.spi.UsernameProvider;
 import org.junit.jupiter.api.Test;
-
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -55,10 +54,11 @@ import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.createParam
 import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.findProvider;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class HcpVaultDedicatedPasswordProviderTest {
+public class HcpVaultPasswordProviderTest {
 
   private static final PasswordProvider PROVIDER =
-          findProvider(PasswordProvider.class, "ojdbc-provider-hcpvault-dedicated-password");
+    findProvider(PasswordProvider.class, "ojdbc-provider-hcpvault-secrets-password");
+
 
   /**
    * Verifies that {@link UsernameProvider#getParameters()} includes parameters
@@ -69,45 +69,51 @@ public class HcpVaultDedicatedPasswordProviderTest {
     Collection<? extends Parameter> parameters = PROVIDER.getParameters();
     assertNotNull(parameters);
 
-    Parameter vaultAddrParameter =
-       parameters.stream()
-        .filter(parameter -> "vaultAddr".equals(parameter.name()))
-        .findFirst()
-        .orElseThrow(AssertionError::new);
-    assertNull(vaultAddrParameter.defaultValue());
-
-    Parameter secretPathParameter =
+    Parameter secretNameParameter =
       parameters.stream()
-        .filter(parameter -> "secretPath".equals(parameter.name()))
+        .filter(parameter -> "secretName".equals(parameter.name()))
         .findFirst()
         .orElseThrow(AssertionError::new);
-    assertTrue(secretPathParameter.isRequired());
-    assertNull(secretPathParameter.defaultValue());
+    assertTrue(secretNameParameter.isRequired());
+    assertNull(secretNameParameter.defaultValue());
 
-    Parameter fieldNameParameter =
+    Parameter orgIdParameter =
       parameters.stream()
-        .filter(parameter -> "fieldName".equals(parameter.name()))
+        .filter(parameter -> "orgId".equals(parameter.name()))
         .findFirst()
         .orElseThrow(AssertionError::new);
-    assertFalse(fieldNameParameter.isRequired());
-    assertNull(fieldNameParameter.defaultValue());
+    assertTrue(orgIdParameter.isRequired());
+    assertNull(orgIdParameter.defaultValue());
+
+    Parameter appNameParameter =
+      parameters.stream()
+        .filter(parameter -> "appName".equals(parameter.name()))
+        .findFirst()
+         .orElseThrow(AssertionError::new);
+    assertTrue(appNameParameter.isRequired());
+    assertNull(appNameParameter.defaultValue());
+
+    Parameter projectIdParameter =
+      parameters.stream()
+        .filter(parameter -> "projectId".equals(parameter.name()))
+        .findFirst()
+        .orElseThrow(AssertionError::new);
+    assertTrue(projectIdParameter.isRequired());
+    assertNull(projectIdParameter.defaultValue());
   }
 
   @Test
   public void testRetrievePassword() {
-    Map<String, String> testParameters = new HashMap<>();
-    testParameters.put("vaultAddr", TestProperties.getOrAbort(DedicatedVaultTestProperty.VAULT_ADDR));
-    testParameters.put("secretPath", TestProperties.getOrAbort(DedicatedVaultTestProperty.PASSWORD_SECRET_PATH));
-    testParameters.put("fieldName", "password");
+    Map<String, String> testParams = new HashMap<>();
+    testParams.put("secretName", TestProperties.getOrAbort(HcpVaultTestProperty.USERNAME_SECRET_NAME));
+    testParams.put("orgId", TestProperties.getOrAbort(HcpVaultTestProperty.HCP_ORG_ID));
+    testParams.put("projectId", TestProperties.getOrAbort(HcpVaultTestProperty.HCP_PROJECT_ID));
+    testParams.put("appName", TestProperties.getOrAbort(HcpVaultTestProperty.HCP_APP_NAME));
+    HcpVaultTestUtil.configureAuthentication(testParams);
 
-    HcpVaultDedicatedTestUtil.configureAuthentication(testParameters);
+    Map<Parameter, CharSequence> values = createParameterValues(PROVIDER, testParams);
+    char[] password = PROVIDER.getPassword(values);
 
-    Map<Parameter, CharSequence> parameterValues =
-            createParameterValues(PROVIDER, testParameters);
-
-    char[] password = PROVIDER.getPassword(parameterValues);
-
-    assertNotNull(password, "Password should not be null");
+    assertNotNull(password);
   }
-
 }

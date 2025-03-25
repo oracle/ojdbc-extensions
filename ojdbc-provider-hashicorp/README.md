@@ -16,19 +16,31 @@ and HashiCorp Vault (HCP).
 ## Resource Providers
 <dl>
 <dt><a href="#dedicated-vault-username-provider">Dedicated Vault Username Provider</a></dt> 
-<dd>Provides a username stored in a HashiCorp Vault Dedicated secret.</dd>
+<dd>Provides a username stored in a HashiCorp Vault Dedicated.</dd>
+<dt><a href="#hcp-vault-secrets-username-provider">HCP Vault Secrets Username Provider</a></dt>
+<dd>Provides a username stored in HashiCorp Vault Secrets.</dd>
 <dt><a href="#dedicated-vault-password-provider">Dedicated Vault Password Provider</a></dt>
-<dd>Provides a password stored in a HashiCorp Vault Dedicated secret.</dd>
+<dd>Provides a password stored in a HashiCorp Vault Dedicated.</dd>
+<dt><a href="#hcp-vault-secrets-password-provider">HCP Vault Secrets Password Provider</a></dt>
+<dd>Provides a password stored in HashiCorp Vault Secrets.</dd>
 <dt><a href="#dedicated-vault-tcps-wallet-provider">Dedicated Vault TCPS Wallet Provider</a></dt> 
-<dd>Provides a TCPS/TLS wallet for secure database connections using credentials stored in HashiCorp Vault Dedicated.</dd>
+<dd>Provides TLS wallets from HashiCorp Vault Dedicated for secure connections.</dd>
+<dt><a href="#hcp-vault-secrets-tcps-wallet-provider">HCP Vault Secrets TCPS Wallet Provider</a></dt>
+<dd>Provides TLS wallets from HashiCorp Vault Secrets for secure connections.</dd>
 <dt><a href="#dedicated-vault-seps-wallet-provider">Dedicated Vault SEPS Wallet Provider</a></dt>
 <dd>Provides SEPS (Secure External Password Store) wallets for secure username and password retrieval from HashiCorp Vault Dedicated.</dd>
+<dt><a href="#hcp-vault-secrets-seps-wallet-provider">HCP Vault Secrets SEPS Wallet Provider</a></dt>
+<dd>Provides SEPS (Secure External Password Store) wallets for secure username and password retrieval from HashiCorp Vault Secrets.</dd>
 <dt><a href="#dedicated-vault-connection-string-provider">Dedicated Vault Connection String Provider</a></dt>
-<dd>Provides connection strings based on aliases stored in a `tnsnames.ora` file within HashiCorp Vault Dedicated.</dd> 
+<dd>Provides connection strings based on aliases stored in a `tnsnames.ora` file within HashiCorp Vault Dedicated.</dd>
+<dt><a href="#hcp-vault-secrets-connection-string-provider">HCP Vault Secrets Connection String Provider</a></dt>
+<dd>Provides connection strings based on aliases stored in a `tnsnames.ora` file within HashiCorp Vault Secrets.</dd>
 <dt><a href="#common-parameters-for-hcp-vault-dedicated-resource-providers">Common Parameters for HCP Vault Dedicated Resource Providers</a></dt>
 <dd>Defines common configuration parameters for providers using HCP Vault Dedicated.</dd>
-<dt><a href="#configuring-authentication-for-resource-providers">Configuring Authentication for HCP Vault Dedicated</a></dt>
-<dd>Details the supported authentication methods for HCP Vault Dedicated.</dd>
+<dt><a href="#common-parameters-for-hcp-vault-secrets-resource-providers">Common Parameters for HCP Vault Secrets Resource Providers</a></dt>
+<dd>Defines common parameters for all providers using HCP Vault Secrets.</dd>
+<dt><a href="#configuring-authentication-for-resource-providers">Configuring Authentication for Resource Providers</a></dt>
+<dd>Details supported authentication methods and usage instructions.</dd>
 </dl>
 
 
@@ -607,6 +619,34 @@ If omitted and multiple keys exist, an error is thrown.
 
 An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault-dedicated.properties](example-vault-dedicated.properties).
 
+## HCP Vault Secrets Username Provider
+
+The **HCP Vault Secrets Username Provider** provides Oracle JDBC with a **database username** that is managed by **HashiCorp Vault Secrets**.
+This is a **Resource Provider** identified by the name `ojdbc-provider-hcpvault-secrets-username`.
+
+In addition to the set of [common parameters](#common-parameters-for-hcp-vault-secrets-resource-providers), this provider also supports the parameters listed below.
+
+<table>
+<thead>
+<tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Accepted Values</th>
+<th>Default Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>secretName</code></td>
+<td>The name of the secret in HCP Vault Secrets containing the username.</td>
+<td>Any valid secret name within the app.</td>
+<td> <i>No default value. A value must be configured for this parameter.</i> </td>
+</tr>
+</tbody>
+</table>
+
+An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault-secrets.properties](example-vault-secrets.properties).
+
 ---
 
 ## Dedicated Vault Password Provider
@@ -663,6 +703,34 @@ If omitted and multiple keys exist, an error is thrown.
 </table>
 
 An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault-dedicated.properties](example-vault-dedicated.properties).
+
+## HCP Vault Secrets Password Provider
+
+The **HCP Vault Secrets Password Provider** provides Oracle JDBC with a **database password** that is managed by **HashiCorp Vault Secrets**.  
+This is a **Resource Provider** identified by the name `ojdbc-provider-hcpvault-secrets-password`.
+
+In addition to the set of [common parameters](#common-parameters-for-hcp-vault-secrets-resource-providers), this provider also supports the parameters listed below.
+
+<table>
+<thead>
+<tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Accepted Values</th>
+<th>Default Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>secretName</code></td>
+<td>The name of the secret in HCP Vault Secrets containing the password.</td>
+<td>Any valid secret name within the app.</td>
+<td> <i>No default value. A value must be configured for this parameter.</i> </td>
+</tr>
+</tbody>
+</table>
+
+An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault-secrets.properties](example-vault-secrets.properties).
 
 ---
 
@@ -746,6 +814,55 @@ If omitted and multiple keys exist, an error is thrown.
 </table>
 
 An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault-dedicated-wallet.properties](example-vault-dedicated-wallet.properties).
+
+## HCP Vault Secrets TCPS Wallet Provider
+
+The **HCP Vault Secrets TCPS Wallet Provide** provides Oracle JDBC with **keys and certificates** managed by **HashiCorp Vault Secrets** to establish secure **TLS connections** with an Autonomous Database.  
+This is a **Resource Provider** identified by the name `ojdbc-provider-hcpvault-secrets-tls`.
+
+For example, when connecting to an Autonomous Database Serverless with **mutual TLS (mTLS)**,  
+you need to configure the JDBC-thin driver with its client certificate.  
+If this certificate is stored in a wallet file (`cwallet.sso`, `ewallet.p12`, `ewallet.pem`),  
+you may store it in **HCP Vault Secrets** for additional security.  
+This provider retrieves the wallet content from **HCP Vault Secrets** and passes it to the JDBC thin driver.
+
+- The **type** parameter must be specified to indicate the wallet format: **SSO, PKCS12, or PEM**.
+- The **walletPassword** must be provided for wallets that require a password (**PKCS12** or password-protected **PEM** files).
+
+In addition to the set of [common parameters](#common-parameters-for-hcp-vault-secrets-resource-providers), this provider also supports the parameters listed below.
+
+<table>
+<thead>
+<tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Accepted Values</th>
+<th>Default Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>secretName</code></td>
+<td>The name of the secret in HCP Vault Secrets containing the wallet.</td>
+<td>Any valid secret name within the app.</td>
+<td> <i>No default value. A value must be configured for this parameter.</i> </td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td>The wallet format.</td>
+<td><code>SSO</code>, <code>PKCS12</code>, <code>PEM</code></td>
+<td> <i>No default value. The file type must be specified.</i> </td>
+</tr>
+<tr>
+<td><code>walletPassword</code></td>
+<td> Optional password for **PKCS12** or protected **PEM** files. If omitted, the file is assumed to be **SSO** or an **unprotected PEM** file. </td>
+<td>Any valid password.</td>
+<td> <i>No default value. Required for password-protected files.</i> </td>
+</tr>
+</tbody>
+</table>
+
+An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault-secrets-wallet.properties](example-vault-secrets-wallet.properties).
 
 ---
 
@@ -842,6 +959,66 @@ If omitted and multiple keys exist, an error is thrown.
 
 An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault-dedicated-wallet.properties](example-vault-dedicated-wallet.properties).
 
+## HCP Vault Secrets SEPS Wallet Provider
+
+The **HCP Vault Secrets SEPS Wallet Provider** provides Oracle JDBC with **username and password credentials** stored in a **Secure External Password Store (SEPS) wallet** within **HCP Vault Secrets**.
+
+This is a **Resource Provider** identified by the name `ojdbc-provider-hcpvault-secrets-seps`.
+
+- The SEPS wallet securely stores **encrypted database credentials**, including the **username, password, and connection strings**.
+  These credentials can be stored as **default values**, such as:
+    - `oracle.security.client.default_username`
+    - `oracle.security.client.default_password`
+
+  or as indexed credentials, for example:
+    - `oracle.security.client.username1`
+    - `oracle.security.client.password1`
+    - `oracle.security.client.connect_string1`.
+
+- The provider retrieves credentials using the following logic:
+    1. If `connectionStringIndex` is **not specified**, the provider attempts to retrieve the **default credentials** (`oracle.security.client.default_username` and `oracle.security.client.default_password`).
+    2. If **default credentials are missing**, the provider checks for a single **set of credentials** associated with a **connection string**.
+    3. If **exactly one connection string** is found, the associated credentials are used.
+    4. If **multiple connection strings** exist, an **error is thrown**, prompting you to specify a `connectionStringIndex`.
+    5. If `connectionStringIndex` is specified, the provider attempts to retrieve the credentials associated with the **specified connection string index** (e.g., `oracle.security.client.username{idx}`, `oracle.security.client.password{idx}`, `oracle.security.client.connect_string{idx}`).
+    6. If credentials for the **specified index** are not found, an **error is thrown**, indicating that no connection string exists with that index.
+
+In addition to the set of [common parameters](#common-parameters-for-hcp-vault-secrets-resource-providers), this provider also supports the parameters listed below.
+
+<table>
+<thead>
+<tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Accepted Values</th>
+<th>Default Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>secretName</code></td>
+<td>The name of the SEPS wallet secret in HCP Vault Secrets.</td>
+<td>Any valid secret name within the app.</td>
+<td><i>No default value. A value must be configured for this parameter.</i></td>
+</tr>
+<tr>
+<td><code>walletPassword</code></td>
+<td> Optional password for **PKCS12 SEPS wallets**. If omitted, the wallet is assumed to be **SSO**. </td>
+<td>Any valid password for the SEPS wallet.</td>
+<td><i>No default value. PKCS12 wallets require a password.</i></td>
+</tr>
+<tr>
+<td><code>connectionStringIndex</code> (Optional)</td>
+<td> Specifies the **index** of the connection string to use when retrieving credentials from the wallet. </td>
+<td>A positive integer representing the index of the desired credential set (e.g., 1, 2, 3, etc.).</td>
+<td><i>No default value. If not specified, the provider follows the default behavior as described above.</i></td>
+</tr>
+</tbody>
+</table>
+
+An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault-secrets-wallet.properties](example-vault-secrets-wallet.properties).
+
+---
 
 ## Dedicated Vault Connection String Provider
 
@@ -910,6 +1087,46 @@ If omitted and multiple keys exist, an error is thrown.
 
 An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault-dedicated.properties](example-vault-dedicated.properties).
 
+## HCP Vault Secrets Connection String Provider
+
+The **HCP Vault Secrets Connection String Provider** provides Oracle JDBC with a **connection string**  
+retrieved from a `tnsnames.ora` file stored in **HCP Vault Secrets**.
+
+This is a **Resource Provider** identified by the name `ojdbc-provider-hcpvault-secrets-tnsnames`.
+
+This provider retrieves and decodes a `tnsnames.ora` file stored as a **base64-encoded secret** or **plain text** in **HCP Vault Secrets**, allowing selection of connection strings based on specified aliases.
+
+This enables flexible configuration for **secure database connections** using the alias names defined in your `tnsnames.ora` file.
+
+In addition to the set of [common parameters](#common-parameters-for-hcp-vault-secrets-resource-providers), this provider also requires the parameters listed below.
+
+<table>
+<thead>
+<tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Accepted Values</th>
+<th>Default Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>secretName</code></td>
+<td>The name of the secret in HCP Vault Secrets containing the tnsnames.ora file.</td>
+<td>Any valid secret name within the app.</td>
+<td> <i>No default value. A value must be configured for this parameter.</i> </td>
+</tr>
+<tr> 
+<td><code>tnsAlias</code></td> 
+<td>The alias to retrieve the connection string.</td>
+<td>Any valid alias present in the `tnsnames.ora` file.</td>
+<td> <i>No default value. A value must be configured for this parameter.</i> </td>
+</tr>
+</tbody>
+</table>
+
+An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault-secrets.properties](example-vault-secrets.properties).
+
 ## Common Parameters for HCP Vault Dedicated Resource Providers
 
 Providers classified as Resource Providers in this module all support a common set of parameters.
@@ -929,7 +1146,7 @@ Providers classified as Resource Providers in this module all support a common s
 <td><code>authenticationMethod</code></td>
 <td>Configures a method of <a href="#hcp-vault-dedicated">authentication for HCP Vault Dedicated</a>.</td>
 <td>Accepted values are defined in: <a href="#hcp-vault-dedicated">Configuring Authentication for HCP Vault Dedicated</a>.</td>
-<td>does not allow System Property / Environment Variable</td>
+<td>Not supported</td>
 <td><i>auto-detect</i></td>
 </tr>
 <tr>
@@ -1010,36 +1227,122 @@ Providers classified as Resource Providers in this module all support a common s
 </tbody>
 </table>
 
+---
+
+## Common Parameters for HCP Vault Secrets Resource Providers
+
+Providers classified as Resource Providers for HCP Vault Secrets support a common set of parameters used for authenticating with the HCP Vault Secrets API.
+
+<table>
+<thead>
+<tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Accepted Values</th>
+<th>System Property / Environment Variable</th>
+<th>Default Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>authenticationMethod</code></td>
+<td>Configures a method of <a href="#hcp-vault-secrets">authentication for HCP Vault Secrets</a>.</td>
+<td><code>client_credentials</code>, <code>cli_credentials_file</code>, <code>auto-detect</code></td>
+<td><i>Not supported</i></td>
+<td><code>auto-detect</code></td>
+</tr>
+<tr>
+<td><code>orgId</code></td>
+<td>The organization ID associated with the HCP Vault Secrets project.</td>
+<td>A valid HCP organization ID.</td>
+<td><code>HCP_ORG_ID</code></td>
+<td><i>No default value.</i></td>
+</tr>
+<tr>
+<td><code>projectId</code></td>
+<td>The project ID associated with the HCP Vault Secrets app.</td>
+<td>A valid HCP project ID.</td>
+<td><code>HCP_PROJECT_ID</code></td>
+<td><i>No default value.</i></td>
+</tr>
+<tr>
+<td><code>appName</code></td>
+<td>The name of the application registered in HCP Vault Secrets.</td>
+<td>A valid HCP application name.</td>
+<td><code>HCP_APP_NAME</code></td>
+<td><i>No default value.</i></td>
+</tr>
+<tr>
+<td><code>clientId</code></td>
+<td>The client ID used for client credentials OAuth 2.0 authentication.</td>
+<td>A valid HCP Client ID.</td>
+<td><code>HCP_CLIENT_ID</code></td>
+<td><i>No default value.</i></td>
+</tr>
+<tr>
+<td><code>clientSecret</code></td>
+<td>The client secret associated with the client ID.</td>
+<td>A valid HCP Client Secret.</td>
+<td><code>HCP_CLIENT_SECRET</code></td>
+<td><i>No default value.</i></td>
+</tr>
+<tr>
+<td><code>credentialsFile</code></td>
+<td>The path to the local HCP CLI credentials file.</td>
+<td>A valid file path (e.g., <code>~/.config/hcp/creds-cache.json</code>)</td>
+<td><code>HCP_CREDENTIALS_FILE</code></td>
+<td><code>~/.config/hcp/creds-cache.json</code></td>
+</tr>
+</tbody>
+</table>
 
 ## Configuring Authentication for Resource Providers
 
 ### HCP Vault Dedicated
 
-Resource Providers in this module must authenticate with HCP Vault Dedicated.
+Resource Providers in this module must authenticate with **HashiCorp Vault Dedicated**.
 By default, the provider will automatically detect any available credentials.
 A specific authentication method may be configured using the "authenticationMethod" parameter.
 
-The parameter may be set to any of the following values:
+Supported values for `authenticationMethod`:
 
-<dl>
-<dt><code>vault-token</code></dt>
-<dd>Authenticate using a **pre-existing Vault token**.</dd>
-<dt><code>userpass</code></dt>
-<dd>Authenticate using a **username and password**.</dd>
-<dt><code>approle</code></dt>
-<dd>Authenticate using **AppRole credentials** (requires <code>roleId</code> and <code>secretId</code>).</dd>
-<dt><code>github</code></dt>
-<dd>Authenticate using a **GitHub personal access token**.</dd>
-<dt><code>auto-detect</code></dt>
-<dd> This is the **default authentication method**. The provider will attempt the following **authentication methods**, in this **priority order**:
-<ol>
-<li><strong>vault-token</strong> (if available)</li>
-<li><strong>userpass</strong> (if username & password are provided)</li> 
-<li><strong>approle</strong> (if roleId & secretId are provided)</li> 
-<li><strong>github</strong> (if no other method succeeds)</li>
-</ol> 
-</dd>
-</dl>
+- **`vault-token`**  
+  Authenticate using a pre-existing Vault token.
+
+- **`userpass`**  
+  Authenticate using a username and password.
+
+- **`approle`**  
+  Authenticate using AppRole credentials (requires `roleId` and `secretId`).
+
+- **`github`**  
+  Authenticate using a GitHub personal access token.
+
+- **`auto-detect`** (default)  
+  Automatically selects the method based on the following priority:
+    1. `vault-token`
+    2. `userpass`
+    3. `approle`
+    4. `github`
+
+### HCP Vault Secrets
+
+Resource Providers that access **HCP Vault Secrets** also require authentication.  
+By default, the provider will **auto-detect** the method to use.  
+You may override this using the `authenticationMethod` parameter.
+
+Supported values for `authenticationMethod`:
+
+- **`client-credentials`**  
+  Uses OAuth 2.0 Client Credentials Flow. Requires `clientId` and `clientSecret`.
+
+- **`cli-credentials-file`**  
+  Uses the local HCP CLI credentials file (`~/.config/hcp/creds-cache.json`), which contains `access_token` and `refresh_token`.
+
+- **`auto-detect`** (default)  
+  Automatically selects based on:
+    1. `cli-credentials-file` (if file exists or is configured)
+    2. `client-credentials` (if both `clientId` and `clientSecret` are available)
 
 ## caching-configuration
 

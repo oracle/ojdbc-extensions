@@ -39,12 +39,9 @@
 package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.resource;
 
 import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultAuthenticationMethod;
-import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters;
-import oracle.jdbc.provider.resource.AbstractResourceProvider;
+import oracle.jdbc.provider.hashicorp.util.AbstractVaultResourceProvider;
 import oracle.jdbc.provider.resource.ResourceParameter;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.*;
@@ -55,7 +52,7 @@ import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.De
  * that request a resource from Hcp Vault Dedicated. This super class defines
  * parameters for authentication with Hcp Vault Dedicated.
  */
-public class HcpVaultDedicatedResourceProvider extends AbstractResourceProvider {
+public class HcpVaultDedicatedResourceProvider extends AbstractVaultResourceProvider {
 
    static final ResourceParameter[] PARAMETERS = {
      new ResourceParameter("authenticationMethod", AUTHENTICATION_METHOD,
@@ -126,47 +123,14 @@ public class HcpVaultDedicatedResourceProvider extends AbstractResourceProvider 
     }
   }
 
-
-  /**
-   * Resolves missing parameters using system properties or environment variables,
-   * ensuring parameters are populated before executing Vault requests.
-   *
-   * @param parameterValues The original parameter map.
-   * @return A new map with resolved missing parameters.
-   */
-  Map<Parameter, CharSequence> resolveMissingParameters(Map<Parameter, CharSequence> parameterValues) {
-    Map<Parameter, CharSequence> resolvedParameters = new HashMap<>(parameterValues);
-    for (ResourceParameter param : HcpVaultDedicatedResourceProvider.PARAMETERS) {
-      resolveParameter(resolvedParameters, param);
-    }
-    return resolvedParameters;
-  }
-
-
-  /**
-   * Resolves a single parameter by mapping its name to a corresponding
-   * system property or environment variable.
-   *
-   * @param parameterValues The parameter map where the resolved value will be set.
-   * @param parameter The ResourceParameter key to check and resolve.
-   */
-  private void resolveParameter(Map<Parameter, CharSequence> parameterValues, ResourceParameter parameter) {
-    if (!parameterValues.containsKey(parameter)) {
-      String envVariable = getEnvVariableForParameter(parameter.name());
-      String fallbackValue = System.getProperty(envVariable, System.getenv(envVariable));
-      if (fallbackValue != null) {
-        parameterValues.put(parameter, fallbackValue);
-      }
-    }
-  }
-
   /**
    * Maps ResourceParameter names to their corresponding environment variable keys.
    *
    * @param paramName The ResourceParameter name (e.g., "vaultAddr").
    * @return The corresponding environment variable key (e.g., "VAULT_ADDR").
    */
-  private String getEnvVariableForParameter(String paramName) {
+  @Override
+   protected String getEnvVariableForParameter(String paramName) {
     switch (paramName) {
       case "vaultAddr": return PARAM_VAULT_ADDR;
       case "vaultNamespace": return PARAM_VAULT_NAMESPACE;
@@ -177,6 +141,7 @@ public class HcpVaultDedicatedResourceProvider extends AbstractResourceProvider 
       case "secretId": return PARAM_VAULT_SECRET_ID;
       case "userPassAuthPath": return PARAM_USERPASS_AUTH_PATH;
       case "appRoleAuthPath": return PARAM_APPROLE_AUTH_PATH;
+      case "githubAuthPath": return PARAM_GITHUB_AUTH_PATH;
       default: return paramName;
     }
   }

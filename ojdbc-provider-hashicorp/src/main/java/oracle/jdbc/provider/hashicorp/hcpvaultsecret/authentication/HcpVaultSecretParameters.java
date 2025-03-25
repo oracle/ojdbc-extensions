@@ -72,7 +72,7 @@ public class HcpVaultSecretParameters {
   public static final String PARAM_HCP_CLIENT_SECRET = "HCP_CLIENT_SECRET";
   public static final String PARAM_HCP_CREDENTIALS_FILE =
           "HCP_CREDENTIALS_FILE";
-  private static final String DEFAULT_CREDENTIALS_FILE_PATH =
+  public static final String DEFAULT_CREDENTIALS_FILE_PATH =
           System.getProperty("user.home") + "/.config/hcp/creds-cache.json";
   private static final String PARAM_AUTHENTICATION = "AUTHENTICATION";
 
