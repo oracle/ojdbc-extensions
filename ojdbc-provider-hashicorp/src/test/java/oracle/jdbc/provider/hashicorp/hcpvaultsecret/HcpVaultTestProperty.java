@@ -36,7 +36,7 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.hashicorp.hcpvaultsecret.configuration;
+package oracle.jdbc.provider.hashicorp.hcpvaultsecret;
 
 /**
  * Enumeration of test properties for HCP Vault.
@@ -57,6 +57,26 @@ public enum HcpVaultTestProperty {
   SECRET_NAME_WITH_MULTIPLE_KEYS,
 
   KEY,
+
+  CONNECTION_STRING_BASE64,
+
+  CONNECTION_STRING_PLAIN_TEXT,
+
+  TNSNAMES_ALIAS,
+
+  USERNAME_SECRET_NAME,
+
+  WALLET_P12_SECRET_NAME,
+
+  WALLET_PASSWORD,
+
+  WALLET_SSO_SECRET_NAME,
+
+  WALLET_PEM_SECRET_NAME,
+
+  WALLET_SECRET_PKCS12_NAME,
+
+  WALLET_SECRET_SSO_NAME,
 
   HCP_CREDENTIALS_FILE
 }

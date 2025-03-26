@@ -1,0 +1,2 @@
+oracle.jdbc.provider.hashicorp.hcpvaultdedicated.resource.HcpVaultDedicatedTCPSProvider
+oracle.jdbc.provider.hashicorp.hcpvaultsecret.resource.HcpVaultSecretTCPSProvider
