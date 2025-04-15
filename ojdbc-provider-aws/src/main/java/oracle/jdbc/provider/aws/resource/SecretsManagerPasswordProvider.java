@@ -35,48 +35,43 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.provider.aws.configuration;
 
-import oracle.jdbc.provider.TestProperties;
-import oracle.jdbc.spi.OracleConfigurationProvider;
-import oracle.provider.aws.AwsTestProperty;
-import org.junit.jupiter.api.Test;
+package oracle.jdbc.provider.aws.resource;
 
-import java.sql.SQLException;
-import java.util.Properties;
+import oracle.jdbc.spi.PasswordProvider;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-public class AwsS3ConfigurationProviderTest {
-
-  static {
-    OracleConfigurationProvider.allowedProviders.add("awss3");
-  }
-
-  private static final OracleConfigurationProvider PROVIDER =
-      OracleConfigurationProvider.find("awss3");
+/**
+ * <p>
+ * A provider of password managed as secrets by AWS Secrets Manager.
+ * This class inherits parameters and behavior from {@link SecretsManagerSecretProvider}
+ * and {@link AwsResourceProvider}.
+ * </p><p>
+ * This class implements the {@link PasswordProvider} SPI defined by Oracle JDBC.
+ * It is designed to be located and instantiated by {@link java.util.ServiceLoader}.
+ * </p>
+ */
+public class SecretsManagerPasswordProvider
+  extends SecretsManagerSecretProvider
+  implements PasswordProvider {
 
   /**
-   * Verifies if AWS S3 Configuration Provider works with default authentication
-   * @throws SQLException
+   * A public no-arg constructor used by {@link java.util.ServiceLoader} to
+   * construct an instance of this provider.
    */
-  @Test
-  public void testDefaultAuthentication() throws SQLException {
-    final String prefix = "jdbc:oracle:thin:@config-awss3://";
+  public SecretsManagerPasswordProvider() {
+    super("secrets-manager-password");
+  }
 
-    String url =
-        TestProperties.getOrAbort(
-            AwsTestProperty.AWS_S3_URL);
-
-    assertTrue(
-        url.startsWith(prefix),
-        "AWS_S3_URL should start with " + prefix);
-
-    Properties properties = PROVIDER
-        .getConnectionProperties(url.substring(prefix.length()));
-
-    assertTrue(properties.containsKey("URL"), "Contains property URL");
-    assertTrue(properties.containsKey("user"), "Contains property user");
-    assertTrue(properties.containsKey("password"), "Contains property password");
+  /**
+   * Retrieves a password stored as a secret in AWS Secrets Manager.
+   *
+   * @param parameterValues A map of parameter names and values required for
+   * retrieving the secret. Must not be null.
+   * @return The secret value as a char array. Not null.
+   */
+  @Override
+  public char[] getPassword(Map<Parameter, CharSequence> parameterValues) {
+    return getSecret(parameterValues).toCharArray();
   }
 }

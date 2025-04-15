@@ -35,48 +35,61 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.provider.aws.configuration;
+
+package oracle.provider.aws.resource;
 
 import oracle.jdbc.provider.TestProperties;
-import oracle.jdbc.spi.OracleConfigurationProvider;
+import oracle.jdbc.spi.OracleResourceProvider.Parameter;
+import oracle.jdbc.spi.UsernameProvider;
 import oracle.provider.aws.AwsTestProperty;
 import org.junit.jupiter.api.Test;
 
-import java.sql.SQLException;
-import java.util.Properties;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.createParameterValues;
+import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.findProvider;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class AwsS3ConfigurationProviderTest {
+public class SecretsManagerUsernameProviderTest {
 
-  static {
-    OracleConfigurationProvider.allowedProviders.add("awss3");
+  private static final UsernameProvider PROVIDER =
+          findProvider(UsernameProvider.class, "ojdbc-provider-aws-secrets-manager-username");
+
+  @Test
+  public void testGetParameters() {
+    Collection<? extends Parameter> parameters = PROVIDER.getParameters();
+    assertNotNull(parameters);
+
+    Parameter secretName = parameters.stream()
+      .filter(p -> "secretName".equals(p.name()))
+      .findFirst()
+      .orElseThrow(AssertionError::new);
+    assertFalse(secretName.isSensitive());
+    assertTrue(secretName.isRequired());
+    assertNull(secretName.defaultValue());
+
+    Parameter regionParameter = parameters.stream()
+      .filter(parameter -> "awsRegion".equals(parameter.name()))
+      .findFirst()
+      .orElseThrow(AssertionError::new);
+    assertFalse(regionParameter.isSensitive());
+    assertFalse(regionParameter.isRequired());
+    assertNull(regionParameter.defaultValue());
   }
 
-  private static final OracleConfigurationProvider PROVIDER =
-      OracleConfigurationProvider.find("awss3");
-
-  /**
-   * Verifies if AWS S3 Configuration Provider works with default authentication
-   * @throws SQLException
-   */
   @Test
-  public void testDefaultAuthentication() throws SQLException {
-    final String prefix = "jdbc:oracle:thin:@config-awss3://";
+  public void testGetUsername() {
+    Map<String, String> testParameters = new HashMap<>();
+    testParameters.put("secretName",
+      TestProperties.getOrAbort(AwsTestProperty.USERNAME_SECRET_NAME));
+    testParameters.put("awsRegion",
+      TestProperties.getOrAbort(AwsTestProperty.AWS_REGION));
 
-    String url =
-        TestProperties.getOrAbort(
-            AwsTestProperty.AWS_S3_URL);
+    Map<Parameter, CharSequence> parameterValues =
+            createParameterValues(PROVIDER, testParameters);
 
-    assertTrue(
-        url.startsWith(prefix),
-        "AWS_S3_URL should start with " + prefix);
-
-    Properties properties = PROVIDER
-        .getConnectionProperties(url.substring(prefix.length()));
-
-    assertTrue(properties.containsKey("URL"), "Contains property URL");
-    assertTrue(properties.containsKey("user"), "Contains property user");
-    assertTrue(properties.containsKey("password"), "Contains property password");
+    assertNotNull(PROVIDER.getUsername(parameterValues));
   }
 }

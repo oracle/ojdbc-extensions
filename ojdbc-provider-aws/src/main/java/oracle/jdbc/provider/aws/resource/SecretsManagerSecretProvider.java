@@ -35,48 +35,56 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.provider.aws.configuration;
 
-import oracle.jdbc.provider.TestProperties;
-import oracle.jdbc.spi.OracleConfigurationProvider;
-import oracle.provider.aws.AwsTestProperty;
-import org.junit.jupiter.api.Test;
+package oracle.jdbc.provider.aws.resource;
 
-import java.sql.SQLException;
-import java.util.Properties;
+import oracle.jdbc.provider.aws.secrets.SecretsManagerFactory;
+import oracle.jdbc.provider.resource.ResourceParameter;
+import oracle.jdbc.provider.util.ResourceParameterUtils;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.Map;
 
-public class AwsS3ConfigurationProviderTest {
+import static oracle.jdbc.provider.aws.secrets.SecretsManagerFactory.SECRET_NAME;
 
-  static {
-    OracleConfigurationProvider.allowedProviders.add("awss3");
+/**
+ * <p>
+ * Base class for all providers that retrieve secrets from AWS Secrets Manager.
+ * This class defines shared parameters and secret retrieval logic.
+ * </p>
+ */
+public class SecretsManagerSecretProvider extends AwsResourceProvider {
+
+  private static final ResourceParameter[] PARAMETERS = {
+          new ResourceParameter("secretName", SECRET_NAME)
+  };
+
+  protected SecretsManagerSecretProvider(String valueType) {
+    super(valueType, PARAMETERS);
   }
 
-  private static final OracleConfigurationProvider PROVIDER =
-      OracleConfigurationProvider.find("awss3");
+  protected SecretsManagerSecretProvider(String valueType, ResourceParameter[] additionalParameters) {
+    super(valueType, ResourceParameterUtils.combineParameters(PARAMETERS, additionalParameters));
+  }
 
   /**
-   * Verifies if AWS S3 Configuration Provider works with default authentication
-   * @throws SQLException
+   * <p>
+   * Retrieves a secret from AWS Secrets Manager based on parameters provided
+   * in {@code parameterValues}. This method centralizes secret retrieval logic
+   * and is intended to be used by subclasses implementing the
+   * {@link oracle.jdbc.spi.OracleResourceProvider} SPI.
+   * </p><p>
+   * The method uses the {@code getResource} method to parse the
+   * {@code parameterValues} and request the secret from AWS Secrets Manager via
+   * the {@link oracle.jdbc.provider.aws.secrets.SecretsManagerFactory} instance.
+   * The secret value is returned as a {@code String}.
+   * </p>
+   *
+   * @param parameterValues A map of parameter names and their corresponding
+   * values required for secret retrieval.
+   * @return The secret value as a {@code String}.
+   * @throws IllegalStateException If secret retrieval fails or returns null.
    */
-  @Test
-  public void testDefaultAuthentication() throws SQLException {
-    final String prefix = "jdbc:oracle:thin:@config-awss3://";
-
-    String url =
-        TestProperties.getOrAbort(
-            AwsTestProperty.AWS_S3_URL);
-
-    assertTrue(
-        url.startsWith(prefix),
-        "AWS_S3_URL should start with " + prefix);
-
-    Properties properties = PROVIDER
-        .getConnectionProperties(url.substring(prefix.length()));
-
-    assertTrue(properties.containsKey("URL"), "Contains property URL");
-    assertTrue(properties.containsKey("user"), "Contains property user");
-    assertTrue(properties.containsKey("password"), "Contains property password");
+  protected final String getSecret(Map<Parameter, CharSequence> parameterValues) {
+    return getResource(SecretsManagerFactory.getInstance(), parameterValues);
   }
 }

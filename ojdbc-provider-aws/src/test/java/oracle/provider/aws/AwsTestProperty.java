@@ -35,48 +35,20 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.provider.aws.configuration;
+package oracle.provider.aws;
 
-import oracle.jdbc.provider.TestProperties;
-import oracle.jdbc.spi.OracleConfigurationProvider;
-import oracle.provider.aws.AwsTestProperty;
-import org.junit.jupiter.api.Test;
-
-import java.sql.SQLException;
-import java.util.Properties;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-public class AwsS3ConfigurationProviderTest {
-
-  static {
-    OracleConfigurationProvider.allowedProviders.add("awss3");
-  }
-
-  private static final OracleConfigurationProvider PROVIDER =
-      OracleConfigurationProvider.find("awss3");
-
-  /**
-   * Verifies if AWS S3 Configuration Provider works with default authentication
-   * @throws SQLException
-   */
-  @Test
-  public void testDefaultAuthentication() throws SQLException {
-    final String prefix = "jdbc:oracle:thin:@config-awss3://";
-
-    String url =
-        TestProperties.getOrAbort(
-            AwsTestProperty.AWS_S3_URL);
-
-    assertTrue(
-        url.startsWith(prefix),
-        "AWS_S3_URL should start with " + prefix);
-
-    Properties properties = PROVIDER
-        .getConnectionProperties(url.substring(prefix.length()));
-
-    assertTrue(properties.containsKey("URL"), "Contains property URL");
-    assertTrue(properties.containsKey("user"), "Contains property user");
-    assertTrue(properties.containsKey("password"), "Contains property password");
-  }
+public enum AwsTestProperty {
+  AWS_S3_URL,
+  AWS_SECRETS_MANAGER_URL,
+  AWS_REGION,
+  PASSWORD_SECRET_NAME,
+  USERNAME_SECRET_NAME,
+  TNSNAMES_SECRET_NAME,
+  TNS_ALIAS,
+  PKCS12_WALLET_SECRET_NAME,
+  WALLET_PASSWORD,
+  SSO_WALLET_SECRET_NAME,
+  PEM_WALLET_SECRET_NAME,
+  PKCS12_SEPS_WALLET_SECRET_NAME,
+  SSO_SEPS_WALLET_SECRET_NAME
 }

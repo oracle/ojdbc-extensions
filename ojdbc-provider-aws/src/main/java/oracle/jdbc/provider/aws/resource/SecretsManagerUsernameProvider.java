@@ -35,9 +35,43 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.provider.aws.configuration;
 
-public enum AwsTestProperty {
-  AWS_S3_URL,
-  AWS_SECRETS_MANAGER_URL
+package oracle.jdbc.provider.aws.resource;
+
+import oracle.jdbc.spi.UsernameProvider;
+import java.util.Map;
+
+/**
+ * <p>
+ * A provider of username managed as secrets by AWS Secrets Manager.
+ * This class inherits parameters and behavior from {@link SecretsManagerSecretProvider}
+ * and {@link AwsResourceProvider}.
+ * </p><p>
+ * This class implements the {@link UsernameProvider} SPI defined by Oracle JDBC.
+ * It is designed to be located and instantiated by {@link java.util.ServiceLoader}.
+ * </p>
+ */
+public class SecretsManagerUsernameProvider
+  extends SecretsManagerSecretProvider
+  implements UsernameProvider {
+
+  /**
+   * A public no-arg constructor used by {@link java.util.ServiceLoader} to
+   * construct an instance of this provider.
+   */
+  public SecretsManagerUsernameProvider() {
+    super("secrets-manager-username");
+  }
+
+  /**
+   * Retrieves a username stored as a secret in AWS Secrets Manager.
+   *
+   * @param parameterValues A map of parameter names and values required for
+   * retrieving the secret. Must not be null.
+   * @return The secret value as the database username. Not null.
+   */
+  @Override
+  public String getUsername(Map<Parameter, CharSequence> parameterValues) {
+    return getSecret(parameterValues);
+  }
 }
