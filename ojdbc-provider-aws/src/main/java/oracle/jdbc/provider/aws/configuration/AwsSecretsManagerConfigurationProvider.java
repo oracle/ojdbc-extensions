@@ -66,7 +66,7 @@ public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationP
                   .addParameter("value", SecretsManagerFactory.SECRET_NAME)
                   .addParameter("key", AwsConfigurationParameters.KEY)
                   .addParameter("type", Parameter.create())
-                  .addParameter("field_name", AwsConfigurationParameters.FIELD_NAME) // Add field_name
+                  .addParameter("field_name", AwsConfigurationParameters.FIELD_NAME)
                   .addParameter("AWS_REGION", AwsConfigurationParameters.REGION))
           .build();
 
