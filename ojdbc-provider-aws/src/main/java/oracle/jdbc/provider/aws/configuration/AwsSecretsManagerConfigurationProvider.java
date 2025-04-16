@@ -39,6 +39,7 @@ package oracle.jdbc.provider.aws.configuration;
 
 import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.aws.secrets.SecretsManagerFactory;
+import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 import oracle.jdbc.util.OracleConfigurationCache;
@@ -64,6 +65,8 @@ public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationP
               ParameterSetParser.builder()
                   .addParameter("value", SecretsManagerFactory.SECRET_NAME)
                   .addParameter("key", AwsConfigurationParameters.KEY)
+                  .addParameter("type", Parameter.create())
+                  .addParameter("field_name", AwsConfigurationParameters.FIELD_NAME) // Add field_name
                   .addParameter("AWS_REGION", AwsConfigurationParameters.REGION))
           .build();
 
