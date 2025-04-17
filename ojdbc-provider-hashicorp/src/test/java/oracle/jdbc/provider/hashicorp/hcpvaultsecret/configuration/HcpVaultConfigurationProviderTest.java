@@ -39,6 +39,7 @@
 package oracle.jdbc.provider.hashicorp.hcpvaultsecret.configuration;
 
 import oracle.jdbc.provider.TestProperties;
+import oracle.jdbc.provider.hashicorp.hcpvaultsecret.HcpVaultTestProperty;
 import oracle.jdbc.spi.OracleConfigurationProvider;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
