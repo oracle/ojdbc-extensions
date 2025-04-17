@@ -60,6 +60,11 @@ public final class AwsConfigurationParameters {
   public static final Parameter<String> KEY = Parameter.create();
 
   /**
+   *  The field name for extracting a specific value from the JSON.
+   */
+  public static final Parameter<String> FIELD_NAME = Parameter.create();
+
+  /**
    * Configures a {@code builder} to build a parser that recognizes the common
    * set of parameters accepted by {@link AwsS3ConfigurationProvider} and
    * {@link AwsSecretsManagerConfigurationProvider}.
