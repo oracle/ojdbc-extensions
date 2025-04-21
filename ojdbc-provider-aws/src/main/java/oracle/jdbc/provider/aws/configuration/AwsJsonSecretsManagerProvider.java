@@ -40,6 +40,7 @@ package oracle.jdbc.provider.aws.configuration;
 import oracle.jdbc.provider.aws.secrets.SecretsManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.spi.OracleConfigurationSecretProvider;
+import oracle.sql.json.OracleJsonException;
 import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonObject;
 
@@ -53,6 +54,9 @@ import static oracle.jdbc.provider.aws.configuration.AwsSecretsManagerConfigurat
 
 public class AwsJsonSecretsManagerProvider
     implements OracleConfigurationSecretProvider {
+
+  private static final OracleJsonFactory JSON_FACTORY = new OracleJsonFactory();
+
   /**
    * {@inheritDoc}
    * <p>
@@ -97,8 +101,7 @@ public class AwsJsonSecretsManagerProvider
     String extractedSecret;
 
     try {
-      OracleJsonObject jsonObject = new OracleJsonFactory()
-        .createJsonTextValue(
+      OracleJsonObject jsonObject = JSON_FACTORY.createJsonTextValue(
            new ByteArrayInputStream(secretString.getBytes(StandardCharsets.UTF_8)))
         .asJsonObject();
 
@@ -114,19 +117,14 @@ public class AwsJsonSecretsManagerProvider
           "FIELD_NAME is required when multiple keys exist in the secret JSON");
       }
 
-    } catch (IllegalStateException e) {
-      throw e;
-    } catch (Exception e) {
+    } catch (OracleJsonException e) {
       extractedSecret = secretString;
     }
 
     return Base64.getEncoder()
-        .encodeToString(extractedSecret.getBytes())
+        .encodeToString(extractedSecret.getBytes(StandardCharsets.UTF_8))
         .toCharArray();
   }
-
-
-
 
   @Override
   public String getSecretType() {
