@@ -12,6 +12,9 @@ Provider</a></dt>
 <dt><a href="#aws-secrets-manager-config-provider">AWS Secrets Manager Configuration 
 Provider</a></dt>
 <dd>Provides connection properties managed by the Secrets Manager service</dd>
+<dt><a href="#aws-parameter-store-config-provider">AWS Parameter Store Configuration 
+Provider</a></dt>
+<dd>Provides connection properties managed by the Systems Manager Parameter Store</dd>
 <dt><a href="#common-parameters-for-centralized-config-providers">Common Parameters for Centralized Config Providers</a></dt>
 <dd>Common parameters supported by the config providers</dd>
 <dt><a href="#caching-configuration">Caching configuration</a></dt>
@@ -97,7 +100,7 @@ The sample code below executes as expected with the previous configuration.
 
 ### Password JSON Object
 
-For the JSON type of provider (AWS S3, AWS Secrets Manager, HTTP/HTTPS, File) the password is an object itself with the following spec:
+For the JSON type of provider (AWS S3, AWS Secrets Manager, AWS Parameter Store, HTTP/HTTPS, File) the password is an object itself with the following spec:
 
 - type
     - Mandatory
@@ -106,6 +109,7 @@ For the JSON type of provider (AWS S3, AWS Secrets Manager, HTTP/HTTPS, File) th
         - azurevault
         - base64
         - awssecretsmanager
+        - awsparameterstore
 - value
     - Mandatory
     - Possible values
@@ -113,6 +117,7 @@ For the JSON type of provider (AWS S3, AWS Secrets Manager, HTTP/HTTPS, File) th
         - Azure Key Vault URI (if azurevault)
         - Base64 Encoded password (if base64)
         - AWS Secret name (if awssecretsmanager)
+        - AWS Parameter name (if awsparameterstore)
 - authentication
     - Optional
     - Possible Values
@@ -127,6 +132,16 @@ jdbc:oracle:thin:@config-awssecretsmanager://{secret-name}
 </pre>
 
 The JSON Payload retrieved by AWS Secrets Manager Provider follows the same format in [AWS S3 Configuration Provider](#json-payload-format).
+
+## AWS Parameter Store Config Provider
+Apart from AWS S3 and Secrets Manager, users can also store JSON payload in AWS Systems Manager Parameter Store. 
+To use it, specify the name of the parameter:
+
+<pre>
+jdbc:oracle:thin:@config-awsparameterstore://{parameter-name}
+</pre>
+
+The JSON payload stored in the parameter should follow the same format as described in [AWS S3 Configuration Provider](#json-payload-format).
 
 ## Common Parameters for Centralized Config Providers
 AWS S3 Configuration Provider and AWS Secrets Manager Configuration Provider
