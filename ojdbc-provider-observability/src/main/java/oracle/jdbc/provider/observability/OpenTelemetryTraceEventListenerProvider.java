@@ -71,8 +71,8 @@ public class OpenTelemetryTraceEventListenerProvider extends ObservabilityTraceE
   @Override
   public TraceEventListener getTraceEventListener(Map<Parameter, CharSequence> map) {
     String uniqueIdentifier = map.get(uniqueIdentifierParameter).toString();
-    return ObservabilityTraceEventListener.getOrCreateInstance(uniqueIdentifier, 
-        ObservabilityConfigurationType.OTEL);
+    return new ObservabilityTraceEventListener(getOrCreateConfiguration(uniqueIdentifier, ObservabilityConfigurationType.OTEL));
+
   }
 
 }

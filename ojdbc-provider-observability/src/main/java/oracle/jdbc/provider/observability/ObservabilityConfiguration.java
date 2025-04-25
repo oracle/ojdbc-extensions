@@ -43,10 +43,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import oracle.jdbc.provider.observability.tracers.ObservabilityTracer;
 import oracle.jdbc.provider.observability.tracers.jfr.JFRTracer;
+import oracle.jdbc.provider.observability.tracers.otel.OTelMetrics;
 import oracle.jdbc.provider.observability.tracers.otel.OTelTracer;
 
 /**
@@ -109,6 +111,12 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
   public static final String OPEN_TELEMETRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED = "oracle.jdbc.provider.opentelemetry.sensitive-enabled";
 
   /**
+   * Name of the UCP connection pool.
+   */
+  public static final String UCP_POOL_NAME = "oracle.jdbc.provider.observability.ucpConnectionPoolName";
+
+
+  /**
    * Default values
    */
   private static final String DEFAULT_ENABLED_TRACERS = "OTEL,JFR";
@@ -138,7 +146,9 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
   /**
    * Maps registered tracer's name to its instance.
    */
-  Map<String, ObservabilityTracer> registeredTracers = new HashMap<>(2, 1);
+  Map<String, Supplier<ObservabilityTracer>> registeredTracers = new HashMap<>(2, 1);
+
+  private OTelMetrics oTelMetrics;
 
 
   /**
@@ -190,6 +200,7 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
 
     setEnabledTracers(enabledTracers);
     setSensitiveDataEnabled(Boolean.parseBoolean(sensitiveDataEnabled));
+    oTelMetrics = new OTelMetrics(this);
   }
 
   /**
@@ -311,23 +322,32 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
    * @param tracerName the name of the tracer.
    * @return returns the registered tracer that was registered using that name.
    */
-  public ObservabilityTracer getTracer(String tracerName) {
+  public Supplier<ObservabilityTracer> getTracer(String tracerName) {
     return registeredTracers.get(tracerName);
   }
 
   /**
    * Registeres a tracer.
    * 
-   * @param tracer the tracer to register
+   * @param name the name of tracer to register
+   * @param tracerSupplier the trace supplier
    */
-  public void registerTracer(ObservabilityTracer tracer) {
+  public void registerTracer(String name, Supplier<ObservabilityTracer> tracerSupplier) {
     observabilityConfigurationLock.lock();
     try {
-      registeredTracers.put(tracer.getName(), tracer);
+      registeredTracers.put(name, tracerSupplier);
     } finally {
       observabilityConfigurationLock.unlock();
     }
   }
 
+  /**
+   * Gets the Opem Telemetry metrics for the configuration
+   * 
+   * @return the Open Telemetry metrics instance for the configuration
+   */
+  public OTelMetrics getOTelMetrics() {
+    return oTelMetrics;
+  }
 
 }

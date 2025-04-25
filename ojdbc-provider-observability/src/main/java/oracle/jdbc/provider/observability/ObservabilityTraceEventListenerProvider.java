@@ -37,12 +37,25 @@
  */
 package oracle.jdbc.provider.observability;
 
+import java.lang.management.ManagementFactory;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.management.InstanceAlreadyExistsException;
+import javax.management.MBeanRegistrationException;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.NotCompliantMBeanException;
+import javax.management.ObjectName;
 
 import oracle.jdbc.TraceEventListener;
 import oracle.jdbc.provider.observability.ObservabilityConfiguration.ObservabilityConfigurationType;
+import oracle.jdbc.provider.observability.tracers.jfr.JFRTracer;
+import oracle.jdbc.provider.observability.tracers.otel.OTelTracer;
 import oracle.jdbc.spi.TraceEventListenerProvider;
 
 /**
@@ -60,6 +73,28 @@ public class ObservabilityTraceEventListenerProvider implements TraceEventListen
    * Name Parameter name, identifies the listener
    */
   private static final String UNIQUE_IDENTIFIER_PARAMETER_NAME = "UNIQUE_IDENTIFIER";
+
+  /**
+   * MBean object name format
+   */
+  private static final String MBEAN_OBJECT_NAME = "com.oracle.jdbc.provider.observability:type=ObservabilityConfiguration,uniqueIdentifier=%s";
+  private static final String MBEAN_OBJECT_NAME_OTEL = "com.oracle.jdbc.extension.opentelemetry:type=OpenTelemetryTraceEventListener,uniqueIdentifier=%s";
+
+
+  /**
+   * MBean server
+   */
+  private static final MBeanServer server = ManagementFactory.getPlatformMBeanServer();
+
+  private ObjectName mBeanObjectName;
+
+  private static final Map<String, ObservabilityConfiguration> configuration = new ConcurrentHashMap<>();
+
+    /**
+   * Logger
+   */
+  private static final Logger logger = Logger.getLogger(
+      ObservabilityTraceEventListener.class.getPackageName());
 
 
   /**
@@ -92,7 +127,7 @@ public class ObservabilityTraceEventListenerProvider implements TraceEventListen
         map.getOrDefault(
             uniqueIdentifierParameter, 
             (CharSequence)ObservabilityTraceEventListener.DEFAULT_UNIQUE_IDENTIFIER).toString();
-    return ObservabilityTraceEventListener.getOrCreateInstance(uniqueIdentifier, ObservabilityConfigurationType.OBSERVABILITY);
+    return new ObservabilityTraceEventListener(getOrCreateConfiguration(uniqueIdentifier, ObservabilityConfigurationType.OBSERVABILITY));
   }
 
   @Override
@@ -103,6 +138,31 @@ public class ObservabilityTraceEventListenerProvider implements TraceEventListen
   @Override
   public Collection<? extends Parameter> getParameters() {
     return Collections.singletonList(uniqueIdentifierParameter);
+  }
+
+  protected ObservabilityConfiguration getOrCreateConfiguration(String uniqueIdentifier, ObservabilityConfigurationType type) {
+    return configuration.computeIfAbsent(uniqueIdentifier, name -> {
+      // Create the  configuration for this instance and register MBean
+      final String mBeanName = ObservabilityConfigurationType.OBSERVABILITY.equals(type) ?
+        String.format(MBEAN_OBJECT_NAME, name):
+        String.format(MBEAN_OBJECT_NAME_OTEL, name);
+
+      ObservabilityConfiguration configuration = new ObservabilityConfiguration(type);
+      try {
+        mBeanObjectName = new ObjectName(mBeanName);
+        if (!server.isRegistered(mBeanObjectName)) {
+          server.registerMBean(configuration, mBeanObjectName);
+          logger.log(Level.FINEST, "MBean and tracers registered");
+        }
+      } catch (InstanceAlreadyExistsException | MBeanRegistrationException | 
+          NotCompliantMBeanException | MalformedObjectNameException e) {
+        logger.log(Level.WARNING, "Could not register MBean", e);
+      }
+      // Register known tracers
+      configuration.registerTracer("OTEL", () -> new OTelTracer(configuration));
+      configuration.registerTracer("JFR", () -> new JFRTracer(configuration));
+      return configuration;
+    });
   }
 
 }

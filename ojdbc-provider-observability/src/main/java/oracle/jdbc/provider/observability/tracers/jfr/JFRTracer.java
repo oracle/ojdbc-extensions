@@ -37,12 +37,14 @@
  */
 package oracle.jdbc.provider.observability.tracers.jfr;
 
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jdk.jfr.Event;
 import oracle.jdbc.TraceEventListener.JdbcExecutionEvent;
 import oracle.jdbc.TraceEventListener.Sequence;
+import oracle.jdbc.TraceEventListener.SpanEventType;
 import oracle.jdbc.TraceEventListener.TraceContext;
 import oracle.jdbc.provider.observability.ObservabilityConfiguration;
 import oracle.jdbc.provider.observability.tracers.ObservabilityTracer;
@@ -107,6 +109,11 @@ public class JFRTracer implements ObservabilityTracer{
     executionEvent.commit();
     //Return previous user context
     return userContext;
+  }
+
+  @Override
+  public Consumer<TraceContext> SpanEvent(SpanEventType spanEventType, TraceContext traceContext) {
+    return (t) -> {};
   }
 
 }

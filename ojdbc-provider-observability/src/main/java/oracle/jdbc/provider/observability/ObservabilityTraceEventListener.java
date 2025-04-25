@@ -41,6 +41,7 @@ import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -96,21 +97,11 @@ import oracle.jdbc.provider.observability.tracers.otel.OTelTracer;
  * </ul>
  */
 public class ObservabilityTraceEventListener implements TraceEventListener {
-  /**
-   * MBean object name format
-   */
-  private static final String MBEAN_OBJECT_NAME = "com.oracle.jdbc.provider.observability:type=ObservabilityConfiguration,uniqueIdentifier=%s";
-  private static final String MBEAN_OBJECT_NAME_OTEL = "com.oracle.jdbc.extension.opentelemetry:type=OpenTelemetryTraceEventListener,uniqueIdentifier=%s";
 
   /**
    * Default unique identifier, if parameter not set.
    */
   static final CharSequence DEFAULT_UNIQUE_IDENTIFIER = "default";
-
-  /**
-   * MBean server
-   */
-  private static final MBeanServer server = ManagementFactory.getPlatformMBeanServer();
 
   /**
    * Logger
@@ -132,30 +123,12 @@ public class ObservabilityTraceEventListener implements TraceEventListener {
   private ObjectName mBeanObjectName;
 
   /**
-   * Create a trace event listener identified by the given name. 
-   * @param uniqueIdentifier the name of the trace event listener.
-   * @param configurationType configuration type for backward compatibility.
+   * Create an instance of trace event listener with a given configuration. 
+   * 
+   * @param configuration the configuration for this trace event listener 
    */
-  private ObservabilityTraceEventListener(String uniqueIdentifier, 
-      ObservabilityConfigurationType configurationType) { 
-    // Create the  configuration for this instance and register MBean
-    final String mBeanName = ObservabilityConfigurationType.OTEL.equals(configurationType) ?
-        String.format(MBEAN_OBJECT_NAME_OTEL, uniqueIdentifier) :
-        String.format(MBEAN_OBJECT_NAME, uniqueIdentifier);
-    this.configuration = new ObservabilityConfiguration(configurationType);
-    try {
-      mBeanObjectName = new ObjectName(mBeanName);
-      if (!server.isRegistered(mBeanObjectName)) {
-        server.registerMBean(configuration, mBeanObjectName);
-        logger.log(Level.FINEST, "MBean and tracers registered");
-      }
-    } catch (InstanceAlreadyExistsException | MBeanRegistrationException | 
-        NotCompliantMBeanException | MalformedObjectNameException e) {
-      logger.log(Level.WARNING, "Could not register MBean", e);
-    }
-    // Register known tracers
-    configuration.registerTracer(new OTelTracer(configuration));
-    configuration.registerTracer(new JFRTracer(configuration));
+  public ObservabilityTraceEventListener(ObservabilityConfiguration configuration) { 
+    this.configuration = configuration;
   }
 
   @Override
@@ -171,7 +144,7 @@ public class ObservabilityTraceEventListener implements TraceEventListener {
 
     // loop through all the enabled tracers
     for (String tracerName : configuration.getEnabledTracersAsList()) {
-      ObservabilityTracer tracer = configuration.getTracer(tracerName);
+      ObservabilityTracer tracer = configuration.getTracer(tracerName).get();
       if (tracer != null) {
         // call the tracer's round trip event with the tracer's context and store
         // the new user context returned by the tracer in the user context map
@@ -202,7 +175,7 @@ public class ObservabilityTraceEventListener implements TraceEventListener {
     
     // loop through all the enabled tracers
     for (String tracerName : configuration.getEnabledTracersAsList()) {
-      ObservabilityTracer tracer = configuration.getTracer(tracerName);
+      ObservabilityTracer tracer = configuration.getTracer(tracerName).get();
       if (tracer != null) {
         // call the tracer's execution event with the tracer's context and store
         // the new user context returned by the tracer in the user context map
@@ -223,6 +196,16 @@ public class ObservabilityTraceEventListener implements TraceEventListener {
   public boolean isDesiredEvent(JdbcExecutionEvent event) {
     // Accept all events
     return true;
+  }
+
+  @Override
+  public Consumer<TraceContext> SpanEvent(SpanEventType spanEventType, TraceContext traceContext) {
+    if (!configuration.getEnabled()) { return null;}
+    for (String tracerName : configuration.getEnabledTracersAsList()) {
+      ObservabilityTracer tracer = configuration.getTracer(tracerName).get();
+      return tracer.SpanEvent(spanEventType, traceContext);
+    }
+    return null;
   }
 
 
@@ -257,19 +240,6 @@ public class ObservabilityTraceEventListener implements TraceEventListener {
    */
   public static ObservabilityTraceEventListener getTraceEventListener(String uniqueIdentifier) {
     return INSTANCES.get(uniqueIdentifier);
-  }
-
-  /**
-   * Gets or creates an instance of {@link ObservabilityTraceEventListener} 
-   * associated to the name.
-   * @param uniqueIdentifier the name of the listener instance.
-   * @param configurationType configuration type for backward compatibility.
-   * 
-   * @return an instance of {@link ObservabilityTraceEventListener}.
-   */
-  static ObservabilityTraceEventListener getOrCreateInstance(String uniqueIdentifier, 
-      ObservabilityConfigurationType configurationType) {
-    return INSTANCES.computeIfAbsent(uniqueIdentifier, n -> new ObservabilityTraceEventListener(n, configurationType));
   }
 
 }

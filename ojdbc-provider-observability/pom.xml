@@ -4,26 +4,34 @@
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
+
   <parent>
-        <groupId>com.oracle.database.jdbc</groupId>
-        <artifactId>ojdbc-extensions</artifactId>
-        <version>1.0.3</version>
+      <groupId>com.oracle.database.jdbc</groupId>
+      <artifactId>ojdbc-extensions</artifactId>
+      <version>1.0.3</version>
   </parent>
 
   <name>Oracle JDBC Observability Provider</name>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-observability</artifactId>
+  <version>1.0.3</version>
 
   <properties>
-      <opentelemetry.version>1.44.1</opentelemetry.version>
-      <maven.compiler.source>11</maven.compiler.source>
-      <maven.compiler.target>11</maven.compiler.target>
+    <opentelemetry.version>1.44.1</opentelemetry.version>
+    <junit.version>5.9.0</junit.version>
+    <mockito.version>4.11.0</mockito.version>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>com.oracle.database.jdbc</groupId>
       <artifactId>ojdbc11</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.oracle.database.jdbc</groupId>
+      <artifactId>ucp11</artifactId>
     </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
@@ -33,23 +41,20 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
+      <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
       <scope>test</scope>
+      <version>${junit.version}</version>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-params</artifactId>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <artifactId>ojdbc-provider-common</artifactId>
-      <groupId>com.oracle.database.jdbc</groupId>
-      <classifier>tests</classifier>
-      <type>test-jar</type>
+      <version>${junit.version}</version>
     </dependency>
   </dependencies>
   <build>

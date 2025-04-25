@@ -72,12 +72,13 @@ import jdk.jfr.consumer.RecordedEvent;
 import jdk.jfr.consumer.RecordingFile;
 import oracle.jdbc.DatabaseFunction;
 import oracle.jdbc.driver.OracleConnection;
-import oracle.jdbc.provider.TestProperties;
+//import oracle.jdbc.provider.TestProperties;
 
 public class ObservabilityTraceEventListenerTest {
-  String url = TestProperties.getOrAbort(ObservabilityTestProperties.OBSERVABILITY_URL);
-  String userName = TestProperties.getOrAbort(ObservabilityTestProperties.OBSERVABILITY_USERNAME);
-  String password = TestProperties.getOrAbort(ObservabilityTestProperties.OBSERVABILITY_PASSWORD);
+
+  String url = ""; //TestProperties.getOrAbort(ObservabilityTestProperties.OBSERVABILITY_URL);
+  String userName = ""; //TestProperties.getOrAbort(ObservabilityTestProperties.OBSERVABILITY_USERNAME);
+  String password = ""; //TestProperties.getOrAbort(ObservabilityTestProperties.OBSERVABILITY_PASSWORD);
 
   // JFR
   private static final String SESSION_KEY = "oracle.jdbc.provider.observability.RoundTrip.SESSION_KEY";

@@ -39,9 +39,11 @@ package oracle.jdbc.provider.observability.tracers;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import oracle.jdbc.TraceEventListener.JdbcExecutionEvent;
 import oracle.jdbc.TraceEventListener.Sequence;
+import oracle.jdbc.TraceEventListener.SpanEventType;
 import oracle.jdbc.TraceEventListener.TraceContext;
 import oracle.jdbc.provider.observability.ObservabilityTraceEventListener;
 
@@ -96,5 +98,15 @@ public interface ObservabilityTracer {
    * type of event. May be null.
    */
   Object traceExecutionEvent(JdbcExecutionEvent event, Object userContext, Object... params);
+
+  /**
+   * Called by {@link ObservabilityTraceEventListener} when a span event is 
+   * received.
+   * @param spanEventType Type of the span event
+   * @param traceContext Trace Context
+   * @return returns a callback function that will be called at the end of the 
+   * span event.
+   */
+  Consumer<TraceContext> SpanEvent(SpanEventType spanEventType, TraceContext traceContext);
 
 }

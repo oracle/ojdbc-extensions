@@ -158,10 +158,12 @@ public class OpenTelemetryTraceEventListener
 
   public OpenTelemetryTraceEventListener() {
     this(GlobalOpenTelemetry.get().getTracer(OpenTelemetryTraceEventListener.class.getName()));
+    logger.info("Got tracer from GlobalOpenTelemetry");
   }
 
   public OpenTelemetryTraceEventListener(Tracer tracer) {
     this.tracer = tracer;
+    logger.info("Tracer class: " + tracer.getClass().getName());
   }
 
   @Override
@@ -205,6 +207,7 @@ public class OpenTelemetryTraceEventListener
     if (!isEnabled())
       return null;
     if (sequence == Sequence.BEFORE) {
+      logger.info("Before round-trip: " + traceContext.databaseOperation());
       // Create the Span before the round-trip.
       final Span span = initAndGetSpan(traceContext, traceContext.databaseOperation());
       try (Scope ignored = span.makeCurrent()) {
@@ -217,6 +220,7 @@ public class OpenTelemetryTraceEventListener
       // as user context parameter on the next round-trip call.
       return span;
     } else {
+      logger.info("After round-trip: " + traceContext.databaseOperation());
       // End the Span after the round-trip.
       if (userContext instanceof Span) {
         final Span span = (Span) userContext;
@@ -326,6 +330,8 @@ public class OpenTelemetryTraceEventListener
     final String parentId = spanContext.getSpanId();
     final String traceFlags = spanContext.getTraceFlags().toString();
 
+    logger.info("Trace Id:" + spanContext.getTraceId());
+    logger.info("Span Id:" + spanContext.getSpanId());
     return String.format("traceparent: %s-%s-%s-%s\r\n",
         version, traceId, parentId, traceFlags);
   }

@@ -1007,9 +1007,9 @@ public class JFREventFactory {
           host = params[2].toString();
           port = params[3].toString();
           serviceName = params[4].toString();
-          sid = params[5].toString();
-          connectionData = params[6].toString();
-          vipAddress = params[7].toString();
+          sid =  params[5] != null ? params[5].toString() : "" ;
+          connectionData =  params[6] != null ? params[6].toString() : "";
+          vipAddress =  params[7] != null ? params[7].toString() : "";
         }
     }
 
