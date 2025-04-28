@@ -35,63 +35,50 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-
 package oracle.jdbc.provider.aws.configuration;
 
-import oracle.jdbc.provider.aws.parameterstore.ParameterStoreFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.spi.OracleConfigurationSecretProvider;
+import oracle.jdbc.datasource.impl.OracleDataSource;
 
-import java.util.Base64;
-import java.util.Map;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
-import static oracle.jdbc.provider.aws.configuration.AwsParameterStoreConfigurationProvider.PARAMETER_SET_PARSER;
-
-public class AwsJsonParameterStoreProvider
-  implements OracleConfigurationSecretProvider {
+/**
+ * A standalone example that configures Oracle JDBC to be provided with the
+ * connection properties retrieved from AWS Systems Manager Parameter Store.
+ */
+public class AwsParameterStoreConfigurationExample {
+  private static String url;
 
   /**
-   * {@inheritDoc}
    * <p>
-   * Returns the value of the parameter retrieved from AWS Systems Manager
-   * Parameter Store.
+   * A simple example to retrieve connection properties from AWS Parameter Store.
+   * </p><p>
+   * For the default authentication, the only required local configuration is
+   * to have a valid AWS Config in ~/.aws/config and ~/.aws/credentials.
    * </p>
-   * <p>
-   * The {@code jsonObject} is expected to be in the following form:
-   * </p>
-   *
-   * <pre>{@code
-   *   "password": {
-   *       "type": "awsparameterstore",
-   *       "value": "/my-app/database-password"
-   *   }
-   * }</pre>
-   *
-   * <p>
-   * The provider retrieves the parameter specified by the {@code value} field
-   * from AWS Parameter Store, then encodes it as a Base64 string.
-   * The encoded value is returned as a {@code char[]} for use with Oracle JDBC's
-   * centralized configuration.
-   * </p>
-   *
-   * @param map Map object containing key-value pairs parsed from the JSON configuration.
-   * @return Base64-encoded {@code char[]} representing the retrieved secret value.
+   * @param args the command line arguments
+   * @throws SQLException if an error occurs during the database calls
    */
-  @Override
-  public char[] getSecret(Map<String, String> map) {
-    ParameterSet parameterSet = PARAMETER_SET_PARSER.parseNamedValues(map);
+  public static void main(String[] args) throws SQLException {
 
-    String parameterValue = ParameterStoreFactory.getInstance()
-      .request(parameterSet)
-      .getContent();
+    // Sample default URL if non present
+    if (args.length == 0) {
+      url = "jdbc:oracle:thin:@config-awsparameterstore://parameter_name";
+    } else {
+      url = args[0];
+    }
 
-    return Base64.getEncoder()
-      .encodeToString(parameterValue.getBytes())
-      .toCharArray();
-  }
+    // No changes required, configuration provider is loaded at runtime
+    OracleDataSource ds = new OracleDataSource();
+    ds.setURL(url);
 
-  @Override
-  public String getSecretType() {
-    return "awsparameterstore";
+    // Standard JDBC code
+    Connection cn = ds.getConnection();
+    Statement st = cn.createStatement();
+    ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
+    if (rs.next())
+      System.out.println(rs.getString(1));
   }
 }

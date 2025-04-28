@@ -55,21 +55,21 @@ import static oracle.jdbc.provider.aws.configuration.AwsConfigurationParameters.
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
 
 public final class ParameterStoreFactory
-        extends AwsResourceFactory<String> {
+  extends AwsResourceFactory<String> {
 
   /**
    * The name of the parameter to retrieve from AWS Systems Manager Parameter Store.
    * This is a required parameter.
    */
   public static final Parameter<String> PARAMETER_NAME =
-          Parameter.create(REQUIRED);
+    Parameter.create(REQUIRED);
 
   /**
    * The single instance of {@code CachedResourceFactory} for requesting
    * parameter values from AWS Systems Manager Parameter Store.
    */
   private static final ResourceFactory<String> INSTANCE =
-          CachedResourceFactory.create(new ParameterStoreFactory());
+    CachedResourceFactory.create(new ParameterStoreFactory());
 
   private ParameterStoreFactory() { }
 
@@ -88,8 +88,8 @@ public final class ParameterStoreFactory
     String region = parameterSet.getOptional(REGION);
 
     SsmClientBuilder builder = SsmClient
-            .builder()
-            .credentialsProvider(() -> awsCredentials);
+      .builder()
+      .credentialsProvider(() -> awsCredentials);
 
     if (region != null) {
       builder.region(Region.of(region));
@@ -97,9 +97,9 @@ public final class ParameterStoreFactory
 
     try (SsmClient client = builder.build()) {
       GetParameterRequest req = GetParameterRequest.builder()
-              .name(name)
-              .withDecryption(true)
-              .build();
+        .name(name)
+        .withDecryption(true)
+        .build();
       GetParameterResponse resp = client.getParameter(req);
       String value = resp.parameter().value();
       return Resource.createPermanentResource(value, true);

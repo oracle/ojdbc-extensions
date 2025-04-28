@@ -59,16 +59,16 @@ import static oracle.jdbc.provider.aws.configuration.AwsConfigurationParameters.
  * See {@link #getInputStream(String)} for the spec of the JSON payload.
  **/
 public class AwsParameterStoreConfigurationProvider
-        extends OracleConfigurationParsableProvider {
+  extends OracleConfigurationParsableProvider {
 
   static final ParameterSetParser PARAMETER_SET_PARSER =
-          AwsConfigurationParameters.configureBuilder(
-                  ParameterSetParser.builder()
-                          .addParameter("value", ParameterStoreFactory.PARAMETER_NAME)
-                          .addParameter("key", KEY)
-                          .addParameter("type", Parameter.create())
-                          .addParameter("AWS_REGION", REGION)
-          ).build();
+    AwsConfigurationParameters.configureBuilder(
+      ParameterSetParser.builder()
+        .addParameter("value", ParameterStoreFactory.PARAMETER_NAME)
+        .addParameter("key", KEY)
+        .addParameter("type", Parameter.create())
+        .addParameter("AWS_REGION", REGION)
+    ).build();
 
   /**
    * {@inheritDoc}
@@ -88,8 +88,8 @@ public class AwsParameterStoreConfigurationProvider
 
     ParameterSet params = PARAMETER_SET_PARSER.parseNamedValues(opts);
     String json = ParameterStoreFactory.getInstance()
-            .request(params)
-            .getContent();
+      .request(params)
+      .getContent();
 
     return new ByteArrayInputStream(json.getBytes());
   }
