@@ -40,18 +40,15 @@ package oracle.jdbc.provider.azure.configuration;
 
 import com.azure.data.appconfiguration.ConfigurationClient;
 import com.azure.data.appconfiguration.ConfigurationClientBuilder;
-import com.azure.data.appconfiguration.models.ConfigurationSetting;
 import com.azure.identity.ClientSecretCredentialBuilder;
-import oracle.jdbc.provider.TestProperties;
-import oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod;
 import oracle.jdbc.datasource.impl.OracleDataSource;
+import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.azure.AzureTestProperty;
-import oracle.jdbc.spi.OracleConfigurationCachableProvider;
+import oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod;
 import oracle.jdbc.spi.OracleConfigurationProvider;
 import oracle.jdbc.util.OracleConfigurationCache;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -61,9 +58,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
-import static oracle.jdbc.provider.TestProperties.getOrAbort;
 import static oracle.jdbc.provider.TestProperties.getProperties;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Verifies the {@link AzureAppConfigurationProvider} as implementing behavior
@@ -118,13 +116,6 @@ public class AzureAppConfigurationProviderURLParserTest {
       ConfigurationClient client = getSecretCredentialClient();
       String url = composeURL(options);
       removeCacheEntry(url);
-      System.out.println("Print cached properties");
-      Properties cached;
-      if ((cached = CACHE.get(url.replaceFirst("jdbc:oracle:thin:@config-azure://", ""))) != null) {
-        cached.forEach((k, v) -> {
-          System.out.println("key: " + k + ", value: " + v);
-        });
-      }
       verifyInvalidKeyThrowsException(client, url);
     }
 
@@ -221,19 +212,14 @@ public class AzureAppConfigurationProviderURLParserTest {
     String value = "foo";
 
     // Add the new configuration setting
-    ConfigurationSetting setting = client.addConfigurationSetting(key, label, value);
-    System.out.println("Added: " + setting.getKey() + ", " + setting.getValue());
+    client.addConfigurationSetting(key, label, value);
 
     try {
       SQLException exception = assertThrows(SQLException.class,
         () -> {
           OracleDataSource ds = new OracleDataSource();
           ds.setURL(url);
-          Connection cn = ds.getConnection();
-          ResultSet rs = cn.createStatement().executeQuery("SELECT 'Hello, db' FROM sys.dual");
-          if (rs.next())
-            System.out.println(rs.getString(1));
-          },
+          ds.getConnection();},
         "Should throw an SQLException");
       // Expected exception:
       // ORA-18729: Property is not whitelisted for external providers
