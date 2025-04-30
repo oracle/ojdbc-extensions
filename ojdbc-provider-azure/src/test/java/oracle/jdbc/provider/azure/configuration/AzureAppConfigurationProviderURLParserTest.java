@@ -40,6 +40,7 @@ package oracle.jdbc.provider.azure.configuration;
 
 import com.azure.data.appconfiguration.ConfigurationClient;
 import com.azure.data.appconfiguration.ConfigurationClientBuilder;
+import com.azure.data.appconfiguration.models.ConfigurationSetting;
 import com.azure.identity.ClientSecretCredentialBuilder;
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod;
@@ -117,6 +118,13 @@ public class AzureAppConfigurationProviderURLParserTest {
       ConfigurationClient client = getSecretCredentialClient();
       String url = composeURL(options);
       removeCacheEntry(url);
+      System.out.println("Print cached properties");
+      Properties cached;
+      if ((cached = CACHE.get(url.replaceFirst("jdbc:oracle:thin:@config-azure://", ""))) != null) {
+        cached.forEach((k, v) -> {
+          System.out.println("key: " + k + ", value: " + v);
+        });
+      }
       verifyInvalidKeyThrowsException(client, url);
     }
 
@@ -213,7 +221,8 @@ public class AzureAppConfigurationProviderURLParserTest {
     String value = "foo";
 
     // Add the new configuration setting
-    client.addConfigurationSetting(key, label, value);
+    ConfigurationSetting setting = client.addConfigurationSetting(key, label, value);
+    System.out.println("Added: " + setting.getKey() + ", " + setting.getValue());
 
     try {
       SQLException exception = assertThrows(SQLException.class,
