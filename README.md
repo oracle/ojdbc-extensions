@@ -178,3 +178,4 @@ The command above will publish jars to your local Maven cache.
 ## License
 
 Copyright (c) 2023 Oracle and/or its affiliates. Released under the Universal Permissive License v1.0 as shown at <https://oss.oracle.com/licenses/upl/>.
+
