@@ -72,6 +72,7 @@ public class AzureAppConfigurationProviderURLParserTest {
   private static OracleConfigurationCache CACHE;
   @BeforeAll
   static void init() {
+    OracleConfigurationProvider.allowedProviders.add("azure");
     CACHE = ((AzureAppConfigurationProvider)OracleConfigurationProvider
         .find("azure"))
         .getCache();
@@ -95,10 +96,6 @@ public class AzureAppConfigurationProviderURLParserTest {
           AzureTestProperty.AZURE_CLIENT_SECRET),
         "AZURE_TENANT_ID=" + TestProperties.getOrAbort(
           AzureTestProperty.AZURE_TENANT_ID)};
-
-      AzureAppConfigurationProvider provider =
-          (AzureAppConfigurationProvider)OracleConfigurationProvider
-              .find("azure");
     }
     @Test
     void testValidUrlWithSecret() throws SQLException {
