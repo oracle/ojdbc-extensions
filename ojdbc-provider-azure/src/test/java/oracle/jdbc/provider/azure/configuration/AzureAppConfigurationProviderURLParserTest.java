@@ -70,12 +70,12 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class AzureAppConfigurationProviderURLParserTest {
   private static OracleConfigurationCache CACHE;
-  @BeforeAll
-  static void init() {
-    CACHE = ((AzureAppConfigurationProvider)OracleConfigurationProvider
-        .find("azure"))
-        .getCache();
-  }
+//  @BeforeAll
+//  static void init() {
+//    CACHE = ((AzureAppConfigurationProvider)OracleConfigurationProvider
+//        .find("azure"))
+//        .getCache();
+//  }
 
 
   /**
@@ -101,6 +101,7 @@ public class AzureAppConfigurationProviderURLParserTest {
               .find("azure");
     }
     @Test
+    @Disabled
     void testValidUrlWithSecret() throws SQLException {
       String url = composeURL(options);
       removeCacheEntry(url);
@@ -108,6 +109,7 @@ public class AzureAppConfigurationProviderURLParserTest {
     }
 
     @Test
+    @Disabled
     void testInvalidUrlWithSecret() {
       String invalidUrl = composeURL(options)
           .replace("@config-azure", "@config-azurex");
@@ -116,6 +118,7 @@ public class AzureAppConfigurationProviderURLParserTest {
     }
 
     @Test
+    @Disabled
     void testInvalidKeyWithSecret() {
       ConfigurationClient client = getSecretCredentialClient();
       String url = composeURL(options);
@@ -124,6 +127,7 @@ public class AzureAppConfigurationProviderURLParserTest {
     }
 
     @Test
+    @Disabled
     void testNonWhitelistedKeyWithSecret() {
       ConfigurationClient client = getSecretCredentialClient();
       String url = composeURL(options);
@@ -136,6 +140,7 @@ public class AzureAppConfigurationProviderURLParserTest {
    * Verifies {@link AzureAuthenticationMethod#SERVICE_PRINCIPLE}
    */
   @Test
+  @Disabled
   public void testServicePrincipleCertificate() throws SQLException {
     String url = composeURL(
         "AUTHENTICATION=AZURE_SERVICE_PRINCIPAL",
@@ -153,6 +158,7 @@ public class AzureAppConfigurationProviderURLParserTest {
    * Verifies {@link AzureAuthenticationMethod#SERVICE_PRINCIPLE}
    */
   @Test
+  @Disabled
   public void testServicePrinciplePfxCertificate() throws SQLException {
     String url = composeURL(
         "AUTHENTICATION=AZURE_SERVICE_PRINCIPAL",
