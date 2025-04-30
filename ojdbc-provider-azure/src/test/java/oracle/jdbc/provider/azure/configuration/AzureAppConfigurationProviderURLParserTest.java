@@ -229,7 +229,11 @@ public class AzureAppConfigurationProviderURLParserTest {
         () -> {
           OracleDataSource ds = new OracleDataSource();
           ds.setURL(url);
-          ds.getConnection();},
+          Connection cn = ds.getConnection();
+          ResultSet rs = cn.createStatement().executeQuery("SELECT 'Hello, db' FROM sys.dual");
+          if (rs.next())
+            System.out.println(rs.getString(1));
+          },
         "Should throw an SQLException");
       // Expected exception:
       // ORA-18729: Property is not whitelisted for external providers
