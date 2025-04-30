@@ -230,7 +230,7 @@ public class AzureAppConfigurationProviderURLParserTest {
           OracleDataSource ds = new OracleDataSource();
           ds.setURL(url);
           Connection cn = ds.getConnection();
-          ResultSet rs = cn.createStatement().executeQuery("SELECT 'Hello, db' FROM sys.dual");
+          ResultSet rs = cn.createStatement().executeQuery("SELECT 'Hello, db1' FROM sys.dual");
           if (rs.next())
             System.out.println(rs.getString(1));
           },
