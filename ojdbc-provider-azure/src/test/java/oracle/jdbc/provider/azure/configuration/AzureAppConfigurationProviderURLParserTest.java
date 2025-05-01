@@ -41,16 +41,14 @@ package oracle.jdbc.provider.azure.configuration;
 import com.azure.data.appconfiguration.ConfigurationClient;
 import com.azure.data.appconfiguration.ConfigurationClientBuilder;
 import com.azure.identity.ClientSecretCredentialBuilder;
-import oracle.jdbc.provider.TestProperties;
-import oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod;
 import oracle.jdbc.datasource.impl.OracleDataSource;
+import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.azure.AzureTestProperty;
-import oracle.jdbc.spi.OracleConfigurationCachableProvider;
+import oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod;
 import oracle.jdbc.spi.OracleConfigurationProvider;
 import oracle.jdbc.util.OracleConfigurationCache;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -60,9 +58,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
-import static oracle.jdbc.provider.TestProperties.getOrAbort;
 import static oracle.jdbc.provider.TestProperties.getProperties;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Verifies the {@link AzureAppConfigurationProvider} as implementing behavior
@@ -72,6 +71,7 @@ public class AzureAppConfigurationProviderURLParserTest {
   private static OracleConfigurationCache CACHE;
   @BeforeAll
   static void init() {
+    OracleConfigurationProvider.allowedProviders.add("azure");
     CACHE = ((AzureAppConfigurationProvider)OracleConfigurationProvider
         .find("azure"))
         .getCache();
@@ -95,10 +95,6 @@ public class AzureAppConfigurationProviderURLParserTest {
           AzureTestProperty.AZURE_CLIENT_SECRET),
         "AZURE_TENANT_ID=" + TestProperties.getOrAbort(
           AzureTestProperty.AZURE_TENANT_ID)};
-
-      AzureAppConfigurationProvider provider =
-          (AzureAppConfigurationProvider)OracleConfigurationProvider
-              .find("azure");
     }
     @Test
     void testValidUrlWithSecret() throws SQLException {
