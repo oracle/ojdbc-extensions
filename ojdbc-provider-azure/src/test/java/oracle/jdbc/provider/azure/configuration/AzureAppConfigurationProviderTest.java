@@ -53,7 +53,6 @@ class AzureAppConfigurationProviderTest {
       String url = buildUrlWithLabel("all");
       try (Connection conn = tryConnection(url)) {
       } catch (IllegalArgumentException e) {
-        // no connect descriptor is set for empty label
         Assertions.assertTrue(e.getMessage().contains(
           "Label 'all' or '*' is not allowed"));
       }
@@ -64,7 +63,6 @@ class AzureAppConfigurationProviderTest {
       String url = buildUrlWithLabel("*");
       try (Connection conn = tryConnection(url)) {
       } catch (IllegalArgumentException e) {
-        // no connect descriptor is set for empty label
         Assertions.assertTrue(e.getMessage().contains(
           "Label 'all' or '*' is not allowed"));
       }
@@ -75,7 +73,6 @@ class AzureAppConfigurationProviderTest {
       String url = buildUrlWithLabel("dev,prod");
       try (Connection conn = tryConnection(url)) {
       } catch (IllegalArgumentException e) {
-        // no connect descriptor is set for empty label
         Assertions.assertTrue(e.getMessage().contains(
           "Multiple labels and wildcards are not supported"));
       }
@@ -86,7 +83,6 @@ class AzureAppConfigurationProviderTest {
       String url = buildUrlWithLabel("dev*");
       try (Connection conn = tryConnection(url)) {
       } catch (IllegalArgumentException e) {
-        // no connect descriptor is set for empty label
         Assertions.assertTrue(e.getMessage().contains(
           "Multiple labels and wildcards are not supported"));
       }
