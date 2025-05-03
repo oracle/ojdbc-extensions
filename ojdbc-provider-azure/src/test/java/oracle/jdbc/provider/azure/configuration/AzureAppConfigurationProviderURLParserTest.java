@@ -279,7 +279,8 @@ public class AzureAppConfigurationProviderURLParserTest {
     String optionsString = String.join("&", options);
 
     Properties properties = getProperties();
-    if (properties.containsKey(AzureTestProperty.AZURE_APP_CONFIG_LABEL)) {
+    if (properties.containsKey(
+      AzureTestProperty.AZURE_APP_CONFIG_LABEL.name())) {
       optionsString = String.format("label=%s&%s",
         properties.getProperty(AzureTestProperty.AZURE_APP_CONFIG_LABEL.name()),
         optionsString);
