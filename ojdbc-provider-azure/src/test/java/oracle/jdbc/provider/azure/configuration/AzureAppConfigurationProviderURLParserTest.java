@@ -126,7 +126,7 @@ public class AzureAppConfigurationProviderURLParserTest {
     @Test
     void testInvalidKeyWithSecret() {
       options.add("key=" + TestProperties.getOrAbort(
-          AzureTestProperty.AZURE_APP_CONFIG_KEY_INVALID_KEY));
+          AzureTestProperty.AZURE_APP_CONFIG_KEY_INVALID_PROPERTIES));
       url = composeURL(options);
       shouldThrowException(url, 18729);
     }
