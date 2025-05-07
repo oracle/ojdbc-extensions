@@ -38,15 +38,13 @@
 
 package oracle.jdbc.provider.azure.configuration;
 
-import com.azure.data.appconfiguration.ConfigurationClient;
-import com.azure.data.appconfiguration.ConfigurationClientBuilder;
-import com.azure.identity.ClientSecretCredentialBuilder;
 import oracle.jdbc.datasource.impl.OracleDataSource;
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.azure.AzureTestProperty;
 import oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod;
 import oracle.jdbc.spi.OracleConfigurationProvider;
 import oracle.jdbc.util.OracleConfigurationCache;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -56,6 +54,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import static oracle.jdbc.provider.TestProperties.getProperties;
@@ -68,6 +68,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * specified by its JavaDoc.
  */
 public class AzureAppConfigurationProviderURLParserTest {
+  private String url;
+
   private static OracleConfigurationCache CACHE;
   @BeforeAll
   static void init() {
@@ -77,6 +79,13 @@ public class AzureAppConfigurationProviderURLParserTest {
         .getCache();
   }
 
+  @AfterEach
+  void cleanUp() {
+    if (url != null) {
+      removeCacheEntry(url);
+    }
+  }
+
 
   /**
    * Verifies {@link AzureAuthenticationMethod#SERVICE_PRINCIPLE}
@@ -84,47 +93,50 @@ public class AzureAppConfigurationProviderURLParserTest {
    */
   @Nested
   class TestServicePrincipleSecret {
-    String[] options;
+    List<String> options;
+
     @BeforeEach
     void beforeEach() {
-      options = new String[] {
-        "AUTHENTICATION=AZURE_SERVICE_PRINCIPAL",
-        "AZURE_CLIENT_ID=" + TestProperties.getOrAbort(
-          AzureTestProperty.AZURE_CLIENT_ID),
-        "AZURE_CLIENT_SECRET=" + TestProperties.getOrAbort(
-          AzureTestProperty.AZURE_CLIENT_SECRET),
-        "AZURE_TENANT_ID=" + TestProperties.getOrAbort(
-          AzureTestProperty.AZURE_TENANT_ID)};
+      options = new ArrayList<>();
+      options.add("AUTHENTICATION=AZURE_SERVICE_PRINCIPAL");
+      options.add("AZURE_CLIENT_ID=" + TestProperties.getOrAbort(
+          AzureTestProperty.AZURE_CLIENT_ID));
+      options.add("AZURE_CLIENT_SECRET=" + TestProperties.getOrAbort(
+          AzureTestProperty.AZURE_CLIENT_SECRET));
+      options.add("AZURE_TENANT_ID=" + TestProperties.getOrAbort(
+          AzureTestProperty.AZURE_TENANT_ID));
     }
     @Test
     void testValidUrlWithSecret() throws SQLException {
-      String url = composeURL(options);
-      removeCacheEntry(url);
+      options.add("key=" + TestProperties.getOrAbort(
+          AzureTestProperty.AZURE_APP_CONFIG_KEY));
+      url = composeURL(options);
       verifyValidUrl(url);
     }
 
     @Test
     void testInvalidUrlWithSecret() {
-      String invalidUrl = composeURL(options)
+      options.add("key=" + TestProperties.getOrAbort(
+          AzureTestProperty.AZURE_APP_CONFIG_KEY));
+      url = composeURL(options)
           .replace("@config-azure", "@config-azurex");
-      removeCacheEntry(invalidUrl);
-      verifyInvalidTypeThrowsException(invalidUrl);
+      shouldThrowException(url);
     }
 
     @Test
     void testInvalidKeyWithSecret() {
-      ConfigurationClient client = getSecretCredentialClient();
-      String url = composeURL(options);
-      removeCacheEntry(url);
-      verifyInvalidKeyThrowsException(client, url);
+      options.add("key=" + TestProperties.getOrAbort(
+          AzureTestProperty.AZURE_APP_CONFIG_KEY_INVALID_PROPERTIES));
+      url = composeURL(options);
+      shouldThrowException(url, 18729);
     }
 
     @Test
     void testNonWhitelistedKeyWithSecret() {
-      ConfigurationClient client = getSecretCredentialClient();
-      String url = composeURL(options);
-      removeCacheEntry(url);
-      verifyNonWhitelistedKeyThrowsException(client, url);
+      options.add("key=" + TestProperties.getOrAbort(
+          AzureTestProperty.AZURE_APP_CONFIG_KEY_NON_WHITELISTED_PROPERTIES));
+      url = composeURL(options);
+      shouldThrowException(url, 18729);
     }
   }
 
@@ -133,15 +145,17 @@ public class AzureAppConfigurationProviderURLParserTest {
    */
   @Test
   public void testServicePrincipleCertificate() throws SQLException {
-    String url = composeURL(
-        "AUTHENTICATION=AZURE_SERVICE_PRINCIPAL",
-        "AZURE_CLIENT_ID=" + TestProperties.getOrAbort(
-            AzureTestProperty.AZURE_CLIENT_ID),
-        "AZURE_CLIENT_CERTIFICATE_PATH=" + TestProperties.getOrAbort(
-            AzureTestProperty.AZURE_CLIENT_CERTIFICATE_PATH),
-        "AZURE_TENANT_ID=" + TestProperties.getOrAbort(
-            AzureTestProperty.AZURE_TENANT_ID));
-    removeCacheEntry(url);
+    List<String> options = new ArrayList<>();
+    options.add("key=" + TestProperties.getOrAbort(
+        AzureTestProperty.AZURE_APP_CONFIG_KEY));
+    options.add("AUTHENTICATION=AZURE_SERVICE_PRINCIPAL");
+    options.add("AZURE_CLIENT_ID=" + TestProperties.getOrAbort(
+        AzureTestProperty.AZURE_CLIENT_ID));
+    options.add("AZURE_CLIENT_CERTIFICATE_PATH=" + TestProperties.getOrAbort(
+        AzureTestProperty.AZURE_CLIENT_CERTIFICATE_PATH));
+    options.add("AZURE_TENANT_ID=" + TestProperties.getOrAbort(
+        AzureTestProperty.AZURE_TENANT_ID));
+    url = composeURL(options);
     verifyValidUrl(url);
   }
 
@@ -150,25 +164,24 @@ public class AzureAppConfigurationProviderURLParserTest {
    */
   @Test
   public void testServicePrinciplePfxCertificate() throws SQLException {
-    String url = composeURL(
-        "AUTHENTICATION=AZURE_SERVICE_PRINCIPAL",
-        "AZURE_CLIENT_ID=" + TestProperties.getOrAbort(
-            AzureTestProperty.AZURE_CLIENT_ID),
-        "AZURE_CLIENT_CERTIFICATE_PATH=" + TestProperties.getOrAbort(
-            AzureTestProperty.AZURE_CLIENT_PFX_CERTIFICATE_PATH),
-        "AZURE_CLIENT_CERTIFICATE_PASSWORD=" + TestProperties.getOrAbort(
-            AzureTestProperty.AZURE_CLIENT_PFX_PASSWORD),
-        "AZURE_TENANT_ID=" + TestProperties.getOrAbort(
-            AzureTestProperty.AZURE_TENANT_ID));
-    removeCacheEntry(url);
+    List<String> options = new ArrayList<>();
+    options.add("key=" + TestProperties.getOrAbort(
+        AzureTestProperty.AZURE_APP_CONFIG_KEY));
+    options.add("AUTHENTICATION=AZURE_SERVICE_PRINCIPAL");
+    options.add("AZURE_CLIENT_ID=" + TestProperties.getOrAbort(
+        AzureTestProperty.AZURE_CLIENT_ID));
+    options.add("AZURE_CLIENT_CERTIFICATE_PATH=" + TestProperties.getOrAbort(
+        AzureTestProperty.AZURE_CLIENT_PFX_CERTIFICATE_PATH));
+    options.add("AZURE_CLIENT_CERTIFICATE_PASSWORD=" + TestProperties.getOrAbort(
+        AzureTestProperty.AZURE_CLIENT_PFX_PASSWORD));
+    options.add("AZURE_TENANT_ID=" + TestProperties.getOrAbort(
+        AzureTestProperty.AZURE_TENANT_ID));
+    url = composeURL(options);
     verifyValidUrl(url);
   }
 
   /** Verifies a valid URL */
   private static void verifyValidUrl(String url) throws SQLException {
-    // Remove the entry from cache before verifying url
-
-
     // No changes required, configuration provider is loaded at runtime
     OracleDataSource ds = new OracleDataSource();
     ds.setURL(url);
@@ -187,7 +200,7 @@ public class AzureAppConfigurationProviderURLParserTest {
   /**
    * Verifies an exception thrown with an invalid type of the provider
    */
-  private static void verifyInvalidTypeThrowsException(String invalidUrl) {
+  private static void shouldThrowException(String invalidUrl) {
     Exception exception = assertThrows(Exception.class,
       () -> {
         OracleDataSource ds = new OracleDataSource();
@@ -202,80 +215,21 @@ public class AzureAppConfigurationProviderURLParserTest {
   /**
    * Verifies an invalid key value in App configuration throws Exception
    */
-  private static void verifyInvalidKeyThrowsException(
-    ConfigurationClient client, String url) {
-    // Name of the invalid key to add to the configuration service.
-    String key = TestProperties.getOrAbort(
-      AzureTestProperty.AZURE_APP_CONFIG_KEY) + "jdbc/invalidKey";
-    String label = TestProperties.getOrAbort(
-      AzureTestProperty.AZURE_APP_CONFIG_LABEL);
-    String value = "foo";
-
-    // Add the new configuration setting
-    client.addConfigurationSetting(key, label, value);
-
-    try {
-      SQLException exception = assertThrows(SQLException.class,
-        () -> {
-          OracleDataSource ds = new OracleDataSource();
-          ds.setURL(url);
-          ds.getConnection();},
-        "Should throw an SQLException");
-      // Expected exception:
-      // ORA-18729: Property is not whitelisted for external providers
-      assertEquals(exception.getErrorCode(), 18729,
-        "Something went unexpected: " + exception.getMessage());
-    } finally {
-      client.deleteConfigurationSetting(key, label);
-    }
+  private static void shouldThrowException(
+      String url, int errorCode) {
+    SQLException exception = assertThrows(SQLException.class,
+      () -> {
+        OracleDataSource ds = new OracleDataSource();
+        ds.setURL(url);
+        ds.getConnection();},
+      "Should throw an SQLException");
+    // Expected exception:
+    // ORA-18729: Property is not whitelisted for external providers
+    assertEquals(exception.getErrorCode(), errorCode,
+      "Something went unexpected: " + exception.getMessage());
   }
 
-  /**
-   * Verifies a non-whitelisted key value in App configuration throws Exception
-   */
-  private static void verifyNonWhitelistedKeyThrowsException(
-    ConfigurationClient client, String url) {
-    // Name of the non-whitelisted key to add to the configuration service.
-    String key = TestProperties.getOrAbort(
-      AzureTestProperty.AZURE_APP_CONFIG_KEY) + "jdbc/oracle.jdbc.newPassword";
-    String label = TestProperties.getOrAbort(
-      AzureTestProperty.AZURE_APP_CONFIG_LABEL);
-    String value = "foo";
-
-    // Add the new configuration setting
-    client.addConfigurationSetting(key, label, value);
-
-    try {
-      SQLException exception = assertThrows(SQLException.class,
-        () -> {
-          OracleDataSource ds = new OracleDataSource();
-          ds.setURL(url);
-          ds.getConnection();},
-        "Should throw an SQLException");
-      // Expected exception:
-      // ORA-18729: Property is not whitelisted for external providers
-      assertEquals(exception.getErrorCode(), 18729,
-
-        "Something went unexpected: " + exception.getMessage());
-    } finally {
-      client.deleteConfigurationSetting(key, label);
-    }
-  }
-
-  private static ConfigurationClient getSecretCredentialClient() {
-    return new ConfigurationClientBuilder()
-      .credential( new ClientSecretCredentialBuilder()
-        .clientId(TestProperties.getOrAbort(AzureTestProperty.AZURE_CLIENT_ID))
-        .clientSecret(
-          TestProperties.getOrAbort(AzureTestProperty.AZURE_CLIENT_SECRET))
-        .tenantId(TestProperties.getOrAbort(AzureTestProperty.AZURE_TENANT_ID))
-        .build())
-      .endpoint("https://" + TestProperties.getOrAbort(
-        AzureTestProperty.AZURE_APP_CONFIG_NAME) + ".azconfig.io")
-      .buildClient();
-  }
-
-  private static String composeURL(String... options) {
+  private static String composeURL(List<String> options) {
     String optionsString = String.join("&", options);
 
     Properties properties = getProperties();
@@ -284,10 +238,9 @@ public class AzureAppConfigurationProviderURLParserTest {
         properties.getProperty(AzureTestProperty.AZURE_APP_CONFIG_LABEL.name()),
         optionsString);
     }
-    return String.format("jdbc:oracle:thin:@config-azure://%s?key=%s&%s",
-      TestProperties.getOrAbort(AzureTestProperty.AZURE_APP_CONFIG_NAME),
-      TestProperties.getOrAbort(AzureTestProperty.AZURE_APP_CONFIG_KEY),
-      optionsString);
+    return String.format("jdbc:oracle:thin:@config-azure://%s?%s",
+        TestProperties.getOrAbort(AzureTestProperty.AZURE_APP_CONFIG_NAME),
+        optionsString);
   }
 
   /**
