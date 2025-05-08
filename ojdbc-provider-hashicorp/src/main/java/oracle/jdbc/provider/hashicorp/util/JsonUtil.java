@@ -84,15 +84,18 @@ public class JsonUtil {
   /**
    * Extracts the secret value from the given JSON object based on the field name.
    *
-   * <h2>Logic:</h2>
+   * <p>
+   * <b>Logic:</b>
+   * </p>
    * <ul>
    *   <li>If {@code fieldName} is provided and exists in the JSON, return its value.</li>
    *   <li>If {@code fieldName} is provided but not found, throw an exception (even if only one key exists).</li>
-   *   <li>If {@code fieldName} is not provided:</li>
-   *   <ul>
-   *     <li>If the JSON contains exactly one key-value pair, return its value.</li>
-   *     <li>If multiple keys exist, throw an error.</li>
-   *   </ul>
+   *   <li>If {@code fieldName} is not provided:
+   *    <ul>
+   *      <li>If the JSON contains exactly one key-value pair, return its value.</li>
+   *      <li>If multiple keys exist, throw an error.</li>
+   *    </ul>
+   *   </li>
    * </ul>
    *
    * @param secretJsonObj The JSON object containing the secret.
