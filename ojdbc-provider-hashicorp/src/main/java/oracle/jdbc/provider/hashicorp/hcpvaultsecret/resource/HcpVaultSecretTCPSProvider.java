@@ -40,7 +40,6 @@ package oracle.jdbc.provider.hashicorp.hcpvaultsecret.resource;
 
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
-import oracle.jdbc.provider.util.FileUtils;
 import oracle.jdbc.provider.util.TlsUtils;
 import oracle.jdbc.spi.TlsConfigurationProvider;
 
@@ -75,8 +74,9 @@ public class HcpVaultSecretTCPSProvider
         implements TlsConfigurationProvider {
 
   private static final ResourceParameter[] TCPS_PARAMETERS = {
-          new ResourceParameter("walletPassword", PASSWORD),
-          new ResourceParameter("type", TYPE)
+    new ResourceParameter(HcpVaultSecretResourceParameterNames.WALLET_PASSWORD,
+      PASSWORD),
+    new ResourceParameter(HcpVaultSecretResourceParameterNames.TYPE, TYPE)
   };
 
   /**
@@ -91,11 +91,7 @@ public class HcpVaultSecretTCPSProvider
   public SSLContext getSSLContext(Map<Parameter, CharSequence> parameterValues) {
     try {
       ParameterSet parameterSet = parseParameterValues(parameterValues);
-      String secretValue = getSecret(parameterValues);
-
-      byte[] fileBytes = FileUtils.isBase64Encoded(secretValue.getBytes())
-              ? Base64.getDecoder().decode(secretValue)
-              : secretValue.getBytes();
+      byte[] fileBytes = Base64.getDecoder().decode(getSecret(parameterValues));
 
       char[] password = parameterSet.getOptional(PASSWORD) != null
               ? parameterSet.getOptional(PASSWORD).toCharArray()

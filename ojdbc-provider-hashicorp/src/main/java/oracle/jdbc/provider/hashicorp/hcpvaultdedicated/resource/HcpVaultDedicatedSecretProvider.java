@@ -61,8 +61,10 @@ import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.De
 public class HcpVaultDedicatedSecretProvider extends HcpVaultDedicatedResourceProvider {
 
   private static final ResourceParameter[] PARAMETERS = {
-    new ResourceParameter("secretPath", SECRET_PATH),
-    new ResourceParameter("fieldName", FIELD_NAME),
+    new ResourceParameter(HcpVaultDedicatedResourceParameterNames.SECRET_PATH,
+      SECRET_PATH),
+    new ResourceParameter(HcpVaultDedicatedResourceParameterNames.FIELD_NAME,
+      FIELD_NAME),
   };
 
   protected HcpVaultDedicatedSecretProvider(String valueType) {
@@ -98,7 +100,7 @@ public class HcpVaultDedicatedSecretProvider extends HcpVaultDedicatedResourcePr
       DedicatedVaultSecretsManagerFactory.getInstance(), resolvedValues);
     OracleJsonObject secretJsonObj = JsonUtil.convertJsonToOracleJsonObject(secretJson);
     ResourceParameter fieldNameParam = Stream.of(PARAMETERS)
-      .filter(param -> param.name().equals("fieldName"))
+      .filter(param -> param.name().equals(HcpVaultDedicatedResourceParameterNames.FIELD_NAME))
       .findFirst()
       .orElse(null);
 

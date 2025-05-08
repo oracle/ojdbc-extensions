@@ -58,17 +58,28 @@ public class HcpVaultDedicatedResourceProvider extends AbstractVaultResourceProv
      new ResourceParameter("authenticationMethod", AUTHENTICATION_METHOD,
        "auto-detect",
        HcpVaultDedicatedResourceProvider::parseAuthenticationMethod),
-     new ResourceParameter("vaultAddr", VAULT_ADDR),
-     new ResourceParameter("vaultNamespace", NAMESPACE, DEFAULT_NAMESPACE),
-     new ResourceParameter("vaultUsername", USERNAME),
-     new ResourceParameter("vaultPassword", PASSWORD),
-     new ResourceParameter("vaultToken", VAULT_TOKEN),
-     new ResourceParameter("roleId", ROLE_ID),
-     new ResourceParameter("secretId", SECRET_ID),
-     new ResourceParameter("userPassAuthPath", USERPASS_AUTH_PATH, DEFAULT_USERPASS_PATH),
-     new ResourceParameter("appRoleAuthPath", APPROLE_AUTH_PATH, DEFAULT_APPROLE_PATH),
-     new ResourceParameter("githubToken", GITHUB_TOKEN),
-     new ResourceParameter("githubAuthPath", GITHUB_AUTH_PATH, DEFAULT_GITHUB_PATH),
+     new ResourceParameter(HcpVaultDedicatedResourceParameterNames.VAULT_ADDR,
+       VAULT_ADDR),
+     new ResourceParameter(HcpVaultDedicatedResourceParameterNames.VAULT_NAMESPACE,
+       NAMESPACE, DEFAULT_NAMESPACE),
+     new ResourceParameter(HcpVaultDedicatedResourceParameterNames.VAULT_USERNAME,
+       USERNAME),
+     new ResourceParameter(HcpVaultDedicatedResourceParameterNames.VAULT_PASSWORD,
+       PASSWORD),
+     new ResourceParameter(HcpVaultDedicatedResourceParameterNames.VAULT_TOKEN,
+       VAULT_TOKEN),
+     new ResourceParameter(HcpVaultDedicatedResourceParameterNames.ROLE_ID,
+       ROLE_ID),
+     new ResourceParameter(HcpVaultDedicatedResourceParameterNames.SECRET_ID,
+       SECRET_ID),
+     new ResourceParameter(HcpVaultDedicatedResourceParameterNames.USERPASS_AUTH_PATH,
+       USERPASS_AUTH_PATH, DEFAULT_USERPASS_PATH),
+     new ResourceParameter(HcpVaultDedicatedResourceParameterNames.APPROLE_AUTH_PATH,
+       APPROLE_AUTH_PATH, DEFAULT_APPROLE_PATH),
+     new ResourceParameter(HcpVaultDedicatedResourceParameterNames.GITHUB_TOKEN,
+       GITHUB_TOKEN),
+     new ResourceParameter(HcpVaultDedicatedResourceParameterNames.GITHUB_AUTH_PATH,
+       GITHUB_AUTH_PATH, DEFAULT_GITHUB_PATH),
   };
 
   /**
@@ -132,16 +143,26 @@ public class HcpVaultDedicatedResourceProvider extends AbstractVaultResourceProv
   @Override
    protected String getEnvVariableForParameter(String paramName) {
     switch (paramName) {
-      case "vaultAddr": return PARAM_VAULT_ADDR;
-      case "vaultNamespace": return PARAM_VAULT_NAMESPACE;
-      case "vaultUsername": return PARAM_VAULT_USERNAME;
-      case "vaultPassword": return PARAM_VAULT_PASSWORD;
-      case "vaultToken": return PARAM_VAULT_TOKEN;
-      case "roleId": return PARAM_VAULT_ROLE_ID;
-      case "secretId": return PARAM_VAULT_SECRET_ID;
-      case "userPassAuthPath": return PARAM_USERPASS_AUTH_PATH;
-      case "appRoleAuthPath": return PARAM_APPROLE_AUTH_PATH;
-      case "githubAuthPath": return PARAM_GITHUB_AUTH_PATH;
+      case HcpVaultDedicatedResourceParameterNames.VAULT_ADDR:
+        return PARAM_VAULT_ADDR;
+      case HcpVaultDedicatedResourceParameterNames.VAULT_NAMESPACE:
+        return PARAM_VAULT_NAMESPACE;
+      case HcpVaultDedicatedResourceParameterNames.VAULT_USERNAME:
+        return PARAM_VAULT_USERNAME;
+      case HcpVaultDedicatedResourceParameterNames.VAULT_PASSWORD:
+        return PARAM_VAULT_PASSWORD;
+      case HcpVaultDedicatedResourceParameterNames.VAULT_TOKEN:
+        return PARAM_VAULT_TOKEN;
+      case HcpVaultDedicatedResourceParameterNames.ROLE_ID:
+        return PARAM_VAULT_ROLE_ID;
+      case HcpVaultDedicatedResourceParameterNames.SECRET_ID:
+        return PARAM_VAULT_SECRET_ID;
+      case HcpVaultDedicatedResourceParameterNames.USERPASS_AUTH_PATH:
+        return PARAM_USERPASS_AUTH_PATH;
+      case HcpVaultDedicatedResourceParameterNames.APPROLE_AUTH_PATH:
+        return PARAM_APPROLE_AUTH_PATH;
+      case HcpVaultDedicatedResourceParameterNames.GITHUB_AUTH_PATH:
+        return PARAM_GITHUB_AUTH_PATH;
       default: return paramName;
     }
   }

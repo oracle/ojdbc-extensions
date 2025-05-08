@@ -56,4 +56,15 @@ public final class FileUtils {
       return false;
     }
   }
+
+  /**
+   * Decodes the given secret bytes if base64 encoded, otherwise returns them as-is.
+   *
+   * @param input the secret bytes
+   * @return the decoded byte array if base64, or the original byte array
+   */
+  public static byte[] decodeIfBase64(byte[] input) {
+    return isBase64Encoded(input) ? Base64.getDecoder().decode(input)
+            : input;
+  }
 }

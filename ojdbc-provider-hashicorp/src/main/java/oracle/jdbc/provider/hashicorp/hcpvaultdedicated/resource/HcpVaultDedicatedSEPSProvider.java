@@ -74,8 +74,10 @@ public class HcpVaultDedicatedSEPSProvider
         implements UsernameProvider, PasswordProvider {
 
   private static final ResourceParameter[] SEPS_PARAMETERS = {
-          new ResourceParameter("walletPassword", PASSWORD),
-          new ResourceParameter("connectionStringIndex", CONNECTION_STRING_INDEX)
+          new ResourceParameter(HcpVaultDedicatedResourceParameterNames.WALLET_PASSWORD,
+            PASSWORD),
+          new ResourceParameter(HcpVaultDedicatedResourceParameterNames.CONNECTION_STRING_INDEX,
+            CONNECTION_STRING_INDEX)
   };
 
   /**
@@ -110,8 +112,7 @@ public class HcpVaultDedicatedSEPSProvider
 
     String secretValue = getSecret(parameterValues);
 
-    byte[] walletBytes = FileUtils.isBase64Encoded(secretValue.getBytes()) ?
-      Base64.getDecoder().decode(secretValue) : secretValue.getBytes();
+    byte[] walletBytes = Base64.getDecoder().decode(secretValue);
 
     char[] walletPassword = parameterSet.getOptional(PASSWORD) != null
       ? parameterSet.getOptional(PASSWORD).toCharArray() : null;

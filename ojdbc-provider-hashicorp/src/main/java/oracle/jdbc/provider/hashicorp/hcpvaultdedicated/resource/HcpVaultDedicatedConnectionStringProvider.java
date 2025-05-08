@@ -39,16 +39,15 @@
 package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.resource;
 
 import oracle.jdbc.provider.resource.ResourceParameter;
-import oracle.jdbc.provider.util.FileUtils;
 import oracle.jdbc.provider.util.TNSNames;
 import oracle.jdbc.spi.ConnectionStringProvider;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Base64;
 import java.util.Map;
 
 import static oracle.jdbc.provider.util.CommonParameters.TNS_ALIAS;
+import static oracle.jdbc.provider.util.FileUtils.decodeIfBase64;
 
 /**
  * <p>
@@ -69,7 +68,8 @@ public class HcpVaultDedicatedConnectionStringProvider
         implements ConnectionStringProvider {
 
   private static final ResourceParameter[] TNS_NAMES_PARAMETERS = {
-          new ResourceParameter("tnsAlias", TNS_ALIAS)
+    new ResourceParameter(HcpVaultDedicatedResourceParameterNames.TNS_ALIAS,
+      TNS_ALIAS)
   };
 
   /**
@@ -103,14 +103,7 @@ public class HcpVaultDedicatedConnectionStringProvider
   public String getConnectionString(Map<Parameter, CharSequence> parameterValues) {
     String  alias = parseParameterValues(parameterValues).getRequired(TNS_ALIAS);
 
-    byte[] secretBytes = getSecret(parameterValues).getBytes();
-
-    byte[] fileBytes;
-    if (FileUtils.isBase64Encoded(secretBytes)) {
-      fileBytes = Base64.getDecoder().decode(secretBytes);
-    } else {
-      fileBytes = secretBytes;
-    }
+    byte[] fileBytes = decodeIfBase64(getSecret(parameterValues).getBytes());
 
     TNSNames tnsNames;
     try (InputStream inputStream = new ByteArrayInputStream(fileBytes)) {

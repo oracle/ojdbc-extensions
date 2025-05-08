@@ -565,7 +565,9 @@ For the JSON type of provider (HCP Vault Dedicated, HCP Vault Secrets, HTTP/HTTP
         - method
         - optional parameters (depends on the cloud provider).
 
-## Dedicated Vault Username Provider
+## Resource Providers
+
+### Dedicated Vault Username Provider
 
 The **Dedicated Vault Username Provider** provides Oracle JDBC with a **database username** that is managed by **HashiCorp Vault Dedicated**.
 This is a **Resource Provider** identified by the name `ojdbc-provider-hcpvault-dedicated-username`.
@@ -606,7 +608,8 @@ In addition to the set of [common parameters](#common-parameters-for-hcp-vault-d
 <td>
 The field inside the JSON secret that contains the required value.  
 If the secret contains multiple keys, this parameter specifies which key to extract.  
-If the secret contains only one key, the value is automatically used.  
+If the secret contains only one key and this parameter is not provided, the value is automatically used.
+if <code>fieldName</code> is provided but not found, an error is thrown.
 If omitted and multiple keys exist, an error is thrown.
 </td>
 <td>Any valid field name.</td>
@@ -619,7 +622,7 @@ If omitted and multiple keys exist, an error is thrown.
 
 An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault-dedicated.properties](example-vault-dedicated.properties).
 
-## HCP Vault Secrets Username Provider
+### HCP Vault Secrets Username Provider
 
 The **HCP Vault Secrets Username Provider** provides Oracle JDBC with a **database username** that is managed by **HashiCorp Vault Secrets**.
 This is a **Resource Provider** identified by the name `ojdbc-provider-hcpvault-secrets-username`.
@@ -649,7 +652,7 @@ An example of a [connection properties file](https://docs.oracle.com/en/database
 
 ---
 
-## Dedicated Vault Password Provider
+### Dedicated Vault Password Provider
 
 The **Dedicated Vault Password Provider** provides Oracle JDBC with a **database password** that is managed by **HashiCorp Vault Dedicated**.  
 This is a **Resource Provider** identified by the name `ojdbc-provider-hcpvault-dedicated-password`.
@@ -690,7 +693,8 @@ In addition to the set of [common parameters](#common-parameters-for-hcp-vault-d
 <td>
 The field inside the JSON secret that contains the required value.  
 If the secret contains multiple keys, this parameter specifies which key to extract.  
-If the secret contains only one key, the value is automatically used.  
+If the secret contains only one key and this parameter is not provided, the value is automatically used.
+if <code>fieldName</code> is provided but not found, an error is thrown.
 If omitted and multiple keys exist, an error is thrown.
 </td>
 <td>Any valid field name.</td>
@@ -704,7 +708,7 @@ If omitted and multiple keys exist, an error is thrown.
 
 An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault-dedicated.properties](example-vault-dedicated.properties).
 
-## HCP Vault Secrets Password Provider
+### HCP Vault Secrets Password Provider
 
 The **HCP Vault Secrets Password Provider** provides Oracle JDBC with a **database password** that is managed by **HashiCorp Vault Secrets**.  
 This is a **Resource Provider** identified by the name `ojdbc-provider-hcpvault-secrets-password`.
@@ -734,7 +738,7 @@ An example of a [connection properties file](https://docs.oracle.com/en/database
 
 ---
 
-## Dedicated Vault TCPS Wallet Provider
+### Dedicated Vault TCPS Wallet Provider
 
 The **Dedicated Vault TCPS Wallet Provider** provides Oracle JDBC with **keys and certificates** managed by **HashiCorp Vault Dedicated** to establish secure **TLS connections** with an Autonomous Database.  
 This is a **Resource Provider** identified by the name `ojdbc-provider-hcpvault-dedicated-tls`.
@@ -781,7 +785,7 @@ In addition to the set of [common parameters](#common-parameters-for-hcp-vault-d
 <tr>
 <td><code>type</code></td>
 <td>The wallet format.</td>
-<td>SSO, PKCS12, PEM</td>
+<td><code>SSO</code>, <code>PKCS12</code>, <code>PEM</code></td>
 <td>
 <i>No default value. The file type must be specified.</i>
 </td>
@@ -800,9 +804,14 @@ If omitted, the file is assumed to be **SSO** or an **unprotected PEM** file.
 <tr>
 <td><code>fieldName</code> (Optional)</td>
 <td>
-The field inside the JSON secret that contains the required value.  
+The field inside the JSON secret that contains the base64-encoded TCPS wallet.  
+<br>
+HashiCorp Vault Dedicated stores secrets as JSON objects.  
+For TCPS wallets, this means a secret may contain multiple base64-encoded entries (e.g., <code>sso</code>, <code>pkcs12</code>, <code>pem</code>, etc.). 
+<br>
 If the secret contains multiple keys, this parameter specifies which key to extract.  
-If the secret contains only one key, the value is automatically used.  
+If the secret contains only one key and this parameter is not provided, the value is automatically used.
+if <code>fieldName</code> is provided but not found, an error is thrown.
 If omitted and multiple keys exist, an error is thrown.
 </td>
 <td>Any valid field name.</td>
@@ -815,7 +824,7 @@ If omitted and multiple keys exist, an error is thrown.
 
 An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault-dedicated-wallet.properties](example-vault-dedicated-wallet.properties).
 
-## HCP Vault Secrets TCPS Wallet Provider
+### HCP Vault Secrets TCPS Wallet Provider
 
 The **HCP Vault Secrets TCPS Wallet Provide** provides Oracle JDBC with **keys and certificates** managed by **HashiCorp Vault Secrets** to establish secure **TLS connections** with an Autonomous Database.  
 This is a **Resource Provider** identified by the name `ojdbc-provider-hcpvault-secrets-tls`.
@@ -866,7 +875,7 @@ An example of a [connection properties file](https://docs.oracle.com/en/database
 
 ---
 
-## Dedicated Vault SEPS Wallet Provider
+### Dedicated Vault SEPS Wallet Provider
 
 The **Dedicated Vault SEPS Wallet Provider** provides Oracle JDBC with **username and password credentials** stored in a **Secure External Password Store (SEPS) wallet** within **HCP Vault Dedicated**.
 
@@ -944,9 +953,14 @@ Specifies the **index** of the connection string to use when retrieving credenti
 <tr>
 <td><code>fieldName</code> (Optional)</td>
 <td>
-The field inside the JSON secret that contains the required value.  
+The field inside the JSON secret that contains the base64-encoded SEPS wallet.  
+<br>
+HashiCorp Vault Dedicated stores secrets as JSON objects.  
+For SEPS wallets, this means a secret may contain multiple base64-encoded entries (e.g., <code>sso</code>, <code>pkcs12</code>, etc.). 
+<br>
 If the secret contains multiple keys, this parameter specifies which key to extract.  
-If the secret contains only one key, the value is automatically used.  
+If the secret contains only one key and this parameter is not provided, the value is automatically used.
+if <code>fieldName</code> is provided but not found, an error is thrown.
 If omitted and multiple keys exist, an error is thrown.
 </td>
 <td>Any valid field name.</td>
@@ -959,7 +973,7 @@ If omitted and multiple keys exist, an error is thrown.
 
 An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault-dedicated-wallet.properties](example-vault-dedicated-wallet.properties).
 
-## HCP Vault Secrets SEPS Wallet Provider
+### HCP Vault Secrets SEPS Wallet Provider
 
 The **HCP Vault Secrets SEPS Wallet Provider** provides Oracle JDBC with **username and password credentials** stored in a **Secure External Password Store (SEPS) wallet** within **HCP Vault Secrets**.
 
@@ -1020,7 +1034,7 @@ An example of a [connection properties file](https://docs.oracle.com/en/database
 
 ---
 
-## Dedicated Vault Connection String Provider
+### Dedicated Vault Connection String Provider
 
 The **Dedicated Vault Connection String Provider** provides Oracle JDBC with a **connection string**  
 retrieved from a `tnsnames.ora` file stored in **HCP Vault Dedicated**.
@@ -1072,9 +1086,10 @@ In addition to the set of [common parameters](#common-parameters-for-hcp-vault-d
 <tr>
 <td><code>fieldName</code> (Optional)</td>
 <td>
-The field inside the JSON secret that contains the required value.  
+The field inside the JSON secret that contains the <code>tnsnames.ora</code> content, either as plain text or base64-encoded.  
 If the secret contains multiple keys, this parameter specifies which key to extract.  
-If the secret contains only one key, the value is automatically used.  
+If the secret contains only one key and this parameter is not provided, the value is automatically used.
+if <code>fieldName</code> is provided but not found, an error is thrown.
 If omitted and multiple keys exist, an error is thrown.
 </td>
 <td>Any valid field name.</td>
@@ -1087,7 +1102,7 @@ If omitted and multiple keys exist, an error is thrown.
 
 An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault-dedicated.properties](example-vault-dedicated.properties).
 
-## HCP Vault Secrets Connection String Provider
+### HCP Vault Secrets Connection String Provider
 
 The **HCP Vault Secrets Connection String Provider** provides Oracle JDBC with a **connection string**  
 retrieved from a `tnsnames.ora` file stored in **HCP Vault Secrets**.
@@ -1127,7 +1142,7 @@ In addition to the set of [common parameters](#common-parameters-for-hcp-vault-s
 
 An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-vault-secrets.properties](example-vault-secrets.properties).
 
-## Common Parameters for HCP Vault Dedicated Resource Providers
+### Common Parameters for HCP Vault Dedicated Resource Providers
 
 Providers classified as Resource Providers in this module all support a common set of parameters.
 
@@ -1229,7 +1244,7 @@ Providers classified as Resource Providers in this module all support a common s
 
 ---
 
-## Common Parameters for HCP Vault Secrets Resource Providers
+### Common Parameters for HCP Vault Secrets Resource Providers
 
 Providers classified as Resource Providers for HCP Vault Secrets support a common set of parameters used for authenticating with the HCP Vault Secrets API.
 
@@ -1296,9 +1311,9 @@ Providers classified as Resource Providers for HCP Vault Secrets support a commo
 </tbody>
 </table>
 
-## Configuring Authentication for Resource Providers
+### Configuring Authentication for Resource Providers
 
-### HCP Vault Dedicated
+#### HCP Vault Dedicated
 
 Resource Providers in this module must authenticate with **HashiCorp Vault Dedicated**.
 By default, the provider will automatically detect any available credentials.
@@ -1325,7 +1340,7 @@ Supported values for `authenticationMethod`:
     3. `approle`
     4. `github`
 
-### HCP Vault Secrets
+#### HCP Vault Secrets
 
 Resource Providers that access **HCP Vault Secrets** also require authentication.  
 By default, the provider will **auto-detect** the method to use.  

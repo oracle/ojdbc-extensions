@@ -38,51 +38,23 @@
 
 package oracle.jdbc.provider.hashicorp.hcpvaultsecret.resource;
 
-import oracle.jdbc.provider.hashicorp.hcpvaultsecret.secrets.HcpVaultSecretsManagerFactory;
-import oracle.jdbc.provider.resource.ResourceParameter;
-import oracle.jdbc.provider.util.ResourceParameterUtils;
-
-import java.util.Map;
-
-import static oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultSecretParameters.*;
-
 /**
- * <p>
- * A provider of secrets from HashiCorp HCP Vault Secrets. This class is designed
- * for inheritance by subclasses that implement an
- * {@link oracle.jdbc.spi.OracleResourceProvider} SPI defined by the Oracle JDBC
- * driver.
- * </p>
+ * Centralized parameter name constants used by HCP Vault Secret resource providers.
  */
-public class HcpVaultSecretProvider extends HcpVaultSecretResourceProvider {
+public final class HcpVaultSecretResourceParameterNames {
 
-  private static final ResourceParameter[] PARAMETERS = {
-    new ResourceParameter(HcpVaultSecretResourceParameterNames.SECRET_NAME, SECRET_NAME),
-  };
+  private HcpVaultSecretResourceParameterNames() {}
 
-  protected HcpVaultSecretProvider(String valueType) {
-    super(valueType, PARAMETERS);
-  }
+  public static final String ORG_ID = "orgId";
+  public static final String PROJECT_ID = "projectId";
+  public static final String APP_NAME = "appName";
+  public static final String CLIENT_ID = "clientId";
+  public static final String CLIENT_SECRET = "clientSecret";
+  public static final String CREDENTIALS_FILE = "credentialsFile";
 
-  protected HcpVaultSecretProvider(String valueType, ResourceParameter[] additionalParameters) {
-    super(valueType, ResourceParameterUtils.combineParameters(PARAMETERS, additionalParameters));
-  }
-
-  /**
-   * <p>
-   * Retrieves a secret from HashiCorp HCP Vault Secrets based on parameters
-   * provided in {@code parameterValues}. This method centralizes secret
-   * retrieval logic and is used by subclasses implementing
-   * the {@link oracle.jdbc.spi.OracleResourceProvider} SPI.
-   * </p>
-   *
-   * @param parameterValues A map of parameter names and their corresponding
-   * -values required for secret retrieval. Must not be null.
-   * @return The raw secret value as a {@code String}.
-   */
-  protected final String getSecret(Map<Parameter, CharSequence> parameterValues) {
-    Map<Parameter, CharSequence> resolvedValues =
-      resolveMissingParameters(parameterValues, HcpVaultSecretResourceProvider.PARAMETERS);
-    return getResource(HcpVaultSecretsManagerFactory.getInstance(), resolvedValues);
-  }
+  public static final String SECRET_NAME = "secretName";
+  public static final String TNS_ALIAS = "tnsAlias";
+  public static final String CONNECTION_STRING_INDEX = "connectionStringIndex";
+  public static final String WALLET_PASSWORD = "walletPassword";
+  public static final String TYPE = "type";
 }

@@ -57,12 +57,17 @@ public class HcpVaultSecretResourceProvider extends AbstractVaultResourceProvide
     new ResourceParameter("authenticationMethod", AUTHENTICATION_METHOD,
       "auto-detect",
       HcpVaultSecretResourceProvider::parseAuthenticationMethod),
-    new ResourceParameter("orgId", HCP_ORG_ID),
-    new ResourceParameter("projectId", HCP_PROJECT_ID),
-    new ResourceParameter("appName", HCP_APP_NAME),
-    new ResourceParameter("clientId", HCP_CLIENT_ID),
-    new ResourceParameter("clientSecret", HCP_CLIENT_SECRET),
-    new ResourceParameter("credentialsFile", HCP_CREDENTIALS_FILE, DEFAULT_CREDENTIALS_FILE_PATH),
+    new ResourceParameter(HcpVaultSecretResourceParameterNames.ORG_ID, HCP_ORG_ID),
+    new ResourceParameter(HcpVaultSecretResourceParameterNames.PROJECT_ID,
+      HCP_PROJECT_ID),
+    new ResourceParameter(HcpVaultSecretResourceParameterNames.APP_NAME,
+      HCP_APP_NAME),
+    new ResourceParameter(HcpVaultSecretResourceParameterNames.CLIENT_ID,
+      HCP_CLIENT_ID),
+    new ResourceParameter(HcpVaultSecretResourceParameterNames.CLIENT_SECRET,
+      HCP_CLIENT_SECRET),
+    new ResourceParameter(HcpVaultSecretResourceParameterNames.CREDENTIALS_FILE,
+      HCP_CREDENTIALS_FILE, DEFAULT_CREDENTIALS_FILE_PATH),
   };
 
   protected HcpVaultSecretResourceProvider(String resourceType, ResourceParameter... additionalParameters) {
@@ -89,12 +94,18 @@ public class HcpVaultSecretResourceProvider extends AbstractVaultResourceProvide
   @Override
   protected String getEnvVariableForParameter(String paramName) {
     switch (paramName) {
-      case "orgId": return PARAM_HCP_ORG_ID;
-      case "projectId": return PARAM_HCP_PROJECT_ID;
-      case "appName": return PARAM_HCP_APP_NAME;
-      case "clientId": return PARAM_HCP_CLIENT_ID;
-      case "clientSecret": return PARAM_HCP_CLIENT_SECRET;
-      case "credentialsFile": return PARAM_HCP_CREDENTIALS_FILE;
+      case HcpVaultSecretResourceParameterNames.ORG_ID:
+        return PARAM_HCP_ORG_ID;
+      case HcpVaultSecretResourceParameterNames.PROJECT_ID:
+        return PARAM_HCP_PROJECT_ID;
+      case HcpVaultSecretResourceParameterNames.APP_NAME:
+        return PARAM_HCP_APP_NAME;
+      case HcpVaultSecretResourceParameterNames.CLIENT_ID:
+        return PARAM_HCP_CLIENT_ID;
+      case HcpVaultSecretResourceParameterNames.CLIENT_SECRET:
+        return PARAM_HCP_CLIENT_SECRET;
+      case HcpVaultSecretResourceParameterNames.CREDENTIALS_FILE:
+        return PARAM_HCP_CREDENTIALS_FILE;
       default: return paramName;
     }
   }

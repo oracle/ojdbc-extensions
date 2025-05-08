@@ -40,7 +40,6 @@ package oracle.jdbc.provider.hashicorp.hcpvaultsecret.resource;
 
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
-import oracle.jdbc.provider.util.FileUtils;
 import oracle.jdbc.provider.util.WalletUtils;
 import oracle.jdbc.spi.OracleResourceProvider;
 import oracle.jdbc.spi.PasswordProvider;
@@ -73,8 +72,10 @@ public class HcpVaultSecretSEPSProvider
         implements UsernameProvider, PasswordProvider {
 
   private static final ResourceParameter[] SEPS_PARAMETERS = {
-          new ResourceParameter("walletPassword", PASSWORD),
-          new ResourceParameter("connectionStringIndex", CONNECTION_STRING_INDEX)
+          new ResourceParameter(HcpVaultSecretResourceParameterNames.WALLET_PASSWORD,
+            PASSWORD),
+          new ResourceParameter(HcpVaultSecretResourceParameterNames.CONNECTION_STRING_INDEX,
+            CONNECTION_STRING_INDEX)
   };
 
   /**
@@ -98,12 +99,7 @@ public class HcpVaultSecretSEPSProvider
   private WalletUtils.Credentials getWalletCredentials(
           Map<OracleResourceProvider.Parameter, CharSequence> parameterValues) {
     ParameterSet parameterSet = parseParameterValues(parameterValues);
-
-    String secretValue = getSecret(parameterValues);
-
-    byte[] walletBytes = FileUtils.isBase64Encoded(secretValue.getBytes())
-            ? Base64.getDecoder().decode(secretValue)
-            : secretValue.getBytes();
+    byte[] walletBytes = Base64.getDecoder().decode(getSecret(parameterValues));
 
     char[] walletPassword = parameterSet.getOptional(PASSWORD) != null
             ? parameterSet.getOptional(PASSWORD).toCharArray()
