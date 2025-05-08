@@ -56,7 +56,7 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-oci</artifactId>
-  <version>1.0.3</version>
+  <version>1.0.5</version>
 </dependency>
 ```
 
@@ -296,7 +296,7 @@ An example of App Configuration in Azure with TTL of 60 seconds is listed below.
 
 ## Database Connection String Provider
 The Database Connection String Provider provides Oracle JDBC with the connection string of an
-Autonomous Database. This is a Resource Provider identified by the name
+Autonomous Database. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified by the name
 `ojdbc-provider-oci-database-connection-string`.
 
 For databases that require mutual TLS (mTLS) authentication, it is recommended
@@ -354,7 +354,7 @@ that configures this provider can be found in
 The Database TLS Provider provides Oracle JDBC with keys and certificates for
 [mutual TLS authentication](https://docs.oracle.com/en/cloud/paas/autonomous-database/adbsa/connect-introduction.html#GUID-9A472E49-3B2B-4D9F-9DC2-D3E6E4454285)
 (mTLS)
-with an Autonomous Database. This is a Resource Provider identified by the name
+with an Autonomous Database. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified by the name
 `ojdbc-provider-oci-database-tls`.
 
 In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider
@@ -388,7 +388,7 @@ that configures this provider can be found in
 
 ## Vault Password Provider
 The Vault Password Provider provides Oracle JDBC with a password that is managed
-by the OCI Vault service. This is a Resource Provider identified by the
+by the OCI Vault service. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified by the
 name `ojdbc-provider-oci-vault-password`.
 
 In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider
@@ -422,7 +422,7 @@ that configures this provider can be found in
 
 ## Vault Username Provider
 The Vault Username Provider provides Oracle JDBC with a username that is managed by the
-OCI Vault service. This is a Resource Provider identified by the name
+OCI Vault service. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified by the name
 `ojdbc-provider-oci-vault-username`.
 
 In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider
@@ -457,16 +457,16 @@ that configures this provider can be found in
 ## TCPS Wallet Provider
 
 The TCPS Wallet Provider provides Oracle JDBC with keys and certificates managed by the OCI Vault service
-to establish secure TLS connections with an Autonomous Database. This is a Resource Provider identified by the name
+to establish secure TLS connections with an Autonomous Database. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified by the name
 `ojdbc-provider-oci-vault-tls`.
 
 For example, when connecting to Autonomous Database Serverless with mutual TLS (mTLS), you need to configure the JDBC-thin
 driver with its client certificate. If this certificate is stored in a wallet file (e.g., `cwallet.sso`, `ewallet.p12`, `ewallet.pem`),
-you may store it in a vault secret in OCI for additional security.
-You can then use this provider that will retrieve the wallet content using the OCI SDK and pass it to the JDBC thin driver.
+you may store the base64 encoding of that file as a vault secret in OCI for additional security.
+You can then use this provider to retrieve the wallet content using the OCI SDK and pass it to the JDBC thin driver.
 
 - The type parameter must be specified to indicate the wallet format: SSO, PKCS12, or PEM.
-- The password must be provided for wallets that require a password (e.g., PKCS12 or password-protected PEM files).
+- The walletPassword parameter must be provided for wallets that require a password (e.g., PKCS12 or password-protected PEM files).
 
 In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider also supports the parameters listed below.
 
@@ -480,7 +480,7 @@ In addition to the set of [common parameters](#common-parameters-for-resource-pr
 <tbody>
 <tr>
 <td>ocid</td>
-<td>Identifies the secret containing the TCPS file.</td>
+<td>Identifies the secret containing the base64 encoding of a wallet file.</td>
 <td>
 The <a href="https://docs.oracle.com/en-us/iaas/Content/General/Concepts/identifiers.htm">OCID</a> of an OCI Vault secret
 </td>
@@ -505,7 +505,7 @@ Specifies the type of the file being used.
 </td>
 <td>SSO, PKCS12, PEM</td>
 <td>
-<i>No default value. The file type must be specified..</i>
+<i>No default value. The file type must be specified.</i>
 </td>
 </tr>
 </tbody>
@@ -516,7 +516,7 @@ An example of a [connection properties file](https://docs.oracle.com/en/database
 ## SEPS Wallet Provider
 
 The SEPS Wallet Provider provides Oracle JDBC with a username and password managed by the OCI Vault service,
-stored in a Secure External Password Store (SEPS) wallet. This is a Resource Provider identified by the name
+where the base64 encoding of a Secure External Password Store (SEPS) wallet file is stored as a secret. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified by the name
 `ojdbc-provider-oci-vault-seps`.
 
 - The SEPS wallet securely stores encrypted database credentials, including the username, password, and connection strings.
@@ -547,7 +547,7 @@ In addition to the set of [common parameters](#common-parameters-for-resource-pr
 <tbody>
 <tr>
 <td>ocid</td>
-<td>Identifies the secret containing the SEPS wallet.</td>
+<td>Identifies the secret containing the base64 encoding of a SEPS wallet file.</td>
 <td>
 The <a href="https://docs.oracle.com/en-us/iaas/Content/General/Concepts/identifiers.htm">OCID</a> of an OCI Vault secret
 </td>
@@ -583,7 +583,7 @@ An example of a [connection properties file](https://docs.oracle.com/en/database
 ## Vault Connection String Provider
 
 The OCI Vault Connection String Provider provides Oracle JDBC with a connection string managed by the OCI Vault service.
-This is a Resource Provider identified by the name `ojdbc-provider-oci-vault-tnsnames`.
+This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified by the name `ojdbc-provider-oci-vault-tnsnames`.
 
 This provider retrieves and decodes a `tnsnames.ora` file stored as a secret in OCI Vault, allowing selection of
 connection strings based on specified aliases.
@@ -622,7 +622,7 @@ An example of a [connection properties file](https://docs.oracle.com/en/database
 
 
 ## Access Token Provider
-The Access Token Provider provides Oracle JDBC with an access token that authorizes logins to an Autonomous Database. This is a Resource Provider identified by
+The Access Token Provider provides Oracle JDBC with an access token that authorizes logins to an Autonomous Database. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified by
 the name `ojdbc-provider-oci-token`.
 
 This provider must be configured to <a href="#configuring-authentication">authenticate</a> as
@@ -631,7 +631,7 @@ can be found in the <a href="https://docs.oracle.com/en/cloud/paas/autonomous-da
 ADB product documentation.
 </a>
 #### Caching Mechanism
-The `AccessTokenFactory` employs a caching mechanism to efficiently manage and reuse access tokens. By utilizing Oracle JDBC's cache for JWTs, access tokens are
+The Access Token Provider employs a caching mechanism to efficiently manage and reuse access tokens. By utilizing Oracle JDBC's cache for JWTs, access tokens are
 cached and updated one minute before they expire, ensuring no blocking of threads. This cache reduces latency when creating JDBC connections, as a thread opening
 a connection does not have to wait for a new token to be requested.You can check this in more detail
 at [Oracle's documentation](https://docs.oracle.com/en/database/oracle/oracle-database/19/jajdb/oracle/jdbc/AccessToken.html#createJsonWebTokenCache_java_util_function_Supplier_).
@@ -699,7 +699,7 @@ urn:oracle:db::id::*
 
 ## Common Parameters for Resource Providers
 
-Providers classified as Resource Providers in this module all support a
+Providers classified as [Resource Providers](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) in this module all support a
 common set of parameters.
 <table>
   <thead><tr>

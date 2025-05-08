@@ -41,6 +41,7 @@ import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod;
 import oracle.jdbc.provider.azure.AzureTestProperty;
 import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
+import oracle.jdbc.spi.OracleConfigurationProvider;
 import oracle.jdbc.spi.OracleConfigurationSecretProvider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -49,6 +50,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AzureVaultSecretProviderTest {
+  static {
+    OracleConfigurationProvider.allowedProviders.add("azurevault");
+  }
+
   private static final OracleConfigurationSecretProvider PROVIDER =
     OracleConfigurationSecretProvider.find("azurevault");
 
