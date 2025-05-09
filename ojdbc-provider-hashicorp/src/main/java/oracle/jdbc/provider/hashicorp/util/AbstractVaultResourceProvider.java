@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2024 Oracle and/or its affiliates.
+ ** Copyright (c) 2025 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -36,35 +36,56 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.util;
+package oracle.jdbc.provider.hashicorp.util;
 
-import java.util.Base64;
+import oracle.jdbc.provider.resource.AbstractResourceProvider;
+import oracle.jdbc.provider.resource.ResourceParameter;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * Utility class for common file handling operations.
+ * Abstract class that encapsulates common behavior for resolving parameters
+ * from system properties or environment variables.
  */
-public final class FileUtils {
+public abstract class AbstractVaultResourceProvider extends AbstractResourceProvider {
+
+  protected AbstractVaultResourceProvider(String providerType, String resourceType, ResourceParameter[] parameters) {
+    super(providerType, resourceType, parameters);
+  }
 
   /**
-   * Checks if the given byte array is Base64-encoded.
+   * Resolves missing parameters using system properties or environment variables.
+   *
+   * @param parameterValues The original parameter map.
+   * @param parameters The parameters to check.
+   * @return A map with resolved parameters.
    */
-  public static boolean isBase64Encoded(byte[] secretBytes) {
-    try {
-      Base64.getDecoder().decode(secretBytes);
-      return true;
-    } catch (IllegalArgumentException e) {
-      return false;
+  protected Map<Parameter, CharSequence> resolveMissingParameters(
+    Map<Parameter, CharSequence> parameterValues, ResourceParameter[] parameters) {
+
+    Map<Parameter, CharSequence> resolved = new HashMap<>(parameterValues);
+    for (ResourceParameter param : parameters) {
+      resolveParameter(resolved, param);
+    }
+    return resolved;
+  }
+
+  private void resolveParameter(Map<Parameter, CharSequence> parameterValues, ResourceParameter parameter) {
+    if (!parameterValues.containsKey(parameter)) {
+      String envKey = getEnvVariableForParameter(parameter.name());
+      String value = System.getProperty(envKey, System.getenv(envKey));
+      if (value != null) {
+        parameterValues.put(parameter, value);
+      }
     }
   }
 
   /**
-   * Decodes the given secret bytes if base64 encoded, otherwise returns them as-is.
+   * Subclasses must define how parameter names map to env vars or sys props.
    *
-   * @param input the secret bytes
-   * @return the decoded byte array if base64, or the original byte array
+   * @param paramName The parameter name
+   * @return Corresponding environment variable or system property key
    */
-  public static byte[] decodeIfBase64(byte[] input) {
-    return isBase64Encoded(input) ? Base64.getDecoder().decode(input)
-            : input;
-  }
+  protected abstract String getEnvVariableForParameter(String paramName);
 }

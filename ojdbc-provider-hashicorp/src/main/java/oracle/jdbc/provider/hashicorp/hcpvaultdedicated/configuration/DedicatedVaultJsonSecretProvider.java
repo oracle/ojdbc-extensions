@@ -49,6 +49,7 @@ import java.util.Map;
 
 import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.FIELD_NAME;
 import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.PARAMETER_SET_PARSER;
+import static oracle.jdbc.provider.hashicorp.util.JsonUtil.extractSecret;
 
 /**
  * <p>
@@ -95,20 +96,11 @@ public class DedicatedVaultJsonSecretProvider implements OracleConfigurationSecr
     OracleJsonObject secretJsonObj = JsonUtil.convertJsonToOracleJsonObject(secretString);
 
     String fieldName = parameterSet.getOptional(FIELD_NAME);
-    String extractedPassword;
-    if (fieldName != null && secretJsonObj.containsKey(fieldName)) {
-      extractedPassword = secretJsonObj.getString(fieldName);
-    } else if (secretJsonObj.size() == 1) {
-      extractedPassword = secretJsonObj.values().iterator().next().toString();
-    } else {
-      throw new IllegalStateException(
-              "FIELD_NAME is required when multiple keys exist in the secret."
-      );
-    }
+    String extractedSecret = extractSecret(secretJsonObj, fieldName);
 
     return Base64.getEncoder()
-            .encodeToString(extractedPassword.getBytes())
-            .toCharArray();
+      .encodeToString(extractedSecret.getBytes())
+      .toCharArray();
   }
 
   @Override

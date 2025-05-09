@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2024 Oracle and/or its affiliates.
+ ** Copyright (c) 2025 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -36,35 +36,41 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.util;
-
-import java.util.Base64;
+package oracle.jdbc.provider.hashicorp.hcpvaultdedicated;
 
 /**
- * Utility class for common file handling operations.
+ * Enumeration of test properties for Dedicated Vault.
  */
-public final class FileUtils {
+public enum DedicatedVaultTestProperty {
+  DEDICATED_VAULT_SECRET_PATH,
 
-  /**
-   * Checks if the given byte array is Base64-encoded.
-   */
-  public static boolean isBase64Encoded(byte[] secretBytes) {
-    try {
-      Base64.getDecoder().decode(secretBytes);
-      return true;
-    } catch (IllegalArgumentException e) {
-      return false;
-    }
-  }
+  DEDICATED_VAULT_SECRET_PATH_WITH_MULTIPLE_KEYS,
 
-  /**
-   * Decodes the given secret bytes if base64 encoded, otherwise returns them as-is.
-   *
-   * @param input the secret bytes
-   * @return the decoded byte array if base64, or the original byte array
-   */
-  public static byte[] decodeIfBase64(byte[] input) {
-    return isBase64Encoded(input) ? Base64.getDecoder().decode(input)
-            : input;
-  }
+  KEY,
+
+  VAULT_TOKEN,
+
+  VAULT_ADDR,
+
+  VAULT_USERNAME,
+
+  VAULT_PASSWORD,
+
+  VAULT_NAMESPACE,
+
+  ROLE_ID,
+
+  SECRET_ID,
+
+  PASSWORD_SECRET_PATH,
+
+  TNSNAMES_SECRET_PATH,
+
+  TNSNAMES_ALIAS,
+
+  GITHUB_TOKEN,
+
+  WALLET_SECRET_PATH,
+
+  WALLET_PASSWORD
 }

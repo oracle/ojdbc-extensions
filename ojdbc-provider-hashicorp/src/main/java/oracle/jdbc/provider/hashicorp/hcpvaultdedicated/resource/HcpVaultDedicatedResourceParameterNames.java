@@ -36,31 +36,32 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.configuration;
+package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.resource;
 
 /**
- * Enumeration of test properties for Dedicated Vault.
+ * Centralized parameter name constants used by HCP Vault Dedicated resource providers.
  */
-public enum DedicatedVaultTestProperty {
-  DEDICATED_VAULT_SECRET_PATH,
+public class HcpVaultDedicatedResourceParameterNames {
 
-  DEDICATED_VAULT_SECRET_PATH_WITH_MULTIPLE_KEYS,
+  private HcpVaultDedicatedResourceParameterNames() {}
 
-  KEY,
+  public static final String VAULT_ADDR = "vaultAddr";
+  public static final String VAULT_NAMESPACE = "vaultNamespace";
+  public static final String VAULT_USERNAME = "vaultUsername";
+  public static final String VAULT_PASSWORD = "vaultPassword";
+  public static final String VAULT_TOKEN = "vaultToken";
+  public static final String ROLE_ID = "roleId";
+  public static final String SECRET_ID = "secretId";
+  public static final String USERPASS_AUTH_PATH = "userPassAuthPath";
+  public static final String APPROLE_AUTH_PATH = "appRoleAuthPath";
+  public static final String GITHUB_TOKEN = "githubToken";
+  public static final String GITHUB_AUTH_PATH = "githubAuthPath";
 
-  VAULT_TOKEN,
+  public static final String SECRET_PATH = "secretPath";
+  public static final String FIELD_NAME = "fieldName";
 
-  VAULT_ADDR,
-
-  VAULT_USERNAME,
-
-  VAULT_PASSWORD,
-
-  VAULT_NAMESPACE,
-
-  ROLE_ID,
-
-  SECRET_ID,
-
-  GITHUB_TOKEN
+  public static final String TNS_ALIAS = "tnsAlias";
+  public static final String CONNECTION_STRING_INDEX = "connectionStringIndex";
+  public static final String WALLET_PASSWORD = "walletPassword";
+  public static final String TYPE = "type";
 }

@@ -80,4 +80,44 @@ public class JsonUtil {
     }
     throw new IllegalStateException("Missing field '" + fieldName + "' in the response JSON.");
   }
+
+  /**
+   * Extracts the secret value from the given JSON object based on the field name.
+   *
+   * <p>
+   * <b>Logic:</b>
+   * </p>
+   * <ul>
+   *   <li>If {@code fieldName} is provided and exists in the JSON, return its value.</li>
+   *   <li>If {@code fieldName} is provided but not found, throw an exception (even if only one key exists).</li>
+   *   <li>If {@code fieldName} is not provided:
+   *    <ul>
+   *      <li>If the JSON contains exactly one key-value pair, return its value.</li>
+   *      <li>If multiple keys exist, throw an error.</li>
+   *    </ul>
+   *   </li>
+   * </ul>
+   *
+   * @param secretJsonObj The JSON object containing the secret.
+   * @param fieldName The field name to extract (optional).
+   * @return The extracted secret value as a string.
+   * @throws IllegalStateException If multiple keys exist but no `fieldName` is specified.
+   */
+  public static String extractSecret(OracleJsonObject secretJsonObj, String fieldName) {
+    if (fieldName != null ) {
+      if (secretJsonObj.containsKey(fieldName)) {
+        return secretJsonObj.getString(fieldName);
+      } else {
+        throw new IllegalStateException(
+          "FIELD_NAME '" + fieldName + "' not found in the secret.");
+      }
+    } else if (secretJsonObj.size() == 1) {
+      String firstKey = secretJsonObj.keySet().iterator().next();
+      return secretJsonObj.getString(firstKey);
+    } else {
+      throw new IllegalStateException(
+        "FIELD_NAME is required when multiple keys exist in the secret."
+      );
+    }
+  }
 }
