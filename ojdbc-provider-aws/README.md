@@ -47,7 +47,7 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-aws</artifactId>
-  <version>1.0.4</version>
+  <version>1.0.5</version>
 </dependency>
 ```
 
@@ -90,7 +90,8 @@ And the JSON Payload for the file **payload_ojdbc_objectstorage.json** in **mybu
   "user": "scott",
   "password": { 
     "type": "awssecretsmanager",
-    "value": "test-secret"
+    "value": "test-secret",
+    "field_name": "<field-name>"  // Optional: Only needed when the secret is structured and contains multiple key-value pairs.
   },
   "jdbc": {
     "oracle.jdbc.ReadTimeout": 1000,
@@ -130,6 +131,12 @@ For the JSON type of provider (AWS S3, AWS Secrets Manager, HTTP/HTTPS, File) th
         - Azure Key Vault URI (if azurevault)
         - Base64 Encoded password (if base64)
         - AWS Secret name (if awssecretsmanager)
+- field_name
+  - Optional
+  - Description: Specifies the key within the secret JSON object from which to extract the password value.
+    If the secret JSON contains multiple key-value pairs, field_name must be provided to unambiguously select the desired secret value.
+    If the secret contains only a single key-value pair and field_name is not provided, that sole value will be used.
+    If the secret is provided as plain text (i.e., not structured as a JSON object), no field_name is required.
 - authentication
     - Optional
     - Possible Values
