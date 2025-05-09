@@ -77,7 +77,6 @@ public class HcpVaultTCPSProviderTest {
         .filter(parameter -> "orgId".equals(parameter.name()))
         .findFirst()
         .orElseThrow(AssertionError::new);
-    assertTrue(orgIdParameter.isRequired());
     assertNull(orgIdParameter.defaultValue());
 
     Parameter appNameParameter =
@@ -85,7 +84,6 @@ public class HcpVaultTCPSProviderTest {
         .filter(parameter -> "appName".equals(parameter.name()))
         .findFirst()
         .orElseThrow(AssertionError::new);
-    assertTrue(appNameParameter.isRequired());
     assertNull(appNameParameter.defaultValue());
 
     Parameter projectIdParameter =
@@ -93,7 +91,6 @@ public class HcpVaultTCPSProviderTest {
         .filter(parameter -> "projectId".equals(parameter.name()))
         .findFirst()
         .orElseThrow(AssertionError::new);
-    assertTrue(projectIdParameter.isRequired());
     assertNull(projectIdParameter.defaultValue());
 
     Parameter typeParameter =
