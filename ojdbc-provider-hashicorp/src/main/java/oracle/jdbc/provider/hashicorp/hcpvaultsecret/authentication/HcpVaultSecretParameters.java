@@ -84,34 +84,34 @@ public class HcpVaultSecretParameters {
   /**
    * Parameter for the OAuth2 client ID. Required.
    */
-  public static final Parameter<String> HCP_CLIENT_ID = Parameter.create(REQUIRED);
+  public static final Parameter<String> HCP_CLIENT_ID = Parameter.create();
 
   /**
    * Parameter for the OAuth2 client secret. Required.
    */
-  public static final Parameter<String> HCP_CLIENT_SECRET = Parameter.create(REQUIRED);
+  public static final Parameter<String> HCP_CLIENT_SECRET = Parameter.create();
 
   /**
    * Parameter for the credentials file path.
    * By default, the credentials file is expected at:
    * <code>System.getProperty("user.home") + "/.config/hcp/creds-cache.json"</code>.
    */
-  public static final Parameter<String> HCP_CREDENTIALS_FILE = Parameter.create(REQUIRED);
+  public static final Parameter<String> HCP_CREDENTIALS_FILE = Parameter.create();
 
   /**
    * Parameter for the organization ID. Required.
    */
-  public static final Parameter<String> HCP_ORG_ID = Parameter.create(REQUIRED);
+  public static final Parameter<String> HCP_ORG_ID = Parameter.create();
 
   /**
    * Parameter for the project ID. Required.
    */
-  public static final Parameter<String> HCP_PROJECT_ID = Parameter.create(REQUIRED);
+  public static final Parameter<String> HCP_PROJECT_ID = Parameter.create();
 
   /**
    * Parameter for the application name. Required.
    */
-  public static final Parameter<String> HCP_APP_NAME = Parameter.create(REQUIRED);
+  public static final Parameter<String> HCP_APP_NAME = Parameter.create();
 
   /**
    * Parameter for the secret name. Required.
