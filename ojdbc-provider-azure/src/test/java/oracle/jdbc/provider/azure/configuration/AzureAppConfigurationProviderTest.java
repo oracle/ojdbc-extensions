@@ -105,6 +105,7 @@ class AzureAppConfigurationProviderTest {
       TestProperties.getOrAbort(AzureTestProperty.AZURE_APP_CONFIG_KEY);
     String APP_CONFIG_LABEL =
       TestProperties.getOrAbort(AzureTestProperty.AZURE_APP_CONFIG_LABEL);
+
     String username = "user";
     String originalUrl =
             "jdbc:oracle:thin:@config-azure://" + APP_CONFIG_NAME +
@@ -121,16 +122,18 @@ class AzureAppConfigurationProviderTest {
     client.setConfigurationSetting( APP_CONFIG_KEY + username,
       APP_CONFIG_LABEL, originalKeyValue + "wrong");
 
-    // Connection fails: hit 1017
-    SQLException exception = assertThrows(SQLException.class,
-      () -> tryConnection(url), "Should throw an SQLException");
-    Assertions.assertEquals(exception.getErrorCode(), 1017);
-
-    // Set value of 'user' correct
-    ConfigurationSetting result =
-      client.setConfigurationSetting(APP_CONFIG_KEY + username,
-      APP_CONFIG_LABEL, originalKeyValue);
-    Assertions.assertEquals(originalKeyValue, result.getValue());
+    try {
+      // Connection fails: hit 1017
+      SQLException exception = assertThrows(SQLException.class,
+        () -> tryConnection(url), "Should throw an SQLException");
+      Assertions.assertEquals(exception.getErrorCode(), 1017);
+    } finally {
+      // Set value of 'user' correct
+      ConfigurationSetting result =
+        client.setConfigurationSetting(APP_CONFIG_KEY + username,
+          APP_CONFIG_LABEL, originalKeyValue);
+      Assertions.assertEquals(originalKeyValue, result.getValue());
+    }
 
     // Connection succeeds
     try (Connection conn = tryConnection(url)) {
