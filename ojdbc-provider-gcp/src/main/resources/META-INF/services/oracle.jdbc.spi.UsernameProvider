@@ -1,0 +1,2 @@
+oracle.jdbc.provider.gcp.resource.GcpSecretManagerUsernameProvider
+oracle.jdbc.provider.gcp.resource.GcpSecretManagerSEPSProvider
