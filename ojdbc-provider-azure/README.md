@@ -78,14 +78,14 @@ For example, let's suppose a URL like:
 jdbc:oracle:thin:@config-azure://myappconfig?key=/sales_app1/&label=dev
 </pre>
 
-And the configuration in App Configuration '**myappconfig**' as follows (note that some values such as password can be a reference to a Key Vault secret):
+And the configuration in App Configuration '**myappconfig**' as follows (note that some values such as password can be a reference to a Key Vault secret rather than a raw Key Vault URI):
 
 | Key                                       | Value                                                                                                                                                                    | Label |
 |-------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------| ----- |
 | /sales_app1/user                          | scott                                                                                                                                                                    | dev   |
 | /sales_app1/connect_descriptor            | (description=(address=(protocol=tcps)(port=1521)(host=adb.us-phoenix-1.oraclecloud.com))(connect_data=(service_name=gebqqvpozhjbqbs_dbtest_medium.adb.oraclecloud.com))) | dev   |
-| /sales_app1/password                      | {"uri":"myvault.vault.azure.net/secrets/mysecret"}                                                                                                                       | dev   |
-| /sales_app1/wallet_location               | {"uri":"myvault.vault.azure.net/secrets/mywallet"}                                                                                                                       | dev   |
+| /sales_app1/password                      | {"uri":"https://myvault.vault.azure.net/secrets/mysecret"}                                                                                                                       | dev   |
+| /sales_app1/wallet_location               | {"uri":"https://myvault.vault.azure.net/secrets/mywallet"}                                                                                                                       | dev   |
 | /sales_app1/jdbc/autoCommit               | false                                                                                                                                                                    | dev   |
 | /sales_app1/jdbc/oracle.jdbc.fanEnabled   | true                                                                                                                                                                     | dev   |
 | /sales_app1/jdbc/oracle.jdbc.loginTimeout | 20                                                                                                                                                                       | dev   |
