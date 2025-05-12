@@ -17,6 +17,8 @@ Each module of this project contains a set of providers.
 <dd>Providers for integration with Google Cloud Platform</dd>
 <dt><a href="ojdbc-provider-hashicorp/README.md">Oracle JDBC HashiCorp Providers</a></dt>
 <dd>Providers for integration with Hashicorp</dd>
+<dt><a href="ojdbc-provider-aws/README.md">Oracle JDBC AWS Providers</a></dt>
+<dd>Providers for integration with AWS</dd>
 </dl>
 <u>The next one contains a provider for Open Telemetry:</u>
 <dl>
@@ -131,6 +133,10 @@ this project:
 [ojdbc-provider-oci](ojdbc-provider-oci/README.md#installation)
 
 [ojdbc-provider-azure](ojdbc-provider-azure/README.md#installation)
+
+[ojdbc-provider-hashicorp](ojdbc-provider-hashicorp/README.md#installation)
+
+[ojdbc-provider-aws](ojdbc-provider-aws/README.md#installation)
 
 [ojdbc-provider-gcp](ojdbc-provider-gcp/README.md#installation)
 
