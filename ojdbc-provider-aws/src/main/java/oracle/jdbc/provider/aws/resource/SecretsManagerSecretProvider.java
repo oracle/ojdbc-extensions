@@ -38,12 +38,15 @@
 
 package oracle.jdbc.provider.aws.resource;
 
+import oracle.jdbc.provider.aws.secrets.AwsSecretExtractor;
 import oracle.jdbc.provider.aws.secrets.SecretsManagerFactory;
 import oracle.jdbc.provider.resource.ResourceParameter;
 import oracle.jdbc.provider.util.ResourceParameterUtils;
 
 import java.util.Map;
+import java.util.stream.Stream;
 
+import static oracle.jdbc.provider.aws.configuration.AwsConfigurationParameters.FIELD_NAME;
 import static oracle.jdbc.provider.aws.secrets.SecretsManagerFactory.SECRET_NAME;
 
 /**
@@ -55,7 +58,8 @@ import static oracle.jdbc.provider.aws.secrets.SecretsManagerFactory.SECRET_NAME
 public class SecretsManagerSecretProvider extends AwsResourceProvider {
 
   private static final ResourceParameter[] PARAMETERS = {
-          new ResourceParameter("secretName", SECRET_NAME)
+    new ResourceParameter("secretName", SECRET_NAME),
+    new ResourceParameter("fieldName", FIELD_NAME)
   };
 
   protected SecretsManagerSecretProvider(String valueType) {
@@ -85,6 +89,14 @@ public class SecretsManagerSecretProvider extends AwsResourceProvider {
    * @throws IllegalStateException If secret retrieval fails or returns null.
    */
   protected final String getSecret(Map<Parameter, CharSequence> parameterValues) {
-    return getResource(SecretsManagerFactory.getInstance(), parameterValues);
+    String secretJson = getResource(SecretsManagerFactory.getInstance(),
+      parameterValues);
+    ResourceParameter fieldNameParam = Stream.of(PARAMETERS)
+      .filter(param -> param.name().equals("fieldName"))
+      .findFirst()
+      .orElse(null);
+    String fieldName = parameterValues.containsKey(fieldNameParam) ?
+      parameterValues.get(fieldNameParam).toString() : null;
+    return AwsSecretExtractor.extractSecret(secretJson, fieldName);
   }
 }
