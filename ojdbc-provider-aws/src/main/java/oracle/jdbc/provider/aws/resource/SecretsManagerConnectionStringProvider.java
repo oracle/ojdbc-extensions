@@ -69,7 +69,8 @@ public class SecretsManagerConnectionStringProvider
   implements ConnectionStringProvider {
 
   private static final ResourceParameter[] PARAMETERS = {
-    new ResourceParameter("tnsAlias", TNS_ALIAS)
+    new ResourceParameter(AwsSecretsManagerResourceParameterNames.TNS_ALIAS,
+      TNS_ALIAS)
   };
 
   /**

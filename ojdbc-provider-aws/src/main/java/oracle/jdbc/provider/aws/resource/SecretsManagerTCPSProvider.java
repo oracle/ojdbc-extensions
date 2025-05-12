@@ -74,8 +74,9 @@ public class SecretsManagerTCPSProvider
   implements TlsConfigurationProvider {
 
   private static final ResourceParameter[] PARAMETERS = {
-    new ResourceParameter("walletPassword", PASSWORD),
-    new ResourceParameter("type", TYPE)
+    new ResourceParameter(AwsSecretsManagerResourceParameterNames.WALLET_PASSWORD,
+      PASSWORD),
+    new ResourceParameter(AwsSecretsManagerResourceParameterNames.TYPE, TYPE)
   };
 
   /**
