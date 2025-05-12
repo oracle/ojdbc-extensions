@@ -40,15 +40,23 @@ package oracle.jdbc.provider.aws.configuration;
 import oracle.jdbc.provider.aws.secrets.SecretsManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.spi.OracleConfigurationSecretProvider;
+import oracle.sql.json.OracleJsonException;
+import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonObject;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
 
+import static oracle.jdbc.provider.aws.configuration.AwsConfigurationParameters.FIELD_NAME;
 import static oracle.jdbc.provider.aws.configuration.AwsSecretsManagerConfigurationProvider.PARAMETER_SET_PARSER;
 
 public class AwsJsonSecretsManagerProvider
     implements OracleConfigurationSecretProvider {
+
+  private static final OracleJsonFactory JSON_FACTORY = new OracleJsonFactory();
+
   /**
    * {@inheritDoc}
    * <p>
@@ -62,9 +70,20 @@ public class AwsJsonSecretsManagerProvider
    * <pre>{@code
    *   "password": {
    *       "type": "awssecretsmanager",
-   *       "value": "<secret-name>"
+   *       "value": "<secret-name>",
+   *       "field_name": "<field-name>"
    *   }
    * }</pre>
+   *
+   * <p>
+   * The {@code field_name} parameter indicates the key whose value should
+   * be extracted as the secret. When there are multiple key-value pairs
+   * present, specifying this parameter is mandatory in order to
+   * unambiguously select the desired secret value. If the secret contains
+   * only a single entry and no {@code field_name} is provided, that sole
+   * value will be used. In cases where the secret is plain text,
+   * the {@code field_name} parameter is not required.
+   * </p>
    *
    * @param map Map object to be parsed
    * @return encoded char array in base64 format that represents the retrieved
@@ -73,13 +92,37 @@ public class AwsJsonSecretsManagerProvider
   @Override
   public char[] getSecret(Map<String, String> map) {
     ParameterSet parameterSet = PARAMETER_SET_PARSER.parseNamedValues(map);
+    String fieldName = parameterSet.getOptional(FIELD_NAME);
 
     String secretString = SecretsManagerFactory.getInstance()
         .request(parameterSet)
         .getContent();
 
+    String extractedSecret;
+
+    try {
+      OracleJsonObject jsonObject = JSON_FACTORY.createJsonTextValue(
+           new ByteArrayInputStream(secretString.getBytes(StandardCharsets.UTF_8)))
+        .asJsonObject();
+
+      if (fieldName != null) {
+        if (!jsonObject.containsKey(fieldName)) {
+          throw new IllegalStateException("Field '" + fieldName + "' not found in secret JSON.");
+        }
+        extractedSecret = jsonObject.get(fieldName).asJsonString().getString();
+      } else if (jsonObject.size() == 1) {
+        extractedSecret = jsonObject.values().iterator().next().asJsonString().getString();
+      } else {
+        throw new IllegalStateException(
+          "FIELD_NAME is required when multiple keys exist in the secret JSON");
+      }
+
+    } catch (OracleJsonException e) {
+      extractedSecret = secretString;
+    }
+
     return Base64.getEncoder()
-        .encodeToString(secretString.getBytes())
+        .encodeToString(extractedSecret.getBytes(StandardCharsets.UTF_8))
         .toCharArray();
   }
 
