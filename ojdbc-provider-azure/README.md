@@ -44,7 +44,7 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-azure</artifactId>
-  <version>1.0.4</version>
+  <version>1.0.5</version>
 </dependency>
 ```
 
@@ -193,7 +193,7 @@ details of the caching mechanism.
 
 ## Access Token Provider
 The Access Token Provider provides Oracle JDBC with an access token that authorizes 
-logins to an Autonomous Database. This is a Resource Provider 
+logins to an Autonomous Database. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) 
 identified by the name `ojdbc-provider-azure-token`.
 
 This provider must be configured to 
@@ -204,7 +204,7 @@ Instructions  can be found in the
 ADB product documentation.
 </a>
 #### Caching Mechanism
-The `AccessTokenFactory` employs a caching mechanism to efficiently manage and reuse access tokens. By utilizing Oracle JDBC's cache for JWTs, 
+The Access Token Provider employs a caching mechanism to efficiently manage and reuse access tokens. By utilizing Oracle JDBC's cache for JWTs, 
 access tokens are cached and updated one minute before they expire, ensuring no blocking of threads. This cache reduces latency when creating 
 JDBC connections, as a thread opening a connection does not have to wait for a new token to be requested. You can check this in more detail 
 at [Oracle's documentation](https://docs.oracle.com/en/database/oracle/oracle-database/19/jajdb/oracle/jdbc/AccessToken.html#createJsonWebTokenCache_java_util_function_Supplier_).
@@ -255,7 +255,7 @@ https://example.com/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/.default
 
 ## Key Vault Username Provider
 The Key Vault Username Provider provides Oracle JDBC with a database username
-that is managed by the Key Vault service. This is a Resource Provider
+that is managed by the Key Vault service. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html)
 identified by the name `ojdbc-provider-azure-key-vault-username`.
 
 In addition to the set of [common parameters](#common-parameters-for-resource-providers),
@@ -300,7 +300,7 @@ that configures this provider can be found in
 
 ## Key Vault Password Provider
 The Key Vault Password Provider provides Oracle JDBC with a database password
-that is managed by the Key Vault service. This is a Resource Provider
+that is managed by the Key Vault service. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html)
 identified by the name `ojdbc-provider-azure-key-vault-password`.
 
 In addition to the set of [common parameters](#common-parameters-for-resource-providers),
@@ -346,17 +346,17 @@ that configures this provider can be found in
 ## Key Vault TCPS Wallet Provider
 
 The TCPS Wallet Provider provides Oracle JDBC with keys and certificates managed by the Azure Key Vault service
-to establish secure TLS connections with an Autonomous Database. This is a Resource Provider identified by the name
-`ojdbc-provider-azure-key-vault-tl`.
+to establish secure TLS connections with an Autonomous Database. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified by the name
+`ojdbc-provider-azure-key-vault-tls`.
 
 For example, when connecting to Autonomous Database Serverless with mutual TLS (mTLS), you need to configure the JDBC-thin
 driver with its client certificate. If this certificate is stored in a wallet file (e.g., `cwallet.sso`, `ewallet.p12`, `ewallet.pem`),
-ou may store it in an Azure Key Vault secret for additional security.
-You can then use this provider that will retrieve the wallet content from Azure Key Vault using the Azure SDK
-and pass it to the JDBC thin driver.
+you may store the base64 encoding of that file as an Azure Key Vault secret for additional security.
+You can then use this provider to retrieve the wallet content from Azure Key Vault using the Azure SDK
+and provide it to the JDBC thin driver.
 
 - The type parameter must be specified to indicate the wallet format: SSO, PKCS12, or PEM.
-- The walletpassword must be provided for wallets that require a password (e.g., PKCS12 or password-protected PEM files).
+- The walletPassword parameter must be provided for wallets that require a password (e.g., PKCS12 or password-protected PEM files).
 
 In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider also supports the parameters listed below.
 
@@ -380,7 +380,7 @@ In addition to the set of [common parameters](#common-parameters-for-resource-pr
 </tr>
 <tr>
 <td>secretName</td>
-<td>The name of the secret containing the TCPS wallet file in Azure Key Vault.</td>
+<td>The name of the secret containing the base64 encoding of a wallet file in Azure Key Vault.</td>
 <td>Any valid secret name</td>
 <td> 
 <i>No default value. A value must be configured for this parameter.</i> 
@@ -414,8 +414,8 @@ An example of a [connection properties file](https://docs.oracle.com/en/database
 ## Key Vault SEPS Wallet Provider
 
 The SEPS Wallet Provider provides Oracle JDBC with a username and password managed by the Azure Key Vault service,
-stored in a Secure External Password Store (SEPS) wallet. This is a Resource Provider identified by the name
-`ojdbc-provider-azure-key-vault-seps`.
+where the base64 encoding of a Secure External Password Store (SEPS) wallet file is stored as a secret. This is a 
+[Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified by the name `ojdbc-provider-azure-key-vault-seps`.
 
 - The SEPS wallet securely stores encrypted database credentials, including the username, password, and connection strings.
   These credentials can be stored as default values, such as **oracle.security.client.default_username** and **oracle.security.client.default_password**,
@@ -445,7 +445,7 @@ In addition to the set of [common parameters](#common-parameters-for-resource-pr
 <tbody>
 <tr>
 <td>vaultUrl</td>
-<td>The URL of the Azure Key Vault containing the SEPS wallet.</td>
+<td>The URL of the Azure Key Vault containing the base64 encoding of a SEPS wallet file.</td>
 <td> The <a href="https://docs.microsoft.com/en-us/azure/key-vault/general/overview">Azure Key Vault URL</a>, typically in the form: 
 <pre>https://{vault-name}.vault.azure.net/</pre> 
 </td>
@@ -455,7 +455,7 @@ In addition to the set of [common parameters](#common-parameters-for-resource-pr
 </tr>
 <tr>
 <td>secretName</td>
-<td>The name of the secret containing the SEPS wallet file in Azure Key Vault.</td>
+<td>The name of the secret containing the base64 encoding of a SEPS wallet file in Azure Key Vault.</td>
 <td>Any valid secret name</td>
 <td> 
 <i>No default value. A value must be configured for this parameter.</i> 
@@ -489,7 +489,7 @@ An example of a [connection properties file](https://docs.oracle.com/en/database
 ## Key Vault Connection String Provider
 
 The Connection String Provider provides Oracle JDBC with a connection string managed by the Azure Key Vault service.
-This is a Resource Provider identified by the name `ojdbc-provider-azure-key-vault-tnsnames`.
+This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified by the name `ojdbc-provider-azure-key-vault-tnsnames`.
 
 This provider retrieves and decodes a `tnsnames.ora` file stored as a base64-encoded secret in Azure Key Vault, allowing selection of connection strings based on specified aliases.
 
@@ -531,7 +531,7 @@ In addition to the set of [common parameters](#common-parameters-for-resource-pr
 An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-key-vault.properties](example-key-vault.properties).
 
 ## Common Parameters for Resource Providers
-Providers classified as Resource Providers in this module all support a
+Providers classified as [Resource Providers](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) within this module all support a
 common set of parameters.
 <table>
   <thead><tr>
@@ -725,7 +725,7 @@ or be configured programmatically. Configuration with JVM system properties is
 not supported.
 
 ### Configuring Authentication for Resource Providers
-Resource Providers in this module must authenticate with Azure. By default, a provider will
+[Resource Providers](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) in this module must authenticate with Azure. By default, a provider will
 automatically detect any available credentials. A specific credential
 may be configured using the "authenticationMethod" parameter. The parameter may
 be set to any of the following values:
