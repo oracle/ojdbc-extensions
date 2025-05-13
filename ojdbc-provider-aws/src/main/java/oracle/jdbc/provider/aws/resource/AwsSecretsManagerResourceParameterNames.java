@@ -35,48 +35,34 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.provider.aws.configuration;
 
-import oracle.jdbc.provider.TestProperties;
-import oracle.jdbc.spi.OracleConfigurationProvider;
-import oracle.provider.aws.AwsTestProperty;
-import org.junit.jupiter.api.Test;
+package oracle.jdbc.provider.aws.resource;
 
-import java.sql.SQLException;
-import java.util.Properties;
+/**
+ * Centralized parameter name constants used by AWS Secrets Manager resource providers.
+ */
+public final class AwsSecretsManagerResourceParameterNames {
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+  private AwsSecretsManagerResourceParameterNames() {}
 
-public class AwsS3ConfigurationProviderTest {
+  /** The AWS region where the secret is located (e.g., eu-north-1). */
+  public static final String AWS_REGION = "awsRegion";
 
-  static {
-    OracleConfigurationProvider.allowedProviders.add("awss3");
-  }
+  /** The name of the secret stored in AWS Secrets Manager. */
+  public static final String SECRET_NAME = "secretName";
 
-  private static final OracleConfigurationProvider PROVIDER =
-      OracleConfigurationProvider.find("awss3");
+  /** Optional field name to extract from a JSON secret. */
+  public static final String FIELD_NAME = "fieldName";
 
-  /**
-   * Verifies if AWS S3 Configuration Provider works with default authentication
-   * @throws SQLException
-   */
-  @Test
-  public void testDefaultAuthentication() throws SQLException {
-    final String prefix = "jdbc:oracle:thin:@config-awss3://";
+  /** The alias used to retrieve a connection string from tnsnames.ora. */
+  public static final String TNS_ALIAS = "tnsAlias";
 
-    String url =
-        TestProperties.getOrAbort(
-            AwsTestProperty.AWS_S3_URL);
+  /** Optional password used to decrypt the wallet (for PKCS12 or encrypted PEM). */
+  public static final String WALLET_PASSWORD = "walletPassword";
 
-    assertTrue(
-        url.startsWith(prefix),
-        "AWS_S3_URL should start with " + prefix);
+  /** The wallet format: SSO, PKCS12, or PEM. */
+  public static final String TYPE = "type";
 
-    Properties properties = PROVIDER
-        .getConnectionProperties(url.substring(prefix.length()));
-
-    assertTrue(properties.containsKey("URL"), "Contains property URL");
-    assertTrue(properties.containsKey("user"), "Contains property user");
-    assertTrue(properties.containsKey("password"), "Contains property password");
-  }
+  /** Index of the credential set in the wallet */
+  public static final String CONNECTION_STRING_INDEX = "connectionStringIndex";
 }

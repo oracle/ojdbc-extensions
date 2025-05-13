@@ -21,6 +21,23 @@ Provider</a></dt>
 Visit any of the links above to find information and usage examples for a
 particular provider.
 
+## Resource Providers
+
+<dl>
+<dt><a href="#aws-secrets-manager-username-provider">Secrets Manager Username Provider</a></dt>
+<dd>Provides a database username from AWS Secrets Manager</dd>
+<dt><a href="#aws-secrets-manager-password-provider">Secrets Manager Password Provider</a></dt>
+<dd>Provides a database password from AWS Secrets Manager</dd>
+<dt><a href="#aws-secrets-manager-connection-string-provider">Secrets Manager Connection String Provider</a></dt>
+<dd>Provides connection strings from a tnsnames.ora file stored in AWS Secrets Manager</dd>
+<dt><a href="#aws-secrets-manager-tcps-wallet-provider">Secrets Manager TCPS Wallet Provider</a></dt>
+<dd>Provides TCPS/TLS wallet from AWS Secrets Manager</dd>
+<dt><a href="#aws-secrets-manager-seps-wallet-provider">Secrets Manager SEPS Wallet Provider</a></dt>
+<dd>Provides SEPS (Secure External Password Store) wallet from AWS Secrets Manager</dd>
+<dt><a href="#common-parameters-for-resource-providers">Common Parameters for Resource Providers</a></dt>
+<dd>Common parameters supported by the resource providers</dd>
+</dl>
+
 ## Installation
 
 All providers in this module are distributed as single jar on the Maven Central
@@ -184,6 +201,387 @@ In this project, region can be specified from two places:
 2. [Default region provider chain](https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/region-selection.html#automatically-determine-the-aws-region-from-the-environment).
 
 If `AWS_REGION` is specified in the URL, the provider uses it as the value of Region for authentication. Otherwise, the value from default region provider chain will be applied.
+
+## AWS Secrets Manager Username Provider
+The Secrets Manager Username Provider provides Oracle JDBC with a database username
+that is managed by the Secrets Manager service. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html)
+identified by the name `ojdbc-provider-aws-secretsmanager-username`.
+
+In addition to the set of [common parameters](#common-parameters-for-resource-providers),
+this provider also supports the parameters listed below.
+<table>
+<thead><tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Accepted Values</th>
+<th>Default Value</th>
+</tr></thead>
+<tbody><tr>
+<td><code>secretName</code></td>
+<td>
+The name of a secret in AWS Secrets Manager.
+<td>
+Any valid secret name.
+</td>
+<td>
+<i>No default value. A value must be configured for this parameter.</i>
+</td>
+</tr>
+<tr>
+<td><code>fieldName</code></td>
+<td>
+The field inside the secret that contains the username.
+Use this parameter only when the secret is stored as a key-value pairs.
+If the secret contains multiple keys, this parameter specifies which key to extract.
+If the secret contains only one key and this parameter is not provided, that value is automatically used.
+If <code>fieldName</code> is provided but does not match any key, or if the secret is not structured as key/value pairs, an error is thrown.
+If the secret is plain text and <code>fieldName</code> is provided, an error is also thrown.
+<td>
+The name of the key to extract from the secret when it is stored as a set of key-value pairs
+</td>
+<td>
+<i>Optional</i>
+</td>
+</tr>
+</tbody>
+</table>
+
+An example of a
+[connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
+that configures this provider can be found in
+[example-vault.properties](example-aws-secretsmanager.properties).
+
+## AWS Secrets Manager Password Provider
+The Secrets Manager Password Provider provides Oracle JDBC with a database password
+that is managed by the AWS Secrets Manager service. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html)
+identified by the name `ojdbc-provider-aws-secretsmanager-password`.
+
+In addition to the set of [common parameters](#common-parameters-for-resource-providers),
+this provider also supports the parameters listed below.
+<table>
+<thead><tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Accepted Values</th>
+<th>Default Value</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>secretName</code></td>
+<td>
+The name of a secret in AWS Secrets Manager.
+<td>
+Any valid secret name.
+</td>
+<td>
+<i>No default value. A value must be configured for this parameter.</i>
+</td>
+</tr>
+<tr>
+<td><code>fieldName</code></td>
+<td>
+The field inside the secret that contains the password.
+Use this parameter only when the secret is structured as key-value pairs.
+If the secret contains multiple keys, this parameter specifies which key to extract.
+If the secret contains only one key and this parameter is not provided, that value is used automatically.
+If <code>fieldName</code> is provided but does not match any key, or if the secret is not structured as key-value pairs, an error is thrown.
+If the secret is stored as plain text and <code>fieldName</code> is provided, an error is also thrown.
+<td>
+The name of the key to extract from the secret when it is stored as a set of key-value pairs
+</td>
+<td>
+<i>Optional</i>
+</td>
+</tr>
+</tbody>
+</table>
+
+An example of a
+[connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
+that configures this provider can be found in
+[example-vault.properties](example-aws-secretsmanager.properties).
+
+## AWS Secrets Manager TCPS Wallet Provider
+
+The TCPS Wallet Provider provides Oracle JDBC with keys and certificates managed by the AWS Secrets Manager service
+to establish secure TLS connections with an Autonomous Database. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified by the name
+`ojdbc-provider-aws-secretsmanager-tls`.
+
+For example, when connecting to Autonomous Database Serverless with mutual TLS (mTLS), you need to configure the JDBC-thin
+driver with its client certificate. If this certificate is stored in a wallet file (e.g., `cwallet.sso`, `ewallet.p12`, `ewallet.pem`),
+you may store the base64 encoding of that file as an AWS Secrets Manager secret for additional security.
+You can then use this provider to retrieve the wallet content from AWS Secrets Manager using the AWS SDK
+and provide it to the JDBC thin driver.
+
+- The type parameter must be specified to indicate the wallet format: SSO, PKCS12, or PEM.
+- The walletPassword parameter must be provided for wallets that require a password (e.g., PKCS12 or password-protected PEM files).
+
+In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider also supports the parameters listed below.
+
+<table>
+<thead><tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Accepted Values</th>
+<th>Default Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>secretName</code></td>
+<td>
+The name of a secret in AWS Secrets Manager.
+<td>
+Any valid secret name.
+</td>
+<td>
+<i>No default value. A value must be configured for this parameter.</i>
+</td>
+</tr>
+<tr>
+<td><code>walletPassword</code></td>
+<td>
+Optional password for PKCS12 or protected PEM files. If omitted, the file is assumed to be SSO or an non-protected PEM file.
+</td>
+<td>Any valid password for the wallet</td>
+<td>
+<i>No default value. PKCS12 and password-protected PEM files require a password.</i>
+</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td>
+Specifies the type of the file being used.
+</td>
+<td>SSO, PKCS12, PEM</td>
+<td>
+<i>No default value. The file type must be specified.</i>
+</td>
+</tr>
+<tr>
+<td><code>fieldName</code></td>
+<td>
+The field inside the secret that contains the base64-encoded TCPS wallet.
+Use this parameter only when the secret is structured as key-value pairs.
+If the secret contains multiple keys, this parameter specifies which key to extract.
+If the secret contains only one key and this parameter is not provided, that value is used automatically.
+If <code>fieldName</code> is provided but does not match any key, or if the secret is not structured as key-value pairs, an error is thrown.
+If the secret is stored as plain text and <code>fieldName</code> is provided, an error is also thrown.
+<td>
+The name of the key to extract from the secret when it is stored as a set of key-value pairs
+</td>
+<td>
+<i>Optional</i>
+</td>
+</tr>
+</tbody>
+</table>
+
+An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-secrets-manager-wallet.properties](example-aws-secretsmanager-wallet.properties).
+
+## AWS Secrets Manager SEPS Wallet Provider
+
+The SEPS Wallet Provider provides Oracle JDBC with a username and password managed by the AWS Secrets Manager service,
+where the base64 encoding of a Secure External Password Store (SEPS) wallet file is stored as a secret. This is a
+[Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified by the name `ojdbc-provider-aws-secretsmanager-seps`.
+
+- The SEPS wallet securely stores encrypted database credentials, including the username, password, and connection strings.
+  These credentials can be stored as default values, such as **oracle.security.client.default_username** and **oracle.security.client.default_password**,
+  or as indexed credentials, for example, **oracle.security.client.username1**, **oracle.security.client.password1**,
+  and **oracle.security.client.connect_string1**.
+
+- The provider retrieves credentials based on the following logic: If connectionStringIndex is not specified,
+  it first attempts to retrieve the default credentials (`oracle.security.client.default_username` and `oracle.security.client.default_password`).
+  If default credentials are not found, it checks for a single set of credentials associated with a connection string.
+  If exactly one connection string is found, it uses the associated credentials. However, if multiple connection strings
+  are found, an error is thrown, prompting you to specify a `connectionStringIndex`. If `connectionStringIndex` is specified,
+  the provider attempts to retrieve the credentials associated with the specified connection string index
+  (e.g., **oracle.security.client.username{idx}**, **oracle.security.client.password{idx}**,
+  **oracle.security.client.connect_string{idx}**). If credentials for the specified index are not found,
+  an error is thrown indicating that no connection string was found with that index.
+
+In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider also supports the parameters listed below.
+
+<table>
+<thead><tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Accepted Values</th>
+<th>Default Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>secretName</code></td>
+<td>
+The name of a secret in AWS Secrets Manager.
+<td>
+Any valid secret name.
+</td>
+<td>
+<i>No default value. A value must be configured for this parameter.</i>
+</td>
+</tr>
+<tr>
+<td><code>walletPassword</code></td>
+<td>
+Optional password for wallets stored as PKCS12 keystores. If omitted, the wallet is assumed to be an SSO wallet.
+</td>
+<td>Any valid password for the SEPS wallet</td>
+<td>
+<i>No default value. PKCS12 wallets require a password.</i>
+</td>
+</tr>
+<tr>
+<td><code>connectionStringIndex</code></td>
+<td>
+Optional parameter to specify the index of the connection string to use when retrieving credentials from the wallet
+</td>
+<td>A positive integer representing the index of the desired credential set (e.g., 1, 2, 3, etc.). </td>
+<td>
+<i>No default value. If not specified, the provider follows the default behavior as described above</i>
+</td>
+</tr>
+<tr>
+<td><code>fieldName</code></td>
+<td>
+The field inside the secret that contains the base64-encoded SEPS wallet.
+Use this parameter only when the secret is structured as key-value pairs.
+If the secret contains multiple keys, this parameter specifies which key to extract.
+If the secret contains only one key and this parameter is not provided, that value is used automatically.
+If <code>fieldName</code> is provided but does not match any key, or if the secret is not structured as key-value pairs, an error is thrown.
+If the secret is stored as plain text and <code>fieldName</code> is provided, an error is also thrown.
+<td>
+The name of the key to extract from the secret when it is stored as a set of key-value pairs
+</td>
+<td>
+<i>Optional</i>
+</td>
+</tr>
+</tbody>
+</table>
+
+An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-secrets-manager-wallet.properties](example-aws-secretsmanager-wallet.properties.properties).
+
+## AWS Secrets Manager Connection String Provider
+
+The Connection String Provider provides Oracle JDBC with a connection string managed by the AWS Secrets Manager service.
+This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html)
+identified by the name `ojdbc-provider-aws-secretsmanager-tnsnames`.
+
+This provider retrieves and decodes a `tnsnames.ora` file stored as a secret in AWS Secrets Manager.
+
+You can store the contents of the tnsnames.ora file either as:
+
+- A base64-encoded string, either directly or within a key inside a structured key-value map.
+
+- Plain text, by simply copying and pasting the contents directly into the secret value.
+
+If the secret is a key-value map, the <code>fieldName</code> parameter must be used to specify the key that holds the base64-encoded
+tnsnames.ora content.
+
+If the secret is stored as plain text, it must be provided as the raw contents of the tnsnames.ora file,
+and <code>fieldName</code> should not be set.
+
+This enables flexible configuration for secure database connections using the alias names defined in your `tnsnames.ora` file.
+
+In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider also requires the parameters listed below.
+
+<table>
+<thead>
+  <tr>
+    <th>Parameter Name</th>
+    <th>Description</th>
+    <th>Accepted Values</th>
+    <th>Default Value</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td><code>secretName</code></td> 
+    <td>The name of a secret in AWS Secrets Manager.</td> 
+    <td>Any valid secret name.</td> 
+    <td><i>No default value. A value must be configured for this parameter.</i></td>
+  </tr>
+  <tr>
+    <td><code>tnsAlias</code></td>
+    <td>Specifies the alias to retrieve the appropriate connection string from the <code>tnsnames.ora</code> file.</td> 
+    <td>Any valid alias present in your <code>tnsnames.ora</code> file.</td>
+    <td><i>No default value. A value must be configured for this parameter.</i></td> 
+  </tr> 
+  <tr>
+    <td><code>fieldName</code></td>
+    <td>
+    The field inside the secret that contains the base64-encoded <code>tnsnames.ora</code> content.
+    Use this parameter only when the secret is structured as key-value pairs.
+    If the secret contains multiple keys, this parameter specifies which key to extract.
+    If the secret contains only one key and this parameter is not provided, that value is used automatically. 
+    If <code>fieldName</code> is provided but does not match any key, or if the secret is not structured
+    as key-value pairs, an error is thrown. If the secret is stored as plain text and <code>fieldName</code> is provided,
+    an error is also thrown.
+    </td>
+    <td>The name of the key to extract from the secret when it is stored as a set of key-value pairs</td>
+    <td><i>Optional</i></td>
+  </tr>
+</tbody>
+</table>
+
+An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-aws-secretsmanager.properties](example-aws-secretsmanager.properties).
+
+## Common Parameters for Resource Providers
+
+Providers classified as [Resource Providers](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) within this module
+all support a common set of parameters.
+
+<table>
+<thead>
+<tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Accepted Values</th>
+<th>Default Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>authenticationMethod</code></td>
+<td> Configures a method of <a href="#configuring-authentication">authentication with AWS</a>. <br>This setting shares the same behavior and supported values as described in the <a href="#configuring-authentication">Configuring Authentication</a> section for Centralized Config Providers. </td><td><code>aws-default</code></td>
+<td><i>aws-default</i></td>
+</tr>
+<tr>
+<td><code>awsRegion</code></td> 
+<td> Configures the AWS region used to access Secrets Manager. <br>This parameter is handled identically to <a href="#aws-region">AWS Region</a> configuration described above. </td> <td> Any valid <a href="https://docs.aws.amazon.com/general/latest/gr/rande.html">AWS region</a>, such as <code>us-west-2</code> </td>
+<td><i>If not provided, will be determined from AWS SDK default region provider chain.</i></td>
+</tr>
+</tbody>
+</table>
+
+These parameters may be configured as connection properties recognized by the Oracle JDBC Driver.
+Parameter names are recognized when appended to the name of a connection property that identifies a provider.
+
+For example, when the connection property `oracle.jdbc.provider.password` identifies a provider,
+any of the parameter names listed above may be appended to it:
+```properties
+oracle.jdbc.provider.password=ojdbc-provider-aws-secretsmanager-password
+oracle.jdbc.provider.password.authenticationMethod=aws-default
+oracle.jdbc.provider.password.awsRegion=us-west-2
+oracle.jdbc.provider.password.fieldName=password
+```
+In the example above, the parameter names `authenticationMethod`, `awsRegion`, and `fieldName`
+are appended to the property `oracle.jdbc.provider.password`, effectively configuring the Secrets Manager Password Provider.
+
+These same parameter names can be appended to the name of any other property that identifies a provider.
+For instance, a provider identified by the connection property `oracle.jdbc.provider.username` can be configured with the same parameters:
+```properties
+oracle.jdbc.provider.username=ojdbc-provider-aws-secretsmanager-username
+oracle.jdbc.provider.username.authenticationMethod=aws-default
+oracle.jdbc.provider.username.awsRegion=eu-central-1
+oracle.jdbc.provider.username.fieldName=username
+```
+Connection properties which identify and configure a provider may appear in a
+[connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
+or be configured programmatically. Configuration with JVM system properties is
+not supported.
 
 ## Caching configuration
 

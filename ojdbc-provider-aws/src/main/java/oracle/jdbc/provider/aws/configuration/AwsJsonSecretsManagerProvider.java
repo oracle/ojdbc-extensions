@@ -37,14 +37,11 @@
  */
 package oracle.jdbc.provider.aws.configuration;
 
+import oracle.jdbc.provider.aws.secrets.AwsSecretExtractor;
 import oracle.jdbc.provider.aws.secrets.SecretsManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.spi.OracleConfigurationSecretProvider;
-import oracle.sql.json.OracleJsonException;
-import oracle.sql.json.OracleJsonFactory;
-import oracle.sql.json.OracleJsonObject;
 
-import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
@@ -54,8 +51,6 @@ import static oracle.jdbc.provider.aws.configuration.AwsSecretsManagerConfigurat
 
 public class AwsJsonSecretsManagerProvider
     implements OracleConfigurationSecretProvider {
-
-  private static final OracleJsonFactory JSON_FACTORY = new OracleJsonFactory();
 
   /**
    * {@inheritDoc}
@@ -98,28 +93,8 @@ public class AwsJsonSecretsManagerProvider
         .request(parameterSet)
         .getContent();
 
-    String extractedSecret;
-
-    try {
-      OracleJsonObject jsonObject = JSON_FACTORY.createJsonTextValue(
-           new ByteArrayInputStream(secretString.getBytes(StandardCharsets.UTF_8)))
-        .asJsonObject();
-
-      if (fieldName != null) {
-        if (!jsonObject.containsKey(fieldName)) {
-          throw new IllegalStateException("Field '" + fieldName + "' not found in secret JSON.");
-        }
-        extractedSecret = jsonObject.get(fieldName).asJsonString().getString();
-      } else if (jsonObject.size() == 1) {
-        extractedSecret = jsonObject.values().iterator().next().asJsonString().getString();
-      } else {
-        throw new IllegalStateException(
-          "FIELD_NAME is required when multiple keys exist in the secret JSON");
-      }
-
-    } catch (OracleJsonException e) {
-      extractedSecret = secretString;
-    }
+    String extractedSecret = AwsSecretExtractor.extractSecret(secretString,
+      fieldName);
 
     return Base64.getEncoder()
         .encodeToString(extractedSecret.getBytes(StandardCharsets.UTF_8))
