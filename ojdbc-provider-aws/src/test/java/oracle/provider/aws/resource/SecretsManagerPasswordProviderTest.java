@@ -76,15 +76,23 @@ public class SecretsManagerPasswordProviderTest {
     assertFalse(regionParameter.isSensitive());
     assertFalse(regionParameter.isRequired());
     assertNull(regionParameter.defaultValue());
+
+    Parameter fieldParam = parameters.stream()
+      .filter(p -> "fieldName".equals(p.name()))
+      .findFirst().orElseThrow(AssertionError::new);
+    assertFalse(fieldParam.isSensitive());
+    assertFalse(fieldParam.isRequired());
+    assertNull(fieldParam.defaultValue());
   }
 
   @Test
   public void testGetPassword() {
     Map<String, String> testParameters = new HashMap<>();
     testParameters.put("secretName",
-      TestProperties.getOrAbort(AwsTestProperty.PASSWORD_SECRET_NAME));
+      TestProperties.getOrAbort(AwsTestProperty.DB_CREDENTIALS_SECRET_NAME));
     testParameters.put("awsRegion",
       TestProperties.getOrAbort(AwsTestProperty.AWS_REGION));
+    testParameters.put("fieldName", "password");
 
     Map<Parameter, CharSequence> parameterValues =
             createParameterValues(PROVIDER, testParameters);

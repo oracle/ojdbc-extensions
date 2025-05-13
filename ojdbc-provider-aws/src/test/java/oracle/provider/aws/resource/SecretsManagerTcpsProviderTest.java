@@ -90,6 +90,13 @@ public class SecretsManagerTcpsProviderTest {
       .findFirst().orElseThrow(AssertionError::new);
     assertFalse(region.isSensitive());
     assertFalse(region.isRequired());
+
+    Parameter fieldParam = parameters.stream()
+      .filter(p -> "fieldName".equals(p.name()))
+      .findFirst().orElseThrow(AssertionError::new);
+    assertFalse(fieldParam.isSensitive());
+    assertFalse(fieldParam.isRequired());
+    assertNull(fieldParam.defaultValue());
   }
 
 

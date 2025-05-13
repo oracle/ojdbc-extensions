@@ -99,6 +99,13 @@ public class SecretsManagerSepsProviderTest {
       .findFirst().orElseThrow(AssertionError::new);
     assertFalse(awsRegion.isSensitive());
     assertFalse(awsRegion.isRequired());
+
+    Parameter fieldParam = usernameParams.stream()
+      .filter(p -> "fieldName".equals(p.name()))
+      .findFirst().orElseThrow(AssertionError::new);
+    assertFalse(fieldParam.isSensitive());
+    assertFalse(fieldParam.isRequired());
+    assertNull(fieldParam.defaultValue());
   }
 
   @Test
@@ -138,6 +145,7 @@ public class SecretsManagerSepsProviderTest {
     params.put("connectionStringIndex", "1");
     params.put("awsRegion",
       TestProperties.getOrAbort(AwsTestProperty.AWS_REGION));
+    params.put("fieldName", "sso");
 
     Map<Parameter, CharSequence> values = createParameterValues(PASSWORD_PROVIDER, params);
     assertNotNull(PASSWORD_PROVIDER.getPassword(values));

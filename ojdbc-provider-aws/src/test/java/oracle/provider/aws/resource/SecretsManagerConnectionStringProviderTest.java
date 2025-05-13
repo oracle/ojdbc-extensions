@@ -82,6 +82,13 @@ public class SecretsManagerConnectionStringProviderTest {
     assertFalse(regionParam.isSensitive());
     assertFalse(regionParam.isRequired());
     assertNull(regionParam.defaultValue());
+
+    Parameter fieldParam = parameters.stream()
+      .filter(p -> "fieldName".equals(p.name()))
+      .findFirst().orElseThrow(AssertionError::new);
+    assertFalse(fieldParam.isSensitive());
+    assertFalse(fieldParam.isRequired());
+    assertNull(fieldParam.defaultValue());
   }
 
   @Test

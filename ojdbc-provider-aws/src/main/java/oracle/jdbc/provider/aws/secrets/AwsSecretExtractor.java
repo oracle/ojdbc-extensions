@@ -70,13 +70,20 @@ public class AwsSecretExtractor {
    *       <li>Throws an exception if multiple keys exist and no field name is specified.</li>
    *     </ul>
    *   </li>
-   *   <li>If the string is not valid JSON, returns the original string as-is.</li>
+   *   <li>If the string is not valid JSON:
+   *     <ul>
+   *       <li>Returns the raw string only if {@code fieldName} is not provided.</li>
+   *       <li>Throws an exception if {@code fieldName} is provided.</li>
+   *     </ul>
+   *   </li>
    * </ul>
    *
    * @param secretString the raw secret string from AWS Secrets Manager
    * @param fieldName the key to extract from the JSON object (optional)
    * @return the extracted secret value
-   * @throws IllegalStateException if the JSON is valid but ambiguous or the field is missing
+   * @throws IllegalStateException if the JSON is valid but ambiguous,
+   * the specified field is missing, or the input is not JSON while
+   * {@code fieldName} is provided
    */
   public static String extractSecret(String secretString, String fieldName) {
     try {
@@ -95,7 +102,10 @@ public class AwsSecretExtractor {
         throw new IllegalStateException("FIELD_NAME is required when multiple keys exist in the secret JSON");
       }
     } catch (OracleJsonException e) {
-      // Fallback to plain text if not a JSON object
+      if (fieldName != null) {
+        throw new IllegalStateException("FIELD_NAME provided, but secret is not valid JSON.");
+      }
+      // Accept fallback to plain text only when fieldName is NOT specified
       return secretString;
     }
   }

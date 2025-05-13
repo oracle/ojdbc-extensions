@@ -230,7 +230,12 @@ Any valid secret name.
 <tr>
 <td><code>fieldName</code></td>
 <td>
-Optional key to extract a specific field from a JSON-formatted secret.
+The field inside the secret that contains the username.
+Use this parameter only when the secret is stored as a key-value pairs.
+If the secret contains multiple keys, this parameter specifies which key to extract.
+If the secret contains only one key and this parameter is not provided, that value is automatically used.
+If <code>fieldName</code> is provided but does not match any key, or if the secret is not structured as key/value pairs, an error is thrown.
+If the secret is plain text and <code>fieldName</code> is provided, an error is also thrown.
 <td>
 Key name in JSON
 </td>
@@ -275,8 +280,12 @@ Any valid secret name.
 <tr>
 <td><code>fieldName</code></td>
 <td>
-Optional key to extract a specific field from a JSON-formatted secret.
-<td>
+The field inside the secret that contains the password.
+Use this parameter only when the secret is structured as key-value pairs.
+If the secret contains multiple keys, this parameter specifies which key to extract.
+If the secret contains only one key and this parameter is not provided, that value is used automatically.
+If <code>fieldName</code> is provided but does not match any key, or if the secret is not structured as key-value pairs, an error is thrown.
+If the secret is stored as plain text and <code>fieldName</code> is provided, an error is also thrown.<td>
 Key name in JSON
 </td>
 <td>
@@ -329,17 +338,6 @@ Any valid secret name.
 </td>
 </tr>
 <tr>
-<td><code>fieldName</code></td>
-<td>
-Optional key to extract a specific field from a JSON-formatted secret.
-<td>
-Key name in JSON
-</td>
-<td>
-<i>Optional</i>
-</td>
-</tr>
-<tr>
 <td><code>walletPassword</code></td>
 <td>
 Optional password for PKCS12 or protected PEM files. If omitted, the file is assumed to be SSO or an non-protected PEM file.
@@ -357,6 +355,21 @@ Specifies the type of the file being used.
 <td>SSO, PKCS12, PEM</td>
 <td>
 <i>No default value. The file type must be specified.</i>
+</td>
+</tr>
+<tr>
+<td><code>fieldName</code></td>
+<td>
+The field inside the secret that contains the base64-encoded TCPS wallet.
+Use this parameter only when the secret is structured as key-value pairs.
+If the secret contains multiple keys, this parameter specifies which key to extract.
+If the secret contains only one key and this parameter is not provided, that value is used automatically.
+If <code>fieldName</code> is provided but does not match any key, or if the secret is not structured as key-value pairs, an error is thrown.
+If the secret is stored as plain text and <code>fieldName</code> is provided, an error is also thrown.<td>
+Key name in JSON
+</td>
+<td>
+<i>Optional</i>
 </td>
 </tr>
 </tbody>
@@ -430,8 +443,12 @@ Optional parameter to specify the index of the connection string to use when ret
 <tr>
 <td><code>fieldName</code></td>
 <td>
-Optional key to extract a specific field from a JSON-formatted secret.
-<td>
+The field inside the secret that contains the base64-encoded SEPS wallet.
+Use this parameter only when the secret is structured as key-value pairs.
+If the secret contains multiple keys, this parameter specifies which key to extract.
+If the secret contains only one key and this parameter is not provided, that value is used automatically.
+If <code>fieldName</code> is provided but does not match any key, or if the secret is not structured as key-value pairs, an error is thrown.
+If the secret is stored as plain text and <code>fieldName</code> is provided, an error is also thrown.<td>
 Key name in JSON
 </td>
 <td>
@@ -453,11 +470,15 @@ This provider retrieves and decodes a `tnsnames.ora` file stored as a secret in 
 
 You can store the contents of the tnsnames.ora file either as:
 
-- A base64-encoded string, or
+- A base64-encoded string, either directly or within a key inside a structured key-value map.
 
-- Plain text, by simply copying and pasting the contents directly into the secret value field.
+- Plain text, by simply copying and pasting the contents directly into the secret value.
 
-The provider will automatically handle either format and extract the appropriate connection string based on the specified alias.
+If the secret is a key-value map, the <code>fieldName</code> parameter must be used to specify the key that holds the base64-encoded
+tnsnames.ora content.
+
+If the secret is stored as plain text, it must be provided as the raw contents of the tnsnames.ora file,
+and <code>fieldName</code> should not be set.
 
 This enables flexible configuration for secure database connections using the alias names defined in your `tnsnames.ora` file.
 
@@ -487,7 +508,15 @@ In addition to the set of [common parameters](#common-parameters-for-resource-pr
   </tr> 
   <tr>
     <td><code>fieldName</code></td>
-    <td>Optional key to extract a specific field from a JSON-formatted secret.</td>
+    <td>
+    The field inside the secret that contains the base64-encoded <code>tnsnames.ora</code> content.
+    Use this parameter only when the secret is structured as key-value pairs.
+    If the secret contains multiple keys, this parameter specifies which key to extract.
+    If the secret contains only one key and this parameter is not provided, that value is used automatically. 
+    If <code>fieldName</code> is provided but does not match any key, or if the secret is not structured
+    as key-value pairs, an error is thrown. If the secret is stored as plain text and <code>fieldName</code> is provided,
+    an error is also thrown.
+    </td>
     <td>Key name in JSON</td>
     <td><i>Optional</i></td>
   </tr>
