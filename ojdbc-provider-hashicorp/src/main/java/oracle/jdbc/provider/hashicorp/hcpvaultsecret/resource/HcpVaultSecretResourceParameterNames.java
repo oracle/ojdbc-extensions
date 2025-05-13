@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2024 Oracle and/or its affiliates.
+ ** Copyright (c) 2025 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -36,35 +36,25 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.util;
-
-import java.util.Base64;
+package oracle.jdbc.provider.hashicorp.hcpvaultsecret.resource;
 
 /**
- * Utility class for common file handling operations.
+ * Centralized parameter name constants used by HCP Vault Secret resource providers.
  */
-public final class FileUtils {
+public final class HcpVaultSecretResourceParameterNames {
 
-  /**
-   * Checks if the given byte array is Base64-encoded.
-   */
-  public static boolean isBase64Encoded(byte[] secretBytes) {
-    try {
-      Base64.getDecoder().decode(secretBytes);
-      return true;
-    } catch (IllegalArgumentException e) {
-      return false;
-    }
-  }
+  private HcpVaultSecretResourceParameterNames() {}
 
-  /**
-   * Decodes the given secret bytes if base64 encoded, otherwise returns them as-is.
-   *
-   * @param input the secret bytes
-   * @return the decoded byte array if base64, or the original byte array
-   */
-  public static byte[] decodeIfBase64(byte[] input) {
-    return isBase64Encoded(input) ? Base64.getDecoder().decode(input)
-            : input;
-  }
+  public static final String ORG_ID = "orgId";
+  public static final String PROJECT_ID = "projectId";
+  public static final String APP_NAME = "appName";
+  public static final String CLIENT_ID = "clientId";
+  public static final String CLIENT_SECRET = "clientSecret";
+  public static final String CREDENTIALS_FILE = "credentialsFile";
+
+  public static final String SECRET_NAME = "secretName";
+  public static final String TNS_ALIAS = "tnsAlias";
+  public static final String CONNECTION_STRING_INDEX = "connectionStringIndex";
+  public static final String WALLET_PASSWORD = "walletPassword";
+  public static final String TYPE = "type";
 }

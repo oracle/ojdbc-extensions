@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2024 Oracle and/or its affiliates.
+ ** Copyright (c) 2025 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -36,35 +36,36 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.util;
+package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.resource;
 
-import java.util.Base64;
+import oracle.jdbc.spi.UsernameProvider;
+
+import java.util.Map;
 
 /**
- * Utility class for common file handling operations.
+ * <p>
+ * A provider for securely retrieving a username stored as a secret
+ * in HashiCorp Vault Dedicated.
+ * </p>
+ * <p>
+ * This class implements the {@link UsernameProvider} SPI defined by
+ * Oracle JDBC and is designed to be instantiated via {@link java.util.ServiceLoader}.
+ * </p>
  */
-public final class FileUtils {
+public class HcpVaultDedicatedUsernameProvider
+        extends HcpVaultDedicatedSecretProvider
+        implements UsernameProvider {
 
   /**
-   * Checks if the given byte array is Base64-encoded.
+   * A public no-arg constructor used by {@link java.util.ServiceLoader} to
+   * construct an instance of this provider.
    */
-  public static boolean isBase64Encoded(byte[] secretBytes) {
-    try {
-      Base64.getDecoder().decode(secretBytes);
-      return true;
-    } catch (IllegalArgumentException e) {
-      return false;
-    }
+  public HcpVaultDedicatedUsernameProvider() {
+    super("username");
   }
 
-  /**
-   * Decodes the given secret bytes if base64 encoded, otherwise returns them as-is.
-   *
-   * @param input the secret bytes
-   * @return the decoded byte array if base64, or the original byte array
-   */
-  public static byte[] decodeIfBase64(byte[] input) {
-    return isBase64Encoded(input) ? Base64.getDecoder().decode(input)
-            : input;
+  @Override
+  public String getUsername(Map<Parameter, CharSequence> parameterValues) {
+    return getSecret(parameterValues);
   }
 }
