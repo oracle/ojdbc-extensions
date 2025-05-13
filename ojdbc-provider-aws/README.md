@@ -237,7 +237,7 @@ If the secret contains only one key and this parameter is not provided, that val
 If <code>fieldName</code> is provided but does not match any key, or if the secret is not structured as key/value pairs, an error is thrown.
 If the secret is plain text and <code>fieldName</code> is provided, an error is also thrown.
 <td>
-Key name in JSON
+The name of the key to extract from the secret when it is stored as a set of key-value pairs
 </td>
 <td>
 <i>Optional</i>
@@ -285,8 +285,9 @@ Use this parameter only when the secret is structured as key-value pairs.
 If the secret contains multiple keys, this parameter specifies which key to extract.
 If the secret contains only one key and this parameter is not provided, that value is used automatically.
 If <code>fieldName</code> is provided but does not match any key, or if the secret is not structured as key-value pairs, an error is thrown.
-If the secret is stored as plain text and <code>fieldName</code> is provided, an error is also thrown.<td>
-Key name in JSON
+If the secret is stored as plain text and <code>fieldName</code> is provided, an error is also thrown.
+<td>
+The name of the key to extract from the secret when it is stored as a set of key-value pairs
 </td>
 <td>
 <i>Optional</i>
@@ -365,8 +366,9 @@ Use this parameter only when the secret is structured as key-value pairs.
 If the secret contains multiple keys, this parameter specifies which key to extract.
 If the secret contains only one key and this parameter is not provided, that value is used automatically.
 If <code>fieldName</code> is provided but does not match any key, or if the secret is not structured as key-value pairs, an error is thrown.
-If the secret is stored as plain text and <code>fieldName</code> is provided, an error is also thrown.<td>
-Key name in JSON
+If the secret is stored as plain text and <code>fieldName</code> is provided, an error is also thrown.
+<td>
+The name of the key to extract from the secret when it is stored as a set of key-value pairs
 </td>
 <td>
 <i>Optional</i>
@@ -448,8 +450,9 @@ Use this parameter only when the secret is structured as key-value pairs.
 If the secret contains multiple keys, this parameter specifies which key to extract.
 If the secret contains only one key and this parameter is not provided, that value is used automatically.
 If <code>fieldName</code> is provided but does not match any key, or if the secret is not structured as key-value pairs, an error is thrown.
-If the secret is stored as plain text and <code>fieldName</code> is provided, an error is also thrown.<td>
-Key name in JSON
+If the secret is stored as plain text and <code>fieldName</code> is provided, an error is also thrown.
+<td>
+The name of the key to extract from the secret when it is stored as a set of key-value pairs
 </td>
 <td>
 <i>Optional</i>
@@ -517,7 +520,7 @@ In addition to the set of [common parameters](#common-parameters-for-resource-pr
     as key-value pairs, an error is thrown. If the secret is stored as plain text and <code>fieldName</code> is provided,
     an error is also thrown.
     </td>
-    <td>Key name in JSON</td>
+    <td>The name of the key to extract from the secret when it is stored as a set of key-value pairs</td>
     <td><i>Optional</i></td>
   </tr>
 </tbody>
