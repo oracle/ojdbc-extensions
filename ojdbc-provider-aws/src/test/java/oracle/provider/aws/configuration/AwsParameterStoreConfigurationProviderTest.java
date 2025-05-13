@@ -37,8 +37,42 @@
  */
 package oracle.provider.aws.configuration;
 
-public enum AwsTestProperty {
-  AWS_S3_URL,
-  AWS_SECRETS_MANAGER_URL,
-  AWS_PARAMETER_STORE_URL
+import oracle.jdbc.provider.TestProperties;
+import oracle.jdbc.spi.OracleConfigurationProvider;
+import org.junit.jupiter.api.Test;
+
+import java.sql.SQLException;
+import java.util.Properties;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+public class AwsParameterStoreConfigurationProviderTest {
+
+  static {
+    OracleConfigurationProvider.allowedProviders.add("awsparameterstore");
+  }
+
+  private static final OracleConfigurationProvider PROVIDER =
+      OracleConfigurationProvider.find("awsparameterstore");
+
+  /**
+   * Verifies if AWS Parameter Store Configuration Provider works with default authentication
+   * @throws SQLException
+   */
+  @Test
+  public void testDefaultAuthentication() throws SQLException {
+    final String prefix = "jdbc:oracle:thin:@config-awsparameterstore://";
+
+    String url = TestProperties.getOrAbort(
+      AwsTestProperty.AWS_PARAMETER_STORE_URL);
+    assertTrue(url.startsWith(prefix),
+      "AWS_PARAMETER_STORE_URL should start with " + prefix);
+
+    Properties properties = PROVIDER
+      .getConnectionProperties(url.substring(prefix.length()));
+
+    assertTrue(properties.containsKey("URL"), "Contains property URL");
+    assertTrue(properties.containsKey("user"), "Contains property user");
+    assertTrue(properties.containsKey("password"), "Contains property password");
+  }
 }
