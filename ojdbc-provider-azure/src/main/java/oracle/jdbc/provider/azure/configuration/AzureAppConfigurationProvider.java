@@ -182,9 +182,25 @@ public class AzureAppConfigurationProvider
       selector.setKeyFilter(prefix + "*");
     }
 
+    // Only allow a single label.
+    // If not specified, use "%00" to match empty label.
     if (parameters.contains(AzureAppConfigurationURLParser.LABEL)) {
-      selector.setLabelFilter(
-        parameters.getOptional(AzureAppConfigurationURLParser.LABEL));
+      String label =
+        parameters.getOptional(AzureAppConfigurationURLParser.LABEL);
+
+      if ("all".equalsIgnoreCase(label) || "*".equals(label)) {
+        throw new IllegalArgumentException(
+          "Label 'all' or '*' is not allowed");
+      }
+
+      if (label.contains(",") || label.contains("*")) {
+        throw new IllegalArgumentException(
+          "Multiple labels and wildcards are not supported");
+      }
+
+      selector.setLabelFilter(label);
+    } else {
+      selector.setLabelFilter("%00");
     }
 
     ConfigurationClient configurationClient = new ConfigurationClientBuilder()
