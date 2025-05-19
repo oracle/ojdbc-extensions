@@ -40,16 +40,15 @@ package oracle.jdbc.provider.gcp.resource;
 
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
-import oracle.jdbc.provider.util.FileUtils;
 import oracle.jdbc.provider.util.TlsUtils;
 import oracle.jdbc.spi.TlsConfigurationProvider;
 
 import javax.net.ssl.SSLContext;
-import java.util.Base64;
 import java.util.Map;
 
 import static oracle.jdbc.provider.util.CommonParameters.PASSWORD;
 import static oracle.jdbc.provider.util.CommonParameters.TYPE;
+import static oracle.jdbc.provider.util.FileUtils.decodeIfBase64;
 
 /**
  * <p>
@@ -110,12 +109,7 @@ public class GcpSecretManagerTCPSProvider
   public SSLContext getSSLContext(Map<Parameter, CharSequence> parameterValues) {
     try {
       ParameterSet parameterSet = parseParameterValues(parameterValues);
-
-      byte[] fileBytes = getSecret(parameterValues).toByteArray();
-
-      if (FileUtils.isBase64Encoded(fileBytes)) {
-        fileBytes = Base64.getDecoder().decode(fileBytes);
-      }
+      byte[] fileBytes = decodeIfBase64(getSecret(parameterValues).toByteArray());
 
       char[] password = parameterSet.getOptional(PASSWORD) != null
               ? parameterSet.getOptional(PASSWORD).toCharArray()

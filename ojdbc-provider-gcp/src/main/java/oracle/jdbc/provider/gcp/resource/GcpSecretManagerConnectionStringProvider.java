@@ -39,17 +39,16 @@
 package oracle.jdbc.provider.gcp.resource;
 
 import oracle.jdbc.provider.resource.ResourceParameter;
-import oracle.jdbc.provider.util.FileUtils;
 import oracle.jdbc.provider.util.TNSNames;
 import oracle.jdbc.spi.ConnectionStringProvider;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Base64;
 import java.util.Map;
 
 import static oracle.jdbc.provider.util.CommonParameters.TNS_ALIAS;
+import static oracle.jdbc.provider.util.FileUtils.decodeIfBase64;
 
 
 /**
@@ -103,12 +102,7 @@ public class GcpSecretManagerConnectionStringProvider
    */
   @Override
   public String getConnectionString(Map<Parameter, CharSequence> parameterValues) {
-
-    byte[] fileBytes = getSecret(parameterValues).toByteArray();
-
-    if (FileUtils.isBase64Encoded(fileBytes)) {
-      fileBytes = Base64.getDecoder().decode(fileBytes);
-    }
+    byte[] fileBytes = decodeIfBase64(getSecret(parameterValues).toByteArray());
 
     TNSNames tnsNames;
     try (InputStream inputStream = new ByteArrayInputStream(fileBytes)) {

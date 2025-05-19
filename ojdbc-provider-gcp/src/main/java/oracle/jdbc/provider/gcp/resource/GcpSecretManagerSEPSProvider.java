@@ -40,16 +40,15 @@ package oracle.jdbc.provider.gcp.resource;
 
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.resource.ResourceParameter;
-import oracle.jdbc.provider.util.FileUtils;
 import oracle.jdbc.provider.util.WalletUtils;
 import oracle.jdbc.spi.PasswordProvider;
 import oracle.jdbc.spi.UsernameProvider;
 
-import java.util.Base64;
 import java.util.Map;
 
 import static oracle.jdbc.provider.util.CommonParameters.CONNECTION_STRING_INDEX;
 import static oracle.jdbc.provider.util.CommonParameters.PASSWORD;
+import static oracle.jdbc.provider.util.FileUtils.decodeIfBase64;
 
 /**
  * <p>
@@ -112,12 +111,7 @@ public class GcpSecretManagerSEPSProvider
           Map<Parameter, CharSequence> parameterValues) {
 
     ParameterSet parameterSet = parseParameterValues(parameterValues);
-
-    byte[] walletBytes = getSecret(parameterValues).toByteArray();
-
-    if (FileUtils.isBase64Encoded(walletBytes)) {
-      walletBytes = Base64.getDecoder().decode(walletBytes);
-    }
+    byte[] walletBytes = decodeIfBase64(getSecret(parameterValues).toByteArray());
 
     char[] walletPassword = parameterSet.getOptional(PASSWORD) != null
             ? parameterSet.getOptional(PASSWORD).toCharArray()

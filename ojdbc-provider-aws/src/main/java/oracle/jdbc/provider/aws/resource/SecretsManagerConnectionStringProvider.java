@@ -49,6 +49,7 @@ import java.util.Base64;
 import java.util.Map;
 
 import static oracle.jdbc.provider.util.CommonParameters.TNS_ALIAS;
+import static oracle.jdbc.provider.util.FileUtils.decodeIfBase64;
 import static oracle.jdbc.provider.util.FileUtils.isBase64Encoded;
 
 /**
@@ -103,10 +104,7 @@ public class SecretsManagerConnectionStringProvider
   @Override
   public String getConnectionString(Map<Parameter, CharSequence> parameterValues) {
     String alias = parseParameterValues(parameterValues).getRequired(TNS_ALIAS);
-    byte[] secretBytes = getSecret(parameterValues).getBytes();
-
-    byte[] fileBytes = isBase64Encoded(secretBytes)
-      ? Base64.getDecoder().decode(secretBytes) : secretBytes;
+    byte[] fileBytes = decodeIfBase64(getSecret(parameterValues).getBytes());
 
     try (InputStream inputStream = new ByteArrayInputStream(fileBytes)) {
       TNSNames tnsNames = TNSNames.read(inputStream);
