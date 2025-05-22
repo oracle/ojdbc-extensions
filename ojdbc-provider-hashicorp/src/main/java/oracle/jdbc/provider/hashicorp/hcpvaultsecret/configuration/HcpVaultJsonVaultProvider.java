@@ -40,6 +40,7 @@ package oracle.jdbc.provider.hashicorp.hcpvaultsecret.configuration;
 
 import oracle.jdbc.provider.hashicorp.hcpvaultsecret.secrets.HcpVaultSecretsManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.provider.util.FileUtils;
 import oracle.jdbc.spi.OracleConfigurationSecretProvider;
 
 import java.nio.charset.StandardCharsets;
@@ -47,6 +48,8 @@ import java.util.Base64;
 import java.util.Map;
 
 import static oracle.jdbc.provider.hashicorp.hcpvaultsecret.authentication.HcpVaultSecretParameters.PARAMETER_SET_PARSER;
+import static oracle.jdbc.provider.util.FileUtils.toBase64EncodedCharArray;
+
 /**
  * <p>
  * Implementation of {@link OracleConfigurationSecretProvider} for
@@ -83,9 +86,7 @@ public class HcpVaultJsonVaultProvider implements OracleConfigurationSecretProvi
       .request(parameterSet)
       .getContent();
 
-    String base64Encoded = Base64.getEncoder()
-            .encodeToString(secretString.getBytes(StandardCharsets.UTF_8));
-    return base64Encoded.toCharArray();
+    return toBase64EncodedCharArray(secretString);
   }
 
   @Override

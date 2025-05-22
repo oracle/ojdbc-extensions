@@ -68,11 +68,12 @@ The {S3-URI} can be obtained from the Amazon S3 console and follows this naming 
 
 ### JSON Payload format
 
-There are 3 fixed values that are looked at the root level.
+There are 4 fixed values that are looked at the root level.
 
 - connect_descriptor (required)
 - user (optional)
 - password (optional)
+- wallet_location (optional)
 
 The rest are dependent on the driver, in our case `/jdbc`. The key-value pairs that are with sub-prefix `/jdbc` will be applied to a DataSource. The key values are constant keys which are equivalent to the properties defined in the [OracleConnection](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html) interface.
 
@@ -92,6 +93,11 @@ And the JSON Payload for the file **payload_ojdbc_objectstorage.json** in **mybu
     "type": "awssecretsmanager",
     "value": "test-secret",
     "field_name": "<field-name>"  // Optional: Only needed when the secret is structured and contains multiple key-value pairs.
+  },
+  "wallet_location": {
+    "type": "awssecretsmanager",
+    "value": "wallet-secret",
+    "field_name": "<field-name>" // Optional: Only needed when the secret is structured and contains multiple key-value pairs.
   },
   "jdbc": {
     "oracle.jdbc.ReadTimeout": 1000,
@@ -117,31 +123,51 @@ The sample code below executes as expected with the previous configuration.
 
 For the JSON type of provider (AWS S3, AWS Secrets Manager, HTTP/HTTPS, File) the password is an object itself with the following spec:
 
-- type
+- `type`
     - Mandatory
     - Possible values
-        - ocivault
-        - azurevault
-        - base64
-        - awssecretsmanager
-- value
+      - `ocivault` (OCI Vault)
+      - `azurevault` (Azure Key Vault)
+      - `base64` (Base64)
+      - `awssecretsmanager` (AWS Secrets Manager)
+      - `hcpvaultdedicated` (HCP Vault Dedicated)
+      - `hcpvaultsecret` (HCP Vault Secrets)
+      - `gcpsecretmanager` (GCP Secret Manager)
+- `value`
     - Mandatory
     - Possible values
         - OCID of the secret (if ocivault)
         - Azure Key Vault URI (if azurevault)
         - Base64 Encoded password (if base64)
         - AWS Secret name (if awssecretsmanager)
-- field_name
+        - Secret path (if hcpvaultdedicated)
+        - Secret name (if hcpvaultsecret)
+        - Secret name (if gcpsecretmanager)
+- `field_name`
   - Optional
   - Description: Specifies the key within the secret JSON object from which to extract the password value.
     If the secret JSON contains multiple key-value pairs, field_name must be provided to unambiguously select the desired secret value.
     If the secret contains only a single key-value pair and field_name is not provided, that sole value will be used.
     If the secret is provided as plain text (i.e., not structured as a JSON object), no field_name is required.
-- authentication
+- `authentication`
     - Optional
     - Possible Values
         - method
         - optional parameters (depends on the cloud provider).
+
+### Wallet_location JSON Object
+
+The `oracle.net.wallet_location` connection property is not allowed in the `jdbc` object due to security reasons. Instead, users should use the `wallet_location` object to specify the wallet in the configuration.
+
+For the JSON type of provider (AWS S3, HTTPS, File) the wallet_location is an object itself with the same spec as the [password JSON object](#password-json-object) mentioned above.
+
+The value stored in the secret should be the Base64 representation of the bytes in `cwallet.sso`. This is equivalent to setting the `oracle.net.wallet_location` connection property in a regular JDBC application using the following format:
+
+```
+data:;base64,<Base64 representation of the bytes in cwallet.sso>
+```
+
+<i>*Note: When storing a wallet in AWS Secrets Manager, store the raw Base64-encoded wallet bytes directly. The provider will automatically detect and handle the encoding correctly.</i>
 
 ## AWS Secrets Manager Config Provider
 Apart from AWS S3, users can also store JSON Payload in the content of AWS Secrets Manager secret. Users need to indicate the secret name:
