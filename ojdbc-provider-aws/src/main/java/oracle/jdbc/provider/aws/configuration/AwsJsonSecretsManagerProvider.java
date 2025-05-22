@@ -42,12 +42,11 @@ import oracle.jdbc.provider.aws.secrets.SecretsManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.spi.OracleConfigurationSecretProvider;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Map;
 
 import static oracle.jdbc.provider.aws.configuration.AwsConfigurationParameters.FIELD_NAME;
 import static oracle.jdbc.provider.aws.configuration.AwsSecretsManagerConfigurationProvider.PARAMETER_SET_PARSER;
+import static oracle.jdbc.provider.util.FileUtils.toBase64EncodedCharArray;
 
 public class AwsJsonSecretsManagerProvider
     implements OracleConfigurationSecretProvider {
@@ -96,9 +95,7 @@ public class AwsJsonSecretsManagerProvider
     String extractedSecret = AwsSecretExtractor.extractSecret(secretString,
       fieldName);
 
-    return Base64.getEncoder()
-        .encodeToString(extractedSecret.getBytes(StandardCharsets.UTF_8))
-        .toCharArray();
+    return toBase64EncodedCharArray(extractedSecret);
   }
 
   @Override

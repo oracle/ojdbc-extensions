@@ -157,19 +157,21 @@ For the JSON type of provider (OCI Object Storage, HTTPS, File) the password is 
 - `type`
   - Mandatory
   - Possible values:
-    - `ocivault`
-    - `azurevault`
-    - `base64`
-    - `awssecretsmanager`
-    - `hcpvaultdedicated`
-    - `hcpvaultsecret`
+    - `ocivault` (OCI Vault)
+    - `gcpsecretmanager` (GCP Secret Manager)
+    - `azurevault` (Azure Key Vault)
+    - `base64` (Base64)
+    - `awssecretsmanager` (AWS Secrets Manager)
+    - `hcpvaultdedicated` (HCP Vault Dedicated)
+    - `hcpvaultsecret` (HCP Vault Secrets)
 - `value`
   - Mandatory
   - Possible values:
     - OCID of the secret (if ocivault)
+    - Secret name (if gcpsecretmanager)
     - Azure Key Vault URI (if azurevault)
     - Base64 Encoded password (if base64)
-    - AWS resource name of the secret  (if awssecretsmanager)
+    - AWS Secret name (if awssecretsmanager)
     - Secret path (if hcpvaultdedicated)
     - Secret name (if hcpvaultsecret)
 - `authentication`

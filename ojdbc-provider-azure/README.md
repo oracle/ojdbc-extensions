@@ -103,6 +103,51 @@ The sample code below executes as expected with the previous configuration (and 
     if (rs.next())
       System.out.println("select sysdate from dual: " + rs.getString(1));
 ```
+### Password JSON Object
+
+For the JSON type of provider (Azure App Configuration, Azure Key Vault, HTTP/HTTPS, File) the password is an object itself with the following spec:
+
+- `type`
+  - Mandatory
+  - Possible values
+    - `azurevault` (Azure Key Vault)
+    - `ocivault` (OCI Vault)
+    - `base64` (Base64)
+    - `awssecretsmanager` (AWS Secrets Manager)
+    - `hcpvaultdedicated` (HCP Vault Dedicated)
+    - `hcpvaultsecret` (HCP Vault Secrets)
+    - `gcpsecretmanager` (GCP Secret Manager)
+- `value`
+  - Mandatory
+  - Possible values
+    - Azure Key Vault URI (if azurevault)  
+    - OCID of the secret (if ocivault)
+    - Base64 Encoded password (if base64)
+    - AWS Secret name (if awssecretsmanager)
+    - Secret path (if hcpvaultdedicated)
+    - Secret name (if hcpvaultsecret)
+    - Secret name (if gcpsecretmanager)
+- `authentication`
+  - Optional
+  - Possible Values
+    - method
+    - optional parameters (depends on the cloud provider).
+
+### Wallet_location JSON Object
+
+The `oracle.net.wallet_location` connection property is not allowed in the `jdbc` object due to security reasons. Instead, users should use the `wallet_location` object to specify the wallet in the configuration.
+
+For the JSON type of provider (Azure App Configuration, HTTPS, File) the `wallet_location` is an object itself with the same spec as the [password JSON object](#password-json-object) mentioned above.
+
+The value stored in the secret should be the Base64 representation of the bytes in `cwallet.sso`. This is equivalent to setting the `oracle.net.wallet_location` connection property in a regular JDBC application using the following format:
+
+```
+data:;base64,<Base64 representation of the bytes in cwallet.sso>
+```
+
+<i>*Note: When storing a wallet in Azure Key Vault, store the raw Base64-encoded wallet bytes directly. The provider will automatically detect and handle the encoding correctly.</i>
+
+
 ## Azure Vault Config Provider
 Similar to [OCI Vault Config Provider](../ojdbc-provider-oci/README.md#oci-vault-config-provider), JSON Payload can also be stored in the content of Azure Key Vault Secret.
 The Oracle Data Source uses a new prefix `jdbc:oracle:thin:@config-azurevault://`. Users only need to indicate the Vault Secret’s secret identifier using the following syntax, where option-value pairs separated by `&` are optional authentication parameters that vary by provider:
