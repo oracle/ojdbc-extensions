@@ -1,14 +1,11 @@
 /*
- ** Copyright (c) 2023 Oracle and/or its affiliates.
+ ** Copyright (c) 2025 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
- ** Subject to the condition set forth below, permission is hereby granted to
- *  any
- ** person obtaining a copy of this software, associated documentation and/or
- *  data
- ** (collectively the "Software"), free of charge and under any and all
- * copyright
+ ** Subject to the condition set forth below, permission is hereby granted to any
+ ** person obtaining a copy of this software, associated documentation and/or data
+ ** (collectively the "Software"), free of charge and under any and all copyright
  ** rights in the Software, and any and all patent rights owned or freely
  ** licensable by each licensor hereunder covering either (i) the unmodified
  ** Software as contributed to or provided by such licensor, or (ii) the Larger
@@ -16,8 +13,7 @@
  **
  ** (a) the Software, and
  ** (b) any piece of software and/or hardware listed in the lrgrwrks.txt file if
- ** one is included with the Software (each a "Larger Work" to which the
- * Software
+ ** one is included with the Software (each a "Larger Work" to which the Software
  ** is contributed by such licensors),
  **
  ** without restriction, including without limitation the rights to copy, create
@@ -35,13 +31,60 @@
  ** IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  ** FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  ** AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- ** LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM,
- ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- *  THE
+ ** LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
+
 package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.resource;
 
-public class SimpleVaultDedicatedPasswordProviderExample {
+import oracle.jdbc.datasource.impl.OracleDataSource;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Properties;
+
+/**
+ * Example demonstrating how to use the HCP Vault Dedicated Password Provider
+ * with Oracle JDBC to securely retrieve a database password from HCP Vault Dedicated.
+ */
+public class SimplePasswordProviderExample {
+  private static final String DB_URL = "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=your_db_host))(connect_data=(service_name=your_service_name))(security=(ssl_server_dn_match=yes)))";
+  private static final String JDBC_URL = "jdbc:oracle:thin:@" + DB_URL;
+
+  public static void main(String[] args) throws SQLException {
+    try {
+      OracleDataSource ds = new OracleDataSource();
+      ds.setURL(JDBC_URL);
+      ds.setUser("DB_USER");
+
+      Properties connectionProps = new Properties();
+      connectionProps.put("oracle.jdbc.provider.password", "ojdbc-provider-hcpvault-dedicated-password");
+      connectionProps.put("oracle.jdbc.provider.password.secretPath", "secret/data/db_password");
+      connectionProps.put("oracle.jdbc.provider.password.fieldName", "password");
+
+      // TLS Configuration for secure connection
+      connectionProps.put("oracle.jdbc.provider.tlsConfiguration",
+              "ojdbc-provider-hcpvault-dedicated-tls");
+      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.secretPath",
+              "secret/data/wallet_sso");
+      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.type", "SSO");
+
+      ds.setConnectionProperties(connectionProps);
+
+      try (Connection cn = ds.getConnection()) {
+        String connectionString = cn.getMetaData().getURL();
+        System.out.println("Connected to: " + connectionString);
+        Statement st = cn.createStatement();
+        ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
+        if (rs.next()) {
+          System.out.println(rs.getString(1));
+        }
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException("Connection failed: ", e);
+    }
+  }
 }

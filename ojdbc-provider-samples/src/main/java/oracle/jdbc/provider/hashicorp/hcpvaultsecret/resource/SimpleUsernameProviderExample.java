@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2023 Oracle and/or its affiliates.
+ ** Copyright (c) 2025 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -35,7 +35,55 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
+
 package oracle.jdbc.provider.hashicorp.hcpvaultsecret.resource;
 
+import oracle.jdbc.datasource.impl.OracleDataSource;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Properties;
+
+/**
+ * Example demonstrating how to use the HCP Vault Secrets Username Provider
+ * with Oracle JDBC to securely retrieve a database username from HCP Vault Secrets.
+ */
 public class SimpleUsernameProviderExample {
+  private static final String DB_URL = "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=your_db_host))(connect_data=(service_name=your_service_name))(security=(ssl_server_dn_match=yes)))";
+  private static final String JDBC_URL = "jdbc:oracle:thin:@" + DB_URL;
+
+  public static void main(String[] args) throws SQLException {
+    try {
+      OracleDataSource ds = new OracleDataSource();
+      ds.setURL(JDBC_URL);
+      ds.setPassword("DB_PASSWORD");
+
+      Properties connectionProps = new Properties();
+      connectionProps.put("oracle.jdbc.provider.username", "ojdbc-provider-hcpvault-secrets-username");
+      connectionProps.put("oracle.jdbc.provider.username.secretName", "secret-name");
+
+      // TLS Configuration for secure connection
+      connectionProps.put("oracle.jdbc.provider.tlsConfiguration",
+        "ojdbc-provider-hcpvault-secrets-tls");
+      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.secretName",
+        "secret-name");
+      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.type", "SSO");
+
+      ds.setConnectionProperties(connectionProps);
+
+      try (Connection cn = ds.getConnection()) {
+        String connectionString = cn.getMetaData().getURL();
+        System.out.println("Connected to: " + connectionString);
+        Statement st = cn.createStatement();
+        ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
+        if (rs.next()) {
+          System.out.println(rs.getString(1));
+        }
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException("Connection failed: ", e);
+    }
+  }
 }

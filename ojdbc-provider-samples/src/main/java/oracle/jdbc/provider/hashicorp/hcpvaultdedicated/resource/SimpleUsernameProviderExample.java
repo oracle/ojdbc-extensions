@@ -36,7 +36,7 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.hashicorp.hcpvaultsecret.resource;
+package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.resource;
 
 import oracle.jdbc.datasource.impl.OracleDataSource;
 
@@ -47,10 +47,10 @@ import java.sql.Statement;
 import java.util.Properties;
 
 /**
- * Example demonstrating how to use the HCP Vault Secrets Password Provider
- * with Oracle JDBC to securely retrieve a database password from HCP Vault Secrets.
+ * Example demonstrating how to use the HCP Vault Dedicated Username Provider
+ * with Oracle JDBC to securely retrieve a database username from HCP Vault Dedicated.
  */
-public class SimplePasswordProviderExample {
+public class SimpleUsernameProviderExample {
   private static final String DB_URL = "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=your_db_host))(connect_data=(service_name=your_service_name))(security=(ssl_server_dn_match=yes)))";
   private static final String JDBC_URL = "jdbc:oracle:thin:@" + DB_URL;
 
@@ -58,17 +58,17 @@ public class SimplePasswordProviderExample {
     try {
       OracleDataSource ds = new OracleDataSource();
       ds.setURL(JDBC_URL);
-      ds.setUser("DB_USER");
+      ds.setPassword("DB_PASSWORD");
 
       Properties connectionProps = new Properties();
-      connectionProps.put("oracle.jdbc.provider.password", "ojdbc-provider-hcpvault-secrets-password");
-      connectionProps.put("oracle.jdbc.provider.password.secretName", "secret-password");
+      connectionProps.put("oracle.jdbc.provider.username", "ojdbc-provider-hcpvault-dedicated-username");
+      connectionProps.put("oracle.jdbc.provider.username.secretPath", "secret/data/db_username");
 
       // TLS Configuration for secure connection
       connectionProps.put("oracle.jdbc.provider.tlsConfiguration",
-        "ojdbc-provider-hcpvault-secrets-tls");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.secretName",
-        "secret-name");
+              "ojdbc-provider-hcpvault-dedicated-tls");
+      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.secretPath",
+              "secret/data/wallet_sso");
       connectionProps.put("oracle.jdbc.provider.tlsConfiguration.type", "SSO");
 
       ds.setConnectionProperties(connectionProps);

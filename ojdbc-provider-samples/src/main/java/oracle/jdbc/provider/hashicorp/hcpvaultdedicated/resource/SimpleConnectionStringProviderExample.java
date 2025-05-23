@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2023 Oracle and/or its affiliates.
+ ** Copyright (c) 2025 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -35,7 +35,60 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
+
 package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.resource;
 
+import oracle.jdbc.datasource.impl.OracleDataSource;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Properties;
+
+/**
+ * Example demonstrating how to configure Oracle JDBC with the HCP Vault Dedicated
+ * Connection String Provider to retrieve connection strings from a tnsnames.ora
+ * file stored in HCP Vault Dedicated.
+ */
 public class SimpleConnectionStringProviderExample {
+  public static void main(String[] args) throws SQLException {
+    try {
+      OracleDataSource ds = new OracleDataSource();
+      ds.setURL("jdbc:oracle:thin:@");
+      ds.setUser("DB_USERNAME");
+      ds.setPassword("DB_PASSWORD");
+
+      Properties connectionProps = new Properties();
+
+      // Connection String Provider for retrieving tnsnames.ora content
+      connectionProps.put("oracle.jdbc.provider.connectionString",
+              "ojdbc-provider-hcpvault-dedicated-tnsnames");
+      connectionProps.put("oracle.jdbc.provider.connectionString.secretPath",
+              "secret/data/tnsnames");
+      connectionProps.put("oracle.jdbc.provider.connectionString.tnsAlias",
+              "db_alias");
+
+      // TLS Configuration for secure connection
+      connectionProps.put("oracle.jdbc.provider.tlsConfiguration",
+              "ojdbc-provider-hcpvault-dedicated-tls");
+      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.secretPath",
+              "secret/data/wallet_sso");
+      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.type", "SSO");
+
+      ds.setConnectionProperties(connectionProps);
+
+      try (Connection cn = ds.getConnection()) {
+        String query = "SELECT 'Hello, db' FROM sys.dual";
+        try (Statement st = cn.createStatement();
+             ResultSet rs = st.executeQuery(query)) {
+          if (rs.next()) {
+            System.out.println(rs.getString(1));
+          }
+        }
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException("Connection failed: ", e);
+    }
+  }
 }
