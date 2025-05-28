@@ -12,6 +12,8 @@ Provider</a></dt>
 <dt><a href="#aws-secrets-manager-config-provider">AWS Secrets Manager Configuration 
 Provider</a></dt>
 <dd>Provides connection properties managed by the Secrets Manager service</dd>
+<dt><a href="#aws-appconfig-freeform-config-provider">AWS AppConfig Freeform Configuration Provider</a></dt>
+<dd>Provides connection properties managed by the AWS AppConfig Freeform Configuration service</dd>
 <dt><a href="#common-parameters-for-centralized-config-providers">Common Parameters for Centralized Config Providers</a></dt>
 <dd>Common parameters supported by the config providers</dd>
 <dt><a href="#caching-configuration">Caching configuration</a></dt>
@@ -151,6 +153,28 @@ jdbc:oracle:thin:@config-awssecretsmanager://{secret-name}
 </pre>
 
 The JSON Payload retrieved by AWS Secrets Manager Provider follows the same format in [AWS S3 Configuration Provider](#json-payload-format).
+
+## AWS AppConfig Freeform Config Provider
+The Oracle DataSource uses the prefix `jdbc:oracle:thin:@config-awsappconfig` to identify that the freeform
+configuration parameters should be loaded using AWS AppConfig. Users need to specify the application identifier or name, along with the environment and configuration profile
+
+A URL with the following format is valid:
+
+<pre>
+jdbc:oracle:thin:@config-awsappconfig://{application-identifier}
+</pre>
+
+
+The `{application-identifier}` can be either the application ID or name as defined in [AWS AppConfig](https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/services/appconfigdata/AppConfigDataClient.html). 
+The environment and configuration profile can be specified in the URL,
+
+for example:
+<pre>
+jdbc:oracle:thin:@config-awsappconfig://app-name?appconfig_environment=your-environment&appconfig_profile=your-profile
+</pre>
+
+Alternatively, you can set them via system properties (`aws.appconfig.environment, aws.appconfig.profile`) or
+environment variables (`AWS_APP_CONFIG_ENVIRONMENT, AWS_APP_CONFIG_PROFILE`).
 
 ## Common Parameters for Centralized Config Providers
 AWS S3 Configuration Provider and AWS Secrets Manager Configuration Provider
