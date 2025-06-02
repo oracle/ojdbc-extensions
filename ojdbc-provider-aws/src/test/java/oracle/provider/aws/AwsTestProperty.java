@@ -40,6 +40,7 @@ package oracle.provider.aws;
 public enum AwsTestProperty {
   AWS_S3_URL,
   AWS_SECRETS_MANAGER_URL,
+  AWS_APP_CONFIG_URL,
   AWS_REGION,
   DB_CREDENTIALS_SECRET_NAME,
   TNSNAMES_SECRET_NAME,
