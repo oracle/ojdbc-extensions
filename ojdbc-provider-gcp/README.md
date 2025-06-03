@@ -19,9 +19,9 @@ Provider</a></dt>
 ## Resource Providers
 
 <dl>
-<dt><a href="#vault-password-provider">Secret Manager Password Provider</a></dt>
+<dt><a href="#secret-manager-password-provider">Secret Manager Password Provider</a></dt>
 <dd>Provides passwords managed by the Secret Manager service</dd>
-<dt><a href="#vault-username-provider">Secret Manager Username Provider</a></dt>
+<dt><a href="#secret-manager-username-provider">Secret Manager Username Provider</a></dt>
 <dd>Provides usernames managed by the Secret Manager service</dd>
 <dt><a href="#secret-manager-tcps-wallet-provider">Secret Manager TCPS Wallet Provider</a></dt>
 <dd>Provides TCPS/TLS wallet for secure connections to an Autonomous Database from the Secret Manager service</dd>
@@ -44,7 +44,7 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-gcp</artifactId>
-  <version>1.0.1</version>
+  <version>1.0.5</version>
 </dependency>
 ```
 
@@ -170,10 +170,10 @@ the number of RPC requests to remote location. See
 [Caching configuration](../ojdbc-provider-azure/README.md#caching-configuration) for more 
 details of the caching mechanism.
 
-## Vault Password Provider
+## Secret Manager Password Provider
 The Vault Password Provider provides Oracle JDBC with a password that is managed
 by the GCP Secret Manager service. This is a Resource Provider identified by the
-name `ojdbc-provider-gcp-secret-password`.
+name `ojdbc-provider-gcp-secretmanager-password`.
 
 This provider requires the parameters listed below.
 <table>
@@ -196,10 +196,10 @@ An example of a
 that configures this provider can be found in
 [example-vault.properties](example-vault.properties).
 
-## Vault Username Provider
+## Secret Manager Username Provider
 The Vault Username Provider provides Oracle JDBC with a username that is managed by the
 GCP Secret Manager service. This is a Resource Provider identified by the name
-`ojdbc-provider-gcp-secret-username`.
+`ojdbc-provider-gcp-secretmanager-username`.
 
 In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider
 also supports the parameters listed below.
