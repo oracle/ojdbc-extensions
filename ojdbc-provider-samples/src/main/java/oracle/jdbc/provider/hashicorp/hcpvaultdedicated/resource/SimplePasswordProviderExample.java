@@ -65,13 +65,6 @@ public class SimplePasswordProviderExample {
       connectionProps.put("oracle.jdbc.provider.password.secretPath", "secret/data/db_password");
       connectionProps.put("oracle.jdbc.provider.password.fieldName", "password");
 
-      // TLS Configuration for secure connection
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration",
-              "ojdbc-provider-hcpvault-dedicated-tls");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.secretPath",
-              "secret/data/wallet_sso");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.type", "SSO");
-
       ds.setConnectionProperties(connectionProps);
 
       try (Connection cn = ds.getConnection()) {

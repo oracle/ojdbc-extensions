@@ -64,9 +64,6 @@ public class SimpleUsernameProviderExample {
       connectionProps.put("oracle.jdbc.provider.username", "ojdbc-provider-aws-secrets-manager-username");
       connectionProps.put("oracle.jdbc.provider.username.secretName", "secret-name");
 
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration", "ojdbc-provider-aws-secrets-manager-tls");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.secretName", "secret-name");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.type", "SSO");
       ds.setConnectionProperties(connectionProps);
 
       try (Connection cn = ds.getConnection()) {

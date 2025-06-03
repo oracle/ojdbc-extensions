@@ -66,13 +66,6 @@ public class SimpleSEPSWalletProviderExample {
       connectionProps.put("oracle.jdbc.provider.username.secretPath", "secret/data/seps_credentials");
       connectionProps.put("oracle.jdbc.provider.password.secretPath", "secret/data/seps_credentials");
 
-      // TLS Configuration for secure connection
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration",
-              "ojdbc-provider-hcpvault-dedicated-tls");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.secretPath",
-              "secret/data/wallet_sso");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.type", "SSO");
-
       ds.setConnectionProperties(connectionProps);
 
       try (Connection cn = ds.getConnection()) {
