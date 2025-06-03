@@ -44,14 +44,11 @@ import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.spi.OracleConfigurationSecretProvider;
 import oracle.sql.json.OracleJsonObject;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Map;
 
 import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.FIELD_NAME;
 import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.PARAMETER_SET_PARSER;
 import static oracle.jdbc.provider.hashicorp.util.JsonUtil.extractSecret;
-import static oracle.jdbc.provider.util.FileUtils.isBase64Encoded;
 import static oracle.jdbc.provider.util.FileUtils.toBase64EncodedCharArray;
 
 /**
