@@ -44,8 +44,9 @@ import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 
-import java.util.Base64;
 import java.util.Map;
+
+import static oracle.jdbc.provider.util.FileUtils.toBase64EncodedCharArray;
 
 /**
  * A provider of Secret values from Azure Key Vault.
@@ -97,9 +98,7 @@ public final class AzureVaultSecretProvider
       .getContent()
       .getValue();
 
-    return Base64.getEncoder()
-      .encodeToString(secretString.getBytes())
-      .toCharArray();
+    return toBase64EncodedCharArray(secretString);
   }
 
   /**

@@ -38,6 +38,7 @@
 
 package oracle.jdbc.provider.util;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 /**
@@ -66,5 +67,26 @@ public final class FileUtils {
   public static byte[] decodeIfBase64(byte[] input) {
     return isBase64Encoded(input) ? Base64.getDecoder().decode(input)
             : input;
+  }
+
+  /**
+   * Converts a secret string to a Base64-encoded char array.
+   * If the secret is already Base64-encoded, it is returned as a char array.
+   * Otherwise, it is encoded to Base64.
+   *
+   * @param secretString The secret string to process
+   * @return A char array containing the Base64-encoded secret,
+   * or null if the input is null
+   */
+  public static char[] toBase64EncodedCharArray(String secretString) {
+    if (secretString == null) {
+      return null;
+    }
+    byte[] secretBytes = secretString.getBytes(StandardCharsets.UTF_8);
+    if (isBase64Encoded(secretBytes)) {
+      return secretString.toCharArray();
+    } else {
+      return Base64.getEncoder().encodeToString(secretBytes).toCharArray();
+    }
   }
 }

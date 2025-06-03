@@ -44,12 +44,12 @@ import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.spi.OracleConfigurationSecretProvider;
 import oracle.sql.json.OracleJsonObject;
 
-import java.util.Base64;
 import java.util.Map;
 
 import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.FIELD_NAME;
 import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.PARAMETER_SET_PARSER;
 import static oracle.jdbc.provider.hashicorp.util.JsonUtil.extractSecret;
+import static oracle.jdbc.provider.util.FileUtils.toBase64EncodedCharArray;
 
 /**
  * <p>
@@ -98,9 +98,7 @@ public class DedicatedVaultJsonSecretProvider implements OracleConfigurationSecr
     String fieldName = parameterSet.getOptional(FIELD_NAME);
     String extractedSecret = extractSecret(secretJsonObj, fieldName);
 
-    return Base64.getEncoder()
-      .encodeToString(extractedSecret.getBytes())
-      .toCharArray();
+    return toBase64EncodedCharArray(extractedSecret);
   }
 
   @Override
