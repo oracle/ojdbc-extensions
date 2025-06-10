@@ -183,4 +183,21 @@ public class SecretsManagerTcpsProviderTest {
     assertThrows(IllegalStateException.class, () ->
             PROVIDER.getSSLContext(parameterValues));
   }
+
+  @Test
+  public void testValidTcpsWithEmptyFieldNameOnPlainTextSecret() {
+    Map<String, String> testParameters = new HashMap<>();
+    testParameters.put("secretName",
+      TestProperties.getOrAbort(AwsTestProperty.PEM_WALLET_SECRET_NAME));
+    testParameters.put("walletPassword",
+      TestProperties.getOrAbort(AwsTestProperty.WALLET_PASSWORD));
+    testParameters.put("type", "PEM");
+    testParameters.put("awsRegion",
+      TestProperties.getOrAbort(AwsTestProperty.AWS_REGION));
+    testParameters.put("fieldName", "");
+
+    Map<Parameter, CharSequence> parameterValues = createParameterValues(PROVIDER, testParameters);
+    assertNotNull(PROVIDER.getSSLContext(parameterValues));
+  }
+
 }
