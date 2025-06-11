@@ -73,6 +73,17 @@ public class AuthenticationDetailsFactoryTest {
   }
 
   /**
+   * Verifies partial API_KEY credentials fallback to config file.
+   */
+  @Test
+  public void testApiKeyPartialCredentials() {
+    verifyAuthenticationDetails(
+      buildParameterSet(AuthenticationMethod.API_KEY)
+        .add("Test OCI_USER", AuthenticationDetailsFactory.USER_ID, "dummy-user-id")
+        .build());
+  }
+
+  /**
    * Verifies {@link AuthenticationMethod#CLOUD_SHELL}
    */
   @Test

@@ -239,23 +239,24 @@ public final class AuthenticationDetailsFactory
    * Returns authentication details using the following API key-based
    * methods:
    * <ol>
-   *   <li>Simple authentication: if any of the credentials, including tenant ID
-   *       , user ID, fingerprint, private key, or passphrase, are provided in
-   *       the given {@code parameters}</li>
+   *   <li>Simple authentication: if all required credentials (tenant ID,
+   *   user ID, fingerprint, and private key are provided in the given
+   *   {@code parameters}</li>
    *   <li>Config File (API key) authentication: otherwise</li>
    * </ol>
    * @return API key-based authentication details
    */
   private static AuthenticationDetailsProvider
     apiKeyBasedAuthentication(ParameterSet parameters) {
-    if (parameters.contains(TENANT_ID)
-      || parameters.contains(USER_ID)
-      || parameters.contains(FINGERPRINT)
-      || parameters.contains(PRIVATE_KEY)
-      || parameters.contains(PASS_PHRASE)
-      || parameters.contains(REGION)) {
+    boolean hasAllRequiredKeys =
+      parameters.contains(TENANT_ID)
+      && parameters.contains(USER_ID)
+      && parameters.contains(FINGERPRINT)
+      && parameters.contains(PRIVATE_KEY);
+
+    if(hasAllRequiredKeys)
       return simpleAuthentication(parameters);
-    }
+
     return configFileAuthentication(parameters);
   }
 
