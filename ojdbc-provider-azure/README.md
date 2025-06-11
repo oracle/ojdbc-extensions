@@ -105,7 +105,7 @@ The sample code below executes as expected with the previous configuration (and 
 ```
 ### Password JSON Object
 
-For the JSON type of provider (Azure App Configuration, Azure Key Vault, HTTP/HTTPS, File) the password is an object itself with the following spec:
+For the JSON type of provider (Azure Key Vault, HTTP/HTTPS, File) the password is an object itself with the following spec:
 
 - `type`
   - Mandatory
@@ -137,7 +137,7 @@ For the JSON type of provider (Azure App Configuration, Azure Key Vault, HTTP/HT
 
 The `oracle.net.wallet_location` connection property is not allowed in the `jdbc` object due to security reasons. Instead, users should use the `wallet_location` object to specify the wallet in the configuration.
 
-For the JSON type of provider (Azure App Configuration, HTTPS, File) the `wallet_location` is an object itself with the same spec as the [password JSON object](#password-json-object) mentioned above.
+For the JSON type of provider (Azure Key Vault, HTTPS, File) the `wallet_location` is an object itself with the same spec as the [password JSON object](#password-json-object) mentioned above.
 
 The value stored in the secret should be the Base64 representation of the bytes in `cwallet.sso`. This is equivalent to setting the `oracle.net.wallet_location` connection property in a regular JDBC application using the following format:
 
