@@ -161,10 +161,23 @@ The `oracle.net.wallet_location` connection property is not allowed in the `jdbc
 
 For the JSON type of provider (AWS S3, HTTPS, File) the wallet_location is an object itself with the same spec as the [password JSON object](#password-json-object) mentioned above.
 
-The value stored in the secret should be the Base64 representation of the bytes in `cwallet.sso`. This is equivalent to setting the `oracle.net.wallet_location` connection property in a regular JDBC application using the following format:
+The value stored in the secret should be the Base64 representation of of a supported wallet file. This is equivalent to setting the `oracle.net.wallet_location` connection property in a regular JDBC application using the following format:
 
 ```
-data:;base64,<Base64 representation of the bytes in cwallet.sso>
+data:;base64,<Base64 representation of the wallet file>
+```
+
+#### Supported formats
+- `cwallet.sso` (SSO wallet)
+- `ewallet.pem` (PEM wallet)
+
+If the PEM wallet is encrypted, you must also set the wallet password using the `oracle.net.wallet_password` property.
+This property should be included inside the jdbc object of the JSON payload:
+
+```
+"jdbc": {
+  "oracle.net.wallet_password": "<your-password>"
+}
 ```
 
 <i>*Note: When storing a wallet in AWS Secrets Manager, store the raw Base64-encoded wallet bytes directly. The provider will automatically detect and handle the encoding correctly.</i>
