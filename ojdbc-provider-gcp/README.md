@@ -171,12 +171,25 @@ For the JSON type of provider (GCP Cloud Storage, HTTPS, File) the `wallet_locat
 
 The value stored in the secret can be either:
 
-  - The Base64 representation of the bytes in cwallet.sso.
-  - The raw bytes of the cwallet.sso file, stored as an imported file.
+  - The Base64 representation of a supported wallet file.
+  - The raw bytes of the wallet file, stored as an imported secret.
 
-In both cases, the provider will automatically handle the content. If the secret contains raw bytes (e.g., an imported cwallet.sso file), the provider will perform Base64 encoding as needed. The resulting format is equivalent to setting the oracle.net.wallet_location connection property in a regular JDBC application using the following format:
+In both cases, the provider will automatically handle the content. If the secret contains raw bytes (e.g., an imported `cwallet.sso` or `ewallet.pem` file), the provider will perform Base64 encoding as needed. The resulting format is equivalent to setting the oracle.net.wallet_location` connection property in a regular JDBC application using the following format:
 ```
-data:;base64,<Base64 representation of the bytes in cwallet.sso>
+data:;base64,<Base64 representation of the wallet file>
+```
+
+#### Supported formats
+- `cwallet.sso` (SSO wallet)
+- `ewallet.pem` (PEM wallet)
+
+If the PEM wallet is encrypted, you must also set the wallet password using the `oracle.net.wallet_password` property.
+This property should be included inside the jdbc object of the JSON payload:
+
+```
+"jdbc": {
+  "oracle.net.wallet_password": "<your-password>"
+}
 ```
 
 <i>*Note: When storing a wallet in GCP Secret Manager, you can either store the raw bytes of the cwallet.sso file directly or provide the Base64-encoded string. The provider will detect the format and handle the encoding appropriately.</i>
