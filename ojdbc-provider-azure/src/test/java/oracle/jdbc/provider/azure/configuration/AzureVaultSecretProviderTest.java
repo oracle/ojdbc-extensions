@@ -75,6 +75,32 @@ public class AzureVaultSecretProviderTest {
     )));
   }
 
+  /**
+   * Verifies that calling getSecret(...) with an empty secret name
+   * is rejected by throwing an IllegalArgumentException whose message
+   * indicates a missing secret name.
+   */
+  @Test
+  public void testEmptySecretNameThrows() {
+    IllegalArgumentException ex = Assertions.assertThrows(
+      IllegalArgumentException.class,
+        () -> PROVIDER.getSecret(
+          constructSecretProperties(
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL),
+            "",   // <— empty secret path
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_CLIENT_ID),
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_CLIENT_SECRET),
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_TENANT_ID)
+          )
+        ),
+            "Expected getSecret(...) to throw when secret name is empty"
+    );
+    Assertions.assertTrue(
+      ex.getMessage().toLowerCase().contains("missing secret name"),
+      "Exception message should mention 'secret name', but was: " + ex.getMessage()
+    );
+  }
+
   private Map<String,String> constructSecretProperties(
     String vaultUrl, String secretName, String clientId, String clientSecret, String tenantId) {
     Map<String,String> secretProperties = new HashMap<>();

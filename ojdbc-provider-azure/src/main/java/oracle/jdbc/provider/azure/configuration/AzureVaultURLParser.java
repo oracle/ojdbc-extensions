@@ -70,12 +70,15 @@ public class AzureVaultURLParser {
 
     String path = urlBuilder.getPath();
 
-    if (!path.contains("/secrets"))
+    if (!path.contains("/secrets/"))
       throw new IllegalArgumentException("The Vault Secret URI should " +
         "contain \"/secrets\" following by the name of the Secret: " +
         vaultSecretUri);
 
-    String secretName = path.replace("/secrets", "");
+    String secretName = path.replace("/secrets/", "");
+    if (secretName.trim().isEmpty()){
+      throw new IllegalArgumentException("Missing secret name in Vault URI: " + vaultSecretUri);
+    }
     builder.add("value", KeyVaultSecretFactory.SECRET_NAME, secretName);
   }
 }
