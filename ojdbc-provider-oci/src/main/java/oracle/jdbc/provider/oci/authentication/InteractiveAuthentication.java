@@ -38,15 +38,13 @@
 
 package oracle.jdbc.provider.oci.authentication;
 
-import com.oracle.bmc.Region;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpServer;
-import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.provider.util.JsonWebTokenParser;
+import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
-import java.awt.*;
+import java.awt.Desktop;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -63,8 +61,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-import static java.lang.String.format;
-import static java.nio.charset.StandardCharsets.UTF_8;
+import com.oracle.bmc.Region;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpServer;
+
+import oracle.jdbc.provider.cache.CachedResourceFactory.ResourceRequestFailedException;
+import oracle.jdbc.provider.cache.CachedResourceFactory.ResourceRequestFailedException.Cause;
+import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.provider.util.JsonWebTokenParser;
 
 /**
  * <p>
@@ -188,17 +192,11 @@ final class InteractiveAuthentication {
    * an {@code IllegalStateException} if the server receives an unexpected
    * request.
    */
-  private static CompletableFuture<LoginResult> acceptRedirect(
+  @SuppressWarnings("restriction")
+private static CompletableFuture<LoginResult> acceptRedirect(
     InetSocketAddress redirectAddress) {
 
-    final HttpServer server;
-    try {
-      server = HttpServer.create(redirectAddress, 0);
-    }
-    catch (IOException ioException) {
-      throw new IllegalStateException(
-        "Failed to create an HTTP server", ioException);
-    }
+    final HttpServer server = tryCreateServer(redirectAddress);
 
     CompletableFuture<LoginResult> loginFuture = new CompletableFuture<>();
 
@@ -231,6 +229,41 @@ final class InteractiveAuthentication {
     loginFuture.whenComplete((result, error) -> server.stop(0));
 
     return loginFuture;
+  }
+
+  private static HttpServer tryCreateServer(InetSocketAddress redirectAddress) throws ResourceRequestFailedException {
+	final int maxAttempts = 5;
+	int attempts = 0;
+	int backoff = 2 << Math.max(maxAttempts, 6);  // at least 64 seconds for the first one.
+	/* the idea is that contention should be rare and each iteration
+	 * should be closer and closer to the other process/thread releasing the bind port.
+	 * So start the backoff relatively large and shrink every time it fails
+	 * being "optimistic" that it will be released soon.
+	 */
+	HttpServer server = null;
+	while (attempts++ < maxAttempts) {
+		try {
+			return HttpServer.create(redirectAddress, 0);
+		}
+		catch (IOException ioe) {
+			if (ioe instanceof BindException) {
+				server =  null;
+				try {
+					Thread.sleep(backoff*1000);
+					backoff >>= 2;
+				} catch (InterruptedException e) {
+					throw new IllegalStateException("Failed to create an HTTP server",e);
+				}
+			}
+			else {
+				throw new ResourceRequestFailedException(
+						"Error binding token response http server on " +redirectAddress.toString(), ioe, Cause.UNKNOWN);
+			}
+		}
+	}
+	throw new ResourceRequestFailedException(
+			"Failed to create an HTTP server. Could not bind port: "+redirectAddress.getPort(), 
+				null, Cause.BIND_PORT_FAILED);
   }
 
   /**

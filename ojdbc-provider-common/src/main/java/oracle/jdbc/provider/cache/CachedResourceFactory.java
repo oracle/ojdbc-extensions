@@ -38,17 +38,19 @@
 
 package oracle.jdbc.provider.cache;
 
-import oracle.jdbc.provider.factory.Resource;
-import oracle.jdbc.provider.factory.ResourceFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
+
+import oracle.jdbc.provider.factory.Resource;
+import oracle.jdbc.provider.factory.ResourceFactory;
+import oracle.jdbc.provider.parameter.ParameterSet;
 
 /**
  * <p>
@@ -94,7 +96,7 @@ public final class CachedResourceFactory<T> implements ResourceFactory<T> {
    * Retains cached values. The least recently used value is evicted when the
    * number of values exceeds the {@link #CACHE_SIZE}.
    */
-  private final LruCache<ParameterSet, Future<Resource<T>>> values;
+  private final LruCache<ParameterSet, OneThrowFuture<Resource<T>>> values;
 
   /**
    * Constructs a factory that caches resources requested from the provided
@@ -155,7 +157,7 @@ public final class CachedResourceFactory<T> implements ResourceFactory<T> {
     Objects.requireNonNull(parameterSet, "parameterSet is null");
 
     // Attempt to get a cached value
-    Future<Resource<T>> existingResourceFuture;
+    OneThrowFuture<Resource<T>> existingResourceFuture;
     lock.lock();
     try {
       existingResourceFuture = values.get(parameterSet);
@@ -166,17 +168,21 @@ public final class CachedResourceFactory<T> implements ResourceFactory<T> {
 
     // Return the value if it is present and still valid
     if (existingResourceFuture != null) {
-      Resource<T> resource = await(existingResourceFuture);
-
-      if (resource.isValid())
-        return resource;
+      if (!existingResourceFuture.wasThrown()) {
+    	  // avoid the infinite loop of constantly throwing
+    	  // the same error; only throw an existing future's exception
+    	  // once
+    	  Resource<T> resource = await(existingResourceFuture);
+    	  if (resource.isValid())
+    		  return resource;
+      }
     }
 
     // Create a task to request a new value
-    FutureTask<Resource<T>> newResourceTask =
-      new FutureTask<>(() -> resourceFactory.request(parameterSet));
+    OneThrowFutureTask<Resource<T>> newResourceTask =
+      new OneThrowFutureTask<>(() -> resourceFactory.request(parameterSet));
 
-    Future<Resource<T>> newResourceFuture;
+    OneThrowFuture<Resource<T>> newResourceFuture;
     lock.lock();
     try {
       // Update the map, unless another thread has already done so
@@ -219,22 +225,29 @@ public final class CachedResourceFactory<T> implements ResourceFactory<T> {
    * Returns or throws the result of a {@code future}, blocking the current
    * thread until the future is complete.
    */
-  private Resource<T> await(Future<Resource<T>> future) {
+  private Resource<T> await(OneThrowFuture<Resource<T>> future) {
     try {
       return future.get();
     }
     catch (ExecutionException executionException) {
+      future.thrown();
       Throwable cause = executionException.getCause();
 
-      if (cause instanceof Error)
+      if (cause instanceof Error) {
         throw (Error) cause;
-      else if (cause instanceof IllegalStateException)
+      }
+      else if (cause instanceof IllegalStateException) {
         throw (IllegalStateException) cause;
-      else
-        throw new IllegalStateException(cause);
+      }
+      else {
+        throw new ResourceRequestFailedException("Unexpected exception during resource requst", cause, 
+        		ResourceRequestFailedException.Cause.UNKNOWN);
+      }
     }
     catch (InterruptedException interruptedException) {
-      throw new IllegalStateException(interruptedException);
+      throw new ResourceRequestFailedException(
+    		  "Interrupted while servicing request", interruptedException, 
+    		  		ResourceRequestFailedException.Cause.INTERRUPTED);
     }
   }
 
@@ -270,5 +283,57 @@ public final class CachedResourceFactory<T> implements ResourceFactory<T> {
     public boolean removeEldestEntry(Map.Entry<K, V> entry) {
       return size() > maximumSize;
     }
+  }
+  
+  /**
+   * A future that which contains additional information about it's 
+   * fail state.  Specifically, allow us to track if it's get() has
+   * failed and thrown and exception before.
+   * @param <T>
+   */
+  interface OneThrowFuture<T> extends Future<T> {
+	  public boolean wasThrown();
+	  public void thrown();
+  }
+  
+  /**
+   * A FutureTask that supports OneThrowFuture semantics.
+ * @param <T>
+ */
+private static class OneThrowFutureTask<T> extends FutureTask<T> implements OneThrowFuture<T>{
+
+	private final AtomicBoolean wasThrown;
+
+	public OneThrowFutureTask(Callable<T> callable) {
+		super(callable);
+		this.wasThrown = new AtomicBoolean();
+	}
+	
+	public boolean wasThrown() {
+		return this.wasThrown.get();
+	}
+	
+	public void thrown() {
+		// latch: only set once.
+		this.wasThrown.compareAndSet(false, true);
+	}
+  }
+
+/**
+ * TODO: could/should this really be checked, given that it represents potentially "expected" failure conditions.
+ */
+public static class ResourceRequestFailedException extends IllegalStateException {
+	private static final long serialVersionUID = 1L;
+	public enum Cause {
+		BIND_PORT_FAILED, INTERRUPTED, UNKNOWN;
+	}
+	private final Cause failCause;
+	public ResourceRequestFailedException(String message, Throwable cause, Cause failCause) {
+		super(message, cause);
+		this.failCause = failCause;
+	}
+	public Cause getFailCause() {
+		return failCause;
+	}
   }
 }
