@@ -73,15 +73,6 @@ public class SimpleSEPSWalletProviderAzureExample {
       connectionProps.put("oracle.jdbc.provider.password.secretName",
               "your-seps-secret-name");
 
-      // TLS Configuration for secure connection
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration", "ojdbc-provider-azure-key-vault-tls");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.vaultUrl",
-              "https://your-vault-url.vault.azure.net");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.secretName",
-              "your-wallet-base64-secret-name");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.type",
-              "SSO");
-
       ds.setConnectionProperties(connectionProps);
 
       try (Connection cn = ds.getConnection()) {
