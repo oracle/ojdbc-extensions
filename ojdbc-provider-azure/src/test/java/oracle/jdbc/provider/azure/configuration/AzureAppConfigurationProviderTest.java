@@ -146,6 +146,12 @@ class AzureAppConfigurationProviderTest {
     }
   }
 
+  @Test
+  public void testInvalidConfiguration() {
+    String invalidUrl = "jdbc:oracle:thin:@config-azure://invalid-config";
+    assertThrows(SQLException.class, () -> tryConnection(invalidUrl), "Should throw an SQLException");
+  }
+
   /**
    * Helper function: try to get connection form specified url
    */

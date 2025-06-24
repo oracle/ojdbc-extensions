@@ -139,13 +139,14 @@ public final class TokenCredentialFactory
    * used are configured by the parameters of the given {@code parameters}.
    * Supported parameters are defined by the class variables in
    * {@link TokenCredentialFactory}.
-   * @param parameters parameters that configure credentials. Not null.
+   * @param parameterSet parameters that configure credentials. Not null.
    * @return Credentials configured by parameters
    */
   private static TokenCredential getCredential(ParameterSet parameterSet) {
 
     AzureAuthenticationMethod authenticationMethod =
-      parameterSet.getRequired(AUTHENTICATION_METHOD);
+      parameterSet.contains(AUTHENTICATION_METHOD)
+        ? parameterSet.getRequired(AUTHENTICATION_METHOD) : AzureAuthenticationMethod.DEFAULT;
 
     switch (authenticationMethod) {
       case DEFAULT:
@@ -227,7 +228,7 @@ public final class TokenCredentialFactory
    * the Azure SDK's
    * {@link com.azure.identity.EnvironmentCredential} class.
    * </p>
-   * @param parameterSet Optional parameters. Not null.
+   * @param parameters Optional parameters. Not null.
    * @return Credentials for a service principal. Not null.
    * @throws IllegalStateException If a required parameter is not configured.
    */
