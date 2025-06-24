@@ -70,12 +70,6 @@ public class SimpleSecretManagerUsernameProviderExample {
         "ojdbc-provider-gcp-secretmanager-username");
       connectionProps.put("oracle.jdbc.provider.username.secretVersionName",
         "projects/{your-project-id}/secrets/{your-secret-name}/versions/{version-number}");
-      // TLS Configuration Provider
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration",
-              "ojdbc-provider-gcp-secretmanager-tls");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.type","SSO");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.secretVersionName",
-              "projects/{your-project-id}/secrets/{your-secret-name}/versions/{version-number}");
       ds.setConnectionProperties(connectionProps);
 
       try (Connection cn = ds.getConnection()) {

@@ -88,12 +88,6 @@ public class SimpleSEPSWalletProviderWithIndexExample {
       connectionProps.put("oracle.jdbc.provider.username.connectionStringIndex","1");
       connectionProps.put("oracle.jdbc.provider.password.connectionStringIndex","1");
 
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration",
-              "ojdbc-provider-gcp-secretmanager-tls");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.secretVersionName",
-              "projects/{your-project-id}/secrets/{your-secret-name}/versions/{version-number}");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.type","SSO");
-
       ds.setConnectionProperties(connectionProps);
 
       try (Connection cn = ds.getConnection()) {
