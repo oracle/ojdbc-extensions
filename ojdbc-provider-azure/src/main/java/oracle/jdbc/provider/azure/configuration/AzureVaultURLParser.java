@@ -72,7 +72,7 @@ public class AzureVaultURLParser {
 
     if (!path.contains("/secrets/"))
       throw new IllegalArgumentException("The Vault Secret URI should " +
-        "contain \"/secrets\" following by the name of the Secret: " +
+        "contain \"/secrets\" followed by the name of the Secret: " +
         vaultSecretUri);
 
     String secretName = path.replace("/secrets/", "");
