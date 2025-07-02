@@ -58,6 +58,8 @@ import oracle.sql.json.OracleJsonObject;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.sql.SQLException;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -110,37 +112,42 @@ public class AzureAppConfigurationProvider
    *         Configuration
    */
   @Override
-  public Properties getConnectionProperties(String location) {
+  public Properties getConnectionProperties(String location) throws SQLException {
     // If the location was already consulted, re-use the properties
     Properties cachedProp = CACHE.get(location);
     if (Objects.nonNull(cachedProp)) {
       return cachedProp;
     }
 
-    Properties properties = getRemoteProperties(location);
-    if (properties.containsKey(CONFIG_TTL_JSON_OBJECT_NAME)) {
-      // Remove the TTL information from the properties, if presents
-      long configTimeToLive = Long.parseLong(
-        properties.getProperty(CONFIG_TTL_JSON_OBJECT_NAME));
+    try {
+      Properties properties = getRemoteProperties(location);
+      if (properties.containsKey(CONFIG_TTL_JSON_OBJECT_NAME)) {
+        // Remove the TTL information from the properties, if presents
+        long configTimeToLive = Long.parseLong(
+                properties.getProperty(CONFIG_TTL_JSON_OBJECT_NAME));
 
-      properties.remove(CONFIG_TTL_JSON_OBJECT_NAME);
+        properties.remove(CONFIG_TTL_JSON_OBJECT_NAME);
 
-      CACHE.put(
-        location,
-        properties,
-        configTimeToLive,
-        () -> this.refreshProperties(location),
-        MS_REFRESH_TIMEOUT,
-        MS_RETRY_INTERVAL);
-    } else {
-      CACHE.put(location,
-        properties,
-        () -> this.refreshProperties(location),
-        MS_REFRESH_TIMEOUT,
-        MS_RETRY_INTERVAL);
+        CACHE.put(
+                location,
+                properties,
+                configTimeToLive,
+                () -> this.refreshProperties(location),
+                MS_REFRESH_TIMEOUT,
+                MS_RETRY_INTERVAL);
+      } else {
+        CACHE.put(location,
+                properties,
+                () -> this.refreshProperties(location),
+                MS_REFRESH_TIMEOUT,
+                MS_RETRY_INTERVAL);
+      }
+
+      return properties;
+    } catch (UncheckedIOException | AzureException e) {
+      throw new SQLException("Unable to load Azure App Configuration at " + location, e
+      );
     }
-
-    return properties;
   }
 
   /**
