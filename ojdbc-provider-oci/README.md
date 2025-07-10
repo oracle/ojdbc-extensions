@@ -256,7 +256,12 @@ in Optional Parameters</td>
   <td><b>OCI_INSTANCE_PRINCIPAL</b></td>
   <td>Instance Principal Authentication</td>
   <td>&nbsp;</td>
-  <td>&nbsp;</td>
+  <td>
+    <code>OCI_INSTANCE_PRINCIPAL_TIMEOUT</code> <br>
+    <i>(Optional)</i> Specifies the maximum time, in seconds, to wait for the instance principal authentication process to complete.<br>
+    The value must be a valid integer (e.g., <code>5</code>, <code>30</code>). Decimal values are not allowed.<br>
+    <b>Default:</b> <code>5</code> seconds
+  </td>
 </tr>
 <tr>
   <td><b>OCI_RESOURCE_PRINCIPAL</b></td>
@@ -763,6 +768,15 @@ common set of parameters.
       DEFAULT
       </td>
     </tr>
+    <tr>
+      <td>instancePrincipalTimeout</td>
+      <td>
+        Specifies the maximum time, in seconds, to wait for instance principal authentication to complete.<br>
+        The value must be a valid integer (e.g., <code>5</code>, <code>10</code>). Decimal values are not accepted.
+      </td>
+      <td>A positive integer</td>
+      <td><code>5</code></td>
+    </tr>
   </tbody>
 </table>
 
@@ -815,7 +829,8 @@ OCI configuration file
 <dd>
 Authenticate as an <a href="https://docs.oracle.com/en-us/iaas/Content/Identity/Tasks/callingservicesfrominstances.htm">
 instance principal
-</a>.
+</a>.<br>
+You may optionally configure the timeout for this authentication using the <code>instancePrincipalTimeout</code> parameter.
 </dd>
 <dt>resource-principal</dt>
 <dd>
