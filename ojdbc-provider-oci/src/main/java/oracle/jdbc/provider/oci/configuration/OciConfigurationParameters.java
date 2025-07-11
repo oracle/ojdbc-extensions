@@ -92,6 +92,16 @@ public final class OciConfigurationParameters {
       .addParameter("OCI_FINGERPRINT", FINGERPRINT)
       .addParameter("OCI_KEY_FILE", PRIVATE_KEY)
       .addParameter("OCI_PASS_PHRASE", PASS_PHRASE)
+      .addParameter("OCI_INSTANCE_PRINCIPAL_TIMEOUT", INSTANCE_PRINCIPAL_TIMEOUT,
+         5,
+         s -> {
+           try {
+            return Integer.parseInt(s);
+           }catch (NumberFormatException e) {
+              throw new IllegalArgumentException( "Invalid value for " +
+                "OCI_INSTANCE_PRINCIPAL_TIMEOUT: " + s + ". The value must be an integer.");
+           }
+         })
       .build();
 
   /**
