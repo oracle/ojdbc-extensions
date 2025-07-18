@@ -161,7 +161,7 @@ configuration parameters should be loaded using AWS AppConfig. Users need to spe
 A URL with the following format is valid:
 
 <pre>
-jdbc:oracle:thin:@config-awsappconfig://{application-identifier}
+jdbc:oracle:thin:@config-awsappconfig://{application-identifier}[?appconfig_environment={your-environment}&appconfig_profile={your-profile}]
 </pre>
 
 
