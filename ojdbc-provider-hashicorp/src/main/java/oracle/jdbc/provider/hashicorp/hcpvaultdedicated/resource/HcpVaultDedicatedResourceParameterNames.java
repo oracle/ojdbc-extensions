@@ -36,27 +36,32 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.hashicorp.hcpvaultsecret.configuration;
+package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.resource;
 
 /**
- * Enumeration of test properties for HCP Vault.
+ * Centralized parameter name constants used by HCP Vault Dedicated resource providers.
  */
-public enum HcpVaultTestProperty {
-  HCP_APP_NAME,
+public class HcpVaultDedicatedResourceParameterNames {
 
-  HCP_ORG_ID,
+  private HcpVaultDedicatedResourceParameterNames() {}
 
-  HCP_PROJECT_ID,
+  public static final String VAULT_ADDR = "vaultAddr";
+  public static final String VAULT_NAMESPACE = "vaultNamespace";
+  public static final String VAULT_USERNAME = "vaultUsername";
+  public static final String VAULT_PASSWORD = "vaultPassword";
+  public static final String VAULT_TOKEN = "vaultToken";
+  public static final String ROLE_ID = "roleId";
+  public static final String SECRET_ID = "secretId";
+  public static final String USERPASS_AUTH_PATH = "userPassAuthPath";
+  public static final String APPROLE_AUTH_PATH = "appRoleAuthPath";
+  public static final String GITHUB_TOKEN = "githubToken";
+  public static final String GITHUB_AUTH_PATH = "githubAuthPath";
 
-  HCP_CLIENT_ID,
+  public static final String SECRET_PATH = "secretPath";
+  public static final String FIELD_NAME = "fieldName";
 
-  HCP_CLIENT_SECRET,
-
-  SECRET_NAME,
-
-  SECRET_NAME_WITH_MULTIPLE_KEYS,
-
-  KEY,
-
-  HCP_CREDENTIALS_FILE
+  public static final String TNS_ALIAS = "tnsAlias";
+  public static final String CONNECTION_STRING_INDEX = "connectionStringIndex";
+  public static final String WALLET_PASSWORD = "walletPassword";
+  public static final String TYPE = "type";
 }

@@ -36,31 +36,42 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.configuration;
+package oracle.jdbc.provider.aws.resource;
+
+import oracle.jdbc.spi.UsernameProvider;
+import java.util.Map;
 
 /**
- * Enumeration of test properties for Dedicated Vault.
+ * <p>
+ * A provider of username managed as secrets by AWS Secrets Manager.
+ * This class inherits parameters and behavior from {@link SecretsManagerSecretProvider}
+ * and {@link AwsResourceProvider}.
+ * </p><p>
+ * This class implements the {@link UsernameProvider} SPI defined by Oracle JDBC.
+ * It is designed to be located and instantiated by {@link java.util.ServiceLoader}.
+ * </p>
  */
-public enum DedicatedVaultTestProperty {
-  DEDICATED_VAULT_SECRET_PATH,
+public class SecretsManagerUsernameProvider
+  extends SecretsManagerSecretProvider
+  implements UsernameProvider {
 
-  DEDICATED_VAULT_SECRET_PATH_WITH_MULTIPLE_KEYS,
+  /**
+   * A public no-arg constructor used by {@link java.util.ServiceLoader} to
+   * construct an instance of this provider.
+   */
+  public SecretsManagerUsernameProvider() {
+    super("secrets-manager-username");
+  }
 
-  KEY,
-
-  VAULT_TOKEN,
-
-  VAULT_ADDR,
-
-  VAULT_USERNAME,
-
-  VAULT_PASSWORD,
-
-  VAULT_NAMESPACE,
-
-  ROLE_ID,
-
-  SECRET_ID,
-
-  GITHUB_TOKEN
+  /**
+   * Retrieves a username stored as a secret in AWS Secrets Manager.
+   *
+   * @param parameterValues A map of parameter names and values required for
+   * retrieving the secret. Must not be null.
+   * @return The secret value as the database username. Not null.
+   */
+  @Override
+  public String getUsername(Map<Parameter, CharSequence> parameterValues) {
+    return getSecret(parameterValues);
+  }
 }

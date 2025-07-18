@@ -44,7 +44,7 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-azure</artifactId>
-  <version>1.0.5</version>
+  <version>1.0.6</version>
 </dependency>
 ```
 
@@ -78,14 +78,14 @@ For example, let's suppose a URL like:
 jdbc:oracle:thin:@config-azure://myappconfig?key=/sales_app1/&label=dev
 </pre>
 
-And the configuration in App Configuration '**myappconfig**' as follows (note that some values such as password can be a reference to a Key Vault secret):
+And the configuration in App Configuration '**myappconfig**' as follows (note that some values such as password can be a reference to a Key Vault secret rather than a raw Key Vault URI):
 
 | Key                                       | Value                                                                                                                                                                    | Label |
 |-------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------| ----- |
 | /sales_app1/user                          | scott                                                                                                                                                                    | dev   |
 | /sales_app1/connect_descriptor            | (description=(address=(protocol=tcps)(port=1521)(host=adb.us-phoenix-1.oraclecloud.com))(connect_data=(service_name=gebqqvpozhjbqbs_dbtest_medium.adb.oraclecloud.com))) | dev   |
-| /sales_app1/password                      | {"uri":"myvault.vault.azure.net/secrets/mysecret"}                                                                                                                       | dev   |
-| /sales_app1/wallet_location               | {"uri":"myvault.vault.azure.net/secrets/mywallet"}                                                                                                                       | dev   |
+| /sales_app1/password                      | {"uri":"https://myvault.vault.azure.net/secrets/mysecret"}                                                                                                                       | dev   |
+| /sales_app1/wallet_location               | {"uri":"https://myvault.vault.azure.net/secrets/mywallet"}                                                                                                                       | dev   |
 | /sales_app1/jdbc/autoCommit               | false                                                                                                                                                                    | dev   |
 | /sales_app1/jdbc/oracle.jdbc.fanEnabled   | true                                                                                                                                                                     | dev   |
 | /sales_app1/jdbc/oracle.jdbc.loginTimeout | 20                                                                                                                                                                       | dev   |
@@ -103,6 +103,64 @@ The sample code below executes as expected with the previous configuration (and 
     if (rs.next())
       System.out.println("select sysdate from dual: " + rs.getString(1));
 ```
+### Password JSON Object
+
+For the JSON type of provider (Azure Key Vault, HTTP/HTTPS, File) the password is an object itself with the following spec:
+
+- `type`
+  - Mandatory
+  - Possible values
+    - `azurevault` (Azure Key Vault)
+    - `ocivault` (OCI Vault)
+    - `base64` (Base64)
+    - `awssecretsmanager` (AWS Secrets Manager)
+    - `hcpvaultdedicated` (HCP Vault Dedicated)
+    - `hcpvaultsecret` (HCP Vault Secrets)
+    - `gcpsecretmanager` (GCP Secret Manager)
+- `value`
+  - Mandatory
+  - Possible values
+    - Azure Key Vault URI (if azurevault)  
+    - OCID of the secret (if ocivault)
+    - Base64 Encoded password (if base64)
+    - AWS Secret name (if awssecretsmanager)
+    - Secret path (if hcpvaultdedicated)
+    - Secret name (if hcpvaultsecret)
+    - Secret name (if gcpsecretmanager)
+- `authentication`
+  - Optional
+  - Possible Values
+    - method
+    - optional parameters (depends on the cloud provider).
+
+### Wallet_location JSON Object
+
+The `oracle.net.wallet_location` connection property is not allowed in the `jdbc` object due to security reasons. Instead, users should use the `wallet_location` object to specify the wallet in the configuration.
+
+For the JSON type of provider (Azure Key Vault, HTTPS, File) the `wallet_location` is an object itself with the same spec as the [password JSON object](#password-json-object) mentioned above.
+
+The value stored in the secret should be the Base64 representation of a supported wallet file. This is equivalent to setting the `oracle.net.wallet_location` connection property in a regular JDBC application using the following format:
+
+```
+data:;base64,<Base64 representation of the wallet file>
+```
+
+#### Supported formats
+- `cwallet.sso` (SSO wallet)
+- `ewallet.pem` (PEM wallet)
+
+If the PEM wallet is encrypted, you must also set the wallet password using the `oracle.net.wallet_password` property.
+This property should be included inside the jdbc object of the JSON payload:
+
+```
+"jdbc": {
+  "oracle.net.wallet_password": "<your-password>"
+}
+```
+
+<i>*Note: When storing a wallet in Azure Key Vault, store the raw Base64-encoded wallet bytes directly. The provider will automatically detect and handle the encoding correctly.</i>
+
+
 ## Azure Vault Config Provider
 Similar to [OCI Vault Config Provider](../ojdbc-provider-oci/README.md#oci-vault-config-provider), JSON Payload can also be stored in the content of Azure Key Vault Secret.
 The Oracle Data Source uses a new prefix `jdbc:oracle:thin:@config-azurevault://`. Users only need to indicate the Vault Secret’s secret identifier using the following syntax, where option-value pairs separated by `&` are optional authentication parameters that vary by provider:

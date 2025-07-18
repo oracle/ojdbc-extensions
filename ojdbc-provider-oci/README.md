@@ -56,7 +56,7 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-oci</artifactId>
-  <version>1.0.5</version>
+  <version>1.0.6</version>
 </dependency>
 ```
 
@@ -157,19 +157,21 @@ For the JSON type of provider (OCI Object Storage, HTTPS, File) the password is 
 - `type`
   - Mandatory
   - Possible values:
-    - `ocivault`
-    - `azurevault`
-    - `base64`
-    - `awssecretsmanager`
-    - `hcpvaultdedicated`
-    - `hcpvaultsecret`
+    - `ocivault` (OCI Vault)
+    - `gcpsecretmanager` (GCP Secret Manager)
+    - `azurevault` (Azure Key Vault)
+    - `base64` (Base64)
+    - `awssecretsmanager` (AWS Secrets Manager)
+    - `hcpvaultdedicated` (HCP Vault Dedicated)
+    - `hcpvaultsecret` (HCP Vault Secrets)
 - `value`
   - Mandatory
   - Possible values:
     - OCID of the secret (if ocivault)
+    - Secret name (if gcpsecretmanager)
     - Azure Key Vault URI (if azurevault)
     - Base64 Encoded password (if base64)
-    - AWS resource name of the secret  (if awssecretsmanager)
+    - AWS Secret name (if awssecretsmanager)
     - Secret path (if hcpvaultdedicated)
     - Secret name (if hcpvaultsecret)
 - `authentication`
@@ -184,10 +186,23 @@ The "oracle.net.wallet_location" connection property is not allowed in the "jdbc
 
 For the JSON type of provider (OCI Object Storage, HTTPS, File) the wallet_location is an object itself with the same spec as the [password JSON object](#password-json-object) mentioned above.
 
-The value stored in the secret should be the Base64 representation of the bytes in cwallet.sso. This is equivalent to setting the "oracle.net.wallet_location" connection property in a regular JDBC application using the following format:
+The value stored in the secret should be the Base64 representation of a supported wallet file. This is equivalent to setting the "oracle.net.wallet_location" connection property in a regular JDBC application using the following format:
 
 ```
-data:;base64,<Base64 representation of the bytes in cwallet.sso>
+data:;base64,<Base64 representation of the wallet file>
+```
+
+#### Supported formats:
+- `cwallet.sso` (SSO Wallet)
+- `ewallet.pem`(PEM Wallet)
+
+If the PEM wallet is encrypted, you must also set the wallet password using the `oracle.net.wallet_password` property.
+This property should be included inside the "jdbc" object of the JSON payload.
+
+```
+"jdbc": {
+  "oracle.net.wallet_password": "<your-password>"
+}
 ```
 
 <i>*Note: When storing a wallet as a secret in OCI Vault, choose the Plain-Text secret type template instead of Base64 to prevent double decoding when the provider retrieves the value.</i> 
@@ -241,7 +256,12 @@ in Optional Parameters</td>
   <td><b>OCI_INSTANCE_PRINCIPAL</b></td>
   <td>Instance Principal Authentication</td>
   <td>&nbsp;</td>
-  <td>&nbsp;</td>
+  <td>
+    <code>OCI_INSTANCE_PRINCIPAL_TIMEOUT</code> <br>
+    <i>(Optional)</i> Specifies the maximum time, in seconds, to wait for the instance principal authentication process to complete.<br>
+    The value must be a valid integer (e.g., <code>5</code>, <code>30</code>). Decimal values are not allowed.<br>
+    <b>Default:</b> <code>5</code> seconds
+  </td>
 </tr>
 <tr>
   <td><b>OCI_RESOURCE_PRINCIPAL</b></td>
@@ -748,6 +768,15 @@ common set of parameters.
       DEFAULT
       </td>
     </tr>
+    <tr>
+      <td>instancePrincipalTimeout</td>
+      <td>
+        Specifies the maximum time, in seconds, to wait for instance principal authentication to complete.<br>
+        The value must be a valid integer (e.g., <code>5</code>, <code>10</code>). Decimal values are not accepted.
+      </td>
+      <td>A positive integer</td>
+      <td><code>5</code></td>
+    </tr>
   </tbody>
 </table>
 
@@ -800,7 +829,8 @@ OCI configuration file
 <dd>
 Authenticate as an <a href="https://docs.oracle.com/en-us/iaas/Content/Identity/Tasks/callingservicesfrominstances.htm">
 instance principal
-</a>.
+</a>.<br>
+You may optionally configure the timeout for this authentication using the <code>instancePrincipalTimeout</code> parameter.
 </dd>
 <dt>resource-principal</dt>
 <dd>

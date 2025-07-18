@@ -19,9 +19,9 @@ Provider</a></dt>
 ## Resource Providers
 
 <dl>
-<dt><a href="#vault-password-provider">Secret Manager Password Provider</a></dt>
+<dt><a href="#secret-manager-password-provider">Secret Manager Password Provider</a></dt>
 <dd>Provides passwords managed by the Secret Manager service</dd>
-<dt><a href="#vault-username-provider">Secret Manager Username Provider</a></dt>
+<dt><a href="#secret-manager-username-provider">Secret Manager Username Provider</a></dt>
 <dd>Provides usernames managed by the Secret Manager service</dd>
 <dt><a href="#secret-manager-tcps-wallet-provider">Secret Manager TCPS Wallet Provider</a></dt>
 <dd>Provides TCPS/TLS wallet for secure connections to an Autonomous Database from the Secret Manager service</dd>
@@ -44,7 +44,7 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-gcp</artifactId>
-  <version>1.0.1</version>
+  <version>1.0.6</version>
 </dependency>
 ```
 
@@ -109,6 +109,10 @@ And the JSON Payload for the file **payload_ojdbc_objectstorage.json** in the **
     "type": "gcpsecretmanager",
     "value": "projects/138028249883/secrets/test-secret/versions/1"
   },
+  "wallet_location": {
+    "type": "gcpsecretmanager",
+    "value": "projects/myproject/secrets/wallet-secret/versions/1"
+  },
   "jdbc": {
     "oracle.jdbc.ReadTimeout": 1000,
     "defaultRowPrefetch": 20,
@@ -133,26 +137,62 @@ The sample code below executes as expected with the previous configuration.
 
 For the JSON type of provider (GCP Object Storage, HTTP/HTTPS, File) the password is an object itself with the following spec:
 
-- type
+- `type`
   - Mandatory
   - Possible values
-    - ocivault
-    - azurevault
-    - base64
-    - gcpsecretmanager
-- value
+    - `gcpsecretmanager` (GCP Secret Manager)
+    - `ocivault` (OCI Vault)
+    - `azurevault` (Azure Key Vault)
+    - `base64` (Base64)
+    - `awssecretsmanager` (AWS Secrets Manager)
+    - `hcpvaultdedicated` (HCP Vault Dedicated)
+    - `hcpvaultsecret` (HCP Vault Secrets)
+- `value`
   - Mandatory
   - Possible values
+    - Secret name (if gcpsecretmanager)
     - OCID of the secret (if ocivault)
     - Azure Key Vault URI (if azurevault)
     - Base64 Encoded password (if base64)
-    - GCP resource name (if gcpsecretmanager)
-    - Text
-- authentication
+    - AWS Secret name (if awssecretsmanager)
+    - Secret path (if hcpvaultdedicated)
+    - Secret name (if hcpvaultsecret)
+- `authentication`
   - Optional
   - Possible Values
     - method
     - optional parameters (depends on the cloud provider).
+
+### Wallet_location JSON Object
+
+The `oracle.net.wallet_location` connection property is not allowed in the "jdbc" object due to security reasons. Instead, users should use the `wallet_location object to specify the wallet in the configuration.
+
+For the JSON type of provider (GCP Cloud Storage, HTTPS, File) the `wallet_location` is an object itself with the same spec as the [password JSON object](#password-json-object) mentioned above.
+
+The value stored in the secret can be either:
+
+  - The Base64 representation of a supported wallet file.
+  - The raw bytes of the wallet file, stored as an imported secret.
+
+In both cases, the provider will automatically handle the content. If the secret contains raw bytes (e.g., an imported `cwallet.sso` or `ewallet.pem` file), the provider will perform Base64 encoding as needed. The resulting format is equivalent to setting the oracle.net.wallet_location` connection property in a regular JDBC application using the following format:
+```
+data:;base64,<Base64 representation of the wallet file>
+```
+
+#### Supported formats
+- `cwallet.sso` (SSO wallet)
+- `ewallet.pem` (PEM wallet)
+
+If the PEM wallet is encrypted, you must also set the wallet password using the `oracle.net.wallet_password` property.
+This property should be included inside the jdbc object of the JSON payload:
+
+```
+"jdbc": {
+  "oracle.net.wallet_password": "<your-password>"
+}
+```
+
+<i>*Note: When storing a wallet in GCP Secret Manager, you can either store the raw bytes of the cwallet.sso file directly or provide the Base64-encoded string. The provider will detect the format and handle the encoding appropriately.</i>
 
 ## GCP Secret Manager Config Provider
 Apart from GCP Cloud Storage, users can also store JSON Payload in the content of GCP Secret Manager secret. Users need to indicate the resource name:
@@ -170,10 +210,10 @@ the number of RPC requests to remote location. See
 [Caching configuration](../ojdbc-provider-azure/README.md#caching-configuration) for more 
 details of the caching mechanism.
 
-## Vault Password Provider
+## Secret Manager Password Provider
 The Vault Password Provider provides Oracle JDBC with a password that is managed
 by the GCP Secret Manager service. This is a Resource Provider identified by the
-name `ojdbc-provider-gcp-secret-password`.
+name `ojdbc-provider-gcp-secretmanager-password`.
 
 This provider requires the parameters listed below.
 <table>
@@ -196,10 +236,10 @@ An example of a
 that configures this provider can be found in
 [example-vault.properties](example-vault.properties).
 
-## Vault Username Provider
+## Secret Manager Username Provider
 The Vault Username Provider provides Oracle JDBC with a username that is managed by the
 GCP Secret Manager service. This is a Resource Provider identified by the name
-`ojdbc-provider-gcp-secret-username`.
+`ojdbc-provider-gcp-secretmanager-username`.
 
 In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider
 also supports the parameters listed below.
