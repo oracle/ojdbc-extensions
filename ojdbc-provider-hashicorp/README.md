@@ -56,7 +56,7 @@ The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-hashicorp</artifactId>
-  <version>1.0.5</version>
+  <version>1.0.6</version>
 </dependency>
 ```
 
@@ -450,11 +450,12 @@ jdbc:oracle:thin:@config-hcpvaultsecret://secret-name?HCP_APP_NAME=app-name&key=
 
 ### JSON Payload format
 
-There are 3 fixed values that are looked at the root level:
+There are 4 fixed values that are looked at the root level:
 
 - `connect_descriptor` (required)
 - `user` (optional)
 - `password` (optional)
+- `wallet_location` (optional)
 
 The rest are dependent on the driver, in our case `/jdbc`. The key-value pairs that are under the `/jdbc` prefix will be applied to a `DataSource`. These keys correspond to the properties defined in the [OracleConnection](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html) interface.
 
@@ -473,7 +474,12 @@ And the JSON Payload for the secret **test_config** stored in the HCP Vault Dedi
   "password": {
     "type": "hcpvaultdedicated",
     "value": "/v1/namespace/secret/data/password",
-    "field_name": "db-password"
+    "field_name": "db-password" // Optional: Only needed when the secret is structured and contains multiple key-value pairs.
+  },
+  "wallet_location": {
+    "type": "hcpvaultdedicated",
+    "value": "/v1/namespace/secret/data/wallet",
+    "field_name": "wallet_field" // Optional: Only needed when the secret is structured and contains multiple key-value pairs.
   },
   "jdbc": {
     "oracle.jdbc.ReadTimeout": 1000,
@@ -509,6 +515,10 @@ And the JSON Payload for a secret stored within the application app_name in the 
     "type": "hcpvaultsecret",
     "value": "secret-name"
   },
+  "wallet_location": {
+    "type": "hcpvaultsecret",
+    "value": "wallet-secret"
+  },
   "jdbc": {
     "oracle.jdbc.ReadTimeout": 1000,
     "defaultRowPrefetch": 20,
@@ -533,24 +543,27 @@ The sample code below executes as expected with the previous configuration.
 
 For the JSON type of provider (HCP Vault Dedicated, HCP Vault Secrets, HTTP/HTTPS, File), the password is an object itself with the following spec:
 
-- type
+- `type`
     - Mandatory
     - Possible values
-        - ocivault
-        - azurevault
-        - base64
-        - hcpvaultdedicated
-        - hcpvaultsecret
-- value
+      - `hcpvaultdedicated` (HCP Vault Dedicated)
+      - `hcpvaultsecret` (HCP Vault Secrets) 
+      - `ocivault` (OCI Vault)
+      - `azurevault` (Azure Key Vault)
+      - `base64` (Base64)
+      - `awssecretsmanager` (AWS Secrets Manager)
+      - `gcpsecretmanager` (GCP Secret Manager)
+- `value`
     - Mandatory
     - Possible values
-        - OCID of the secret (if ocivault)
-        - Azure Key Vault URI (if azurevault)
-        - Base64 Encoded password (if base64)
-        - Secret path (if hcpvaultdedicated)
-        - Secret name (if hcpvaultsecret)
-        - Text
-- field_name (HCP Vault Dedicated only)
+      - Secret path (if hcpvaultdedicated)
+      - Secret name (if hcpvaultsecret)
+      - OCID of the secret (if ocivault)
+      - Azure Key Vault URI (if azurevault)
+      - Base64 Encoded password (if base64)
+      - AWS Secret name (if awssecretsmanager)
+      - Secret name (if gcpsecretmanager)
+- `field_name` (HCP Vault Dedicated only)
     - Optional
     - Description: Specifies the key within the secret JSON object to retrieve the password value.
       For example, if the secret contains `{ "db-password": "mypassword" }`,
@@ -559,11 +572,39 @@ For the JSON type of provider (HCP Vault Dedicated, HCP Vault Secrets, HTTP/HTTP
       - If `field_name` is **specified**, its corresponding value is extracted.
       - If the **secret contains only one key-value pair**, that value is **automatically used**.
       - If `field_name` is **missing** and **multiple keys exist**, an **error is thrown**.
-- authentication
+- `authentication`
     - Optional
     - Possible Values
         - method
         - optional parameters (depends on the cloud provider).
+
+### Wallet_location JSON Object
+
+The `oracle.net.wallet_location` connection property is not allowed in the `jdbc` object due to security reasons. Instead, users should use the `wallet_location` object to specify the wallet in the configuration.
+
+For the JSON type of provider (HCP Vault Dedicated, HCP Vault Secrets, HTTPS, File) the `wallet_location` is an object itself with the same spec as the [password JSON object](#password-json-object) mentioned above.
+
+The value stored in the secret should be the Base64 representation of a supported wallet file.  This is equivalent to setting the `oracle.net.wallet_location` connection property in a regular JDBC application using the following format:
+
+```
+data:;base64,<Base64 representation of the wallet file>
+```
+
+
+#### Supported formats
+- `cwallet.sso` (SSO wallet)
+- `ewallet.pem` (PEM wallet)
+
+If the PEM wallet is encrypted, you must also set the wallet password using the `oracle.net.wallet_password` property.
+This property should be included inside the jdbc object of the JSON payload:
+
+```
+"jdbc": {
+  "oracle.net.wallet_password": "<your-password>"
+}
+```
+
+<i>*Note: When storing a wallet in HCP Vault Dedicated or HCP Vault Secrets, store the raw Base64-encoded wallet bytes directly. The provider will automatically detect and handle the encoding correctly.</i>
 
 ## Resource Providers
 

@@ -86,23 +86,24 @@ public class AwsSecretExtractor {
    * {@code fieldName} is provided
    */
   public static String extractSecret(String secretString, String fieldName) {
+    String normalizedFieldName = (fieldName != null && fieldName.trim().isEmpty()) ? null : fieldName;
     try {
       OracleJsonObject jsonObject = JSON_FACTORY.createJsonTextValue(
         new ByteArrayInputStream(secretString.getBytes(StandardCharsets.UTF_8))
       ).asJsonObject();
 
-      if (fieldName != null) {
+      if (normalizedFieldName != null) {
         if (!jsonObject.containsKey(fieldName)) {
-          throw new IllegalStateException("Field '" + fieldName + "' not found in secret JSON.");
+          throw new IllegalStateException("Field '" + normalizedFieldName + "' not found in secret JSON.");
         }
-        return jsonObject.get(fieldName).asJsonString().getString();
+        return jsonObject.get(normalizedFieldName).asJsonString().getString();
       } else if (jsonObject.size() == 1) {
         return jsonObject.values().iterator().next().asJsonString().getString();
       } else {
         throw new IllegalStateException("FIELD_NAME is required when multiple keys exist in the secret JSON");
       }
     } catch (OracleJsonException e) {
-      if (fieldName != null) {
+      if (normalizedFieldName != null) {
         throw new IllegalStateException("FIELD_NAME provided, but secret is not valid JSON.");
       }
       // Accept fallback to plain text only when fieldName is NOT specified

@@ -72,13 +72,6 @@ public class SimpleConnectionStringProviderExample {
       connectionProps.put("oracle.jdbc.provider.connectionString.tnsAlias",
               "YOUR_TNS_ALIAS");
 
-      // TLS Configuration for secure connection
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration",
-              "ojdbc-provider-gcp-secretmanager-tls");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.secretVersionName",
-              "projects/your-project-id/secrets/your-wallet-secret/versions/1");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.type", "SSO");
-
       ds.setConnectionProperties(connectionProps);
 
       try (Connection cn = ds.getConnection()) {

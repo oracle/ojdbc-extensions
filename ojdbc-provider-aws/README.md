@@ -12,6 +12,8 @@ Provider</a></dt>
 <dt><a href="#aws-secrets-manager-config-provider">AWS Secrets Manager Configuration 
 Provider</a></dt>
 <dd>Provides connection properties managed by the Secrets Manager service</dd>
+<dt><a href="#aws-parameter-store-config-provider">AWS Parameter Store Configuration Provider</a></dt>
+<dd>Provides connection properties managed by the Systems Manager Parameter Store</dd>
 <dt><a href="#aws-appconfig-freeform-config-provider">AWS AppConfig Freeform Configuration Provider</a></dt>
 <dd>Provides connection properties managed by the AWS AppConfig Freeform Configuration service</dd>
 <dt><a href="#common-parameters-for-centralized-config-providers">Common Parameters for Centralized Config Providers</a></dt>
@@ -49,7 +51,7 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-aws</artifactId>
-  <version>1.0.5</version>
+  <version>1.0.6</version>
 </dependency>
 ```
 
@@ -70,11 +72,12 @@ The {S3-URI} can be obtained from the Amazon S3 console and follows this naming 
 
 ### JSON Payload format
 
-There are 3 fixed values that are looked at the root level.
+There are 4 fixed values that are looked at the root level.
 
 - connect_descriptor (required)
 - user (optional)
 - password (optional)
+- wallet_location (optional)
 
 The rest are dependent on the driver, in our case `/jdbc`. The key-value pairs that are with sub-prefix `/jdbc` will be applied to a DataSource. The key values are constant keys which are equivalent to the properties defined in the [OracleConnection](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html) interface.
 
@@ -94,6 +97,11 @@ And the JSON Payload for the file **payload_ojdbc_objectstorage.json** in **mybu
     "type": "awssecretsmanager",
     "value": "test-secret",
     "field_name": "<field-name>"  // Optional: Only needed when the secret is structured and contains multiple key-value pairs.
+  },
+  "wallet_location": {
+    "type": "awssecretsmanager",
+    "value": "wallet-secret",
+    "field_name": "<field-name>" // Optional: Only needed when the secret is structured and contains multiple key-value pairs.
   },
   "jdbc": {
     "oracle.jdbc.ReadTimeout": 1000,
@@ -117,33 +125,68 @@ The sample code below executes as expected with the previous configuration.
 
 ### Password JSON Object
 
-For the JSON type of provider (AWS S3, AWS Secrets Manager, HTTP/HTTPS, File) the password is an object itself with the following spec:
+For the JSON type of provider (AWS S3, AWS Secrets Manager, AWS Parameter Store, HTTP/HTTPS, File) the password is an object itself with the following spec:
 
-- type
+- `type`
     - Mandatory
     - Possible values
-        - ocivault
-        - azurevault
-        - base64
-        - awssecretsmanager
-- value
+      - `ocivault` (OCI Vault)
+      - `azurevault` (Azure Key Vault)
+      - `base64` (Base64)
+      - `awssecretsmanager` (AWS Secrets Manager)
+      - `awsparameterstore` (AWS Parameter Store)
+      - `hcpvaultdedicated` (HCP Vault Dedicated)
+      - `hcpvaultsecret` (HCP Vault Secrets)
+      - `gcpsecretmanager` (GCP Secret Manager)
+- `value`
     - Mandatory
     - Possible values
         - OCID of the secret (if ocivault)
         - Azure Key Vault URI (if azurevault)
         - Base64 Encoded password (if base64)
         - AWS Secret name (if awssecretsmanager)
-- field_name
+        - AWS Parameter name (if awsparameterstore)
+        - Secret path (if hcpvaultdedicated)
+        - Secret name (if hcpvaultsecret)
+        - Secret name (if gcpsecretmanager)
+- `field_name`
   - Optional
   - Description: Specifies the key within the secret JSON object from which to extract the password value.
     If the secret JSON contains multiple key-value pairs, field_name must be provided to unambiguously select the desired secret value.
     If the secret contains only a single key-value pair and field_name is not provided, that sole value will be used.
     If the secret is provided as plain text (i.e., not structured as a JSON object), no field_name is required.
-- authentication
+- `authentication`
     - Optional
     - Possible Values
         - method
         - optional parameters (depends on the cloud provider).
+
+### Wallet_location JSON Object
+
+The `oracle.net.wallet_location` connection property is not allowed in the `jdbc` object due to security reasons. Instead, users should use the `wallet_location` object to specify the wallet in the configuration.
+
+For the JSON type of provider (AWS S3, HTTPS, File) the wallet_location is an object itself with the same spec as the [password JSON object](#password-json-object) mentioned above.
+
+The value stored in the secret should be the Base64 representation of of a supported wallet file. This is equivalent to setting the `oracle.net.wallet_location` connection property in a regular JDBC application using the following format:
+
+```
+data:;base64,<Base64 representation of the wallet file>
+```
+
+#### Supported formats
+- `cwallet.sso` (SSO wallet)
+- `ewallet.pem` (PEM wallet)
+
+If the PEM wallet is encrypted, you must also set the wallet password using the `oracle.net.wallet_password` property.
+This property should be included inside the jdbc object of the JSON payload:
+
+```
+"jdbc": {
+  "oracle.net.wallet_password": "<your-password>"
+}
+```
+
+<i>*Note: When storing a wallet in AWS Secrets Manager, store the raw Base64-encoded wallet bytes directly. The provider will automatically detect and handle the encoding correctly.</i>
 
 ## AWS Secrets Manager Config Provider
 Apart from AWS S3, users can also store JSON Payload in the content of AWS Secrets Manager secret. Users need to indicate the secret name:
@@ -153,6 +196,16 @@ jdbc:oracle:thin:@config-awssecretsmanager://{secret-name}
 </pre>
 
 The JSON Payload retrieved by AWS Secrets Manager Provider follows the same format in [AWS S3 Configuration Provider](#json-payload-format).
+
+## AWS Parameter Store Config Provider
+Apart from AWS S3 and Secrets Manager, users can also store JSON payload in AWS Systems Manager Parameter Store. 
+To use it, specify the name of the parameter:
+
+<pre>
+jdbc:oracle:thin:@config-awsparameterstore://{parameter-name}
+</pre>
+
+The JSON payload stored in the parameter should follow the same format as described in [AWS S3 Configuration Provider](#json-payload-format).
 
 ## AWS AppConfig Freeform Config Provider
 The Oracle DataSource uses the prefix `jdbc:oracle:thin:@config-awsappconfig` to identify that the freeform

@@ -122,4 +122,20 @@ public class SecretsManagerConnectionStringProviderTest {
     assertThrows(IllegalArgumentException.class, () ->
             PROVIDER.getConnectionString(parameterValues));
   }
+
+  @Test
+  public void testValidAliasWithEmptyFieldNameOnPlainTextSecret() {
+    Map<String, String> testParameters = new HashMap<>();
+    testParameters.put("secretName",
+      TestProperties.getOrAbort(AwsTestProperty.TNSNAMES_SECRET_NAME));
+    testParameters.put("tnsAlias",
+      TestProperties.getOrAbort(AwsTestProperty.TNS_ALIAS));
+    testParameters.put("awsRegion",
+      TestProperties.getOrAbort(AwsTestProperty.AWS_REGION));
+    testParameters.put("fieldName", "");
+
+    Map<Parameter, CharSequence> parameterValues = createParameterValues(PROVIDER, testParameters);
+    assertNotNull(PROVIDER.getConnectionString(parameterValues));
+  }
+
 }

@@ -229,4 +229,19 @@ public class SecretsManagerSepsProviderTest {
     assertThrows(IllegalStateException.class, () -> PASSWORD_PROVIDER.getPassword(values));
   }
 
+  @Test
+  public void testValidSepsWithEmptyFieldNameOnPlainTextSecret() {
+    Map<String, String> testParameters = new HashMap<>();
+    testParameters.put("secretName",
+      TestProperties.getOrAbort(AwsTestProperty.SSO_SEPS_WALLET_SECRET_NAME));
+    testParameters.put("awsRegion",
+      TestProperties.getOrAbort(AwsTestProperty.AWS_REGION));
+    testParameters.put("fieldName", "");
+
+    Map<Parameter, CharSequence> parameterValues = createParameterValues(USERNAME_PROVIDER,
+            testParameters);
+    assertNotNull(USERNAME_PROVIDER.getUsername(parameterValues));
+  }
+
+
 }
