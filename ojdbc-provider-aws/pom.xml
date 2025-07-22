@@ -66,6 +66,10 @@
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>secretsmanager</artifactId>
     </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>ssm</artifactId>
+    </dependency>
     <!-- TEST DEPENDENCIES -->
     <dependency>
     <groupId>com.oracle.database.jdbc</groupId>

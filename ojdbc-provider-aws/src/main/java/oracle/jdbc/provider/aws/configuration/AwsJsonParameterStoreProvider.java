@@ -35,20 +35,63 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.provider.aws;
 
-public enum AwsTestProperty {
-  AWS_S3_URL,
-  AWS_SECRETS_MANAGER_URL,
-  AWS_REGION,
-  DB_CREDENTIALS_SECRET_NAME,
-  TNSNAMES_SECRET_NAME,
-  TNS_ALIAS,
-  PKCS12_WALLET_SECRET_NAME,
-  WALLET_PASSWORD,
-  SSO_WALLET_SECRET_NAME,
-  PEM_WALLET_SECRET_NAME,
-  PKCS12_SEPS_WALLET_SECRET_NAME,
-  SSO_SEPS_WALLET_SECRET_NAME,
-  AWS_PARAMETER_STORE_URL
+package oracle.jdbc.provider.aws.configuration;
+
+import oracle.jdbc.provider.aws.parameterstore.ParameterStoreFactory;
+import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.spi.OracleConfigurationSecretProvider;
+
+import java.util.Base64;
+import java.util.Map;
+
+import static oracle.jdbc.provider.aws.configuration.AwsParameterStoreConfigurationProvider.PARAMETER_SET_PARSER;
+
+public class AwsJsonParameterStoreProvider
+  implements OracleConfigurationSecretProvider {
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Returns the value of the parameter retrieved from AWS Systems Manager
+   * Parameter Store.
+   * </p>
+   * <p>
+   * The {@code jsonObject} is expected to be in the following form:
+   * </p>
+   *
+   * <pre>{@code
+   *   "password": {
+   *       "type": "awsparameterstore",
+   *       "value": "/my-app/database-password"
+   *   }
+   * }</pre>
+   *
+   * <p>
+   * The provider retrieves the parameter specified by the {@code value} field
+   * from AWS Parameter Store, then encodes it as a Base64 string.
+   * The encoded value is returned as a {@code char[]} for use with Oracle JDBC's
+   * centralized configuration.
+   * </p>
+   *
+   * @param map Map object containing key-value pairs parsed from the JSON configuration.
+   * @return Base64-encoded {@code char[]} representing the retrieved secret value.
+   */
+  @Override
+  public char[] getSecret(Map<String, String> map) {
+    ParameterSet parameterSet = PARAMETER_SET_PARSER.parseNamedValues(map);
+
+    String parameterValue = ParameterStoreFactory.getInstance()
+      .request(parameterSet)
+      .getContent();
+
+    return Base64.getEncoder()
+      .encodeToString(parameterValue.getBytes())
+      .toCharArray();
+  }
+
+  @Override
+  public String getSecretType() {
+    return "awsparameterstore";
+  }
 }
