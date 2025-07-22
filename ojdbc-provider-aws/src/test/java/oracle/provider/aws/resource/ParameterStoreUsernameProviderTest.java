@@ -1,4 +1,4 @@
-package oracle.provider.aws.configuration.resource;
+package oracle.provider.aws.resource;
 
 import oracle.jdbc.spi.OracleResourceProvider.Parameter;
 import oracle.jdbc.spi.PasswordProvider;

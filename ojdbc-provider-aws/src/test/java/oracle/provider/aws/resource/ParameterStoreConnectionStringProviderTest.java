@@ -1,4 +1,4 @@
-package oracle.provider.aws.configuration.resource;
+package oracle.provider.aws.resource;
 
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.spi.ConnectionStringProvider;
