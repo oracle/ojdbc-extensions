@@ -70,6 +70,10 @@
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>ssm</artifactId>
     </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>appconfigdata</artifactId>
+    </dependency>
     <!-- TEST DEPENDENCIES -->
     <dependency>
     <groupId>com.oracle.database.jdbc</groupId>

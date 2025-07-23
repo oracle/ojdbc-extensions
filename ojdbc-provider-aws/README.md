@@ -12,9 +12,10 @@ Provider</a></dt>
 <dt><a href="#aws-secrets-manager-config-provider">AWS Secrets Manager Configuration 
 Provider</a></dt>
 <dd>Provides connection properties managed by the Secrets Manager service</dd>
-<dt><a href="#aws-parameter-store-config-provider">AWS Parameter Store Configuration 
-Provider</a></dt>
+<dt><a href="#aws-parameter-store-config-provider">AWS Parameter Store Configuration Provider</a></dt>
 <dd>Provides connection properties managed by the Systems Manager Parameter Store</dd>
+<dt><a href="#aws-appconfig-freeform-config-provider">AWS AppConfig Freeform Configuration Provider</a></dt>
+<dd>Provides connection properties managed by the AWS AppConfig Freeform Configuration service</dd>
 <dt><a href="#common-parameters-for-centralized-config-providers">Common Parameters for Centralized Config Providers</a></dt>
 <dd>Common parameters supported by the config providers</dd>
 <dt><a href="#caching-configuration">Caching configuration</a></dt>
@@ -205,6 +206,30 @@ jdbc:oracle:thin:@config-awsparameterstore://{parameter-name}
 </pre>
 
 The JSON payload stored in the parameter should follow the same format as described in [AWS S3 Configuration Provider](#json-payload-format).
+
+## AWS AppConfig Freeform Config Provider
+The Oracle DataSource uses the prefix `jdbc:oracle:thin:@config-awsappconfig` to identify that the freeform
+configuration parameters should be loaded using AWS AppConfig. Users need to specify the application identifier or name, along with the environment and configuration profile
+
+A URL with the following format is valid:
+
+<pre>
+jdbc:oracle:thin:@config-awsappconfig://{application-identifier}[?appconfig_environment={environment-id-or-name}&appconfig_profile={profile-id-or-name}]
+</pre>
+
+All three values are required for the AppConfig Freeform Configuration Provider:
+
+ - `{application-identifier}`: the name or ID of your AppConfig application, as defined in [AWS AppConfig](https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/services/appconfigdata/AppConfigDataClient.html). This must be provided directly in the URL.
+ - `{environment-id-or-name}`: the name or ID of the environment within the application (e.g., dev, prod). This can be provided as a URL parameter (`appconfig_environment`), a system property (`aws.appconfig.environment`), or an environment variable (`AWS_APP_CONFIG_ENVIRONMENT`).
+ - `{profile-id-or-name}`: the name or ID of the configuration profile that contains your settings. This can be provided as a URL parameter (`appconfig_profile`), a system property (`aws.appconfig.profile`), or an environment variable (`AWS_APP_CONFIG_PROFILE`).
+
+Example using all parameters in the URL:
+<pre>
+jdbc:oracle:thin:@config-awsappconfig://app-name?appconfig_environment=your-environment&appconfig_profile=your-profile
+</pre>
+
+Alternatively, you can set the environment and profile via system properties (`aws.appconfig.environment, aws.appconfig.profile`) or
+environment variables (`AWS_APP_CONFIG_ENVIRONMENT, AWS_APP_CONFIG_PROFILE`).
 
 ## Common Parameters for Centralized Config Providers
 AWS S3 Configuration Provider and AWS Secrets Manager Configuration Provider
