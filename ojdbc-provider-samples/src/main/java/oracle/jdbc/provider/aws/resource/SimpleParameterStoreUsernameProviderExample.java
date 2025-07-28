@@ -47,29 +47,23 @@ import java.sql.Statement;
 import java.util.Properties;
 
 /**
- * Example demonstrating how to configure Oracle JDBC with the AWS Secrets Manager
- * TCPS Wallet Provider to establish a secure TLS connection using a wallet stored
- * in AWS Secrets Manager.
+ * Example demonstrating how to use the AWS Parameter Store Username Provider
+ * with Oracle JDBC to securely retrieve a database username from
+ * AWS Parameter Store.
  */
-public class SimpleTCPSWalletProviderExample {
+public class SimpleParameterStoreUsernameProviderExample {
   private static final String DB_URL = "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=your_db_host))(connect_data=(service_name=your_service_name))(security=(ssl_server_dn_match=yes)))";
   private static final String JDBC_URL = "jdbc:oracle:thin:@" + DB_URL;
-  private static final String USERNAME = "DB_USER";
-  private static final String PASSWORD = "DB_PASSWORD";
 
   public static void main(String[] args) throws SQLException {
     try {
       OracleDataSource ds = new OracleDataSource();
       ds.setURL(JDBC_URL);
-      ds.setUser(USERNAME);
-      ds.setPassword(PASSWORD);
+      ds.setPassword("DB_PASSWORD");
 
       Properties connectionProps = new Properties();
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration",
-        "ojdbc-provider-aws-secrets-manager-tls");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.secretName",
-        "secret-name");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.type", "SSO");
+      connectionProps.put("oracle.jdbc.provider.username", "ojdbc-provider-aws-parameter-store-username");
+      connectionProps.put("oracle.jdbc.provider.username.parameterName", "parameter-name");
 
       ds.setConnectionProperties(connectionProps);
 
