@@ -1,1 +1,2 @@
 oracle.jdbc.provider.aws.resource.SecretsManagerConnectionStringProvider
+oracle.jdbc.provider.aws.resource.ParameterStoreConnectionStringProvider

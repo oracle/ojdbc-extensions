@@ -38,31 +38,48 @@
 
 package oracle.jdbc.provider.aws.resource;
 
+import oracle.jdbc.provider.aws.parameterstore.ParameterStoreFactory;
+import oracle.jdbc.provider.resource.ResourceParameter;
+import oracle.jdbc.provider.util.ResourceParameterUtils;
+
+import java.util.Map;
+
+import static oracle.jdbc.provider.aws.resource.AwsResourceParameterNames.PARAMETER_NAME;
+
 /**
- * Centralized parameter name constants used by AWS Secrets Manager resource providers.
+ * <p>
+ * Base class for all providers that retrieve secrets from AWS Parameter Store.
+ * This class defines shared parameters and secret retrieval logic.
+ * </p>
  */
-public final class AwsSecretsManagerResourceParameterNames {
+public abstract class ParameterStoreSecretProvider extends AwsResourceProvider {
 
-  private AwsSecretsManagerResourceParameterNames() {}
+  private static final ResourceParameter[] PARAMETERS = {
+    new ResourceParameter(PARAMETER_NAME, ParameterStoreFactory.PARAMETER_NAME)
+  };
 
-  /** The AWS region where the secret is located (e.g., eu-north-1). */
-  public static final String AWS_REGION = "awsRegion";
+  protected ParameterStoreSecretProvider(String resourceType) {
+    super(resourceType, PARAMETERS);
+  }
 
-  /** The name of the secret stored in AWS Secrets Manager. */
-  public static final String SECRET_NAME = "secretName";
+  protected ParameterStoreSecretProvider(String resourceType, ResourceParameter[] additionalParameters) {
+    super(resourceType, ResourceParameterUtils.combineParameters(PARAMETERS, additionalParameters));
+  }
 
-  /** Optional field name to extract from a JSON secret. */
-  public static final String FIELD_NAME = "fieldName";
-
-  /** The alias used to retrieve a connection string from tnsnames.ora. */
-  public static final String TNS_ALIAS = "tnsAlias";
-
-  /** Optional password used to decrypt the wallet (for PKCS12 or encrypted PEM). */
-  public static final String WALLET_PASSWORD = "walletPassword";
-
-  /** The wallet format: SSO, PKCS12, or PEM. */
-  public static final String TYPE = "type";
-
-  /** Index of the credential set in the wallet */
-  public static final String CONNECTION_STRING_INDEX = "connectionStringIndex";
+  /**
+   * <p>
+   * Retrieves a secret from AWS Parameter Store based on parameters provided
+   * in {@code parameterValues}. This method centralizes secret retrieval logic
+   * and is intended to be used by subclasses implementing the
+   * {@link oracle.jdbc.spi.OracleResourceProvider} SPI.
+   * </p>
+   *
+   * @param parameterValues A map of parameter names and their corresponding
+   * values required for secret retrieval.
+   * @return The secret value as a {@code String}.
+   * @throws IllegalStateException If secret retrieval fails or returns null.
+   */
+  protected final String getSecret(Map<Parameter, CharSequence> parameterValues) {
+    return getResource(ParameterStoreFactory.getInstance(), parameterValues);
+  }
 }
