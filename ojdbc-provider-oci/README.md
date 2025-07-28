@@ -769,6 +769,16 @@ common set of parameters.
       </td>
     </tr>
     <tr>
+      <td>region</td>
+      <td>
+        Configures an <a href="https://docs.oracle.com/en-us/iaas/Content/General/Concepts/regions.htm">OCI Region Identifier</a> 
+        to request resources from, including session tokens for interactive authentication.
+      </td>
+      <td>A region identifier, such as "ap-sydney-1" or "us-langley-1"</td>
+      <td><i>No default value. If not configured, then a region from a config file will be used when requesting resources,
+        and interactive authentication will connect to <code>https://login.oci.oraclecloud.com</code></i></td>
+    </tr>
+    <tr>
       <td>instancePrincipalTimeout</td>
       <td>
         Specifies the maximum time, in seconds, to wait for instance principal authentication to complete.<br>
