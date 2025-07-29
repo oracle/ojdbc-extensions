@@ -38,22 +38,24 @@
 
 package oracle.jdbc.provider.aws.resource;
 
-import oracle.jdbc.provider.resource.ResourceParameter;
-import oracle.jdbc.spi.PasswordProvider;
+import oracle.jdbc.provider.util.CommonParameters;
 import oracle.jdbc.spi.UsernameProvider;
+import oracle.jdbc.spi.PasswordProvider;
 import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.provider.resource.ResourceParameter;
 import oracle.jdbc.provider.util.WalletUtils;
 
 import java.util.Base64;
 import java.util.Map;
 
-import static oracle.jdbc.provider.util.CommonParameters.CONNECTION_STRING_INDEX;
+import static oracle.jdbc.provider.aws.resource.AwsResourceParameterNames.WALLET_PASSWORD;
+import static oracle.jdbc.provider.aws.resource.AwsResourceParameterNames.CONNECTION_STRING_INDEX;
 import static oracle.jdbc.provider.util.CommonParameters.PASSWORD;
 
 /**
  * <p>
  * A provider for an Oracle SEPS (Secure External Password Store) wallet stored
- * as a base64-encoded secret in AWS Secrets Manager.
+ * as a base64-encoded parameter in AWS Parameter Store.
  * </p>
  * <p>
  * This class supports both PKCS12 and SSO wallet formats. It implements the
@@ -64,30 +66,40 @@ import static oracle.jdbc.provider.util.CommonParameters.PASSWORD;
  * It is designed to be instantiated via {@link java.util.ServiceLoader}.
  * </p>
  */
-public class SecretsManagerSEPSProvider
-  extends SecretsManagerSecretProvider
+public class ParameterStoreSEPSProvider
+  extends ParameterStoreSecretProvider
   implements UsernameProvider, PasswordProvider {
 
   private static final ResourceParameter[] PARAMETERS = {
-    new ResourceParameter(AwsResourceParameterNames.WALLET_PASSWORD,
-      PASSWORD),
-    new ResourceParameter(AwsResourceParameterNames.CONNECTION_STRING_INDEX,
-      CONNECTION_STRING_INDEX)
+    new ResourceParameter(WALLET_PASSWORD, PASSWORD),
+    new ResourceParameter(CONNECTION_STRING_INDEX, CommonParameters.CONNECTION_STRING_INDEX)
   };
 
   /**
-   * A public no-arg constructor used by {@link java.util.ServiceLoader} to
-   * construct an instance of this provider.
+   * A public no-arg constructor used by {@link java.util.ServiceLoader}
+   * to construct an instance of this provider.
    */
-  public SecretsManagerSEPSProvider() {
-    super("secrets-manager-seps", PARAMETERS);
+  public ParameterStoreSEPSProvider() {
+    super("parameter-store-seps", PARAMETERS);
   }
 
+  /**
+   * Retrieves the username from the SEPS wallet stored in AWS Parameter Store.
+   *
+   * @param parameterValues The map of parameters required to fetch and parse the wallet.
+   * @return The username contained within the wallet.
+   */
   @Override
   public String getUsername(Map<Parameter, CharSequence> parameterValues) {
     return getWalletCredentials(parameterValues).username();
   }
 
+  /**
+   * Retrieves the password from the SEPS wallet stored in AWS Parameter Store.
+   *
+   * @param parameterValues The map of parameters required to fetch and parse the wallet.
+   * @return The password contained within the wallet.
+   */
   @Override
   public char[] getPassword(Map<Parameter, CharSequence> parameterValues) {
     return getWalletCredentials(parameterValues).password();
@@ -95,19 +107,19 @@ public class SecretsManagerSEPSProvider
 
   /**
    * Retrieves the OracleWallet by decoding the base64-encoded wallet stored
-   * in AWS Secrets Manager and opening it as either SSO or PKCS12, based on
+   * in AWS Parameter Store and opening it as either SSO or PKCS12, based on
    * whether a password is provided.
    */
   private WalletUtils.Credentials getWalletCredentials(Map<Parameter, CharSequence> parameterValues) {
     ParameterSet parameterSet = parseParameterValues(parameterValues);
     String secret = getSecret(parameterValues);
-
     byte[] walletBytes = Base64.getDecoder().decode(secret);
 
     char[] walletPassword = parameterSet.getOptional(PASSWORD) != null
-      ? parameterSet.getOptional(PASSWORD).toCharArray() : null;
+            ? parameterSet.getOptional(PASSWORD).toCharArray() : null;
 
-    String connectionStringIndex = parameterSet.getOptional(CONNECTION_STRING_INDEX);
+    String connectionStringIndex =
+            parameterSet.getOptional(CommonParameters.CONNECTION_STRING_INDEX);
     return WalletUtils.getCredentials(walletBytes, walletPassword, connectionStringIndex);
   }
 }

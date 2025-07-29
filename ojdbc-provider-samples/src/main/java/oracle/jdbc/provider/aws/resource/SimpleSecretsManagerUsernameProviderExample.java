@@ -47,38 +47,32 @@ import java.sql.Statement;
 import java.util.Properties;
 
 /**
- * Example demonstrating how to configure Oracle JDBC with the AWS Secrets Manager
- * Connection String Provider to retrieve connection strings from a tnsnames.ora
- * file stored in AWS Secrets Manager.
+ * Example demonstrating how to use the AWS Secrets Manager Username Provider
+ * with Oracle JDBC to securely retrieve a database username from AWS Secrets Manager.
  */
-public class SimpleConnectionStringProviderExample {
+public class SimpleSecretsManagerUsernameProviderExample {
+  private static final String DB_URL = "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=your_db_host))(connect_data=(service_name=your_service_name))(security=(ssl_server_dn_match=yes)))";
+  private static final String JDBC_URL = "jdbc:oracle:thin:@" + DB_URL;
+
   public static void main(String[] args) throws SQLException {
     try {
       OracleDataSource ds = new OracleDataSource();
-      ds.setURL("jdbc:oracle:thin:@");
-      ds.setUser("DB_USERNAME");
+      ds.setURL(JDBC_URL);
       ds.setPassword("DB_PASSWORD");
 
       Properties connectionProps = new Properties();
-
-      // Connection String Provider for retrieving tnsnames.ora content
-      // from AWS Secrets Manager
-      connectionProps.put("oracle.jdbc.provider.connectionString",
-        "ojdbc-provider-aws-secrets-manager-tnsnames");
-      connectionProps.put("oracle.jdbc.provider.connectionString.secretName",
-        "secret-name");
-      connectionProps.put("oracle.jdbc.provider.connectionString.tnsAlias",
-        "tns-alias");
+      connectionProps.put("oracle.jdbc.provider.username", "ojdbc-provider-aws-secrets-manager-username");
+      connectionProps.put("oracle.jdbc.provider.username.secretName", "secret-name");
 
       ds.setConnectionProperties(connectionProps);
 
       try (Connection cn = ds.getConnection()) {
-        String query = "SELECT 'Hello, db' FROM sys.dual";
-        try (Statement st = cn.createStatement();
-             ResultSet rs = st.executeQuery(query)) {
-          if (rs.next()) {
-            System.out.println(rs.getString(1));
-          }
+        String connectionString = cn.getMetaData().getURL();
+        System.out.println("Connected to: " + connectionString);
+        Statement st = cn.createStatement();
+        ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
+        if (rs.next()) {
+          System.out.println(rs.getString(1));
         }
       }
     } catch (SQLException e) {

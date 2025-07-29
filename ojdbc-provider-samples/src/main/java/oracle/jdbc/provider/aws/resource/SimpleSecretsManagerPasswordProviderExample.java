@@ -47,10 +47,10 @@ import java.sql.Statement;
 import java.util.Properties;
 
 /**
- * Example demonstrating how to use the AWS Secrets Manager Username Provider
- * with Oracle JDBC to securely retrieve a database username from AWS Secrets Manager.
+ * Example demonstrating how to use the AWS Secrets Manager Password Provider
+ * with Oracle JDBC to securely retrieve a database password from AWS Secrets Manager.
  */
-public class SimpleUsernameProviderExample {
+public class SimpleSecretsManagerPasswordProviderExample {
   private static final String DB_URL = "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=your_db_host))(connect_data=(service_name=your_service_name))(security=(ssl_server_dn_match=yes)))";
   private static final String JDBC_URL = "jdbc:oracle:thin:@" + DB_URL;
 
@@ -58,11 +58,12 @@ public class SimpleUsernameProviderExample {
     try {
       OracleDataSource ds = new OracleDataSource();
       ds.setURL(JDBC_URL);
-      ds.setPassword("DB_PASSWORD");
+      ds.setUser("DB_USER");
 
       Properties connectionProps = new Properties();
-      connectionProps.put("oracle.jdbc.provider.username", "ojdbc-provider-aws-secrets-manager-username");
-      connectionProps.put("oracle.jdbc.provider.username.secretName", "secret-name");
+      connectionProps.put("oracle.jdbc.provider.password", "ojdbc-provider-aws-secrets-manager-password");
+      connectionProps.put("oracle.jdbc.provider.password.secretName", "secret-name");
+      connectionProps.put("oracle.jdbc.provider.password.fieldName", "password");
 
       ds.setConnectionProperties(connectionProps);
 

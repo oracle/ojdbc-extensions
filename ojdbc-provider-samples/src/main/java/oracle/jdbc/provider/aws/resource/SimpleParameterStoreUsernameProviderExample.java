@@ -38,31 +38,46 @@
 
 package oracle.jdbc.provider.aws.resource;
 
+import oracle.jdbc.datasource.impl.OracleDataSource;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Properties;
+
 /**
- * Centralized parameter name constants used by AWS Secrets Manager resource providers.
+ * Example demonstrating how to use the AWS Parameter Store Username Provider
+ * with Oracle JDBC to securely retrieve a database username from
+ * AWS Parameter Store.
  */
-public final class AwsSecretsManagerResourceParameterNames {
+public class SimpleParameterStoreUsernameProviderExample {
+  private static final String DB_URL = "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=your_db_host))(connect_data=(service_name=your_service_name))(security=(ssl_server_dn_match=yes)))";
+  private static final String JDBC_URL = "jdbc:oracle:thin:@" + DB_URL;
 
-  private AwsSecretsManagerResourceParameterNames() {}
+  public static void main(String[] args) throws SQLException {
+    try {
+      OracleDataSource ds = new OracleDataSource();
+      ds.setURL(JDBC_URL);
+      ds.setPassword("DB_PASSWORD");
 
-  /** The AWS region where the secret is located (e.g., eu-north-1). */
-  public static final String AWS_REGION = "awsRegion";
+      Properties connectionProps = new Properties();
+      connectionProps.put("oracle.jdbc.provider.username", "ojdbc-provider-aws-parameter-store-username");
+      connectionProps.put("oracle.jdbc.provider.username.parameterName", "parameter-name");
 
-  /** The name of the secret stored in AWS Secrets Manager. */
-  public static final String SECRET_NAME = "secretName";
+      ds.setConnectionProperties(connectionProps);
 
-  /** Optional field name to extract from a JSON secret. */
-  public static final String FIELD_NAME = "fieldName";
-
-  /** The alias used to retrieve a connection string from tnsnames.ora. */
-  public static final String TNS_ALIAS = "tnsAlias";
-
-  /** Optional password used to decrypt the wallet (for PKCS12 or encrypted PEM). */
-  public static final String WALLET_PASSWORD = "walletPassword";
-
-  /** The wallet format: SSO, PKCS12, or PEM. */
-  public static final String TYPE = "type";
-
-  /** Index of the credential set in the wallet */
-  public static final String CONNECTION_STRING_INDEX = "connectionStringIndex";
+      try (Connection cn = ds.getConnection()) {
+        String connectionString = cn.getMetaData().getURL();
+        System.out.println("Connected to: " + connectionString);
+        Statement st = cn.createStatement();
+        ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
+        if (rs.next()) {
+          System.out.println(rs.getString(1));
+        }
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException("Connection failed: ", e);
+    }
+  }
 }

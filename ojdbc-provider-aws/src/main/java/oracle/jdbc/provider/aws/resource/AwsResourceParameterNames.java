@@ -35,25 +35,56 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.provider.aws;
 
-public enum AwsTestProperty {
-  AWS_S3_URL,
-  AWS_SECRETS_MANAGER_URL,
-  AWS_APP_CONFIG_URL,
-  AWS_REGION,
-  DB_CREDENTIALS_SECRET_NAME,
-  TNSNAMES_SECRET_NAME,
-  TNS_ALIAS,
-  PKCS12_WALLET_SECRET_NAME,
-  WALLET_PASSWORD,
-  SSO_WALLET_SECRET_NAME,
-  PEM_WALLET_SECRET_NAME,
-  PKCS12_SEPS_WALLET_SECRET_NAME,
-  SSO_SEPS_WALLET_SECRET_NAME,
-  AWS_PARAMETER_STORE_URL,
-  AWS_PARAMETER_STORE_PASSWORD_NAME,
-  AWS_PARAMETER_STORE_TNSNAMES_NAME,
-  PKCS12_SEPS_WALLET_PARAMETER_NAME,
-  SSO_SEPS_WALLET_PARAMETER_NAME
+package oracle.jdbc.provider.aws.resource;
+
+/**
+ * Centralized parameter name constants used by all AWS resource providers.
+ */
+public final class AwsResourceParameterNames {
+
+  private AwsResourceParameterNames() {}
+
+  // Common parameters
+  /**
+   *  The AWS region where the resource is stored (e.g., eu-north-1).
+   */
+  public static final String AWS_REGION = "awsRegion";
+
+  /**
+   *  The alias used to retrieve a connection string from tnsnames.ora.
+   */
+  public static final String TNS_ALIAS = "tnsAlias";
+
+  /**
+   *  Optional password used to decrypt the wallet (for PKCS12 or encrypted PEM).
+   */
+  public static final String WALLET_PASSWORD = "walletPassword";
+
+  /**
+   *  Index of the credential set in the wallet
+   */
+  public static final String CONNECTION_STRING_INDEX = "connectionStringIndex";
+
+  /**
+   *  The wallet/file format: SSO, PKCS12, or PEM.
+   */
+  public static final String TYPE = "type";
+
+  // Parameter Store specific
+  /**
+   *  The name of the parameter stored in AWS Parameter Store.
+   */
+  public static final String PARAMETER_NAME = "parameterName";
+
+  // Secrets Manager specific
+  /**
+   *  The name of the secret stored in AWS Secrets Manager.
+   */
+  public static final String SECRET_NAME = "secretName";
+
+  /**
+   *  Optional field name to extract from a JSON secret.
+   */
+  public static final String FIELD_NAME = "fieldName";
 }

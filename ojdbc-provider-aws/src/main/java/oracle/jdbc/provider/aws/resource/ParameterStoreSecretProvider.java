@@ -38,52 +38,48 @@
 
 package oracle.jdbc.provider.aws.resource;
 
-import oracle.jdbc.datasource.impl.OracleDataSource;
+import oracle.jdbc.provider.aws.parameterstore.ParameterStoreFactory;
+import oracle.jdbc.provider.resource.ResourceParameter;
+import oracle.jdbc.provider.util.ResourceParameterUtils;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Properties;
+import java.util.Map;
+
+import static oracle.jdbc.provider.aws.resource.AwsResourceParameterNames.PARAMETER_NAME;
 
 /**
- * Example demonstrating how to configure Oracle JDBC with the AWS Secrets Manager
- * TCPS Wallet Provider to establish a secure TLS connection using a wallet stored
- * in AWS Secrets Manager.
+ * <p>
+ * Base class for all providers that retrieve secrets from AWS Parameter Store.
+ * This class defines shared parameters and secret retrieval logic.
+ * </p>
  */
-public class SimpleTCPSWalletProviderExample {
-  private static final String DB_URL = "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=your_db_host))(connect_data=(service_name=your_service_name))(security=(ssl_server_dn_match=yes)))";
-  private static final String JDBC_URL = "jdbc:oracle:thin:@" + DB_URL;
-  private static final String USERNAME = "DB_USER";
-  private static final String PASSWORD = "DB_PASSWORD";
+public abstract class ParameterStoreSecretProvider extends AwsResourceProvider {
 
-  public static void main(String[] args) throws SQLException {
-    try {
-      OracleDataSource ds = new OracleDataSource();
-      ds.setURL(JDBC_URL);
-      ds.setUser(USERNAME);
-      ds.setPassword(PASSWORD);
+  private static final ResourceParameter[] PARAMETERS = {
+    new ResourceParameter(PARAMETER_NAME, ParameterStoreFactory.PARAMETER_NAME)
+  };
 
-      Properties connectionProps = new Properties();
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration",
-        "ojdbc-provider-aws-secrets-manager-tls");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.secretName",
-        "secret-name");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.type", "SSO");
+  protected ParameterStoreSecretProvider(String resourceType) {
+    super(resourceType, PARAMETERS);
+  }
 
-      ds.setConnectionProperties(connectionProps);
+  protected ParameterStoreSecretProvider(String resourceType, ResourceParameter[] additionalParameters) {
+    super(resourceType, ResourceParameterUtils.combineParameters(PARAMETERS, additionalParameters));
+  }
 
-      try (Connection cn = ds.getConnection()) {
-        String connectionString = cn.getMetaData().getURL();
-        System.out.println("Connected to: " + connectionString);
-        Statement st = cn.createStatement();
-        ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
-        if (rs.next()) {
-          System.out.println(rs.getString(1));
-        }
-      }
-    } catch (SQLException e) {
-      throw new RuntimeException("Connection failed: ", e);
-    }
+  /**
+   * <p>
+   * Retrieves a secret from AWS Parameter Store based on parameters provided
+   * in {@code parameterValues}. This method centralizes secret retrieval logic
+   * and is intended to be used by subclasses implementing the
+   * {@link oracle.jdbc.spi.OracleResourceProvider} SPI.
+   * </p>
+   *
+   * @param parameterValues A map of parameter names and their corresponding
+   * values required for secret retrieval.
+   * @return The secret value as a {@code String}.
+   * @throws IllegalStateException If secret retrieval fails or returns null.
+   */
+  protected final String getSecret(Map<Parameter, CharSequence> parameterValues) {
+    return getResource(ParameterStoreFactory.getInstance(), parameterValues);
   }
 }

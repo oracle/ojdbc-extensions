@@ -43,8 +43,8 @@ import oracle.jdbc.provider.resource.ResourceParameter;
 import oracle.jdbc.provider.util.TNSNames;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 
 import static oracle.jdbc.provider.util.CommonParameters.TNS_ALIAS;
@@ -53,49 +53,43 @@ import static oracle.jdbc.provider.util.FileUtils.decodeIfBase64;
 /**
  * <p>
  * A provider for securely retrieving the connection string from a tnsnames.ora
- * file stored in AWS Secrets Manager for use with an Oracle Autonomous Database.
- * The tnsnames.ora file is stored as a base64-encoded or plain-text secret in
- * AWS Secrets Manager, and is decoded and parsed to select connection string
- * based on specified alias.
+ * file stored in AWS Parameter Store for use with an Oracle Autonomous Database.
+ * The tnsnames.ora file is stored as a base64-encoded or plain-text parameter,
+ * and is decoded and parsed to select a connection string based on the specified alias.
  * </p>
  * <p>
  * This class implements the {@link ConnectionStringProvider} SPI defined by
  * Oracle JDBC. It is designed to be instantiated via {@link java.util.ServiceLoader}.
  * </p>
  */
-public class SecretsManagerConnectionStringProvider
-  extends SecretsManagerSecretProvider
-  implements ConnectionStringProvider {
+public class ParameterStoreConnectionStringProvider
+        extends ParameterStoreSecretProvider
+        implements ConnectionStringProvider {
 
   private static final ResourceParameter[] PARAMETERS = {
-    new ResourceParameter(AwsResourceParameterNames.TNS_ALIAS,
-      TNS_ALIAS)
+          new ResourceParameter(AwsResourceParameterNames.TNS_ALIAS, TNS_ALIAS)
   };
 
-  /**
-   * A public no-arg constructor used by {@link java.util.ServiceLoader} to
-   * construct an instance of this provider.
-   */
-  public SecretsManagerConnectionStringProvider() {
-    super("secrets-manager-tnsnames", PARAMETERS);
+  public ParameterStoreConnectionStringProvider() {
+    super("parameter-store-tnsnames", PARAMETERS);
   }
 
   /**
    * Retrieves a database connection string from the tnsnames.ora file stored
-   * in AWS Secrets Manager.
+   * in AWS Parameter Store.
    * <p>
-   * This method accesses the file stored as a secret in AWS Secrets Manager,
+   * This method accesses the file stored as a parameter in AWS Parameter Store,
    * attempts to decode it if it is base64-encoded, and then parses the
    * tnsnames.ora content. It returns the connection string associated with
    * the specified alias from the tnsnames.ora file.
    * </p>
    *
    * @param parameterValues The parameters required to access the tnsnames.ora
-   * file in AWS Secrets Manager, including the secret name and the tnsAlias.
+   * file in AWS Parameter Store, including the parameter name and the tnsAlias.
    * @return The connection string associated with the specified alias
    * in the tnsnames.ora file.
    * @throws IllegalStateException If there is an error reading the tnsnames.ora
-   * file or accessing AWS Secrets Manager.
+   * file or accessing AWS Parameter Store.
    * @throws IllegalArgumentException If the specified alias is invalid or
    * does not exist in the tnsnames.ora file.
    */
@@ -115,5 +109,4 @@ public class SecretsManagerConnectionStringProvider
       throw new IllegalStateException("Failed to read tnsnames.ora content", e);
     }
   }
-
 }

@@ -35,25 +35,44 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.provider.aws;
 
-public enum AwsTestProperty {
-  AWS_S3_URL,
-  AWS_SECRETS_MANAGER_URL,
-  AWS_APP_CONFIG_URL,
-  AWS_REGION,
-  DB_CREDENTIALS_SECRET_NAME,
-  TNSNAMES_SECRET_NAME,
-  TNS_ALIAS,
-  PKCS12_WALLET_SECRET_NAME,
-  WALLET_PASSWORD,
-  SSO_WALLET_SECRET_NAME,
-  PEM_WALLET_SECRET_NAME,
-  PKCS12_SEPS_WALLET_SECRET_NAME,
-  SSO_SEPS_WALLET_SECRET_NAME,
-  AWS_PARAMETER_STORE_URL,
-  AWS_PARAMETER_STORE_PASSWORD_NAME,
-  AWS_PARAMETER_STORE_TNSNAMES_NAME,
-  PKCS12_SEPS_WALLET_PARAMETER_NAME,
-  SSO_SEPS_WALLET_PARAMETER_NAME
+package oracle.jdbc.provider.aws.resource;
+
+import oracle.jdbc.spi.UsernameProvider;
+
+import java.util.Map;
+
+/**
+ * <p>
+ * A provider of username managed as parameters in AWS Systems Manager Parameter Store.
+ * This class inherits parameters and behavior from {@link ParameterStoreSecretProvider}
+ * and {@link AwsResourceProvider}.
+ * </p><p>
+ * This class implements the {@link UsernameProvider} SPI defined by Oracle JDBC.
+ * It is designed to be located and instantiated by {@link java.util.ServiceLoader}.
+ * </p>
+ */
+public class ParameterStoreUsernameProvider
+  extends ParameterStoreSecretProvider
+  implements UsernameProvider {
+
+  /**
+   * A public no-arg constructor used by {@link java.util.ServiceLoader}
+   * to construct an instance of this provider.
+   */
+  public ParameterStoreUsernameProvider() {
+    super("parameter-store-username");
+  }
+
+  /**
+   * Retrieves a username stored in AWS Parameter Store.
+   *
+   * @param parameterValues A map of parameter names and values required for
+   * retrieving the parameter. Must not be null.
+   * @return The secret value as the database username. Not null.
+   */
+  @Override
+  public String getUsername(Map<Parameter, CharSequence> parameterValues) {
+    return getSecret(parameterValues);
+  }
 }
