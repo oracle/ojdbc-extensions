@@ -296,7 +296,7 @@ The following parameters can be used alongside any supported authentication meth
   <td><code>OCI_REGION</code></td>
   <td>
     Specifies the OCI Region Identifier to be used for requests and interactive authentication.
-    This is especially important in government or non-OC1 regions to ensure authentication is routed correctly.<br>
+    This allows targeting a specific region for login, which is especially useful when the region differs from the default behavior.<br>
     <i>For example, specifying <code>us-langley-1</code> will direct the login to 
     <code>https://login.us-langley-1.oraclegovcloud.com/</code></i>
   </td>
@@ -306,7 +306,7 @@ The following parameters can be used alongside any supported authentication meth
   </td>
   <td>
     <i>If not provided, the login URL will default to <code>https://login.oci.oraclecloud.com</code>,
-    which may not work for gov regions.</i>
+    which may not work for your target region.</i>
   </td>
 </tr>
 </tbody>
