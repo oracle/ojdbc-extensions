@@ -38,6 +38,7 @@
 
 package oracle.jdbc.provider.oci.configuration;
 
+import com.oracle.bmc.Region;
 import oracle.jdbc.provider.oci.authentication.AuthenticationDetailsFactory;
 import oracle.jdbc.provider.oci.authentication.AuthenticationMethod;
 import oracle.jdbc.provider.parameter.Parameter;
@@ -92,6 +93,7 @@ public final class OciConfigurationParameters {
       .addParameter("OCI_FINGERPRINT", FINGERPRINT)
       .addParameter("OCI_KEY_FILE", PRIVATE_KEY)
       .addParameter("OCI_PASS_PHRASE", PASS_PHRASE)
+      .addParameter("OCI_REGION", REGION, null, Region::fromRegionCodeOrId)
       .addParameter("OCI_INSTANCE_PRINCIPAL_TIMEOUT", INSTANCE_PRINCIPAL_TIMEOUT,
          5,
          s -> {
