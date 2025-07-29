@@ -278,7 +278,40 @@ in Optional Parameters</td>
 </tbody>
 </table>
 
-<i>*Note: this parameter is introduced to align with entries of the config file. The region that is used for calling Object Storage, Database Tools Connection, and Secret services will be extracted from the Object Storage URL, Database Tools Connection OCID or Secret OCID</i>
+<i>*Note: The region that is used for calling Object Storage, Database Tools Connection, and Vault services may be inferred from the Object Storage URL, Database Tools Connection OCID, or Secret OCID. However, for interactive authentication (e.g., using <code>OCI_INTERACTIVE</code>), it is recommended to explicitly set <code>OCI_REGION</code> to ensure the login is directed to the correct realm (such as <code>oraclegovcloud.com</code> for government regions).</i>
+
+### Additional Optional Parameters
+
+The following parameters can be used alongside any supported authentication method to configure specific behaviors.
+
+<table>
+<thead><tr>
+  <th>Parameter Name</th>
+  <th>Description</th>
+  <th>Accepted Values</th>
+  <th>Default Value</th>
+</tr></thead>
+<tbody>
+<tr>
+  <td><code>OCI_REGION</code></td>
+  <td>
+    Specifies the OCI Region Identifier to be used for requests and interactive authentication.
+    This is especially important in government or non-OC1 regions to ensure authentication is routed correctly.<br>
+    <i>For example, specifying <code>us-langley-1</code> will direct the login to 
+    <code>https://login.us-langley-1.oraclegovcloud.com/</code></i>
+  </td>
+  <td>
+    A valid <a href="https://docs.oracle.com/en-us/iaas/Content/General/Concepts/regions.htm">region identifier</a>,
+    such as <code>us-langley-1</code> or <code>ap-sydney-1</code>.
+  </td>
+  <td>
+    <i>If not provided, the login URL will default to <code>https://login.oci.oraclecloud.com</code>,
+    which may not work for gov regions.</i>
+  </td>
+</tr>
+</tbody>
+</table>
+
 
 ## Caching configuration
 
