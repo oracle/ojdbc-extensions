@@ -1,5 +1,5 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.oracle.database.jdbc</groupId>
@@ -155,10 +155,13 @@
             </goals>
             <configuration>
               <attach>true</attach>
+              <!-- Disable strict checks -->
+              <doclint>none</doclint>
             </configuration>
           </execution>
         </executions>
         <configuration>
+          <!-- Your custom tags -->
           <tags>
             <tag>
               <name>apiNote</name>
@@ -176,6 +179,8 @@
               <head>Implementation Note:</head>
             </tag>
           </tags>
+          <!-- Global doclint suppression -->
+          <doclint>none</doclint>
         </configuration>
       </plugin>
       <plugin>

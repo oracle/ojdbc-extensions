@@ -1,73 +1,127 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-  <parent>
+    <parent>
         <groupId>com.oracle.database.jdbc</groupId>
         <artifactId>ojdbc-extensions</artifactId>
         <version>1.0.3</version>
-  </parent>
+    </parent>
 
-  <name>Oracle JDBC Observability Provider</name>
-  <groupId>com.oracle.database.jdbc</groupId>
-  <artifactId>ojdbc-provider-observability</artifactId>
+    <name>Oracle JDBC Observability Provider</name>
+    <groupId>com.oracle.database.jdbc</groupId>
+    <artifactId>ojdbc-provider-observability</artifactId>
 
-  <properties>
-      <opentelemetry.version>1.44.1</opentelemetry.version>
-      <maven.compiler.source>11</maven.compiler.source>
-      <maven.compiler.target>11</maven.compiler.target>
-  </properties>
+    <properties>
+        <opentelemetry.version>1.44.1</opentelemetry.version>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+    </properties>
 
-  <dependencies>
-    <dependency>
-      <groupId>com.oracle.database.jdbc</groupId>
-      <artifactId>ojdbc11</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.opentelemetry</groupId>
-      <artifactId>opentelemetry-api</artifactId>
-      <version>${opentelemetry.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-engine</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-params</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <artifactId>ojdbc-provider-common</artifactId>
-      <groupId>com.oracle.database.jdbc</groupId>
-      <classifier>tests</classifier>
-      <type>test-jar</type>
-    </dependency>
-  </dependencies>
-  <build>
-      <plugins>
-          <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-surefire-plugin</artifactId>
-              <configuration>
-              <!-- 
-                ObservabilityConfigurationTest must run first and alone since it depends on
-                ObservabilityConfiguration being started with system properties set on the 
-                test.
-                Running tests alphabetical and single threaded ensures that.
-              -->
-                <parallel>none</parallel>
-                <runOrder>alphabetical</runOrder>
-              </configuration>
-          </plugin>
-      </plugins>
-  </build>
+    <dependencies>
+        <!--<dependency>
+          <groupId>com.oracle.database.jdbc</groupId>
+          <artifactId>ojdbc11</artifactId>
+        </dependency>-->
+        <dependency>
+            <groupId>com.oracle</groupId>
+            <artifactId>ojdbc</artifactId>
+            <version>11.2.0.4</version> <!-- Change to your version -->
+            <scope>system</scope>
+            <systemPath>/Users/abdessamadelaaissaoui/Desktop/jars/ojdbc21.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-api</artifactId>
+            <version>${opentelemetry.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <artifactId>ojdbc-provider-common</artifactId>
+            <groupId>com.oracle.database.jdbc</groupId>
+            <classifier>tests</classifier>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle</groupId>
+            <artifactId>ucp</artifactId>
+            <version>11.2.0.4</version> <!-- Change to your version -->
+            <scope>system</scope>
+            <systemPath>/Users/abdessamadelaaissaoui/Desktop/jars/ucp21.jar</systemPath>
+        </dependency>
+
+        <dependency>
+            <groupId>com.oracle</groupId>
+            <artifactId>oraclepki</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>/Users/abdessamadelaaissaoui/Downloads/oraclepki.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle</groupId>
+            <artifactId>ons</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>/Users/abdessamadelaaissaoui/Downloads/ons.jar</systemPath>
+        </dependency>
+        <!-- OpenTelemetry API -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-api</artifactId>
+            <version>1.32.0</version>
+        </dependency>
+
+        <!-- OpenTelemetry SDK -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk</artifactId>
+            <version>1.32.0</version>
+        </dependency>
+
+        <!-- Prometheus Exporter -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-prometheus</artifactId>
+            <version>1.32.0-alpha</version>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk-extension-autoconfigure</artifactId>
+            <version>1.32.0</version>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!--
+                      ObservabilityConfigurationTest must run first and alone since it depends on
+                      ObservabilityConfiguration being started with system properties set on the
+                      test.
+                      Running tests alphabetical and single threaded ensures that.
+                    -->
+                    <parallel>none</parallel>
+                    <runOrder>alphabetical</runOrder>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
