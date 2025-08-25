@@ -65,8 +65,13 @@ public class SimpleParameterStoreConnectionStringProviderExample {
       // from AWS Parameter Store
       connectionProps.put("oracle.jdbc.provider.connectionString",
         "ojdbc-provider-aws-parameter-store-tnsnames");
+
+      // Specify the AWS Parameter Store parameter name that contains
+      // the tnsnames.ora file content (base64-encoded or plain text)
       connectionProps.put("oracle.jdbc.provider.connectionString.parameterName",
         "parameter-name");
+
+      // Specify the TNS alias from the tnsnames.ora file to use
       connectionProps.put("oracle.jdbc.provider.connectionString.tnsAlias",
         "tns-alias");
 

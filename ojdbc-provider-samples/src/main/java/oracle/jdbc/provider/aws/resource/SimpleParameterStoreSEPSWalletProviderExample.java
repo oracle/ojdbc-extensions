@@ -61,10 +61,18 @@ public class SimpleParameterStoreSEPSWalletProviderExample {
       ds.setURL(JDBC_URL);
 
       Properties connectionProps = new Properties();
-      connectionProps.put("oracle.jdbc.provider.username", "ojdbc-provider-aws-parameter-store-seps");
-      connectionProps.put("oracle.jdbc.provider.password", "ojdbc-provider-aws-parameter-store-seps");
-      connectionProps.put("oracle.jdbc.provider.username.parameterName", "parameter-name");
-      connectionProps.put("oracle.jdbc.provider.password.parameterName", "parameter-name");
+      // Configure AWS Parameter Store SEPS providers
+      connectionProps.put("oracle.jdbc.provider.username",
+        "ojdbc-provider-aws-parameter-store-seps");
+      connectionProps.put("oracle.jdbc.provider.password",
+        "ojdbc-provider-aws-parameter-store-seps");
+
+      // Set the AWS Parameter Store parameter name containing
+      // the base64-encoded SEPS wallet
+      connectionProps.put("oracle.jdbc.provider.username.parameterName",
+        "parameter-name");
+      connectionProps.put("oracle.jdbc.provider.password.parameterName",
+        "parameter-name");
 
       ds.setConnectionProperties(connectionProps);
 

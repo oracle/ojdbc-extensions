@@ -62,8 +62,17 @@ public class SimpleParameterStorePasswordProviderExample {
       ds.setUser("DB_USER");
 
       Properties connectionProps = new Properties();
-      connectionProps.put("oracle.jdbc.provider.password", "ojdbc-provider-aws-parameter-store-password");
-      connectionProps.put("oracle.jdbc.provider.password.parameterName", "parameter-name");
+
+      // Configure the AWS Parameter Store Password Provider
+      // This tells Oracle JDBC to use the Parameter Store provider
+      // for password retrieval
+      connectionProps.put("oracle.jdbc.provider.password",
+        "ojdbc-provider-aws-parameter-store-password");
+
+      // Specify the AWS Parameter Store parameter name that contains
+      // the database password
+      connectionProps.put("oracle.jdbc.provider.password.parameterName",
+        "parameter-name");
 
       ds.setConnectionProperties(connectionProps);
 
