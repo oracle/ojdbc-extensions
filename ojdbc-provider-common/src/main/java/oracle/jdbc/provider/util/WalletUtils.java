@@ -114,7 +114,8 @@ public final class WalletUtils {
    * </p>
    * <ol>
    *   <li>
-   *     <strong>If {@code connectionStringIndex} is {@code null}:</strong>
+   *     <strong>If {@code connectionStringIndex} is {@code null}, empty,
+   *     or blank:</strong>
    *     <ul>
    *       <li>
    *         The method first attempts to retrieve credentials using the default
@@ -182,6 +183,11 @@ public final class WalletUtils {
    */
   public static Credentials getCredentials(
     byte[] walletBytes, char[] walletPassword, String connectionStringIndex) {
+
+    // treat blank as missing
+    if (connectionStringIndex != null && connectionStringIndex.trim().isEmpty()) {
+      connectionStringIndex = null;
+    }
 
     OracleWallet wallet = new OracleWallet();
     try {
