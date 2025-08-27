@@ -13,10 +13,6 @@ jobs:
       AWS_REGION: ${{ secrets.TEST_AWS_REGION }}
       AWS_ACCESS_KEY_ID: ${{ secrets.TEST_AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.TEST_AWS_SECRET_ACCESS_KEY }}
-      VAULT_ADDR: ${{ secrets.TEST_VAULT_ADDR }}
-      HCP_ORG_ID: ${{ secrets.TEST_HCP_ORG_ID }}
-      HCP_PROJECT_ID: ${{ secrets.TEST_HCP_PROJECT_ID }}
-      HCP_APP_NAME: ${{ secrets.TEST_HCP_APP_NAME }}
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
@@ -142,25 +138,6 @@ jobs:
           echo "${{ secrets.TEST_GCP_CONFIG }}" > $HOME/.gcp/config.json
           echo "${{ secrets.GCP_TEST_PROPERTIES }}" > ojdbc-provider-gcp/test.properties
           
-          # Generate ojdbc-provider-hashicorp/test.properties
-          echo -e "VAULT_ADDR=${{ secrets.TEST_VAULT_ADDR }}\n
-          DEDICATED_VAULT_SECRET_PATH=${{ secrets.TEST_DEDICATED_VAULT_SECRET_PATH }}\n
-          DEDICATED_VAULT_SECRET_PATH_WITH_MULTIPLE_KEYS=${{ secrets.TEST_DEDICATED_VAULT_SECRET_PATH_WITH_MULTIPLE_KEYS }}\n
-          VAULT_USERNAME=${{ secrets.TEST_VAULT_USERNAME }}\n
-          VAULT_PASSWORD=${{ secrets.TEST_VAULT_PASSWORD }}\n
-          VAULT_NAMESPACE=${{ secrets.TEST_VAULT_NAMESPACE }}\n
-          ROLE_ID=${{ secrets.TEST_ROLE_ID }}\n
-          SECRET_ID=${{ secrets.TEST_SECRET_ID }}\n
-          GITHUB_TOKEN=${{ secrets.TEST_GITHUB_TOKEN }}\n
-          KEY=${{ secrets.TEST_KEY }}\n
-          HCP_ORG_ID=${{ secrets.TEST_HCP_ORG_ID }}\n
-          HCP_PROJECT_ID=${{ secrets.TEST_HCP_PROJECT_ID }}\n
-          HCP_APP_NAME=${{ secrets.TEST_HCP_APP_NAME }}\n
-          HCP_CLIENT_ID=${{ secrets.TEST_HCP_CLIENT_ID }}\n
-          HCP_CLIENT_SECRET=${{ secrets.TEST_HCP_CLIENT_SECRET }}\n
-          SECRET_NAME=${{ secrets.TEST_SECRET_NAME }}\n
-          SECRET_NAME_WITH_MULTIPLE_KEYS=${{ secrets.TEST_SECRET_NAME_WITH_MULTIPLE_KEYS }}\n
-          " >> ojdbc-provider-hashicorp/test.properties
 
       - name: Run tests with Maven
         run: mvn -B test --file pom.xml
@@ -181,4 +158,3 @@ jobs:
           rm ojdbc-provider-jackson-oson/test.properties
           
           rm ojdbc-provider-aws/test.properties
-          rm ojdbc-provider-hashicorp/test.properties

@@ -115,7 +115,6 @@ For the JSON type of provider (Azure Key Vault, HTTP/HTTPS, File) the password i
     - `base64` (Base64)
     - `awssecretsmanager` (AWS Secrets Manager)
     - `hcpvaultdedicated` (HCP Vault Dedicated)
-    - `hcpvaultsecret` (HCP Vault Secrets)
     - `gcpsecretmanager` (GCP Secret Manager)
 - `value`
   - Mandatory
@@ -125,7 +124,6 @@ For the JSON type of provider (Azure Key Vault, HTTP/HTTPS, File) the password i
     - Base64 Encoded password (if base64)
     - AWS Secret name (if awssecretsmanager)
     - Secret path (if hcpvaultdedicated)
-    - Secret name (if hcpvaultsecret)
     - Secret name (if gcpsecretmanager)
 - `authentication`
   - Optional
