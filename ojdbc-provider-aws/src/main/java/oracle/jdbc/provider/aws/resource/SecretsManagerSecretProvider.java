@@ -58,9 +58,9 @@ import static oracle.jdbc.provider.aws.secrets.SecretsManagerFactory.SECRET_NAME
 public class SecretsManagerSecretProvider extends AwsResourceProvider {
 
   private static final ResourceParameter[] PARAMETERS = {
-    new ResourceParameter(AwsSecretsManagerResourceParameterNames.SECRET_NAME,
+    new ResourceParameter(AwsResourceParameterNames.SECRET_NAME,
       SECRET_NAME),
-    new ResourceParameter(AwsSecretsManagerResourceParameterNames.FIELD_NAME,
+    new ResourceParameter(AwsResourceParameterNames.FIELD_NAME,
       FIELD_NAME)
   };
 
@@ -94,7 +94,7 @@ public class SecretsManagerSecretProvider extends AwsResourceProvider {
     String secretJson = getResource(SecretsManagerFactory.getInstance(),
       parameterValues);
     ResourceParameter fieldNameParam = Stream.of(PARAMETERS)
-      .filter(param -> param.name().equals(AwsSecretsManagerResourceParameterNames.FIELD_NAME))
+      .filter(param -> param.name().equals(AwsResourceParameterNames.FIELD_NAME))
       .findFirst()
       .orElse(null);
     String fieldName = parameterValues.containsKey(fieldNameParam) ?

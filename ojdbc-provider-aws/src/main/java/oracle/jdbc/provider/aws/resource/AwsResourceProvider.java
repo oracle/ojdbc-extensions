@@ -48,7 +48,7 @@ import java.util.stream.Stream;
 import static oracle.jdbc.provider.aws.authentication.AwsAuthenticationMethod.DEFAULT;
 import static oracle.jdbc.provider.aws.authentication.AwsCredentialsFactory.AUTHENTICATION_METHOD;
 import static oracle.jdbc.provider.aws.configuration.AwsConfigurationParameters.REGION;
-import static oracle.jdbc.provider.aws.resource.AwsSecretsManagerResourceParameterNames.AWS_REGION;
+import static oracle.jdbc.provider.aws.resource.AwsResourceParameterNames.AWS_REGION;
 
 /**
  * Super class of all {@code OracleResourceProvider} implementations

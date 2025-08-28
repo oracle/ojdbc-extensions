@@ -30,14 +30,22 @@ particular provider.
 <dl>
 <dt><a href="#aws-secrets-manager-username-provider">Secrets Manager Username Provider</a></dt>
 <dd>Provides a database username from AWS Secrets Manager</dd>
+<dt><a href="#aws-parameter-store-username-provider">Parameter Store Username Provider</a></dt>
+<dd>Provides a database username from AWS Parameter Store</dd>
 <dt><a href="#aws-secrets-manager-password-provider">Secrets Manager Password Provider</a></dt>
 <dd>Provides a database password from AWS Secrets Manager</dd>
+<dt><a href="#aws-parameter-store-password-provider">Parameter Store Password Provider</a></dt>
+<dd>Provides a database password from AWS Parameter Store</dd>
 <dt><a href="#aws-secrets-manager-connection-string-provider">Secrets Manager Connection String Provider</a></dt>
 <dd>Provides connection strings from a tnsnames.ora file stored in AWS Secrets Manager</dd>
+<dt><a href="#aws-parameter-store-connection-string-provider">Parameter Store Connection String Provider</a></dt>
+<dd>Provides connection strings from a tnsnames.ora file stored in AWS Parameter Store</dd>
 <dt><a href="#aws-secrets-manager-tcps-wallet-provider">Secrets Manager TCPS Wallet Provider</a></dt>
 <dd>Provides TCPS/TLS wallet from AWS Secrets Manager</dd>
 <dt><a href="#aws-secrets-manager-seps-wallet-provider">Secrets Manager SEPS Wallet Provider</a></dt>
 <dd>Provides SEPS (Secure External Password Store) wallet from AWS Secrets Manager</dd>
+<dt><a href="#aws-parameter-store-seps-wallet-provider">Parameter Store SEPS Wallet Provider</a></dt>
+<dd>Provides SEPS (Secure External Password Store) wallet from AWS Parameter Store</dd>
 <dt><a href="#common-parameters-for-resource-providers">Common Parameters for Resource Providers</a></dt>
 <dd>Common parameters supported by the resource providers</dd>
 </dl>
@@ -330,6 +338,37 @@ An example of a
 that configures this provider can be found in
 [example-vault.properties](example-aws-secretsmanager.properties).
 
+## AWS Parameter Store Username Provider
+
+The Parameter Store Username Provider provides Oracle JDBC with a database username stored in AWS Systems Manager Parameter Store. 
+This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified
+by the name `ojdbc-provider-aws-parameter-store-username`.
+
+In addition to the set of [common parameters](#common-parameters-for-resource-providers),
+this provider also supports the parameters listed below.
+
+<table>
+<thead><tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Accepted Values</th>
+<th>Default Value</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>parameterName</code></td>
+<td>The name of a parameter in AWS Parameter Store.</td>
+<td>Any valid parameter name.</td>
+<td><i>No default value. A value must be configured for this parameter.</i></td>
+</tr>
+</tbody>
+</table>
+
+An example of a
+[connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
+that configures this provider can be found in
+[example-vault.properties](example-aws-parameterstore.properties).
+
 ## AWS Secrets Manager Password Provider
 The Secrets Manager Password Provider provides Oracle JDBC with a database password
 that is managed by the AWS Secrets Manager service. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html)
@@ -379,6 +418,36 @@ An example of a
 [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
 that configures this provider can be found in
 [example-vault.properties](example-aws-secretsmanager.properties).
+
+## AWS Parameter Store Password Provider
+
+The Parameter Store Password Provider provides Oracle JDBC with a database password stored in AWS Systems Manager Parameter Store.
+This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified
+by the name `ojdbc-provider-aws-parameter-store-password`.
+
+In addition to the set of [common parameters](#common-parameters-for-resource-providers),
+this provider also supports the parameters listed below.
+<table>
+<thead><tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Accepted Values</th>
+<th>Default Value</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>parameterName</code></td>
+<td>The name of a parameter in AWS Parameter Store.</td>
+<td>Any valid parameter name.</td>
+<td><i>No default value. A value must be configured for this parameter.</i></td>
+</tr>
+</tbody>
+</table>
+
+An example of a
+[connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
+that configures this provider can be found in
+[example-vault.properties](example-aws-parameterstore.properties).
 
 ## AWS Secrets Manager TCPS Wallet Provider
 
@@ -542,6 +611,49 @@ The name of the key to extract from the secret when it is stored as a set of key
 
 An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-secrets-manager-wallet.properties](example-aws-secretsmanager-wallet.properties.properties).
 
+## AWS Parameter Store SEPS Wallet Provider
+
+The SEPS Wallet Provider retrieves a SEPS wallet stored in AWS Parameter Store. 
+This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified
+by the name `ojdbc-provider-aws-parameter-store-seps`.
+
+This provider works identically to the [AWS Secrets Manager SEPS Wallet Provider](#aws-secrets-manager-seps-wallet-provider)
+except that it uses a Parameter Store parameter instead of a Secrets Manager secret.
+
+In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider also supports the parameters listed below.
+
+<table>
+<thead><tr>
+<th>Parameter Name</th>
+<th>Description</th>
+<th>Accepted Values</th>
+<th>Default Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>parameterName</code></td>
+<td>The name of a parameter in AWS Parameter Store.</td>
+<td>Any valid parameter name.</td>
+<td><i>No default value. A value must be configured for this parameter.</i></td>
+</tr>
+<tr>
+<td><code>walletPassword</code></td>
+<td>Optional password for PKCS12 wallets.</td>
+<td>Any valid password</td>
+<td><i>None. Required if wallet is password-protected.</i></td>
+</tr>
+<tr>
+<td><code>connectionStringIndex</code></td>
+<td>Optional index to select specific credentials in SEPS wallet.</td>
+<td>Any positive integer (e.g., 1, 2, 3)</td>
+<td><i>None</i></td>
+</tr>
+</tbody>
+</table>
+
+An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-parameter-store-wallet.properties](example-aws-parameterstore-wallet.properties).
+
 ## AWS Secrets Manager Connection String Provider
 
 The Connection String Provider provides Oracle JDBC with a connection string managed by the AWS Secrets Manager service.
@@ -606,6 +718,49 @@ In addition to the set of [common parameters](#common-parameters-for-resource-pr
 </table>
 
 An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-aws-secretsmanager.properties](example-aws-secretsmanager.properties).
+
+## AWS Parameter Store Connection String Provider
+
+The Connection String Provider provides Oracle JDBC with a connection string managed by the AWS Systems Manager Parameter Store service.
+This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified
+by the name `ojdbc-provider-aws-parameter-store-tnsnames`.
+
+This provider retrieves and decodes a `tnsnames.ora` file stored as a parameter value in AWS Parameter Store.
+
+You can store the contents of the `tnsnames.ora` file as:
+
+- A base64-encoded string containing the full contents of the `tnsnames.ora` file.
+
+- Plain text, by simply copying and pasting the contents directly into the parameter value.
+
+In addition to the set of [common parameters](#common-parameters-for-resource-providers), this provider also requires the parameters listed below.
+
+<table>
+<thead>
+  <tr>
+    <th>Parameter Name</th>
+    <th>Description</th>
+    <th>Accepted Values</th>
+    <th>Default Value</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td><code>parameterName</code></td> 
+    <td>The name of a parameter in AWS Systems Manager Parameter Store.</td> 
+    <td>Any valid parameter name.</td> 
+    <td><i>No default value. A value must be configured for this parameter.</i></td>
+  </tr>
+  <tr>
+    <td><code>tnsAlias</code></td>
+    <td>Specifies the alias to retrieve the appropriate connection string from the <code>tnsnames.ora</code> file.</td> 
+    <td>Any valid alias present in your <code>tnsnames.ora</code> file.</td>
+    <td><i>No default value. A value must be configured for this parameter.</i></td> 
+  </tr> 
+</tbody>
+</table>
+
+An example of a [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE) that configures this provider can be found in [example-aws-parameterstore.properties](example-aws-parameterstore.properties).
 
 ## Common Parameters for Resource Providers
 

@@ -38,31 +38,51 @@
 
 package oracle.jdbc.provider.aws.resource;
 
+import oracle.jdbc.datasource.impl.OracleDataSource;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Properties;
+
 /**
- * Centralized parameter name constants used by AWS Secrets Manager resource providers.
+ * Example demonstrating how to configure Oracle JDBC with the AWS Secrets Manager
+ * Connection String Provider to retrieve connection strings from a tnsnames.ora
+ * file stored in AWS Secrets Manager.
  */
-public final class AwsSecretsManagerResourceParameterNames {
+public class SimpleSecretsManagerConnectionStringProviderExample {
+  public static void main(String[] args) throws SQLException {
+    try {
+      OracleDataSource ds = new OracleDataSource();
+      ds.setURL("jdbc:oracle:thin:@");
+      ds.setUser("DB_USERNAME");
+      ds.setPassword("DB_PASSWORD");
 
-  private AwsSecretsManagerResourceParameterNames() {}
+      Properties connectionProps = new Properties();
 
-  /** The AWS region where the secret is located (e.g., eu-north-1). */
-  public static final String AWS_REGION = "awsRegion";
+      // Connection String Provider for retrieving tnsnames.ora content
+      // from AWS Secrets Manager
+      connectionProps.put("oracle.jdbc.provider.connectionString",
+        "ojdbc-provider-aws-secrets-manager-tnsnames");
+      connectionProps.put("oracle.jdbc.provider.connectionString.secretName",
+        "secret-name");
+      connectionProps.put("oracle.jdbc.provider.connectionString.tnsAlias",
+        "tns-alias");
 
-  /** The name of the secret stored in AWS Secrets Manager. */
-  public static final String SECRET_NAME = "secretName";
+      ds.setConnectionProperties(connectionProps);
 
-  /** Optional field name to extract from a JSON secret. */
-  public static final String FIELD_NAME = "fieldName";
-
-  /** The alias used to retrieve a connection string from tnsnames.ora. */
-  public static final String TNS_ALIAS = "tnsAlias";
-
-  /** Optional password used to decrypt the wallet (for PKCS12 or encrypted PEM). */
-  public static final String WALLET_PASSWORD = "walletPassword";
-
-  /** The wallet format: SSO, PKCS12, or PEM. */
-  public static final String TYPE = "type";
-
-  /** Index of the credential set in the wallet */
-  public static final String CONNECTION_STRING_INDEX = "connectionStringIndex";
+      try (Connection cn = ds.getConnection()) {
+        String query = "SELECT 'Hello, db' FROM sys.dual";
+        try (Statement st = cn.createStatement();
+             ResultSet rs = st.executeQuery(query)) {
+          if (rs.next()) {
+            System.out.println(rs.getString(1));
+          }
+        }
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException("Connection failed: ", e);
+    }
+  }
 }
