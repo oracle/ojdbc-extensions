@@ -144,7 +144,6 @@ For the JSON type of provider (AWS S3, AWS Secrets Manager, AWS Parameter Store,
       - `awssecretsmanager` (AWS Secrets Manager)
       - `awsparameterstore` (AWS Parameter Store)
       - `hcpvaultdedicated` (HCP Vault Dedicated)
-      - `hcpvaultsecret` (HCP Vault Secrets)
       - `gcpsecretmanager` (GCP Secret Manager)
 - `value`
     - Mandatory
@@ -155,7 +154,6 @@ For the JSON type of provider (AWS S3, AWS Secrets Manager, AWS Parameter Store,
         - AWS Secret name (if awssecretsmanager)
         - AWS Parameter name (if awsparameterstore)
         - Secret path (if hcpvaultdedicated)
-        - Secret name (if hcpvaultsecret)
         - Secret name (if gcpsecretmanager)
 - `field_name`
   - Optional
