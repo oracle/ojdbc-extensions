@@ -22,8 +22,11 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.oracle.database.jdbc</groupId>
-      <artifactId>ojdbc11</artifactId>
+      <groupId>com.oracle</groupId>
+      <artifactId>ojdbc</artifactId>
+      <version>11.2.0.4</version> <!-- Change to your version -->
+      <scope>system</scope>
+      <systemPath>/Users/abdessamadelaaissaoui/Desktop/ojdbc11.jar</systemPath>
     </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
@@ -51,6 +54,43 @@
       <classifier>tests</classifier>
       <type>test-jar</type>
     </dependency>
+    <dependency>
+      <groupId>com.oracle</groupId>
+      <artifactId>ucp</artifactId>
+      <version>11.2.0.4</version>
+      <scope>system</scope>
+      <systemPath>/Users/abdessamadelaaissaoui/Desktop/ucp11.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.oracle.database.security</groupId>
+      <artifactId>oraclepki</artifactId>
+      <version>23.3.0.23.09</version>
+    </dependency>
+    <dependency>
+      <groupId>com.oracle.database.ha</groupId>
+      <artifactId>ons</artifactId>
+      <version>23.9.0.25.07</version>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-api</artifactId>
+      <version>1.32.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-sdk</artifactId>
+      <version>1.32.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-exporter-prometheus</artifactId>
+      <version>1.32.0-alpha</version>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-sdk-extension-autoconfigure</artifactId>
+      <version>1.32.0</version>
+    </dependency>
   </dependencies>
   <build>
       <plugins>
@@ -58,9 +98,9 @@
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-surefire-plugin</artifactId>
               <configuration>
-              <!-- 
+              <!--
                 ObservabilityConfigurationTest must run first and alone since it depends on
-                ObservabilityConfiguration being started with system properties set on the 
+                ObservabilityConfiguration being started with system properties set on the
                 test.
                 Running tests alphabetical and single threaded ensures that.
               -->
