@@ -1,3 +1,2 @@
-oracle.ucp.provider.observability.logging.LoggingUCPEventListenerProvider
 oracle.ucp.provider.observability.jfr.core.JFRUCPEventListenerProvider
-oracle.ucp.provider.observability.otel.OtelOpenTelemetryUCPEventListenerProvider
+oracle.ucp.provider.observability.otel.OtelUCPEventListenerProvider
