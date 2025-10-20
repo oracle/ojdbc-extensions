@@ -93,4 +93,8 @@ public interface ObservabilityConfigurationMBean {
    * @param sensitiveDataEnabled true to enable sensitive data, otherwise false.
    */
   void setSensitiveDataEnabled(boolean sensitiveDataEnabled);
+
+  String getSemconvOptIn();
+  void setSemconvOptIn(String optIn);
+
 }

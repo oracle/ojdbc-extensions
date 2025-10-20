@@ -12,29 +12,112 @@ will publish these events into Open Telemetry. These events include:
  * AC begin and success
  * VIP down event
 
-The following attributes are added the traces for each event:
- * **Roundtrips**
-    * Connection ID
-    * Database Operation
-    * Database User
-    * Database Tenant
-    * SQL ID
-    * Original SQL Text *(only present if sensitive data is enabled)*
-    * Actual SQL Text *(only present if sensitive data is enabled)*
-  * **AC begin and success**
-    * Error Message
-    * Error code
-    * SQL state
-    * Current replay retry count
-  * **VIP down event**
-    * Error message
-    * VIP address
-    * Protocol *(only present if sensitive data is enabled)*
-    * Host *(only present if sensitive data is enabled)*
-    * Port *(only present if sensitive data is enabled)*
-    * Service name *(only present if sensitive data is enabled)*
-    * SID *(only present if sensitive data is enabled)*
-    * Connection data *(only present if sensitive data is enabled)*
+## Semantic Conventions (OpenTelemetry Tracer)
+
+The OpenTelemetry tracer supports both **stable** and **experimental** (legacy)
+OpenTelemetry semantic conventions for Oracle Database instrumentation.
+
+### Semantic Convention Migration
+
+The OpenTelemetry tracer supports three modes controlled by the `OTEL_SEMCONV_STABILITY_OPT_IN`
+environment variable:
+
+* **Empty/Not Set (default)** - Emits only experimental (legacy) conventions for backward compatibility
+* **`database`** - Emits only the new stable Oracle Database semantic conventions
+* **`database/dup`** - Emits both old and new conventions (dual mode for gradual migration)
+
+This configuration can be set via environment variable or changed at runtime through the MBean interface.
+
+See the [OpenTelemetry Database Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/database/database-spans/)
+for details on the stable conventions.
+
+### Roundtrip Events
+
+#### Stable Conventions
+When `OTEL_SEMCONV_STABILITY_OPT_IN=database` or `database/dup`:
+
+* **Required/Recommended Attributes**
+    * `db.system.name` - Always set to `"oracle.db"`
+    * `db.namespace` - Format: `{instance_name}|{database_name}|{service_name}`
+    * `db.operation.name` - Database operation being executed
+    * `db.query.summary` - Low cardinality query summary (SQL type)
+    * `server.address` - Database server hostname
+    * `server.port` - Database server port (if non-default, i.e., not 1521)
+    * `oracle.db.query.sql.id` - Oracle SQL_ID
+    * `oracle.db.session.id` - Oracle session ID
+    * `oracle.db.server.pid` - Oracle server process ID
+    * `oracle.db.shard.name` - Oracle shard name (if applicable)
+    * `thread.id` - Current thread ID
+    * `thread.name` - Current thread name
+
+* **Opt-In Attributes** *(only present if sensitive data is enabled)*
+    * `db.user` - Database user name
+    * `db.query.text` - Actual SQL query text
+    * `db.response.returned_rows` - Number of rows returned
+
+* **Error Attributes** *(only present on errors)*
+    * `error.type` - Exception class name (e.g., `java.sql.SQLSyntaxErrorException`)
+    * `db.response.status_code` - Oracle error code (format: `ORA-XXXXX`)
+
+#### Legacy Conventions
+When `OTEL_SEMCONV_STABILITY_OPT_IN` is empty/not set or `database/dup`:
+
+* `Connection ID`
+* `Database Operation`
+* `Database Tenant`
+* `SQL ID`
+* `thread.id`
+* `thread.name`
+* `Database User` *(only present if sensitive data is enabled)*
+* `Original SQL Text` *(only present if sensitive data is enabled)*
+* `Actual SQL Text` *(only present if sensitive data is enabled)*
+
+### Application Continuity (AC) Replay Events
+
+#### Stable Conventions
+When `OTEL_SEMCONV_STABILITY_OPT_IN=database` or `database/dup`:
+
+* `db.system.name` - Always set to `"oracle.db"`
+* `error.type` - Error message that triggered replay
+* `db.response.status_code` - Oracle error code (format: `ORA-XXXXX`)
+* `db.operation.batch.size` - Current replay retry count
+
+#### Legacy Conventions
+When `OTEL_SEMCONV_STABILITY_OPT_IN` is empty/not set or `database/dup`:
+
+* `Error Message`
+* `Error code`
+* `SQL state`
+* `Current replay retry count`
+
+### VIP Retry Events 
+
+#### Stable Conventions
+When `OTEL_SEMCONV_STABILITY_OPT_IN=database` or `database/dup`:
+
+* `db.system.name` - Always set to `"oracle.db"`
+* `error.type` - Error message that triggered VIP retry
+* `server.address` - VIP address being retried
+
+**Opt-In VIP Debug Attributes** *(only present if sensitive data is enabled)*:
+* `server.port` - Server port number
+* `oracle.db.vip.protocol` - Connection protocol
+* `oracle.db.vip.failed_host` - Host that failed during VIP retry
+* `oracle.db.vip.service_name` - Oracle service name
+* `oracle.db.vip.sid` - Oracle System Identifier (SID)
+* `oracle.db.vip.connection_descriptor` - Full connection descriptor
+
+#### Legacy Conventions
+When `OTEL_SEMCONV_STABILITY_OPT_IN` is empty/not set or `database/dup`:
+
+* `Error message`
+* `VIP Address`
+* `Protocol` *(only present if sensitive data is enabled)*
+* `Host` *(only present if sensitive data is enabled)*
+* `Port` *(only present if sensitive data is enabled)*
+* `Service name` *(only present if sensitive data is enabled)*
+* `SID` *(only present if sensitive data is enabled)*
+* `Connection data` *(only present if sensitive data is enabled)*
 
 ## Installation
 
@@ -68,6 +151,17 @@ oracle.jdbc.provider.traceEventListener.unique_identifier=<unique identifier>
 ```
 
 If no unique identifier is provided, the unique idetifier "default" is used.
+
+### Enabling Stable Semantic Conventions (OpenTelemetry)
+
+To use the new stable OpenTelemetry semantic conventions, set the environment variable:
+```bash
+# Use only stable conventions
+export OTEL_SEMCONV_STABILITY_OPT_IN=database
+
+# OR use both old and new conventions (dual mode for migration)
+export OTEL_SEMCONV_STABILITY_OPT_IN=database/dup
+```
 
 ## Configuration
 

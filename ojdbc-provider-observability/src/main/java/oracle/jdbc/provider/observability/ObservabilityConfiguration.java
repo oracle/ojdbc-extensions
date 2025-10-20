@@ -109,11 +109,31 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
   public static final String OPEN_TELEMETRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED = "oracle.jdbc.provider.opentelemetry.sensitive-enabled";
 
   /**
+   * OpenTelemetry semantic convention stability opt-in environment variable.
+   * Accepts a comma-separated list of values including:
+   * "database" (new stable conventions only),
+   * "database/dup" (both old and new conventions),
+   * or empty/null (old conventions only)
+   */
+  public static final String OTEL_SEMCONV_STABILITY_OPT_IN = "OTEL_SEMCONV_STABILITY_OPT_IN";
+
+
+  /**
    * Default values
    */
   private static final String DEFAULT_ENABLED_TRACERS = "OTEL,JFR";
   private static final String DEFAULT_SENSITIVE_DATA_ENABLED = "false";
   private static final String DEFAULT_OPEN_TELEMETRY_ENABLED = "true";
+  private volatile String semconvOptIn = "";
+
+  public String getSemconvOptIn() {
+    return semconvOptIn == null ? "" : semconvOptIn;
+  }
+
+  public void setSemconvOptIn(String optIn) {
+    this.semconvOptIn = optIn == null ? "" : optIn;
+  }
+
 
   /**
    * Lock used to ensure that only one thread can access the configuration at a time.
@@ -173,6 +193,8 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
   ObservabilityConfiguration(ObservabilityConfigurationType configurationType) {  
     String enabledTracers = DEFAULT_ENABLED_TRACERS;
     String sensitiveDataEnabled = DEFAULT_SENSITIVE_DATA_ENABLED;
+    String optIn = System.getenv(OTEL_SEMCONV_STABILITY_OPT_IN);
+
     if (ObservabilityConfigurationType.OBSERVABILITY.equals(configurationType)) {
       enabledTracers = System.getProperty(ENABLED_TRACERS, DEFAULT_ENABLED_TRACERS);
       sensitiveDataEnabled = System.getProperty(SENSITIVE_DATA_ENABLED, DEFAULT_SENSITIVE_DATA_ENABLED);
@@ -190,6 +212,8 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
 
     setEnabledTracers(enabledTracers);
     setSensitiveDataEnabled(Boolean.parseBoolean(sensitiveDataEnabled));
+    this.setSemconvOptIn(optIn);
+
   }
 
   /**
