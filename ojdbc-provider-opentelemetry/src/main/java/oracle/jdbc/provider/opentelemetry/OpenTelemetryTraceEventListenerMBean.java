@@ -47,7 +47,11 @@ public interface OpenTelemetryTraceEventListenerMBean {
 
   void setSensitiveDataEnabled(boolean enabled);
 
+  void setSemconvOptIn(String optIn);
+
   boolean isEnabled();
 
   boolean isSensitiveDataEnabled();
+
+  String getSemconvOptIn();
 }

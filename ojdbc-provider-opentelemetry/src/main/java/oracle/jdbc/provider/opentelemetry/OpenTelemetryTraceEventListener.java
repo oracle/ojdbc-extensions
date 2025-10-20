@@ -58,9 +58,11 @@ import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 
+import static oracle.jdbc.provider.opentelemetry.OtelSemanticConventions.*;
+
 /**
  * <p>
- * TraceEventListener implementaiton that receives notifications whenever events
+ * TraceEventListener implementation that receives notifications whenever events
  * are generated in the driver and publishes these events into Open Telemetry.
  * </p>
  * <p>
@@ -76,10 +78,17 @@ import io.opentelemetry.context.Scope;
  * {@value #OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_ENABLED}
  * and
  * {@value #OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED}
- * can be used
- * to enable/disable this listener and the use of sensitive data by this
- * listener. A MBean registered by the {@link
- * OpenTelemetryTraceEventListenerProvider} can be used to change these values
+ * can be used to enable/disable this listener and the use of sensitive data
+ * by this listener.
+ * The environment variable {@value #OTEL_SEMCONV_STABILITY_OPT_IN} controls which
+ * semantic convention version to emit:
+ * <ul>
+ *  <li><b>"database"</b> - emit only the new stable Oracle Database semantic conventions</li>
+ *  <li><b>"database/dup"</b> - emit both old and new conventions (for migration)</li>
+ *  <li><b>empty/not set (default)</b> - emit only old experimental conventions</li>
+ * </ul>
+ * A MBean registered by the
+ * {@link OpenTelemetryTraceEventListenerProvider} can be used to change these values
  * at runtime.
  */
 public class OpenTelemetryTraceEventListener
@@ -96,6 +105,15 @@ public class OpenTelemetryTraceEventListener
   public static final String OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED = "oracle.jdbc.provider.opentelemetry.sensitive-enabled";
 
   private static final String TRACE_KEY = "clientcontext.ora$opentelem$tracectx";
+
+  /**
+   * OpenTelemetry semantic convention stability opt-in environment variable.
+   * Accepts a comma-separated list of values including:
+   * "database" (new stable conventions only),
+   * "database/dup" (both old and new conventions),
+   * or empty/null (old conventions only)
+   */
+  public static final String OTEL_SEMCONV_STABILITY_OPT_IN = "OTEL_SEMCONV_STABILITY_OPT_IN";
 
   // Number of parameters expected for each execution event
   private static final Map<JdbcExecutionEvent, Integer> EXECUTION_EVENTS_PARAMETERS = new EnumMap<JdbcExecutionEvent, Integer>(
@@ -126,17 +144,22 @@ public class OpenTelemetryTraceEventListener
    * </p>
    */
   private enum Configuration {
-    INSTANCE(true, false);
+    INSTANCE(true, false, "");
 
     private AtomicBoolean enabled;
     private AtomicBoolean sensitiveDataEnabled;
+    private volatile String semconvOptIn;
 
-    private Configuration(boolean enabled, boolean sensitiveDataEnabled) {
+    private Configuration(boolean enabled, boolean sensitiveDataEnabled, String defaultOptIn) {
       String enabledStr = System.getProperty(OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_ENABLED);
       String sensitiveStr = System.getProperty(OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED);
+      String optInStr = System.getenv(OTEL_SEMCONV_STABILITY_OPT_IN);
+
       this.enabled = new AtomicBoolean(enabledStr == null ? enabled : Boolean.parseBoolean(enabledStr));
       this.sensitiveDataEnabled = new AtomicBoolean(
           sensitiveStr == null ? sensitiveDataEnabled : Boolean.parseBoolean(sensitiveStr));
+
+      this.semconvOptIn = optInStr == null ? defaultOptIn : optInStr;
     }
 
     private boolean isEnabled() {
@@ -153,6 +176,56 @@ public class OpenTelemetryTraceEventListener
 
     private void setSensitiveDataEnabled(boolean enabled) {
       this.sensitiveDataEnabled.set(enabled);
+    }
+
+    private String getSemconvOptIn() {
+      return semconvOptIn == null ? "" : semconvOptIn;
+    }
+
+    private void setSemconvOptIn(String optIn) {
+      this.semconvOptIn = optIn == null ? "" : optIn;
+    }
+
+    /**
+     * Returns true if stable database semantic conventions should be emitted.
+     * This checks if OTEL_SEMCONV_STABILITY_OPT_IN contains "database" or "database/dup"
+     * in its comma-separated list of values.
+     */
+    private boolean isStableConventionsEnabled() {
+      return hasDatabaseValue("database") || hasDatabaseValue("database/dup");
+    }
+
+    /**
+     * Returns true if old conventions should be emitted.
+     * This is true when:
+     * - OTEL_SEMCONV_STABILITY_OPT_IN is empty/null (default behavior), OR
+     * - OTEL_SEMCONV_STABILITY_OPT_IN contains "database/dup" (dual mode)
+     */
+    private boolean isOldConventionsEnabled() {
+      if (semconvOptIn == null || semconvOptIn.isEmpty()) {
+        return true;
+      }
+      return hasDatabaseValue("database/dup");
+    }
+
+    /**
+     * Helper method to check if a specific database value is present in the
+     * comma-separated OTEL_SEMCONV_STABILITY_OPT_IN list.
+     *
+     * @param targetValue the value to search for (e.g., "database" or "database/dup")
+     * @return true if the value is found in the comma-separated list
+     */
+    private boolean hasDatabaseValue(String targetValue) {
+      if (semconvOptIn == null || semconvOptIn.isEmpty()) {
+        return false;
+      }
+
+      for (String value : semconvOptIn.split(",")) {
+        if (targetValue.equals(value.trim())) {
+          return true;
+        }
+      }
+      return false;
     }
   }
 
@@ -189,11 +262,21 @@ public class OpenTelemetryTraceEventListener
   }
 
   @Override
+  public String getSemconvOptIn() {
+    return Configuration.INSTANCE.getSemconvOptIn();
+  }
+
+  @Override
   /**
    * Sets whether the traces should contain sensitive data.
    */
   public void setSensitiveDataEnabled(boolean enabled) {
     Configuration.INSTANCE.setSensitiveDataEnabled(enabled);
+  }
+
+  @Override
+  public void setSemconvOptIn(String optIn) {
+    Configuration.INSTANCE.setSemconvOptIn(optIn);
   }
 
   @Override
@@ -216,15 +299,28 @@ public class OpenTelemetryTraceEventListener
       // supplies it
       // as user context parameter on the next round-trip call.
       return span;
-    } else {
-      // End the Span after the round-trip.
-      if (userContext instanceof Span) {
-        final Span span = (Span) userContext;
-        span.setStatus(traceContext.isCompletedExceptionally() ? StatusCode.ERROR : StatusCode.OK);
-        endSpan(span);
+  } else {
+    // End the Span after the round-trip.
+    if (userContext instanceof Span) {
+      final Span span = (Span) userContext;
+      boolean emitStable = Configuration.INSTANCE.isStableConventionsEnabled();
+      Boolean isErrorObj = traceContext.isCompletedExceptionally();
+      boolean hasError = isErrorObj != null && isErrorObj;
+      span.setStatus(hasError ? StatusCode.ERROR : StatusCode.OK);
+      if (hasError && emitStable) {
+        Throwable throwable = traceContext.getThrowable();
+        if (throwable != null) {
+          span.setAttribute(ERROR_TYPE_ATTRIBUTE, throwable.getClass().getName());
+          if (throwable instanceof SQLException) {
+            SQLException sqlEx = (SQLException) throwable;
+            span.setAttribute(DB_RESPONSE_STATUS_CODE_ATTRIBUTE, String.format("ORA-%05d", sqlEx.getErrorCode()));
+          }
+        }
       }
-      return null;
+      endSpan(span);
     }
+    return null;
+  }
 
   }
 
@@ -236,31 +332,115 @@ public class OpenTelemetryTraceEventListener
     // Noop if not enabled or parameter count is not correct
     if (!isEnabled())
       return null;
+
+    boolean emitStable = Configuration.INSTANCE.isStableConventionsEnabled();
+    boolean emitOld = Configuration.INSTANCE.isOldConventionsEnabled();
+
     if (EXECUTION_EVENTS_PARAMETERS.get(event) == params.length) {
       if (event == TraceEventListener.JdbcExecutionEvent.VIP_RETRY) {
-        SpanBuilder spanBuilder = tracer
-            .spanBuilder(event.getDescription())
-            .setAttribute("Error message", params[0].toString())
-            .setAttribute("VIP Address", params[7].toString());
-        // Add sensitive information (URL and SQL) if it is enabled
-        if (Configuration.INSTANCE.isSensitiveDataEnabled()) {
-          logger.log(Level.FINEST, "Sensitive information on");
-          spanBuilder.setAttribute("Protocol", params[1].toString())
-              .setAttribute("Host", params[2].toString())
-              .setAttribute("Port", params[3].toString())
-              .setAttribute("Service name", params[4].toString())
-              .setAttribute("SID", params[5].toString())
-              .setAttribute("Connection data", params[6].toString());
+        SpanBuilder spanBuilder = tracer.spanBuilder(event.getDescription());
+
+        // Emit NEW stable conventions
+        if (emitStable) {
+          spanBuilder.setAttribute(DB_SYSTEM_ATTRIBUTE, DB_SYSTEM_VALUE_ORACLE);
+
+          if (params[0] != null) {
+            spanBuilder.setAttribute(ERROR_TYPE_ATTRIBUTE, params[0].toString());
+          }
+          if (params[7] != null) {
+            spanBuilder.setAttribute(SERVER_ADDRESS_ATTRIBUTE, params[7].toString());
+          }
+
+          // Add sensitive information (URL and SQL) if enabled
+          if (Configuration.INSTANCE.isSensitiveDataEnabled()) {
+            logger.log(Level.FINEST, "Sensitive information on");
+            if (params[3] != null) {
+              spanBuilder.setAttribute(SERVER_PORT_ATTRIBUTE, params[3].toString());
+            }
+            if (params[1] != null) {
+              spanBuilder.setAttribute(ORACLE_VIP_PROTOCOL_ATTRIBUTE, params[1].toString());
+            }
+            if (params[2] != null) {
+              spanBuilder.setAttribute(ORACLE_VIP_FAILED_HOST_ATTRIBUTE, params[2].toString());
+            }
+            if (params[4] != null) {
+              spanBuilder.setAttribute(ORACLE_VIP_SERVICE_NAME_ATTRIBUTE, params[4].toString());
+            }
+            if (params[5] != null) {
+              spanBuilder.setAttribute(ORACLE_VIP_SID_ATTRIBUTE, params[5].toString());
+            }
+            if (params[6] != null) {
+              spanBuilder.setAttribute(ORACLE_VIP_CONNECTION_DESCRIPTOR_ATTRIBUTE, params[6].toString());
+            }
+          }
+        }
+
+        if (emitOld) {
+          spanBuilder.setAttribute(LEGACY_ERROR_MESSAGE_ATTRIBUTE, params[0].toString());
+
+          if (params[7] != null) {
+            spanBuilder.setAttribute(LEGACY_VIP_ADDRESS_ATTRIBUTE, params[7].toString());
+          }
+
+          // Add sensitive information (URL and connection details) if enabled
+          if (Configuration.INSTANCE.isSensitiveDataEnabled()) {
+            logger.log(Level.FINEST, "Sensitive information on");
+            if (params[1] != null) {
+              spanBuilder.setAttribute(LEGACY_PROTOCOL_ATTRIBUTE, params[1].toString());
+            }
+            if (params[2] != null) {
+              spanBuilder.setAttribute(LEGACY_HOST_ATTRIBUTE, params[2].toString());
+            }
+            if (params[3] != null) {
+              spanBuilder.setAttribute(LEGACY_PORT_ATTRIBUTE, params[3].toString());
+            }
+            if (params[4] != null) {
+              spanBuilder.setAttribute(LEGACY_SERVICE_NAME_ATTRIBUTE, params[4].toString());
+            }
+            if (params[5] != null) {
+              spanBuilder.setAttribute(LEGACY_SID_ATTRIBUTE, params[5].toString());
+            }
+            if (params[6] != null) {
+              spanBuilder.setAttribute(LEGACY_CONNECTION_DATA_ATTRIBUTE, params[6].toString());
+            }
+          }
         }
         return spanBuilder.startSpan();
+
       } else if (event == TraceEventListener.JdbcExecutionEvent.AC_REPLAY_STARTED
           || event == TraceEventListener.JdbcExecutionEvent.AC_REPLAY_SUCCESSFUL) {
-        SpanBuilder spanBuilder = tracer
-            .spanBuilder(event.getDescription())
-            .setAttribute("Error Message", params[0].toString())
-            .setAttribute("Error code", ((SQLException) params[1]).getErrorCode())
-            .setAttribute("SQL state", ((SQLException) params[1]).getSQLState())
-            .setAttribute("Current replay retry count", params[2].toString());
+        SpanBuilder spanBuilder = tracer.spanBuilder(event.getDescription());
+        SQLException sqlEx = (SQLException) params[1];
+        // Emit NEW stable conventions
+        if (emitStable) {
+          spanBuilder.setAttribute(DB_SYSTEM_ATTRIBUTE, DB_SYSTEM_VALUE_ORACLE);
+          if (params[0] != null) {
+            spanBuilder.setAttribute(ERROR_TYPE_ATTRIBUTE, params[0].toString());
+          }
+
+          if (sqlEx != null) {
+            spanBuilder.setAttribute(DB_RESPONSE_STATUS_CODE_ATTRIBUTE, String.format("ORA-%05d",
+                    sqlEx.getErrorCode()));
+          }
+
+          if (params[2] != null) {
+            spanBuilder.setAttribute(DB_OPERATION_BATCH_SIZE_ATTRIBUTE, params[2].toString());
+          }
+        }
+        if (emitOld) {
+          if (params[0] != null) {
+            spanBuilder.setAttribute(LEGACY_ERROR_MESSAGE_CAPITAL_ATTRIBUTE, params[0].toString());
+          }
+
+          if (sqlEx != null) {
+            spanBuilder.setAttribute(LEGACY_ERROR_CODE_ATTRIBUTE, sqlEx.getErrorCode());
+            spanBuilder.setAttribute(LEGACY_SQL_STATE_ATTRIBUTE, sqlEx.getSQLState());
+          }
+
+          if (params[2] != null) {
+            spanBuilder.setAttribute(LEGACY_REPLAY_RETRY_COUNT_ATTRIBUTE, params[2].toString());
+          }
+        }
         return spanBuilder.startSpan();
       } else {
         logger.log(Level.WARNING, "Unknown event received : " + event.toString());
@@ -284,27 +464,121 @@ public class OpenTelemetryTraceEventListener
      * child span to the current span. I.e. the current span in context becomes
      * parent to this child span.
      */
-    SpanBuilder spanBuilder = tracer
-        .spanBuilder(spanName)
-        .setAttribute("thread.id", Thread.currentThread().getId())
-        .setAttribute("thread.name", Thread.currentThread().getName())
-        .setAttribute("Connection ID", traceContext.getConnectionId())
-        .setAttribute("Database Operation", traceContext.databaseOperation())
-        .setAttribute("Database User", traceContext.user())
-        .setAttribute("Database Tenant", traceContext.tenant())
-        .setAttribute("SQL ID", traceContext.getSqlId());
+    SpanBuilder spanBuilder = tracer.spanBuilder(spanName);
+    boolean emitStable = Configuration.INSTANCE.isStableConventionsEnabled();
+    boolean emitOld = Configuration.INSTANCE.isOldConventionsEnabled();
 
-    // Add sensitive information (URL and SQL) if it is enabled
-    if (this.isSensitiveDataEnabled()) {
-      logger.log(Level.FINEST, "Sensitive information on");
-      spanBuilder.setAttribute("Original SQL Text", traceContext.originalSqlText())
-          .setAttribute("Actual SQL Text", traceContext.actualSqlText());
+    // Thread attributes are common to both old and new conventions
+    spanBuilder
+      .setAttribute(THREAD_ID_ATTRIBUTE, Thread.currentThread().getId())
+      .setAttribute(THREAD_NAME_ATTRIBUTE, Thread.currentThread().getName());
+
+    // Emit NEW stable semantic conventions
+    if (emitStable) {
+      spanBuilder.setAttribute(DB_SYSTEM_ATTRIBUTE, DB_SYSTEM_VALUE_ORACLE);
+
+      String namespace = buildDbNamespace(traceContext);
+      if (namespace != null && !namespace.isEmpty()) {
+        spanBuilder.setAttribute(DB_NAMESPACE_ATTRIBUTE, namespace);
+      }
+
+      if (traceContext.getServerAddress() != null && !traceContext.getServerAddress().isEmpty()) {
+        spanBuilder.setAttribute(SERVER_ADDRESS_ATTRIBUTE, traceContext.getServerAddress());
+      }
+
+      if (traceContext.databaseOperation() != null && !traceContext.databaseOperation().isEmpty()) {
+        spanBuilder.setAttribute(DB_OPERATION_NAME_ATTRIBUTE, traceContext.databaseOperation());
+      }
+
+      if (traceContext.getSqlId() != null && !traceContext.getSqlId().isEmpty()) {
+        spanBuilder.setAttribute(ORACLE_SQL_ID_ATTRIBUTE, traceContext.getSqlId());
+      }
+
+      if (traceContext.getSessionID() != null && !traceContext.getSessionID().isEmpty()) {
+        spanBuilder.setAttribute(ORACLE_SESSION_ID_ATTRIBUTE, traceContext.getSessionID());
+      }
+
+      if (traceContext.getServerPID() != null && !traceContext.getServerPID().isEmpty()) {
+        spanBuilder.setAttribute(ORACLE_SERVER_PID_ATTRIBUTE, traceContext.getServerPID());
+      }
+
+      if (traceContext.getShardName() != null && !traceContext.getShardName().isEmpty()) {
+        spanBuilder.setAttribute(ORACLE_SHARD_NAME_ATTRIBUTE, traceContext.getShardName());
+      }
+
+      int serverPort = traceContext.getServerPort();
+      if (serverPort > 0 && serverPort != 1521) { // 1521 is default Oracle port
+        spanBuilder.setAttribute(SERVER_PORT_ATTRIBUTE, serverPort);
+      }
+
+      if (traceContext.getSqlType() != null && !traceContext.getSqlType().isEmpty()) {
+        spanBuilder.setAttribute(DB_QUERY_SUMMARY_ATTRIBUTE, traceContext.getSqlType());
+      }
+
+      // Add sensitive information (URL and SQL) if it is enabled
+      if (this.isSensitiveDataEnabled()) {
+        logger.log(Level.FINEST, "Sensitive information on");
+        if (traceContext.user() != null && !traceContext.user().isEmpty()) {
+          spanBuilder.setAttribute(DB_USER_ATTRIBUTE, traceContext.user());
+        }
+        if (traceContext.actualSqlText() != null) {
+          spanBuilder.setAttribute(DB_QUERY_TEXT_ATTRIBUTE, traceContext.actualSqlText());
+        }
+        long numRows = traceContext.getNumRows();
+        if (numRows > 0) {
+          spanBuilder.setAttribute(DB_RESPONSE_RETURNED_ROWS_ATTRIBUTE, numRows);
+        }
+      }
+    }
+
+    // Emit old conventions
+    if (emitOld) {
+      spanBuilder
+        .setAttribute(LEGACY_CONNECTION_ID_ATTRIBUTE, traceContext.getConnectionId())
+        .setAttribute(LEGACY_DATABASE_OPERATION_ATTRIBUTE, traceContext.databaseOperation())
+        .setAttribute(LEGACY_DATABASE_USER_ATTRIBUTE, traceContext.user())
+        .setAttribute(LEGACY_SQL_ID_ATTRIBUTE, traceContext.getSqlId())
+        .setAttribute(LEGACY_DATABASE_TENANT_ATTRIBUTE, traceContext.tenant());
+
+      // Add sensitive information (URL and SQL) if it is enabled
+      if (this.isSensitiveDataEnabled()) {
+        logger.log(Level.FINEST, "Sensitive information on");
+        spanBuilder.setAttribute(LEGACY_ORIGINAL_SQL_TEXT_ATTRIBUTE, traceContext.originalSqlText())
+          .setAttribute(LEGACY_ACTUAL_SQL_TEXT_ATTRIBUTE, traceContext.actualSqlText());
+      }
     }
 
     // Indicates that the span covers server-side handling of an RPC or other remote
     // request.
-    return spanBuilder.setSpanKind(SpanKind.SERVER).startSpan();
+    SpanKind spanKind = emitStable ? SpanKind.CLIENT : SpanKind.SERVER;
+    return spanBuilder.setSpanKind(spanKind).startSpan();  }
 
+
+
+  /**
+   * Builds the db.namespace attribute according to Oracle Database
+   * semantic conventions.
+   * Format: {instance_name}|{database_name}|{service_name}
+   * Missing components and their separators are omitted.
+   */
+  private String buildDbNamespace(TraceContext traceContext) {
+    StringBuilder ns = new StringBuilder();
+
+    if (traceContext.getInstanceName() != null && !traceContext.getInstanceName().isEmpty()) {
+      ns.append(traceContext.getInstanceName());
+    }
+
+    if (traceContext.getDatabaseName() != null && !traceContext.getDatabaseName().isEmpty()) {
+      if (ns.length() > 0) ns.append('|');
+      ns.append(traceContext.getDatabaseName());
+    }
+
+    if (traceContext.getServiceName() != null && !traceContext.getServiceName().isEmpty()) {
+      if (ns.length() > 0) ns.append('|');
+      ns.append(traceContext.getServiceName());
+    }
+
+    return ns.length() > 0 ? ns.toString() : null;
   }
 
   private void endSpan(Span span) {
