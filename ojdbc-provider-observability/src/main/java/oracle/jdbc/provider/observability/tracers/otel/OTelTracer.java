@@ -64,7 +64,6 @@ import static oracle.jdbc.provider.observability.tracers.otel.OtelSemanticConven
  * Open Telemetry tracer. Exports round trip event and execution events to
  * Open Telemetry. with support for both stable and experimental semantic
  * conventions.
- * </p>
  * <p>
  * <b>Semantic Convention Modes:</b>
  * </p>

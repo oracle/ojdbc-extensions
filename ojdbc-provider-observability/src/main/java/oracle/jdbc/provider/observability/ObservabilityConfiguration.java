@@ -124,15 +124,7 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
   private static final String DEFAULT_ENABLED_TRACERS = "OTEL,JFR";
   private static final String DEFAULT_SENSITIVE_DATA_ENABLED = "false";
   private static final String DEFAULT_OPEN_TELEMETRY_ENABLED = "true";
-  private volatile String semconvOptIn = "";
-
-  public String getSemconvOptIn() {
-    return semconvOptIn == null ? "" : semconvOptIn;
-  }
-
-  public void setSemconvOptIn(String optIn) {
-    this.semconvOptIn = optIn == null ? "" : optIn;
-  }
+  private String semconvOptIn = "";
 
 
   /**
@@ -212,7 +204,7 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
 
     setEnabledTracers(enabledTracers);
     setSensitiveDataEnabled(Boolean.parseBoolean(sensitiveDataEnabled));
-    this.setSemconvOptIn(optIn);
+    setSemconvOptIn(optIn);
 
   }
 
@@ -316,6 +308,38 @@ public class ObservabilityConfiguration implements ObservabilityConfigurationMBe
       observabilityConfigurationLock.unlock();
     }
   }
+
+  /**
+   * Returns the OpenTelemetry semantic convention stability opt-in configuration.
+   *
+   * @return the current semantic convention mode, never {@code null}
+   */
+  @Override
+  public String getSemconvOptIn() {
+    observabilityConfigurationLock.lock();
+    try {
+      return semconvOptIn == null ? "" : semconvOptIn;
+    } finally {
+      observabilityConfigurationLock.unlock();
+    }
+  }
+
+  /**
+   * Sets the OpenTelemetry semantic convention stability opt-in configuration.
+   *
+   * @param optIn the semantic convention mode to set; {@code null} is
+   * treated as empty string
+   */
+  @Override
+  public void setSemconvOptIn(String optIn) {
+    observabilityConfigurationLock.lock();
+    try {
+      this.semconvOptIn = optIn == null ? "" : optIn;
+    } finally {
+      observabilityConfigurationLock.unlock();
+    }
+  }
+
 
   /**
    * Returns a list of enabled tracers.

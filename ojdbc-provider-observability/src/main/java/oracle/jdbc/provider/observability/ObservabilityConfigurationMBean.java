@@ -94,7 +94,19 @@ public interface ObservabilityConfigurationMBean {
    */
   void setSensitiveDataEnabled(boolean sensitiveDataEnabled);
 
+  /**
+   * Returns the OpenTelemetry semantic convention stability opt-in configuration.
+   *
+   * @return the current semantic convention mode, never {@code null}
+   */
   String getSemconvOptIn();
+
+  /**
+   * Sets the OpenTelemetry semantic convention stability opt-in configuration.
+   *
+   * @param optIn the semantic convention mode to set; {@code null} is
+   * treated as empty string
+   */
   void setSemconvOptIn(String optIn);
 
 }
