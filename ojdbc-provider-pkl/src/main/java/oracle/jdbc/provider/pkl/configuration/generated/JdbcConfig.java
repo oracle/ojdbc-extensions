@@ -1,4 +1,4 @@
-package oracle.jdbc.provider.pkl.configuration.parser.generated;
+package oracle.jdbc.provider.pkl.configuration.generated;
 
 import java.lang.Boolean;
 import java.lang.Long;
@@ -20,7 +20,7 @@ import org.pkl.core.Duration;
  * Generator so the changes are made manually for now. The good thing is that
  * this is a one-time process.
  */
-public final class OjdbcConfig {
+public final class JdbcConfig {
   public final @NonNull String connect_descriptor;
 
   public final String user;
@@ -33,10 +33,10 @@ public final class OjdbcConfig {
 
   public final Duration config_time_to_live;
 
-  public OjdbcConfig(@Named("connect_descriptor") @NonNull String connect_descriptor,
-      @Named("user") String user, @Named("password") Secret password,
-      @Named("wallet_location") Secret wallet_location, @Named("jdbc") Jdbc jdbc,
-      @Named("config_time_to_live") Duration config_time_to_live) {
+  public JdbcConfig(@Named("connect_descriptor") @NonNull String connect_descriptor,
+                    @Named("user") String user, @Named("password") Secret password,
+                    @Named("wallet_location") Secret wallet_location, @Named("jdbc") Jdbc jdbc,
+                    @Named("config_time_to_live") Duration config_time_to_live) {
     this.connect_descriptor = connect_descriptor;
     this.user = user;
     this.password = password;
@@ -45,28 +45,28 @@ public final class OjdbcConfig {
     this.config_time_to_live = config_time_to_live;
   }
 
-  public OjdbcConfig withConnect_descriptor(@NonNull String connect_descriptor) {
-    return new OjdbcConfig(connect_descriptor, user, password, wallet_location, jdbc, config_time_to_live);
+  public JdbcConfig withConnect_descriptor(@NonNull String connect_descriptor) {
+    return new JdbcConfig(connect_descriptor, user, password, wallet_location, jdbc, config_time_to_live);
   }
 
-  public OjdbcConfig withUser(String user) {
-    return new OjdbcConfig(connect_descriptor, user, password, wallet_location, jdbc, config_time_to_live);
+  public JdbcConfig withUser(String user) {
+    return new JdbcConfig(connect_descriptor, user, password, wallet_location, jdbc, config_time_to_live);
   }
 
-  public OjdbcConfig withPassword(Secret password) {
-    return new OjdbcConfig(connect_descriptor, user, password, wallet_location, jdbc, config_time_to_live);
+  public JdbcConfig withPassword(Secret password) {
+    return new JdbcConfig(connect_descriptor, user, password, wallet_location, jdbc, config_time_to_live);
   }
 
-  public OjdbcConfig withWallet_location(Secret wallet_location) {
-    return new OjdbcConfig(connect_descriptor, user, password, wallet_location, jdbc, config_time_to_live);
+  public JdbcConfig withWallet_location(Secret wallet_location) {
+    return new JdbcConfig(connect_descriptor, user, password, wallet_location, jdbc, config_time_to_live);
   }
 
-  public OjdbcConfig withJdbc(Jdbc jdbc) {
-    return new OjdbcConfig(connect_descriptor, user, password, wallet_location, jdbc, config_time_to_live);
+  public JdbcConfig withJdbc(Jdbc jdbc) {
+    return new JdbcConfig(connect_descriptor, user, password, wallet_location, jdbc, config_time_to_live);
   }
 
-  public OjdbcConfig withConfig_time_to_live(Duration config_time_to_live) {
-    return new OjdbcConfig(connect_descriptor, user, password, wallet_location, jdbc, config_time_to_live);
+  public JdbcConfig withConfig_time_to_live(Duration config_time_to_live) {
+    return new JdbcConfig(connect_descriptor, user, password, wallet_location, jdbc, config_time_to_live);
   }
 
   @Override
@@ -74,7 +74,7 @@ public final class OjdbcConfig {
     if (this == obj) return true;
     if (obj == null) return false;
     if (this.getClass() != obj.getClass()) return false;
-    OjdbcConfig other = (OjdbcConfig) obj;
+    JdbcConfig other = (JdbcConfig) obj;
     if (!Objects.equals(this.connect_descriptor, other.connect_descriptor)) return false;
     if (!Objects.equals(this.user, other.user)) return false;
     if (!Objects.equals(this.password, other.password)) return false;
@@ -99,7 +99,7 @@ public final class OjdbcConfig {
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder(350);
-    builder.append(OjdbcConfig.class.getSimpleName()).append(" {");
+    builder.append(JdbcConfig.class.getSimpleName()).append(" {");
     appendProperty(builder, "connect_descriptor", this.connect_descriptor);
     appendProperty(builder, "user", this.user);
     appendProperty(builder, "password", this.password);
@@ -126,8 +126,9 @@ public final class OjdbcConfig {
 
     public final Map<@NonNull String, @NonNull String> authentication;
 
-    public Secret(@Named("type") @NonNull String type, @Named("value") @NonNull String value,
-        @Named("authentication") Map<@NonNull String, @NonNull String> authentication) {
+    public Secret(@Named("type") @NonNull String type,
+                  @Named("value") @NonNull String value,
+                  @Named("authentication") Map<@NonNull String, @NonNull String> authentication) {
       this.type = type;
       this.value = value;
       this.authentication = authentication;

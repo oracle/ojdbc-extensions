@@ -1,6 +1,6 @@
-package oracle.jdbc.provider.pkl.configuration.parser;
+package oracle.jdbc.provider.pkl.configuration;
 
-import oracle.jdbc.provider.pkl.configuration.parser.generated.OjdbcConfig;
+import oracle.jdbc.provider.pkl.configuration.generated.JdbcConfig;
 import oracle.jdbc.spi.OracleConfigurationParser;
 import oracle.jdbc.spi.OracleConfigurationSecretProvider;
 import org.pkl.config.java.Config;
@@ -10,52 +10,36 @@ import org.pkl.core.Duration;
 import org.pkl.core.ModuleSource;
 import org.pkl.core.PNull;
 
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import static oracle.jdbc.OracleConnection.CONNECTION_PROPERTY_PASSWORD;
 import static oracle.jdbc.OracleConnection.CONNECTION_PROPERTY_WALLET_LOCATION;
 
-public class YamlParser implements OracleConfigurationParser {
+public class PklParser implements OracleConfigurationParser {
   @Override
   public Properties parse(
     InputStream inputStream, Map<String, String> options) throws SQLException {
-
     Properties properties = new Properties();
     Config pklConfig;
 
-    try (ConfigEvaluator evaluator = ConfigEvaluator.preconfigured()) {
-      // Create a temp file that is deleted after JVM terminates
-      File tempFile = File.createTempFile("temp", ".pkl");
-      tempFile.deleteOnExit();
-
-      byte[] buffer = inputStream.readAllBytes();
-      try (OutputStream outputStream = new FileOutputStream(tempFile)) {
-        outputStream.write(buffer);
-      }
-
-      final String pklScript = "import \"package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.deepToTyped@1.0.0#/deepToTyped.pkl\" as t " +
-        "import \"pkl:yaml\" " +
-        "import \"https://raw.githubusercontent.com/oracle/ojdbc-extensions/support-pkl/ojdbc-provider-pkl/src/main/resources/ojdbcConfig.pkl\" " +
-        "file = read(\"file://" + tempFile.getAbsolutePath() + "\") " +
-        "parsed = new yaml.Parser {}.parse(file) " +
-        "config = t.apply(ojdbcConfig.getClass(), parsed)";
-
-      pklConfig = evaluator.evaluate(ModuleSource.text(pklScript));
-
-      pklConfig = pklConfig.get("config");
-
+    // Parse Pkl config from String
+    try (ConfigEvaluator evaluator = ConfigEvaluator.preconfigured();
+         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+      String fileString =  reader.lines().collect(Collectors.joining("\n"));
+      pklConfig = evaluator.evaluate(ModuleSource.text(fileString));
     } catch (IOException e) {
-      throw new SQLException(e);
+      throw new SQLException("Failed to parse input stream", e);
     }
 
     // If key is present, we parse that pkl class
@@ -70,7 +54,7 @@ public class YamlParser implements OracleConfigurationParser {
     }
 
     // User common connect_descriptor as the URL
-    OjdbcConfig ojdbcConfig = pklConfig.as(OjdbcConfig.class);
+    JdbcConfig ojdbcConfig = pklConfig.as(JdbcConfig.class);
 
     if (ojdbcConfig.connect_descriptor != null)
       properties.put("URL",
@@ -132,7 +116,7 @@ public class YamlParser implements OracleConfigurationParser {
 
   @Override
   public String getType() {
-    return "yaml";
+    return "pkl";
   }
 
   /**
@@ -150,7 +134,7 @@ public class YamlParser implements OracleConfigurationParser {
     return null;
   }
 
-  private Map<String, String> toSecretMap(OjdbcConfig.Secret secretConfig) {
+  private Map<String, String> toSecretMap(JdbcConfig.Secret secretConfig) {
     // Convert Pkl config to map
     Map<String, String> options = new HashMap<>();
     options.put("value", secretConfig.value);
@@ -165,26 +149,24 @@ public class YamlParser implements OracleConfigurationParser {
     return options;
   }
 
-  private Properties toJdbcProperties(OjdbcConfig.Jdbc ojdbcConfig)
+  private Properties toJdbcProperties(JdbcConfig.Jdbc ojdbcConfig)
     throws IllegalAccessException {
 
     Properties properties = new Properties();
 
-    if (ojdbcConfig != null) {
-      Field[] fields = ojdbcConfig.getClass().getDeclaredFields();
-      for (Field field : fields) {
-        Object value = field.get(ojdbcConfig);
-        if (value == null) continue;
+    Field[] fields = ojdbcConfig.getClass().getDeclaredFields();
+    for (Field field : fields) {
+      Object value = field.get(ojdbcConfig);
+      if (value == null) continue;
 
-        Class<?> type = field.getType();
-        if (type == Duration.class) {
-          value = durationToInt((Duration) value);
-        }
-
-        // Replace $$ with .
-        String name = field.getName().replace("$$", ".");
-        properties.setProperty(name, value.toString());
+      Class<?> type = field.getType();
+      if (type == Duration.class) {
+        value = durationToInt((Duration)value);
       }
+
+      // Replace $$ with .
+      String name = field.getName().replace("$$", ".");
+      properties.setProperty(name, value.toString());
     }
 
     return properties;

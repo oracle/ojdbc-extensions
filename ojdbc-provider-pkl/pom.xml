@@ -10,11 +10,11 @@
   <parent>
     <groupId>com.oracle.database.jdbc</groupId>
     <artifactId>ojdbc-extensions</artifactId>
-    <version>${extensions-version}</version>
+    <version>1.0.6</version>
   </parent>
   
   <properties>
-    <pkl.version>0.27.0</pkl.version>
+    <pkl.version>0.30.0</pkl.version>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
   </properties>
@@ -47,6 +47,13 @@
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
     </dependency>
+    <!-- TEST DEPENDENCIES -->
+    <dependency>
+      <groupId>com.oracle.database.jdbc</groupId>
+      <artifactId>ojdbc-provider-common</artifactId>
+      <classifier>tests</classifier>
+      <type>test-jar</type>
+    </dependency>
   </dependencies>
 
   <build>
@@ -69,34 +76,16 @@
           </execution>
         </executions>
       </plugin>
-<!--      <plugin>-->
-<!--        &lt;!&ndash; Comment out this plugin for now. We only need to generate the Java class from pkl template only once. &ndash;&gt;-->
-<!--        &lt;!&ndash; There are some changes being made manually in the generated Java class. For example, replacing        &ndash;&gt;-->
-<!--        &lt;!&ndash; dots (.) in variable names with double dollar sign ($$), since dot is illegal in Java variable names. &ndash;&gt;-->
-<!--        <groupId>org.codehaus.mojo</groupId>-->
-<!--        <artifactId>exec-maven-plugin</artifactId>-->
-<!--        <version>3.3.0</version>-->
-<!--        <executions>-->
-<!--          <execution>-->
-<!--            <goals>-->
-<!--              <goal>java</goal>-->
-<!--            </goals>-->
-<!--            <phase>initialize</phase>-->
-<!--          </execution>-->
-<!--        </executions>-->
-<!--        <configuration>-->
-<!--          <mainClass>org.pkl.codegen.java.Main</mainClass>-->
-<!--          <arguments>-->
-<!--            <argument>&#45;&#45;generate-javadoc</argument>-->
-<!--            <argument>-w</argument>-->
-<!--            <argument>${maven.multiModuleProjectDirectory}/ojdbc-provider-pkl</argument>-->
-<!--            <argument>-o</argument>-->
-<!--            <argument>${maven.multiModuleProjectDirectory}/ojdbc-provider-pkl/src/main</argument>-->
-<!--            <argument>src/main/resources/OjdbcConfig.pkl</argument>-->
-<!--          </arguments>-->
-<!--        </configuration>-->
-<!--      </plugin>-->
     </plugins>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <includes>
+          <include>**/*.pkl</include>
+          <include>META-INF/services/oracle.jdbc.spi.*</include>
+        </includes>
+      </resource>
+    </resources>
   </build>
 
 </project>
