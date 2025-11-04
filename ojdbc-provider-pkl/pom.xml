@@ -25,17 +25,7 @@
     </dependency>
     <dependency>
       <groupId>org.pkl-lang</groupId>
-      <artifactId>pkl-core</artifactId>
-      <version>${pkl.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.pkl-lang</groupId>
       <artifactId>pkl-config-java</artifactId>
-      <version>${pkl.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.pkl-lang</groupId>
-      <artifactId>pkl-codegen-java</artifactId>
       <version>${pkl.version}</version>
     </dependency>
     <dependency>
