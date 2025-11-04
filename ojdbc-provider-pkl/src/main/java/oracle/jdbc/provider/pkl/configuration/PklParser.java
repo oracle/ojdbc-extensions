@@ -1,6 +1,5 @@
 package oracle.jdbc.provider.pkl.configuration;
 
-import oracle.jdbc.provider.pkl.configuration.generated.JdbcConfig;
 import oracle.jdbc.spi.OracleConfigurationParser;
 import oracle.jdbc.spi.OracleConfigurationSecretProvider;
 import org.pkl.config.java.Config;

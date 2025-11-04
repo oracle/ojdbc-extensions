@@ -1,4 +1,4 @@
-package oracle.jdbc.provider.pkl.configuration.generated;
+package oracle.jdbc.provider.pkl.configuration;
 
 import java.lang.Boolean;
 import java.lang.Long;

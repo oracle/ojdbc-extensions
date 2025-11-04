@@ -1,6 +1,6 @@
 # Oracle JDBC Configuration Provider Parser for Pkl
 
-This module provides a parser that integrates **Oracle JDBC** with **Pkl**, a modern configuration language.  
+This module provides a parser that integrates **Oracle JDBC** with **[Pkl](https://pkl-lang.org/index.html)**, a modern configuration language.  
 It implements the `OracleConfigurationParser` interface to parse and read `.pkl` files for database configuration.
 
 With the Oracle JDBC Pkl Parser, developers can store JDBC configurations in `.pkl` files and load them dynamically through Oracle JDBC Driver Extensions.
@@ -10,7 +10,7 @@ With the Oracle JDBC Pkl Parser, developers can store JDBC configurations in `.p
 ## Installation
 
 All providers in this module are distributed as single jar on the Maven Central
-Repository. The jar is compiled for JDK 8, and is forward compatible with later
+Repository. The jar is compiled for JDK 17 (as required by Pkl), and is forward compatible with later
 JDK versions. The coordinates for the latest release are:
 
 ```xml
@@ -48,7 +48,7 @@ There are two approaches to filling out a template: **amends** and **import**.
 #### myJdbcConfig.pkl
 
 ```yaml
-amends "https://raw.githubusercontent.com/oracle/ojdbc-extensions/ojdbc-provider-pkl/src/main/resources/JdbcConfig.pkl"
+amends "https://raw.githubusercontent.com/oracle/ojdbc-extensions/refs/heads/main/ojdbc-provider-pkl/template/JdbcConfig.pkl"
 
 connect_descriptor = "dbhost:1521/orclpdb1"
 user = "scott"
@@ -78,7 +78,7 @@ jdbc:oracle:thin:@config-file://myJdbcConfig.pkl
 #### myJdbcConfig.pkl
 
 ```yaml
-import "https://raw.githubusercontent.com/oracle/ojdbc-extensions/ojdbc-provider-pkl/src/main/resources/JdbcConfig.pkl"
+import "https://raw.githubusercontent.com/oracle/ojdbc-extensions/refs/heads/main/ojdbc-provider-pkl/template/JdbcConfig.pkl"
  
 config1 = (JdbcConfig) {
   connect_descriptor = "dbhost:1521/orclpdb1"
