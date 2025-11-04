@@ -1,0 +1,195 @@
+module oracle.jdbc.provider.pkl.configuration.generated.JdbcConfig
+
+connect_descriptor: String
+user: String?
+password: Secret?
+wallet_location: Secret?
+jdbc: Jdbc?
+config_time_to_live: Duration?
+
+class Secret {
+  type: String
+  value: String
+  authentication: Mapping<String, String>?
+}
+
+class Jdbc {
+  `oracle.jdbc.RetainV9LongBindBehavior`: Boolean? = false
+  user: String?
+  `oracle.jdbc.applicationContext`: String?
+  database: String?
+  autoCommit: Boolean? = true
+  `oracle.jdbc.bindUseDBA`: Boolean? = true
+  protocol: String?
+  `oracle.jdbc.StreamChunkSize`: Int? = 32767
+  SetFloatAndDoubleUseBinary: Boolean? = false
+  `v$session.terminal`: String? = "unknown"
+  `v$session.machine`: String?
+  `v$session.osuser`: String?
+  `v$session.program`: String?
+  `v$session.process`: String? = "1234"
+  `v$session.iname`: String? = "jdbc_ttc_impl"
+  `v$session.ename`: String?
+  `oracle.net.profile`: String?
+  `oracle.net.setFIPSMode`: String?
+  `oracle.jdbc.debugJDWP`: String?
+  `oracle.net.allow_weak_crypto`: Boolean? = true
+  `oracle.net.encryption_client`: String?
+  `oracle.net.encryption_types_client`: String?
+  `oracle.net.crypto_checksum_client`: String?
+  `oracle.net.crypto_checksum_types_client`: String?
+  `oracle.net.crypto_seed`: String?
+  `oracle.net.useJCEAPI`: Boolean? = true
+  `oracle.jdbc.TcpNoDelay`: Boolean? = false
+  `oracle.jdbc.ReadTimeout`: String?
+  `oracle.net.OUTBOUND_CONNECT_TIMEOUT`: String? = "0"
+  `oracle.net.CONNECT_TIMEOUT`: String? = "0"
+  `oracle.net.disableOob`: Boolean? = false
+  `oracle.net.useZeroCopyIO`: Boolean? = true
+  `oracle.jdbc.use1900AsYearForTime`: Boolean? = false
+  `oracle.jdbc.timestampTzInGmt`: Boolean? = true
+  `oracle.jdbc.timezoneAsRegion`: Boolean? = true
+  `oracle.net.ssl_certificate_alias`: String?
+  `oracle.net.ssl_certificate_thumbprint`: String?
+  `oracle.net.ssl_server_dn_match`: String?
+  `oracle.net.ssl_server_cert_dn`: String?
+  `oracle.net.ssl_allow_weak_dn_match`: String?
+  `oracle.net.ssl_version`: String?
+  `oracle.net.ssl_cipher_suites`: String?
+  `javax.net.ssl.keyStore`: String?
+  `javax.net.ssl.keyStoreType`: String?
+  `javax.net.ssl.keyStorePassword`: String?
+  `javax.net.ssl.trustStore`: String?
+  `javax.net.ssl.trustStoreType`: String?
+  `javax.net.ssl.trustStorePassword`: String?
+  `ssl.keyManagerFactory.algorithm`: String?
+  `ssl.trustManagerFactory.algorithm`: String?
+  `oracle.net.oldSyntax`: String?
+  `oracle.net.wallet_location`: String?
+  `oracle.net.wallet_password`: String?
+  `oracle.jdbc.proxyClientName`: String?
+  `oracle.jdbc.useNio`: Boolean? = false
+  `oracle.net.httpsProxyHost`: String?
+  `oracle.net.httpsProxyPort`: Int? = 0
+  `oracle.jdbc.localhostName`: String?
+  `oracle.net.connectionIdPrefix`: String?
+  JDBCDriverCharSetId: String?
+  `oracle.jdbc.editionName`: String?
+  `oracle.jdbc.thinLogonCapability`: String? = "o5"
+  `oracle.jdbc.useOCIDefaultDefines`: Boolean? = false
+  internal_logon: String?
+  `oracle.jdbc.createDescriptorUseCurrentSchemaForSchemaName`: Boolean? = false
+  OCISvcCtxHandle: Int? = 0
+  OCIEnvHandle: Int? = 0
+  OCIErrHandle: Int? = 0
+  prelim_auth: Boolean? = false
+  `oracle.jdbc.jmsNotification`: Boolean? = false
+  `oracle.jdbc.ociNlsLangBackwardCompatible`: Boolean? = false
+  defaultExecuteBatch: Int? = 1
+  defaultRowPrefetch: Int? = 10
+  `oracle.jdbc.defaultLobPrefetchSize`: Int? = 32768
+  `oracle.jdbc.enableDataInLocator`: Boolean? = true
+  `oracle.jdbc.enableReadDataInLocator`: Boolean? = true
+  `oracle.jdbc.overrideEnableReadDataInLocator`: Boolean? = false
+  remarksReporting: Boolean? = false
+  includeSynonyms: Boolean? = false
+  restrictGetTables: Boolean? = false
+  AccumulateBatchResult: Boolean? = true
+  useFetchSizeWithLongColumn: Boolean? = false
+  processEscapes: Boolean? = true
+  fixedString: Boolean? = false
+  defaultNChar: Boolean? = false
+  `oracle.jdbc.internal.permitBindDateDefineTimestampMismatch`: Boolean? = false
+  RessourceManagerId: String? = "0000"
+  disableDefineColumnType: Boolean? = false
+  `oracle.jdbc.convertNcharLiterals`: Boolean? = true
+  `oracle.jdbc.autoCommitSpecCompliant`: Boolean? = true
+  `oracle.jdbc.JDBCStandardBehavior`: Boolean? = false
+  `oracle.jdbc.J2EE13Compliant`: Boolean? = false
+  `oracle.jdbc.mapDateToTimestamp`: Boolean? = true
+  `oracle.jdbc.useThreadLocalBufferCache`: Boolean? = false
+  `oracle.jdbc.driverNameAttribute`: String?
+  `oracle.jdbc.maxCachedBufferSize`: Int? = 30
+  `oracle.jdbc.implicitStatementCacheSize`: Int? = 0
+  `oracle.jdbc.LobStreamPosStandardCompliant`: Boolean? = false
+  `oracle.jdbc.strictASCIIConversion`: Boolean? = false
+  `oracle.jdbc.quickASCIIConversion`: Boolean? = false
+  `oracle.jdbc.DRCPConnectionClass`: String?
+  `oracle.jdbc.thinForceDNSLoadBalancing`: Boolean? = false
+  `oracle.jdbc.enableTempLobRefCnt`: Boolean? = true
+  `oracle.net.keepAlive`: Boolean? = false
+  `oracle.net.useTcpFastOpen`: Boolean? = false
+  `oracle.jdbc.javaNetNio`: Boolean? = true
+  `oracle.jdbc.nsDirectBuffer`: Boolean? = false
+  `oracle.jdbc.plsqlVarcharParameter4KOnly`: Boolean? = false
+  `oracle.jdbc.targetInstanceName`: String?
+  `oracle.jdbc.readOnlyInstanceAllowed`: Boolean? = false
+  `oracle.jdbc.enableOCIFastApplicationNotification`: Boolean? = false
+  `oracle.jdbc.enableResultSetCache`: Boolean? = false
+  `oracle.jdbc.enableQueryResultCache`: Boolean? = true
+  `oracle.jdbc.backwardCompatibileUpdateableResultSet`: Boolean? = false
+  `oracle.jdbc.allowedLogonVersion`: String? = "8"
+  `oracle.jdbc.commitOption`: String?
+  `oracle.jdbc.calculateChecksum`: String?
+  `oracle.jdbc.javaNetLocalIPForMsgq`: String?
+  `oracle.jdbc.javaNetMsgqTransport`: String?
+  `oracle.jdbc.javaNetMsgqBusyWait`: Duration? = 40.us
+  `oracle.jdbc.javaNetMsgqKernelWait`: Duration? = 50.ms
+  `oracle.net.DOWN_HOSTS_TIMEOUT`: Duration? = 600.s
+  `oracle.jdbc.fanEnabled`: Boolean? = true
+  `oracle.net.networkCompression`: String? = "off"
+  `oracle.net.networkCompressionLevels`: String? = "(high)"
+  `oracle.net.networkCompressionThreshold`: Int? = 1024
+  `oracle.net.websocketUser`: String?
+  `oracle.net.websocketPassword`: String?
+  `oracle.net.socksProxyHost`: String?
+  `oracle.net.socksProxyPort`: Int? = 1080
+  `oracle.net.socksRemoteDNS`: Boolean? = false
+  `oracle.jdbc.defaultConnectionValidation`: String? = "NETWORK"
+  `oracle.jdbc.enableACSupport`: Boolean? = true
+  `oracle.jdbc.enableTGSupport`: Boolean? = false
+  `oracle.jdbc.enableImplicitRequests`: Boolean? = true
+  `oracle.jdbc.enableSSSCursor`: Boolean? = false
+  `oracle.jdbc.DRCPMultiplexingInRequestAPIs`: Boolean? = false
+  `oracle.jdbc.continueBatchOnError`: Boolean? = false
+  `oracle.net.TCP_KEEPIDLE`: Int? = -1
+  `oracle.net.TCP_KEEPINTERVAL`: Int? = -1
+  `oracle.jdbc.useShardingDriverConnection`: Boolean? = false
+  `oracle.net.TCP_KEEPCOUNT`: Int? = -1
+  `oracle.jdbc.replay.protectedRequestSizeLimit`: Int? = 2147483647
+  `oracle.jdbc.ons.walletpassword`: String?
+  `oracle.jdbc.ons.protocol`: String? = "TCP"
+  `oracle.jdbc.loginTimeout`: Duration? = 0.s
+  `oracle.jdbc.inbandNotification`: Boolean? = true
+  `oracle.net.ssl_context_protocol`: String? = "TLS"
+  `oracle.jdbc.fetchSizeTuning`: Int? = 8
+  `oracle.jdbc.useTrueCacheDriverConnection`: Boolean? = false
+  `oracle.jdbc.diagnostic.enableSensitiveDiagnostics`: Boolean? = false
+  `oracle.jdbc.diagnostic.loggerName`: String? = "oracle.jdbc"
+  `oracle.jdbc.diagnostic.bufferSize`: Int? = 1000
+  `oracle.jdbc.diagnostic.enableDiagnoseFirstFailure`: Boolean? = true
+  `oracle.jdbc.diagnostic.enableLogging`: Boolean? = false
+  `oracle.jdbc.diagnostic.debugTenant`: String?
+  `oracle.jdbc.diagnostic.debugSQL`: String?
+  `oracle.jdbc.tokenAuthentication`: String?
+  `oracle.jdbc.tokenLocation`: String?
+  `oracle.jdbc.passwordAuthentication`: String? = "PASSWORD_VERIFIER"
+  `oracle.jdbc.ociIamUrl`: String?
+  `oracle.jdbc.ociTenancy`: String?
+  `oracle.jdbc.ociCompartment`: String?
+  `oracle.jdbc.ociDatabase`: String?
+  `oracle.jdbc.commitSelectOnAutocommit`: Boolean? = false
+  `oracle.jdbc.jsonDefaultGetObjectType`: String?
+  `oracle.jdbc.accessToken`: String?
+  `oracle.jdbc.retainLobPrefetchData`: Boolean? = true
+  `oracle.jdbc.ociProfile`: String? = "DEFAULT"
+  `oracle.jdbc.azureDatabaseApplicationIdUri`: String?
+  `oracle.jdbc.tenantId`: String?
+  `oracle.jdbc.clientId`: String?
+  `oracle.jdbc.clientSecret`: String?
+  `oracle.jdbc.clientCertificate`: String?
+  `oracle.jdbc.clientCertificatePassword`: String?
+  `oracle.jdbc.redirectUri`: String?
+  `oracle.jdbc.maxBatchMemory`: Int? = 0
+  `oracle.jdbc.vectorDefaultGetObjectType`: String?
+}

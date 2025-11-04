@@ -30,6 +30,8 @@ Each module of this project contains a set of providers.
 <dt><a href="ojdbc-provider-jackson-oson/README.md">Oracle JDBC Jackson OSON</a></dt>
 <dd>Provider for <a href="https://docs.oracle.com/en/database/oracle/oracle-database/23/adjsn/json-in-oracle-database.html#GUID-A8A58B49-13A5-4F42-8EA0-508951DAE0BB">OSON</a> through the JACKSON APIs. 
 This provider can be used for seamless integration of applications that use the JACKSON APIs with the Oracle JSON type.</dd>
+<dt><a href="ojdbc-provider-pkl/README.md">Oracle JDBC Pkl Parser</a></dt>
+<dd>Parser for integration with Pkl that can be used by providers</dd>
 </dl>
 Visit any of the links above to learn about providers which are available for 
 a particular platform.
@@ -143,6 +145,8 @@ this project:
 [ojdbc-provider-opentelemetry](ojdbc-provider-opentelemetry/README.md#installation)
 
 [ojdbc-provider-jackson-oson](ojdbc-provider-jackson-oson/README.md#installation)
+
+[ojdbc-provider-pkl](ojdbc-provider-pkl/README.md#installation)
 
 
 Each module listed above is distributed on the Maven Central Repository as a
