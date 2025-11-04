@@ -74,7 +74,7 @@ public class PklParserTest {
     file = File.createTempFile("myJdbcConfig", ".pkl");
     file.createNewFile();
 
-    URL resourceUrl = PklParser.class.getClassLoader().getResource(RESOURCE_NAME);
+    URL resourceUrl = Thread.currentThread().getContextClassLoader().getResource(RESOURCE_NAME);
     if (resourceUrl == null) {
       throw new RuntimeException("Resource not found: " + RESOURCE_NAME);
     }

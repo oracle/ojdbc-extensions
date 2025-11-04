@@ -1,4 +1,4 @@
-module oracle.jdbc.provider.pkl.configuration.generated.JdbcConfig
+module oracle.jdbc.provider.pkl.configuration.JdbcConfig
 
 connect_descriptor: String
 user: String?
