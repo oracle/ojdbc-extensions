@@ -1,6 +1,6 @@
 # Oracle JDBC Configuration Provider Parser for Pkl
 
-This module provides a parser that integrates **Oracle JDBC** with **Pkl**, a modern configuration language.  
+This module provides a parser that integrates **Oracle JDBC** with **[Pkl](https://pkl-lang.org/index.html)**, a modern configuration language.  
 It implements the `OracleConfigurationParser` interface to parse and read `.pkl` files for database configuration.
 
 With the Oracle JDBC Pkl Parser, developers can store JDBC configurations in `.pkl` files and load them dynamically through Oracle JDBC Driver Extensions.
@@ -10,7 +10,7 @@ With the Oracle JDBC Pkl Parser, developers can store JDBC configurations in `.p
 ## Installation
 
 All providers in this module are distributed as single jar on the Maven Central
-Repository. The jar is compiled for JDK 17, and is forward compatible with later
+Repository. The jar is compiled for JDK 17 (as required by Pkl), and is forward compatible with later
 JDK versions. The coordinates for the latest release are:
 
 ```xml
