@@ -32,7 +32,7 @@
   <properties>
     <maven.compiler.target>1.8</maven.compiler.target>
     <maven.compiler.source>1.8</maven.compiler.source>
-    <jdbc.version>23.26.0.0.0</jdbc.version>
+    <jdbc.version>23.7.0.25.01</jdbc.version>
     <junit.version>5.9.0</junit.version>
     <mockito.version>4.11.0</mockito.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
