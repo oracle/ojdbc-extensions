@@ -58,7 +58,7 @@ public class PklExample {
   public static void main(String[] args) throws SQLException {
     // Sample default URL if non present
     if (args.length == 0) {
-      url = "jdbc:oracle:thin:@config-file://myJdbcConfig.pkl";
+      url = "jdbc:oracle:thin:@config-file://myJdbcConfig.pkl?parser=pkl";
     } else {
       url = args[0];
     }

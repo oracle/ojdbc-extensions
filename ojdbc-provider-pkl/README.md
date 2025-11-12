@@ -27,16 +27,16 @@ To use the Oracle JDBC Pkl Parser:
 
 1. Prepare a .pkl configuration file (see examples below).
 2. Add this artifact to your application's classpath.
-3. Reference the .pkl file in the JDBC URL.
+3. Reference the .pkl file and the parser type in the JDBC URL.
 
-The parser type is inferred from the file extension. In this case, it’s "pkl".
-If the file name doesn’t include an extension, you can specify the parser explicitly using the parser option.
+The parser type can be specified using the `parser` option. In this case, it’s "parser=pkl". 
+By default, the parser type is "json".
 All other options (like key, label, etc.) follow the same format as other providers.
 
 Example using the file configuration provider:
 
 ```java
-jdbc:oracle:thin:@config-file://{pkl-file-name}[?parser=pkl&key=prefix&label=value&option1=value1&option2=value2...]
+jdbc:oracle:thin:@config-file://{pkl-file-name}?parser=pkl[&key=prefix&label=value&option1=value1&option2=value2...]
 ```
 
 ## Writing .pkl Configuration
@@ -70,7 +70,7 @@ jdbc {
 #### URL (using file provider):
 
 ```java
-jdbc:oracle:thin:@config-file://myJdbcConfig.pkl
+jdbc:oracle:thin:@config-file://myJdbcConfig.pkl?parser=pkl
 ```
 
 ### 2. Using `import`
@@ -103,5 +103,5 @@ config1 = (JdbcConfig) {
 #### URL (using file provider):
 
 ```java
-jdbc:oracle:thin:@config-file://myJdbcConfig.pkl?key=config1
+jdbc:oracle:thin:@config-file://myJdbcConfig.pkl?parser=pkl&key=config1
 ```
