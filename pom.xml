@@ -32,7 +32,7 @@
   <properties>
     <maven.compiler.target>1.8</maven.compiler.target>
     <maven.compiler.source>1.8</maven.compiler.source>
-    <jdbc.version>23.8.0.25.04</jdbc.version>
+    <jdbc.version>23.26.0.0.0</jdbc.version>
     <junit.version>5.9.0</junit.version>
     <mockito.version>4.11.0</mockito.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -53,6 +53,15 @@
         <maven.compiler.release>8</maven.compiler.release>
       </properties>
     </profile>
+    <profile>
+      <id>javac-release-jfr</id>
+      <activation>
+        <jdk>[9,)</jdk>
+      </activation>
+      <properties>
+        <maven.compiler.release>11</maven.compiler.release>
+      </properties>
+    </profile>
   </profiles>
 
   <modules>
@@ -64,6 +73,7 @@
     <module>ojdbc-provider-aws</module>
     <module>ojdbc-provider-gcp</module>
     <module>ojdbc-provider-jackson-oson</module>
+    <module>ojdbc-provider-observability</module>
     <module>ojdbc-provider-hashicorp</module>
     <module>ojdbc-provider-pkl</module>
   </modules>

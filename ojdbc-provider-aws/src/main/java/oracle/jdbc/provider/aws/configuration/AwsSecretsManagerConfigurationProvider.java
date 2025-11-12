@@ -56,6 +56,8 @@ import java.util.Map;
  **/
 public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationParsableProvider {
 
+  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
+
   /**
    * Parser that recognizes the named parameters which appear in a URL,
    * or a Json object.

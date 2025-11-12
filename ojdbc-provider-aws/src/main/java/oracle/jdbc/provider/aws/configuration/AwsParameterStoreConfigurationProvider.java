@@ -61,6 +61,8 @@ import static oracle.jdbc.provider.aws.configuration.AwsConfigurationParameters.
 public class AwsParameterStoreConfigurationProvider
   extends OracleConfigurationParsableProvider {
 
+  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
+
   static final ParameterSetParser PARAMETER_SET_PARSER =
     AwsConfigurationParameters.configureBuilder(
       ParameterSetParser.builder()

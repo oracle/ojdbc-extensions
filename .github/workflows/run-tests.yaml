@@ -129,7 +129,13 @@ jobs:
           JACKSON_OSON_USERNAME=${{ secrets.TEST_JACKSON_OSON_USERNAME }}\n
           JACKSON_OSON_PASSWORD=${{ secrets.TEST_JACKSON_OSON_PASSWORD }}\n
           " >> ojdbc-provider-jackson-oson/test.properties
-          
+
+          # Generate ojdbc-provider-observability/test.properties
+          echo -e "OBSERVABILITY_URL=${{ secrets.TEST_JACKSON_OSON_URL }}\n
+          OBSERVABILITY_USERNAME=${{ secrets.TEST_JACKSON_OSON_USERNAME }}\n
+          OBSERVABILITY_PASSWORD=${{ secrets.TEST_JACKSON_OSON_PASSWORD }}\n
+          " >> ojdbc-provider-observability/test.properties
+
           # Generate ojdbc-provider-aws/test.properties
           echo -e "AWS_S3_URL=${{ secrets.TEST_AWS_S3_URL }}\n
           AWS_SECRETS_MANAGER_URL=${{ secrets.TEST_AWS_SECRETS_MANAGER_URL }}\n
@@ -157,5 +163,7 @@ jobs:
           rm ojdbc-provider-gcp/test.properties
           
           rm ojdbc-provider-jackson-oson/test.properties
+
+          rm ojdbc-provider-observability/test.properties
           
           rm ojdbc-provider-aws/test.properties
