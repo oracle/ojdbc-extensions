@@ -73,15 +73,6 @@ public class UsernameProviderAzureExample {
       connectionProps.put("oracle.jdbc.provider.username.vaultUrl", "https://me-vault-test.vault.azure.net");
       connectionProps.put("oracle.jdbc.provider.username.secretName", "db-username");
 
-      // TLS Configuration for secure connection
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration", "ojdbc-provider-azure-key-vault-tls");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.vaultUrl",
-              "https://your-vault-url.vault.azure.net");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.secretName",
-              "your-wallet-base64-secret-name");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.type",
-              "SSO");
-
       ds.setConnectionProperties(connectionProps);
 
       try (Connection cn = ds.getConnection()) {

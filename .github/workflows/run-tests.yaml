@@ -16,10 +16,11 @@ jobs:
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
-      - name: Set up JDK 11
-        uses: actions/setup-java@v1
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
         with:
-          java-version: 11
+          distribution: 'oracle'
+          java-version: '17'
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
@@ -29,11 +30,16 @@ jobs:
 
       - name: Install dependencies
         run: mvn install -DskipTests
+      
+      - name: Set GCP environment variables
+        run : |
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/.gcp/config.json" >> $GITHUB_ENV
 
       - name: Prepare certificate and properties files
         run: |
           mkdir -p $HOME/.azure
           mkdir -p $HOME/.oci
+          mkdir -p $HOME/.gcp
           
           # Prepare certificate
           echo "${{ secrets.TEST_AZURE_CERTIFICATE }}" > $HOME/.azure/ojdbc-plugin-test-app.pem
@@ -58,6 +64,8 @@ jobs:
           AZURE_TOKEN_SCOPE=${{ secrets.TEST_AZURE_TOKEN_SCOPE }}\n
           AZURE_APP_CONFIG_NAME=${{ secrets.TEST_AZURE_APP_CONFIG_NAME }}\n
           AZURE_APP_CONFIG_KEY=${{ secrets.TEST_AZURE_APP_CONFIG_KEY }}\n
+          AZURE_APP_CONFIG_KEY_INVALID_PROPERTIES=${{ vars.TEST_AZURE_APP_CONFIG_KEY_INVALID_PROPERTIES }}\n
+          AZURE_APP_CONFIG_KEY_NON_WHITELISTED_PROPERTIES=${{ vars.TEST_AZURE_APP_CONFIG_KEY_NON_WHITELISTED_PROPERTIES }}\n
           AZURE_APP_CONFIG_LABEL=${{ secrets.TEST_AZURE_APP_CONFIG_LABEL }}\n
           AZURE_KEY_VAULT_URL=${{ secrets.TEST_AZURE_KEY_VAULT_URL }}\n
           AZURE_KEY_VAULT_SECRET_NAME=${{ secrets.TEST_AZURE_KEY_VAULT_SECRET_NAME }}\n
@@ -133,6 +141,11 @@ jobs:
           AWS_SECRETS_MANAGER_URL=${{ secrets.TEST_AWS_SECRETS_MANAGER_URL }}\n
           " >> ojdbc-provider-aws/test.properties
           
+          # Generate GCP config
+          echo "${{ secrets.TEST_GCP_CONFIG }}" > $HOME/.gcp/config.json
+          echo "${{ secrets.GCP_TEST_PROPERTIES }}" > ojdbc-provider-gcp/test.properties
+          
+
       - name: Run tests with Maven
         run: mvn -B test --file pom.xml
 
@@ -145,6 +158,9 @@ jobs:
           rm $HOME/.azure/ojdbc-plugin-test-app.pem
           rm ojdbc-provider-azure/ojdbc-provider-test-app.pfx
           rm ojdbc-provider-azure/test.properties
+          
+          rm $HOME/.gcp/config.json
+          rm ojdbc-provider-gcp/test.properties
           
           rm ojdbc-provider-jackson-oson/test.properties
 

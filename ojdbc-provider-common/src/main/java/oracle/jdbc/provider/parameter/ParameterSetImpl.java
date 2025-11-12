@@ -38,9 +38,7 @@
 
 package  oracle.jdbc.provider.parameter;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 final class ParameterSetImpl implements ParameterSet {
@@ -102,7 +100,7 @@ final class ParameterSetImpl implements ParameterSet {
     ParameterSetBuilder builder = ParameterSet.builder();
 
     for (Map.Entry<Parameter<?>, Object> parameterValue
-      : parameterValues.entrySet()) {
+            : parameterValues.entrySet()) {
       @SuppressWarnings("unchecked")
       Parameter<Object> parameter = (Parameter<Object>) parameterValue.getKey();
       Object value = parameterValue.getValue();
@@ -122,6 +120,28 @@ final class ParameterSetImpl implements ParameterSet {
   public boolean equals(Object other) {
     return other instanceof ParameterSetImpl
       && ((ParameterSetImpl)other).parameterValues.equals(parameterValues);
+  }
+
+  /**
+   * Retrieves the relevant parameter key-value pairs.
+   */
+  private Map<String, Object> getParameterKeyValuePairs() {
+    return parameterNames.entrySet().stream()
+            .filter(entry -> parameterValues.get(entry.getKey()) != null)
+            .collect(Collectors.toMap(
+                    Map.Entry::getValue,
+                    entry -> parameterValues.get(entry.getKey())
+            ));
+  }
+
+  @Override
+  public Map<String, Object> filterParameters(String[] relevantKeys) {
+    Map<String, Object> allParameters = getParameterKeyValuePairs();
+    List<String> relevantKeysList = Arrays.asList(relevantKeys);
+
+    return allParameters.entrySet().stream()
+            .filter(entry -> relevantKeysList.contains(entry.getKey()))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 
   /**

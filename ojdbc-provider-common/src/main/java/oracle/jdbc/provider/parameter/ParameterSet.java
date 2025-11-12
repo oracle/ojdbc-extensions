@@ -40,6 +40,10 @@ package  oracle.jdbc.provider.parameter;
 
 import oracle.jdbc.provider.factory.ResourceFactory;
 
+import java.util.Arrays;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
 
@@ -137,11 +141,10 @@ public interface ParameterSet {
 
     if (value != null)
       return value;
-
     String name = getName(parameter);
     throw new IllegalStateException(format(
-      "No value defined for parameter \"%s\"",
-      name != null ? name : parameter.toString()));
+            "No value defined for parameter \"%s\"",
+            name != null ? name : parameter.toString()));
   }
 
   /**
@@ -158,5 +161,18 @@ public interface ParameterSet {
    * {@code ParameterSet}. Not null.
    */
   ParameterSetBuilder copyBuilder();
+
+  /**
+   * Filters the parameters from the {@link ParameterSet} based on the provided
+   * relevant keys.
+   *
+   * This method extracts only the parameters whose names are included
+   * in the specified array.
+   *
+   * @param relevantKeys An array of parameter names to include in the filtered
+   * result.
+   * @return A map containing only the filtered parameters.
+   */
+   Map<String, Object> filterParameters(String[] relevantKeys);
 
 }

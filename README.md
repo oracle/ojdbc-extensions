@@ -6,13 +6,19 @@ APIs. These SPI implementations are referred as "providers" for short.
 
 Each module of this project contains a set of providers.
 
-<u>Two of these modules contain providers for a particular cloud platform:</u>
+<u>The following modules contain providers for a particular cloud platform:</u>
 
 <dl>
 <dt><a href="ojdbc-provider-oci/README.md">Oracle JDBC OCI Providers</a></dt>
 <dd>Providers for integration with Oracle Cloud Infrastructure (OCI).</dd>
 <dt><a href="ojdbc-provider-azure/README.md">Oracle JDBC Azure Providers</a></dt>
 <dd>Providers for integration with Microsoft Azure</dd>
+<dt><a href="ojdbc-provider-gcp/README.md">Oracle JDBC GCP Providers</a></dt>
+<dd>Providers for integration with Google Cloud Platform</dd>
+<dt><a href="ojdbc-provider-hashicorp/README.md">Oracle JDBC HashiCorp Providers</a></dt>
+<dd>Providers for integration with Hashicorp</dd>
+<dt><a href="ojdbc-provider-aws/README.md">Oracle JDBC AWS Providers</a></dt>
+<dd>Providers for integration with AWS</dd>
 </dl>
 <u>The next one contains a provider for Open Telemetry:</u>
 <dl>
@@ -24,6 +30,8 @@ Each module of this project contains a set of providers.
 <dt><a href="ojdbc-provider-jackson-oson/README.md">Oracle JDBC Jackson OSON</a></dt>
 <dd>Provider for <a href="https://docs.oracle.com/en/database/oracle/oracle-database/23/adjsn/json-in-oracle-database.html#GUID-A8A58B49-13A5-4F42-8EA0-508951DAE0BB">OSON</a> through the JACKSON APIs. 
 This provider can be used for seamless integration of applications that use the JACKSON APIs with the Oracle JSON type.</dd>
+<dt><a href="ojdbc-provider-pkl/README.md">Oracle JDBC Pkl Parser</a></dt>
+<dd>Parser for integration with Pkl that can be used by providers</dd>
 </dl>
 Visit any of the links above to learn about providers which are available for 
 a particular platform.
@@ -128,9 +136,17 @@ this project:
 
 [ojdbc-provider-azure](ojdbc-provider-azure/README.md#installation)
 
+[ojdbc-provider-hashicorp](ojdbc-provider-hashicorp/README.md#installation)
+
+[ojdbc-provider-aws](ojdbc-provider-aws/README.md#installation)
+
+[ojdbc-provider-gcp](ojdbc-provider-gcp/README.md#installation)
+
 [ojdbc-provider-opentelemetry](ojdbc-provider-opentelemetry/README.md#installation)
 
 [ojdbc-provider-jackson-oson](ojdbc-provider-jackson-oson/README.md#installation)
+
+[ojdbc-provider-pkl](ojdbc-provider-pkl/README.md#installation)
 
 
 Each module listed above is distributed on the Maven Central Repository as a

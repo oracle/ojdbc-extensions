@@ -65,6 +65,8 @@ public class AzureVaultJsonProvider extends OracleConfigurationParsableProvider 
    */
   private static final Parameter<String> KEY = Parameter.create();
 
+  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
+
   static final ParameterSetParser PARAMETER_SET_PARSER =
     AzureConfigurationParameters.configureBuilder(
       ParameterSetParser.builder()

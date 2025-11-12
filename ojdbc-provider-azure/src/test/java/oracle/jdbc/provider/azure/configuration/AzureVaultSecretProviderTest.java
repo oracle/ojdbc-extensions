@@ -41,6 +41,7 @@ import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod;
 import oracle.jdbc.provider.azure.AzureTestProperty;
 import oracle.jdbc.spi.OracleConfigurationJsonSecretProvider;
+import oracle.jdbc.spi.OracleConfigurationProvider;
 import oracle.jdbc.spi.OracleConfigurationSecretProvider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -49,6 +50,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AzureVaultSecretProviderTest {
+  static {
+    OracleConfigurationProvider.allowedProviders.add("azurevault");
+  }
+
   private static final OracleConfigurationSecretProvider PROVIDER =
     OracleConfigurationSecretProvider.find("azurevault");
 
@@ -68,6 +73,32 @@ public class AzureVaultSecretProviderTest {
         TestProperties.getOrAbort(AzureTestProperty.AZURE_CLIENT_SECRET),
         TestProperties.getOrAbort(AzureTestProperty.AZURE_TENANT_ID)
     )));
+  }
+
+  /**
+   * Verifies that calling getSecret(...) with an empty secret name
+   * is rejected by throwing an IllegalArgumentException whose message
+   * indicates a missing secret name.
+   */
+  @Test
+  public void testEmptySecretNameThrows() {
+    IllegalArgumentException ex = Assertions.assertThrows(
+      IllegalArgumentException.class,
+        () -> PROVIDER.getSecret(
+          constructSecretProperties(
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_KEY_VAULT_URL),
+            "",   // <— empty secret path
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_CLIENT_ID),
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_CLIENT_SECRET),
+            TestProperties.getOrAbort(AzureTestProperty.AZURE_TENANT_ID)
+          )
+        ),
+            "Expected getSecret(...) to throw when secret name is empty"
+    );
+    Assertions.assertTrue(
+      ex.getMessage().toLowerCase().contains("missing secret name"),
+      "Exception message should mention 'secret name', but was: " + ex.getMessage()
+    );
   }
 
   private Map<String,String> constructSecretProperties(
