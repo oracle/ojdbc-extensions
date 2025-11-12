@@ -103,7 +103,7 @@ public class PklParserTest {
     final String location =  file.getAbsolutePath();
 
     Properties properties = PROVIDER
-        .getConnectionProperties(location);
+        .getConnectionProperties(location + "?parser=pkl");
 
 
     assertTrue(properties.containsKey("URL"), "Should contain property URL");
