@@ -144,7 +144,7 @@ public class OTelTracer implements ObservabilityTracer {
         boolean hasError = isErrorObj != null && isErrorObj;
         span.setStatus(hasError ? StatusCode.ERROR : StatusCode.OK);
         if (hasError && isStableConventionsEnabled()) {
-          Throwable throwable = null; // traceContext.getThrowable();
+          Throwable throwable = traceContext.getThrowable();
           if (throwable != null) {
             span.setAttribute(ERROR_TYPE_ATTRIBUTE, throwable.getClass().getName());
             if (throwable instanceof SQLException) {
@@ -328,7 +328,7 @@ public class OTelTracer implements ObservabilityTracer {
     // Emit NEW stable semantic conventions
     if (emitStable) {
       spanBuilder.setAttribute(DB_SYSTEM_ATTRIBUTE, DB_SYSTEM_VALUE_ORACLE);
-/*
+
       if (traceContext.getServiceName() != null && !traceContext.getServiceName().isEmpty()) {
         spanBuilder.setAttribute(DB_NAMESPACE_ATTRIBUTE, traceContext.getServiceName());
       }
@@ -388,7 +388,6 @@ public class OTelTracer implements ObservabilityTracer {
           spanBuilder.setAttribute(DB_RESPONSE_RETURNED_ROWS_ATTRIBUTE, numRows);
         }
       }
- */
     }
 
     // Emit old conventions
