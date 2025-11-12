@@ -38,11 +38,13 @@ When `OTEL_SEMCONV_STABILITY_OPT_IN=database` or `database/dup`:
 
 * **Required/Recommended Attributes**
     * `db.system.name` - Always set to `"oracle.db"`
-    * `db.namespace` - Format: `{instance_name}|{database_name}|{service_name}`
+    * `db.namespace` - Service name (or TNS alias if used)
     * `db.operation.name` - Database operation being executed
     * `db.query.summary` - Low cardinality query summary (SQL type)
     * `server.address` - Database server hostname
     * `server.port` - Database server port (if non-default, i.e., not 1521)
+    * `oracle.db.instance.id` - Oracle database instance identifier
+    * `oracle.db.pdb` - Oracle PDB name
     * `oracle.db.query.sql.id` - Oracle SQL_ID
     * `oracle.db.session.id` - Oracle session ID
     * `oracle.db.server.pid` - Oracle server process ID

@@ -329,9 +329,16 @@ public class OTelTracer implements ObservabilityTracer {
     if (emitStable) {
       spanBuilder.setAttribute(DB_SYSTEM_ATTRIBUTE, DB_SYSTEM_VALUE_ORACLE);
 
-      String namespace = buildDbNamespace(traceContext);
-      if (namespace != null && !namespace.isEmpty()) {
-        spanBuilder.setAttribute(DB_NAMESPACE_ATTRIBUTE, namespace);
+      if (traceContext.getServiceName() != null && !traceContext.getServiceName().isEmpty()) {
+        spanBuilder.setAttribute(DB_NAMESPACE_ATTRIBUTE, traceContext.getServiceName());
+      }
+
+      if (traceContext.getInstanceName() != null && !traceContext.getInstanceName().isEmpty()) {
+        spanBuilder.setAttribute(ORACLE_INSTANCE_ID_ATTRIBUTE, traceContext.getInstanceName());
+      }
+
+      if (traceContext.getDatabaseName() != null && !traceContext.getDatabaseName().isEmpty()) {
+        spanBuilder.setAttribute(ORACLE_PDB_ATTRIBUTE, traceContext.getDatabaseName());
       }
 
       if (traceContext.getServerAddress() != null && !traceContext.getServerAddress().isEmpty()) {
@@ -456,32 +463,6 @@ public class OTelTracer implements ObservabilityTracer {
 
     traceState.forEach((k, v) -> stringBuilder.append(k).append("=").append(v));
     return String.format(TRACE_STATE_FORMAT, stringBuilder);
-  }
-
-  /**
-   * Builds the db.namespace attribute according to Oracle Database
-   * semantic conventions.
-   * Format: {instance_name}|{database_name}|{service_name}
-   * Missing components and their separators are omitted.
-   */
-  private String buildDbNamespace(TraceContext traceContext) {
-    StringBuilder ns = new StringBuilder();
-
-    if (traceContext.getInstanceName() != null && !traceContext.getInstanceName().isEmpty()) {
-      ns.append(traceContext.getInstanceName());
-    }
-
-    if (traceContext.getDatabaseName() != null && !traceContext.getDatabaseName().isEmpty()) {
-      if (ns.length() > 0) ns.append('|');
-      ns.append(traceContext.getDatabaseName());
-    }
-
-    if (traceContext.getServiceName() != null && !traceContext.getServiceName().isEmpty()) {
-      if (ns.length() > 0) ns.append('|');
-      ns.append(traceContext.getServiceName());
-    }
-
-    return ns.length() > 0 ? ns.toString() : null;
   }
 
   /**

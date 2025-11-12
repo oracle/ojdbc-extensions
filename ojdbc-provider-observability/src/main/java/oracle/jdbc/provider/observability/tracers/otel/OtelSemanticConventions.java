@@ -149,6 +149,16 @@ final class OtelSemanticConventions {
   static final String ORACLE_SERVER_PID_ATTRIBUTE = "oracle.db.server.pid";
 
   /**
+   * Attribute key for Oracle database instance identifier.
+   */
+  static final String ORACLE_INSTANCE_ID_ATTRIBUTE = "oracle.db.instance.id";
+
+  /**
+   * Attribute key for Oracle PDB name.
+   */
+  static final String ORACLE_PDB_ATTRIBUTE = "oracle.db.pdb";
+
+  /**
    * Attribute key for Oracle shard name.
    */
   static final String ORACLE_SHARD_NAME_ATTRIBUTE = "oracle.db.shard.name";
