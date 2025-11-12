@@ -7,7 +7,7 @@
   <parent>
         <groupId>com.oracle.database.jdbc</groupId>
         <artifactId>ojdbc-extensions</artifactId>
-        <version>1.0.3</version>
+        <version>1.0.6</version>
   </parent>
 
   <name>Oracle JDBC Observability Provider</name>
@@ -23,7 +23,7 @@
   <dependencies>
     <dependency>
       <groupId>com.oracle.database.jdbc</groupId>
-      <artifactId>ojdbc11</artifactId>
+      <artifactId>ojdbc8</artifactId>
     </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>

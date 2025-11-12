@@ -92,11 +92,6 @@
         <scope>provided</scope>
       </dependency>
       <dependency>
-        <groupId>com.oracle.database.jdbc</groupId>
-        <artifactId>ojdbc11</artifactId>
-        <version>${jdbc.version}</version>
-      </dependency>
-      <dependency>
         <groupId>com.oracle.database.security</groupId>
         <artifactId>oraclepki</artifactId>
         <version>${jdbc.version}</version>
