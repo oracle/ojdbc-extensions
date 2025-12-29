@@ -72,6 +72,10 @@ public class SecretsManagerUsernameProvider
    */
   @Override
   public String getUsername(Map<Parameter, CharSequence> parameterValues) {
-    return getSecret(parameterValues);
+    String username = getSecret(parameterValues);
+    if (username == null || username.trim().isEmpty()) {
+      throw new IllegalArgumentException("Username secret content is blank.");
+    }
+    return username;
   }
 }
