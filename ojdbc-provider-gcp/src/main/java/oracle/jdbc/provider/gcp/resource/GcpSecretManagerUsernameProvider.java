@@ -60,7 +60,12 @@ public class GcpSecretManagerUsernameProvider extends GcpSecretManagerProvider i
 
   @Override
   public String getUsername(Map<Parameter, CharSequence> parameterValues) {
-    return getSecret(parameterValues).toStringUtf8();
+    String username = getSecret(parameterValues).toStringUtf8();
+
+    if (username == null || username.trim().isEmpty()) {
+      throw new IllegalArgumentException("Username secret content is blank");
+    }
+    return username;
   }
 
 }
