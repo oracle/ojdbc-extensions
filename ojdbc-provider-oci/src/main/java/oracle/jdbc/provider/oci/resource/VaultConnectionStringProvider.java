@@ -119,7 +119,12 @@ public class VaultConnectionStringProvider
     String secretValue = getVaultSecret(parameterValues)
                            .getBase64Secret();
 
-    byte[] fileBytes = Base64.getDecoder().decode(secretValue);
+    byte[] fileBytes;
+    try {
+      fileBytes = Base64.getDecoder().decode(secretValue);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalStateException("Invalid base64 encoding in secret", e);
+    }
 
     TNSNames tnsNames;
     try (InputStream inputStream = new ByteArrayInputStream(fileBytes)) {
