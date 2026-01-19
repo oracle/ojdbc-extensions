@@ -37,39 +37,39 @@ for details on the stable conventions.
 When `OTEL_SEMCONV_STABILITY_OPT_IN=database` or `database/dup`:
 
 * **Required/Recommended Attributes**
-    * `db.system.name` - Always set to `"oracle.db"`
-    * `db.namespace` - Service name (or TNS alias if used)
-    * `db.operation.name` - Database operation being executed
-    * `db.query.summary` - Low cardinality query summary (SQL type)
-    * `server.address` - Database server hostname
+    * `db.system.name` - Always set to `"oracle.db"` (identifies Oracle Database)
+    * `db.namespace` - The Oracle service name from the connection
+    * `db.operation.name` - Database operation being executed (e.g. `ExecuteQuery`)
+    * `db.query.summary` - Low cardinality SQL command type (e.g., `SELECT`, `INSERT`)
+    * `server.address` - Database server hostname (e.g., `db.example.com`)
     * `server.port` - Database server port (if non-default, i.e., not 1521)
     * `oracle.db.instance.id` - Oracle database instance identifier
-    * `oracle.db.pdb` - Oracle PDB name
-    * `oracle.db.query.sql.id` - Oracle SQL_ID
-    * `oracle.db.session.id` - Oracle session ID
-    * `oracle.db.server.pid` - Oracle server process ID
-    * `oracle.db.shard.name` - Oracle shard name (if applicable)
-    * `thread.id` - Current thread ID
-    * `thread.name` - Current thread name
+    * `oracle.db.pdb` - Oracle Pluggable Database (PDB) name
+    * `oracle.db.query.sql.id` - Oracle SQL identifier (e.g., `8vq9m5kx3n2wh`)
+    * `oracle.db.session.id` - Oracle session identifier (e.g., `1234`)
+    * `oracle.db.server.pid` - Oracle server process ID on the database host (e.g., `56789`)
+    * `oracle.db.shard.name` - Oracle shard database name (only populated when using Oracle Sharding)
+    * `thread.id` - JVM thread ID that executed the operation
+    * `thread.name` - JVM thread name that executed the operation
 
 * **Opt-In Attributes** *(only present if sensitive data is enabled)*
-    * `db.user` - Database user name
-    * `db.query.text` - Actual SQL query text
+    * `db.user` - Database username used for the connection (e.g., `APP_USER`, `SCOTT`)
+    * `db.query.text` - Full SQL statement text sent to the database
     * `db.response.returned_rows` - Number of rows returned
 
 * **Error Attributes** *(only present on errors)*
     * `error.type` - Exception class name (e.g., `java.sql.SQLSyntaxErrorException`)
-    * `db.response.status_code` - Oracle error code (format: `ORA-XXXXX`)
+    * `db.response.status_code` - Oracle error code in format `ORA-XXXXX` (e.g., `ORA-00942`, `ORA-01017`)
 
 #### Legacy Conventions
 When `OTEL_SEMCONV_STABILITY_OPT_IN` is empty/not set or `database/dup`:
 
-* `Connection ID`
-* `Database Operation`
-* `Database Tenant`
-* `SQL ID`
-* `thread.id`
-* `thread.name`
+* `Connection ID` - JDBC connection identifier
+* `Database Operation` - Database operation being executed (e.g., `Commit`, `ExecuteQuery`)
+* `Database Tenant` - Tenant name
+* `SQL ID` - Oracle SQL identifier (e.g., `8vq9m5kx3n2wh`)
+* `thread.id` - JVM thread ID that executed the operation
+* `thread.name` - JVM thread name that executed the operation
 * `Database User` *(only present if sensitive data is enabled)*
 * `Original SQL Text` *(only present if sensitive data is enabled)*
 * `Actual SQL Text` *(only present if sensitive data is enabled)*
@@ -79,35 +79,35 @@ When `OTEL_SEMCONV_STABILITY_OPT_IN` is empty/not set or `database/dup`:
 #### Stable Conventions
 When `OTEL_SEMCONV_STABILITY_OPT_IN=database` or `database/dup`:
 
-* `db.system.name` - Always set to `"oracle.db"`
-* `error.type` - Error message that triggered replay
-* `db.response.status_code` - Oracle error code (format: `ORA-XXXXX`)
-* `db.operation.batch.size` - Current replay retry count
+* `db.system.name` - Always set to `"oracle.db"` (identifies Oracle Database)
+* `error.type` - The error message text that triggered the replay attempt
+* `db.response.status_code` - Oracle error code that triggered replay in format `ORA-XXXXX` (e.g., `ORA-03135`, `ORA-25408`)
+* `oracle.db.ac.retry_count` - Application Continuity replay attempt number
 
 #### Legacy Conventions
 When `OTEL_SEMCONV_STABILITY_OPT_IN` is empty/not set or `database/dup`:
 
-* `Error Message`
+* `Error Message` - Error message text that triggered the replay attempt
 * `Error code`
 * `SQL state`
-* `Current replay retry count`
+* `Current replay retry count` - Application Continuity replay attempt number
 
 ### VIP Retry Events 
 
 #### Stable Conventions
 When `OTEL_SEMCONV_STABILITY_OPT_IN=database` or `database/dup`:
 
-* `db.system.name` - Always set to `"oracle.db"`
-* `error.type` - Error message that triggered VIP retry
-* `server.address` - VIP address being retried
+* `db.system.name` - Always set to `"oracle.db"` (identifies Oracle Database)
+* `error.type` - The error message that triggered the VIP retry
+* `server.address` - The VIP (Virtual IP) address that is being retried after failure
 
 **Opt-In VIP Debug Attributes** *(only present if sensitive data is enabled)*:
-* `server.port` - Server port number
-* `oracle.db.vip.protocol` - Connection protocol
-* `oracle.db.vip.failed_host` - Host that failed during VIP retry
-* `oracle.db.vip.service_name` - Oracle service name
-* `oracle.db.vip.sid` - Oracle System Identifier (SID)
-* `oracle.db.vip.connection_descriptor` - Full connection descriptor
+* `server.port` - Database server port number being retried
+* `oracle.db.vip.protocol` - Connection protocol being used
+* `oracle.db.vip.failed_host` - The hostname that failed, triggering the VIP retry
+* `oracle.db.vip.service_name` - Oracle service name for the failed connection
+* `oracle.db.vip.sid` - Oracle System Identifier (SID) for the failed connection
+* `oracle.db.vip.connection_descriptor` - Complete JDBC connection descriptor string
 
 #### Legacy Conventions
 When `OTEL_SEMCONV_STABILITY_OPT_IN` is empty/not set or `database/dup`:

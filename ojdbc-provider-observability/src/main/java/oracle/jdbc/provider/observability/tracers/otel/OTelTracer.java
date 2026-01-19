@@ -253,7 +253,7 @@ public class OTelTracer implements ObservabilityTracer {
           }
           if (params[2] != null) {
             try {
-              spanBuilder.setAttribute(DB_OPERATION_BATCH_SIZE_ATTRIBUTE,
+              spanBuilder.setAttribute(ORACLE_AC_RETRY_COUNT_ATTRIBUTE,
                 Integer.parseInt(params[2].toString()));
             } catch (NumberFormatException e) {
               logger.log(Level.FINE, "Could not parse retry count: " + params[2]);

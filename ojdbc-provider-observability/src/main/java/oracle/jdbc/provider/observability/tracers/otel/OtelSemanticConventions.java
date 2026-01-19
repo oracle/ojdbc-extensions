@@ -100,11 +100,6 @@ final class OtelSemanticConventions {
   static final String DB_RESPONSE_RETURNED_ROWS_ATTRIBUTE = "db.response.returned_rows";
 
   /**
-   * Attribute key for the number of queries in a batch operation.
-   */
-  static final String DB_OPERATION_BATCH_SIZE_ATTRIBUTE = "db.operation.batch.size";
-
-  /**
    * Attribute key for the database host name.
    */
   static final String SERVER_ADDRESS_ATTRIBUTE = "server.address";
@@ -182,6 +177,11 @@ final class OtelSemanticConventions {
    * Attribute key for the Oracle SID during VIP retry.
    */
   static final String ORACLE_VIP_SID_ATTRIBUTE = "oracle.db.vip.sid";
+
+  /**
+   * Attribute key for Oracle Application Continuity replay retry count.
+   */
+  static final String ORACLE_AC_RETRY_COUNT_ATTRIBUTE = "oracle.db.ac.retry_count";
 
   /**
    * Attribute key for the connection descriptor during VIP retry.
