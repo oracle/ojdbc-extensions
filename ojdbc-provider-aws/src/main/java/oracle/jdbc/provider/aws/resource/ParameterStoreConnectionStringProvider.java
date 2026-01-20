@@ -107,6 +107,10 @@ public class ParameterStoreConnectionStringProvider
       return connectionString;
     } catch (IOException e) {
       throw new IllegalStateException("Failed to read tnsnames.ora content", e);
+    } catch (StringIndexOutOfBoundsException | IllegalStateException parseException) {
+      throw new IllegalStateException(
+        "Invalid or corrupted tnsnames.ora content. Ensure the secret contains valid, complete tnsnames.ora data (base64-encoded or plain text).", parseException
+      );
     }
   }
 }
