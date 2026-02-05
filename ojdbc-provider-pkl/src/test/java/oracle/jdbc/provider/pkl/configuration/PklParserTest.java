@@ -94,8 +94,6 @@ public class PklParserTest {
         + "}\n";
     writer.write(content);
     writer.close();
-
-    System.out.println(content);
   }
 
   @Test

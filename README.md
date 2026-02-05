@@ -22,8 +22,8 @@ Each module of this project contains a set of providers.
 </dl>
 <u>The next one contains a provider for Open Telemetry:</u>
 <dl>
-<dt><a href="ojdbc-provider-opentelemetry/README.md">Oracle JDBC Open Telemetry Provider</a></dt>
-<dd>Provider for integration with Open Telemetry.</dd>
+<dt><a href="ojdbc-provider-observability/README.md">Oracle JDBC Observability Provider</a></dt>
+<dd>Provider for integration with Open Telemetry and Java Flight Recorder.</dd>
 </dl>
 <u>And the last one contains a provider for Jackson-OSON:</u>
 <dl>
