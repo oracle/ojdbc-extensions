@@ -63,6 +63,11 @@ public class GcpSecretManagerPasswordProvider extends GcpSecretManagerProvider i
   public char[] getPassword(Map<Parameter, CharSequence> parameterValues) {
     ByteString secret = getSecret(parameterValues);
     String password = secret.toStringUtf8();
+
+    if (password == null || password.trim().isEmpty()) {
+      throw new IllegalArgumentException("Password secret content is blank.");
+    }
+
     return password.toCharArray();
   }
 

@@ -72,6 +72,10 @@ public class SecretsManagerPasswordProvider
    */
   @Override
   public char[] getPassword(Map<Parameter, CharSequence> parameterValues) {
-    return getSecret(parameterValues).toCharArray();
+    String password = getSecret(parameterValues);
+    if (password == null || password.trim().isEmpty()) {
+      throw new IllegalArgumentException("Password secret content is blank.");
+    }
+    return password.toCharArray();
   }
 }
