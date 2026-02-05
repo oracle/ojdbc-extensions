@@ -14,9 +14,7 @@
     <artifactId>ojdbc-provider-jackson-oson</artifactId>
     <properties>
         <jackson-version>2.20.0</jackson-version>
-        <jakarta-persistence-api>3.2.0</jakarta-persistence-api>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <jakarta-persistence-api>3.1.0</jakarta-persistence-api>
     </properties>
 
     <dependencies>
