@@ -74,7 +74,6 @@ public final class ParameterUtils {
    *   <li>System property</li>
    *   <li>Environment variable</li>
    * </ol>
-   * </p>
    *
    * @param parameter The Parameter object to retrieve from ParameterSet
    * @param sysPropKey The system property key to check as fallback
