@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2025 Oracle and/or its affiliates.
+ ** Copyright (c) 2026 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -36,14 +36,21 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.hashicorp.util;
+package oracle.jdbc.provider.util;
+
+import oracle.jdbc.provider.parameter.Parameter;
+import oracle.jdbc.provider.parameter.ParameterSet;
 
 /**
- * Utility class for parameter resolution.
+ * Utility class for parameter resolution with fallback support.
+ * <p>
+ * This class provides methods to retrieve parameter values from multiple sources
+ * with a priority order: ParameterSet → System Properties → Environment Variables.
+ * </p>
  */
-public final class Parameterutil {
+public final class ParameterUtils {
 
-  private Parameterutil() {
+  private ParameterUtils() {
     // Prevent instantiation.
   }
 
@@ -56,5 +63,39 @@ public final class Parameterutil {
    */
   public static String getFallback(String key) {
     return System.getProperty(key, System.getenv(key));
+  }
+
+  /**
+   * Retrieves a parameter value with cascading fallback to system property and environment variable.
+   * <p>
+   * The lookup order is:
+   * <ol>
+   *   <li>ParameterSet</li>
+   *   <li>System property</li>
+   *   <li>Environment variable</li>
+   * </ol>
+   *
+   * @param parameter The Parameter object to retrieve from ParameterSet
+   * @param sysPropKey The system property key to check as fallback
+   * @param envVarKey The environment variable key to check as fallback
+   * @param paramSet The ParameterSet to check first
+   * @return The parameter value from the first available source
+   * @throws IllegalArgumentException if the parameter is not found in any source
+   */
+  public static String getParameterWithFallback(Parameter<String> parameter,
+                                           String sysPropKey, String envVarKey, ParameterSet paramSet) {
+    String value = paramSet.getOptional(parameter);
+    if (value == null) {
+      value = System.getProperty(sysPropKey);
+      if (value == null) {
+        value = System.getenv(envVarKey);
+        if (value == null) {
+          throw new IllegalArgumentException(
+            String.format("Parameter '%s' is required and not found in ParameterSet, system property '%s', or environment variable '%s'",
+              paramSet.getName(parameter), sysPropKey, envVarKey));
+        }
+      }
+    }
+    return value;
   }
 }
