@@ -44,12 +44,6 @@ public class SimpleSEPSWalletProviderWithIndexExample {
       connectionProps.put("oracle.jdbc.provider.password.ocid",
         "ocid1.vaultsecret.oc1.phx.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
 
-      // TLS Configuration Provider
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration",
-        "ojdbc-provider-oci-database-tls");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.ocid",
-        "ocid1.autonomousdatabase.oc1.phx.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-
       // Specify the connection string index
       connectionProps.put("oracle.jdbc.provider.username.connectionStringIndex","1");
       connectionProps.put("oracle.jdbc.provider.password.connectionStringIndex","1");

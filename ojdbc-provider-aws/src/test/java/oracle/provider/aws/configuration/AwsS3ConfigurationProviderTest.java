@@ -39,6 +39,7 @@ package oracle.provider.aws.configuration;
 
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.spi.OracleConfigurationProvider;
+import oracle.provider.aws.AwsTestProperty;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;

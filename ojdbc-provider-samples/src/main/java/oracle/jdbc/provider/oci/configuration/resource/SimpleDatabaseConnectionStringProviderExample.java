@@ -36,11 +36,6 @@ public class SimpleDatabaseConnectionStringProviderExample {
       connectionProps.put("oracle.jdbc.provider.connectionString.ocid",
         "ocid1.autonomousdatabase.oc1.phx.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
 
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration",
-        "ojdbc-provider-oci-database-tls");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.ocid",
-        "ocid1.autonomousdatabase.oc1.phx.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
-
       ds.setConnectionProperties(connectionProps);
 
       try (Connection cn = ds.getConnection()) {

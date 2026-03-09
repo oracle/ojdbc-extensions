@@ -109,6 +109,13 @@ public final class AuthenticationDetailsFactory
   public static final Parameter<String> USERNAME = Parameter.create();
 
   /**
+   * Timeout in seconds for instance principal authentication.
+   * Optional – defaults to 5 seconds if not explicitly configured.
+   */
+  public static final Parameter<Integer> INSTANCE_PRINCIPAL_TIMEOUT =
+    Parameter.create();
+
+  /**
    * <p>
    * An OCI region provided by instances of
    * {@link AbstractAuthenticationDetailsProvider} which implement the
@@ -187,7 +194,7 @@ public final class AuthenticationDetailsFactory
       case CLOUD_SHELL:
         return cloudShellAuthentication();
       case INSTANCE_PRINCIPAL:
-        return instancePrincipalAuthentication();
+        return instancePrincipalAuthentication(parameterSet);
       case RESOURCE_PRINCIPAL:
         return resourcePrincipalAuthentication();
       case INTERACTIVE:
@@ -239,23 +246,24 @@ public final class AuthenticationDetailsFactory
    * Returns authentication details using the following API key-based
    * methods:
    * <ol>
-   *   <li>Simple authentication: if any of the credentials, including tenant ID
-   *       , user ID, fingerprint, private key, or passphrase, are provided in
-   *       the given {@code parameters}</li>
+   *   <li>Simple authentication: if all required credentials (tenant ID,
+   *   user ID, fingerprint, and private key are provided in the given
+   *   {@code parameters}</li>
    *   <li>Config File (API key) authentication: otherwise</li>
    * </ol>
    * @return API key-based authentication details
    */
   private static AuthenticationDetailsProvider
     apiKeyBasedAuthentication(ParameterSet parameters) {
-    if (parameters.contains(TENANT_ID)
-      || parameters.contains(USER_ID)
-      || parameters.contains(FINGERPRINT)
-      || parameters.contains(PRIVATE_KEY)
-      || parameters.contains(PASS_PHRASE)
-      || parameters.contains(REGION)) {
+    boolean hasAllRequiredKeys =
+      parameters.contains(TENANT_ID)
+      && parameters.contains(USER_ID)
+      && parameters.contains(FINGERPRINT)
+      && parameters.contains(PRIVATE_KEY);
+
+    if(hasAllRequiredKeys)
       return simpleAuthentication(parameters);
-    }
+
     return configFileAuthentication(parameters);
   }
 
@@ -311,7 +319,7 @@ public final class AuthenticationDetailsFactory
     }
 
     try {
-      return instancePrincipalAuthentication();
+      return instancePrincipalAuthentication(parameters);
     }
     catch (RuntimeException notComputeInstance) {
       previousFailure.addSuppressed(
@@ -331,17 +339,23 @@ public final class AuthenticationDetailsFactory
    * </p><p>
    * It is thought that authentication as an instance principal should not take
    * more than a few seconds to complete, so this method will throw an
-   * {@code IllegalStateException} if a timeout of 5 seconds is exceeded.
+   * {@code IllegalStateException} if the operation exceeds the configured
+   * timeout (5 seconds by default).
+   * </p><p>
+   * The timeout can be overridden using the optional
+   * {@code INSTANCE_PRINCIPAL_TIMEOUT} parameter (value in seconds), which can
+   * be provided in the URI query string.
    * </p>
    * @return Authentication details for an instance principal. Not null.
    * @throws IllegalStateException If the current environment is not a compute
    * instance.
    */
   private static InstancePrincipalsAuthenticationDetailsProvider
-    instancePrincipalAuthentication() {
+    instancePrincipalAuthentication(ParameterSet parameters) {
+    int timeoutSeconds = parameters.getOptional(INSTANCE_PRINCIPAL_TIMEOUT);
     try {
       return InstancePrincipalAuthenticationTask.FUTURE
-        .get(5, TimeUnit.SECONDS);
+        .get(timeoutSeconds, TimeUnit.SECONDS);
     }
     catch (ExecutionException exception) {
       throw new IllegalStateException(
@@ -355,8 +369,8 @@ public final class AuthenticationDetailsFactory
     }
     catch (TimeoutException timeoutException) {
       throw new IllegalStateException(
-        "Authentication as an instance principal did not complete within" +
-          " 5 seconds",
+        "Authentication as an instance principal did not complete within "
+         + timeoutSeconds + " seconds",
         timeoutException);
     }
   }

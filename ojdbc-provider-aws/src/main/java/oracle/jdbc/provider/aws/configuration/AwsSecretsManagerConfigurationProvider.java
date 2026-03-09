@@ -39,6 +39,7 @@ package oracle.jdbc.provider.aws.configuration;
 
 import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.aws.secrets.SecretsManagerFactory;
+import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 import oracle.jdbc.util.OracleConfigurationCache;
@@ -55,6 +56,8 @@ import java.util.Map;
  **/
 public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationParsableProvider {
 
+  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
+
   /**
    * Parser that recognizes the named parameters which appear in a URL,
    * or a Json object.
@@ -64,6 +67,8 @@ public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationP
               ParameterSetParser.builder()
                   .addParameter("value", SecretsManagerFactory.SECRET_NAME)
                   .addParameter("key", AwsConfigurationParameters.KEY)
+                  .addParameter("type", Parameter.create())
+                  .addParameter("field_name", AwsConfigurationParameters.FIELD_NAME)
                   .addParameter("AWS_REGION", AwsConfigurationParameters.REGION))
           .build();
 

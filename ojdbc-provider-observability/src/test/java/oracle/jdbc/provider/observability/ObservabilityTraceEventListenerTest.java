@@ -50,6 +50,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.time.Instant;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -204,15 +205,15 @@ public class ObservabilityTraceEventListenerTest {
     Mockito.verify(spanBuilder, Mockito.times(1)).setAttribute("Database Operation", DatabaseFunction.EXECUTE_QUERY.getDescription());
     Mockito.verify(spanBuilder, Mockito.times(1)).setAttribute("Database Operation", DatabaseFunction.LOGOFF.getDescription());
     if (sensitiveDataEnabled) {
-      Mockito.verify(spanBuilder, Mockito.times(4)).setAttribute("Database User", userName);
+      Mockito.verify(spanBuilder, Mockito.times(4)).setAttribute("Database User", userName.toUpperCase());
       Mockito.verify(spanBuilder, Mockito.times(1)).setAttribute("Original SQL Text", "SELECT 'OK' FROM DUAL");
       Mockito.verify(spanBuilder, Mockito.times(1)).setAttribute("Actual SQL Text", "SELECT 'OK' FROM DUAL");
     } else {
-      Mockito.verify(spanBuilder, Mockito.times(0)).setAttribute("Database User", userName);
+      Mockito.verify(spanBuilder, Mockito.times(0)).setAttribute("Database User", userName.toUpperCase());
       Mockito.verify(spanBuilder, Mockito.times(0)).setAttribute("Original SQL Text", "SELECT 'OK' FROM DUAL");
       Mockito.verify(spanBuilder, Mockito.times(0)).setAttribute("Actual SQL Text", "SELECT 'OK' FROM DUAL");
     }
-    Mockito.verify(span, atLeast(4)).end();
+    Mockito.verify(span, atLeast(4)).end(Mockito.any(Instant.class));
 
   }
 

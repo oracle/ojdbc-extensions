@@ -71,14 +71,6 @@ public class PasswordProviderAzureExample {
       connectionProps.put("oracle.jdbc.provider.password.vaultUrl", "https://me-vault-test.vault.azure.net");
       connectionProps.put("oracle.jdbc.provider.password.secretName", "db-password");
 
-      // TLS Configuration for secure connection
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration", "ojdbc-provider-azure-key-vault-tls");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.vaultUrl",
-              "https://your-vault-url.vault.azure.net");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.secretName",
-              "your-wallet-base64-secret-name");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.type", "SSO");
-
       ds.setConnectionProperties(connectionProps);
 
       try (Connection cn = ds.getConnection()) {

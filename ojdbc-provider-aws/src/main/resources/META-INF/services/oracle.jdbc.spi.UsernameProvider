@@ -1,0 +1,4 @@
+oracle.jdbc.provider.aws.resource.SecretsManagerUsernameProvider
+oracle.jdbc.provider.aws.resource.ParameterStoreUsernameProvider
+oracle.jdbc.provider.aws.resource.SecretsManagerSEPSProvider
+oracle.jdbc.provider.aws.resource.ParameterStoreSEPSProvider

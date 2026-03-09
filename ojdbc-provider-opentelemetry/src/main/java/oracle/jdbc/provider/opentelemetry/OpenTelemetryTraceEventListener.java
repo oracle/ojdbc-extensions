@@ -210,7 +210,7 @@ public class OpenTelemetryTraceEventListener
       try (Scope ignored = span.makeCurrent()) {
         traceContext.setClientInfo(TRACE_KEY, getTraceValue(span));
       } catch (Exception ex) {
-        logger.log(Level.WARNING, ex.getMessage(), ex);
+        // Ignore exception caused by connection state.
       }
       // Return the Span instance to the driver. The driver holds this instance and
       // supplies it

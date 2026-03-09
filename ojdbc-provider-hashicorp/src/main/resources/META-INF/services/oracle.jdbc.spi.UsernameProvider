@@ -1,0 +1,2 @@
+oracle.jdbc.provider.hashicorp.hcpvaultdedicated.resource.HcpVaultDedicatedUsernameProvider
+oracle.jdbc.provider.hashicorp.hcpvaultdedicated.resource.HcpVaultDedicatedSEPSProvider

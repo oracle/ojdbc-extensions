@@ -30,9 +30,6 @@ public class SimpleVaultSecretUsernameProviderExample {
       connectionProps.put("oracle.jdbc.provider.username","ojdbc-provider-oci-vault-username");
       connectionProps.put("oracle.jdbc.provider.username.ocid",
         "ocid1.vaultsecret.oc1.phx.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration", "ojdbc-provider-oci-database-tls");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.ocid",
-        "ocid1.vaultsecret.oc1.phx.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
       ds.setConnectionProperties(connectionProps);
 
       try (Connection cn = ds.getConnection()) {

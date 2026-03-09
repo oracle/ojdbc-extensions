@@ -27,9 +27,6 @@ public class SimpleVaultSecretPasswordProviderExample {
       connectionProps.put("oracle.jdbc.provider.password","ojdbc-provider-oci-vault-password");
       connectionProps.put("oracle.jdbc.provider.password.ocid",
         "ocid1.vaultsecret.oc1.phx.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration", "ojdbc-provider-oci-database-tls");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.ocid",
-        "ocid1.autonomousdatabase.oc1.phx.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
       ds.setConnectionProperties(connectionProps);
 
       try (Connection cn = ds.getConnection()) {

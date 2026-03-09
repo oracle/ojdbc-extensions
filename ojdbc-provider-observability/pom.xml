@@ -5,9 +5,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>com.oracle.database.jdbc</groupId>
-    <artifactId>ojdbc-extensions</artifactId>
-    <version>1.0.3</version>
+        <groupId>com.oracle.database.jdbc</groupId>
+        <artifactId>ojdbc-extensions</artifactId>
+        <version>1.0.6</version>
   </parent>
 
   <name>Oracle JDBC Observability Provider</name>
@@ -15,21 +15,20 @@
   <artifactId>ojdbc-provider-observability</artifactId>
 
   <properties>
-    <opentelemetry.version>1.44.1</opentelemetry.version>
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
+      <opentelemetry.version>1.44.1</opentelemetry.version>
+      <maven.compiler.source>11</maven.compiler.source>
+      <maven.compiler.target>11</maven.compiler.target>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>com.oracle.database.jdbc</groupId>
-      <artifactId>ojdbc11</artifactId>
+      <artifactId>ojdbc8</artifactId>
     </dependency>
-    <!-- The new UCP jar hasn't been released yet. Please download it from the VM and install it to your local repo. -->
     <dependency>
-      <groupId>com.oracle</groupId>
+      <groupId>com.oracle.database.jdbc</groupId>
       <artifactId>ucp</artifactId>
-      <version>11.2.0.4-SNAPSHOT</version>
+      <version>23.26.1.0.0</version>
     </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
@@ -77,21 +76,21 @@
     </dependency>
   </dependencies>
   <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <!--
-            ObservabilityConfigurationTest must run first and alone since it depends on
-            ObservabilityConfiguration being started with system properties set on the
-            test.
-            Running tests alphabetical and single threaded ensures that.
-          -->
-          <parallel>none</parallel>
-          <runOrder>alphabetical</runOrder>
-        </configuration>
-      </plugin>
-    </plugins>
+      <plugins>
+          <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-surefire-plugin</artifactId>
+              <configuration>
+              <!-- 
+                ObservabilityConfigurationTest must run first and alone since it depends on
+                ObservabilityConfiguration being started with system properties set on the 
+                test.
+                Running tests alphabetical and single threaded ensures that.
+              -->
+                <parallel>none</parallel>
+                <runOrder>alphabetical</runOrder>
+              </configuration>
+          </plugin>
+      </plugins>
   </build>
 </project>

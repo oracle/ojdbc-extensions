@@ -39,11 +39,6 @@ public class SimpleSEPSWalletProviderExample {
       connectionProps.put("oracle.jdbc.provider.password.ocid",
         "ocid1.vaultsecret.oc1.phx.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
 
-      // TLS Configuration Provider
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration", "ojdbc-provider-oci-database-tls");
-      connectionProps.put("oracle.jdbc.provider.tlsConfiguration.ocid",
-        "ocid1.autonomousdatabase.oc1.phx.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-
       ds.setConnectionProperties(connectionProps);
 
       try (Connection cn = ds.getConnection()) {

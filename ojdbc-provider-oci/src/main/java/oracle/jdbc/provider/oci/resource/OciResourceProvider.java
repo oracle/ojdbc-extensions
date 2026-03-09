@@ -80,6 +80,17 @@ public abstract class OciResourceProvider
       new ResourceParameter(
         "username",
         AuthenticationDetailsFactory.USERNAME),
+      new ResourceParameter("instancePrincipalTimeout",
+        AuthenticationDetailsFactory.INSTANCE_PRINCIPAL_TIMEOUT,
+        "5",
+          s -> {
+            try {
+              return Integer.parseInt(s);
+            } catch (NumberFormatException e) {
+              throw new IllegalArgumentException("Invalid value for instancePrincipalTimeout: " + s +
+                " – must be an integer.");
+            }
+        }),
       new ResourceParameter(
         "region",
         AuthenticationDetailsFactory.REGION,
