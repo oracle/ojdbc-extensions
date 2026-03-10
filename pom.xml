@@ -74,6 +74,7 @@
     <module>ojdbc-provider-gcp</module>
     <module>ojdbc-provider-jackson-oson</module>
     <module>ojdbc-provider-observability</module>
+    <module>ojdbc-provider-ucp-observability</module>
     <module>ojdbc-provider-hashicorp</module>
     <module>ojdbc-provider-pkl</module>
   </modules>

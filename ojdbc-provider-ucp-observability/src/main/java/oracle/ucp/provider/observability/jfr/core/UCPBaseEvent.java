@@ -20,7 +20,6 @@ public abstract class UCPBaseEvent extends Event {
 
   /** Event timestamp in milliseconds since epoch */
   @Label("Timestamp")
-  @Timestamp(Timestamp.MILLISECONDS_SINCE_EPOCH)
   protected long timestamp;
 
   /** Maximum configured pool size */

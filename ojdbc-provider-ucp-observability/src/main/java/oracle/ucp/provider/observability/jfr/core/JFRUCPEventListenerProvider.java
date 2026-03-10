@@ -13,6 +13,9 @@ import java.util.Map;
 public final class JFRUCPEventListenerProvider
   implements UCPEventListenerProvider {
 
+  private final UCPEventListener listener;
+
+
   /**
    * Singleton listener that records UCP events as JFR events.
    * Thread-safe and optimized for minimal overhead.
@@ -24,6 +27,13 @@ public final class JFRUCPEventListenerProvider
       UCPEventFactory.recordEvent(eventType, context);
     }
   };
+
+  /**
+   * Creates a new provider instance.
+   */
+  public JFRUCPEventListenerProvider() {
+    this.listener = TRACE_EVENT_LISTENER;
+  }
 
   /**
    * Returns the provider's unique identifier.
@@ -43,6 +53,6 @@ public final class JFRUCPEventListenerProvider
    */
   @Override
   public UCPEventListener getListener(Map<String, String> config) {
-    return TRACE_EVENT_LISTENER;
+    return listener;
   }
 }
