@@ -22,8 +22,7 @@ import java.util.function.Consumer;
 public final class OtelUCPEventListenerProvider
   implements UCPEventListenerProvider {
 
-  private static final UCPEventListener LISTENER =
-    new OtelUCPEventListener();
+  private final UCPEventListener listener = new OtelUCPEventListener();
 
   @Override
   public String getName() {
@@ -32,7 +31,7 @@ public final class OtelUCPEventListenerProvider
 
   @Override
   public UCPEventListener getListener(Map<String, String> config) {
-    return LISTENER;
+    return listener;
   }
 
   /**

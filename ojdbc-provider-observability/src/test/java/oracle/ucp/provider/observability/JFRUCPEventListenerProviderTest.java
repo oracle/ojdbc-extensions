@@ -227,6 +227,48 @@ public class JFRUCPEventListenerProviderTest {
   }
 
   @Test
+  public void testRecordedEventContainsAvgWaitTime() throws IOException {
+    UCPEventContext ctx = new UCPEventContext() {
+      @Override public String poolName() { return "wait-pool"; }
+      @Override public long timestamp() {
+        return System.currentTimeMillis();
+      }
+      @Override public int borrowedConnectionsCount() { return 1; }
+      @Override public int availableConnectionsCount() { return 1; }
+      @Override public int totalConnections() { return 2; }
+      @Override public int maxPoolSize() { return 10; }
+      @Override public int minPoolSize() { return 2; }
+      @Override public long getAverageConnectionWaitTime() { return 42; }
+      @Override public int createdConnections() { return 2; }
+      @Override public int closedConnections() { return 0; }
+      @Override public String formattedTimestamp() {
+        return new SimpleDateFormat("MMMM dd, yyyy HH:mm:ss.SSS z")
+          .format(new Date(timestamp()));
+      }
+    };
+
+    UCPEventFactory.recordEvent(EventType.CONNECTION_BORROWED, ctx);
+
+    if (recording.getState() == RecordingState.RUNNING) {
+      recording.stop();
+    }
+    Path recordingFile = Files.createTempFile("ucp-test", ".jfr");
+    recording.dump(recordingFile);
+
+    RecordedEvent ucpEvent = RecordingFile.readAllEvents(recordingFile)
+      .stream()
+      .filter(e -> e.getEventType().getName()
+        .equals("ucp.ConnectionBorrowed"))
+      .findFirst()
+      .orElse(null);
+
+    assertNotNull(ucpEvent, "Should find ConnectionBorrowed event");
+    assertEquals(42L, ucpEvent.getLong("avgWaitTime"));
+
+    Files.deleteIfExists(recordingFile);
+  }
+
+  @Test
   public void testEmptyPoolNameAccepted() {
     UCPEventContext ctx = createTestContext("", 1, 1, 10, 2);
     listener.onUCPEvent(EventType.CONNECTION_BORROWED, ctx);

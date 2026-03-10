@@ -1,15 +1,14 @@
 package oracle.ucp.provider.observability;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.metrics.SdkMeterProvider;
-import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
+import io.opentelemetry.api.OpenTelemetry;
 import oracle.ucp.events.core.UCPEventContext;
 import oracle.ucp.events.core.UCPEventListener;
 import oracle.ucp.provider.observability.otel.OtelUCPEventListenerProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -20,22 +19,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class OtelUCPTest {
 
-  private InMemoryMetricReader metricReader;
   private OtelUCPEventListenerProvider provider;
   private UCPEventListener listener;
 
   @BeforeEach
   public void setup() {
     GlobalOpenTelemetry.resetForTest();
-
-    metricReader = InMemoryMetricReader.create();
-    SdkMeterProvider meterProvider = SdkMeterProvider.builder()
-      .registerMetricReader(metricReader)
-      .build();
-
-    OpenTelemetrySdk.builder()
-      .setMeterProvider(meterProvider)
-      .buildAndRegisterGlobal();
+    OpenTelemetry mockOTel = Mockito.mock(
+      OpenTelemetry.class, Mockito.RETURNS_DEEP_STUBS);
+    GlobalOpenTelemetry.set(mockOTel);
 
     provider = new OtelUCPEventListenerProvider();
     listener = provider.getListener(null);
@@ -103,16 +95,43 @@ public class OtelUCPTest {
   }
 
   @Test
-  public void testEmptyPoolNameAccepted() {
-    UCPEventContext ctx = createTestContext("", 1, 1, 10, 2);
-    listener.onUCPEvent(EventType.CONNECTION_BORROWED, ctx);
-  }
-
-  @Test
   public void testVeryLongPoolNameAccepted() {
     String longName = new String(new char[1000]).replace('\0', 'a');
     UCPEventContext ctx = createTestContext(longName, 1, 1, 10, 2);
     listener.onUCPEvent(EventType.POOL_CREATED, ctx);
+  }
+
+  @Test
+  public void testRapidFireEvents() {
+    UCPEventContext ctx = createTestContext("rapid-pool", 1, 1, 10, 2);
+
+    for (int i = 0; i < 1000; i++) {
+      listener.onUCPEvent(EventType.CONNECTION_BORROWED, ctx);
+    }
+  }
+
+  @Test
+  public void testAllLifecycleEventsInSequence() {
+    UCPEventContext ctx = createTestContext("lifecycle-pool", 1, 1, 10, 2);
+
+    listener.onUCPEvent(EventType.POOL_CREATED, ctx);
+    listener.onUCPEvent(EventType.POOL_STARTING, ctx);
+    listener.onUCPEvent(EventType.POOL_STARTED, ctx);
+    listener.onUCPEvent(EventType.CONNECTION_CREATED, ctx);
+    listener.onUCPEvent(EventType.CONNECTION_BORROWED, ctx);
+    listener.onUCPEvent(EventType.CONNECTION_RETURNED, ctx);
+    listener.onUCPEvent(EventType.POOL_REFRESHED, ctx);
+    listener.onUCPEvent(EventType.POOL_RECYCLED, ctx);
+    listener.onUCPEvent(EventType.POOL_PURGED, ctx);
+    listener.onUCPEvent(EventType.CONNECTION_CLOSED, ctx);
+    listener.onUCPEvent(EventType.POOL_STOPPED, ctx);
+    listener.onUCPEvent(EventType.POOL_DESTROYED, ctx);
+  }
+
+  @Test
+  public void testEmptyPoolNameAccepted() {
+    UCPEventContext ctx = createTestContext("", 1, 1, 10, 2);
+    listener.onUCPEvent(EventType.CONNECTION_BORROWED, ctx);
   }
 
   @Test
@@ -145,8 +164,8 @@ public class OtelUCPTest {
       final int threadId = i;
       threads[i] = new Thread(() -> {
         for (int j = 0; j < 10; j++) {
-          UCPEventContext ctx = createTestContext("pool" + threadId, j, j,
-            10, 2);
+          UCPEventContext ctx = createTestContext(
+            "pool" + threadId, j, j, 10, 2);
           listener.onUCPEvent(EventType.CONNECTION_BORROWED, ctx);
         }
       });

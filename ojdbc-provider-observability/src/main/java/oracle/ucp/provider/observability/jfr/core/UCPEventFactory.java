@@ -26,7 +26,7 @@ public class UCPEventFactory {
    * @throws NullPointerException if parameters are null
    */
   public static Event createEvent(
-      UCPEventListener.EventType type, UCPEventContext ctx) {
+    UCPEventListener.EventType type, UCPEventContext ctx) {
     Objects.requireNonNull(type, "EventType cannot be null");
     switch (type) {
     // Pool Lifecycle Events
@@ -61,25 +61,20 @@ public class UCPEventFactory {
 
     default:
       throw new IllegalStateException(
-          "Unexpected event type: " + type);
+        "Unexpected event type: " + type);
     }
   }
 
   /**
    * Creates and immediately records a JFR event for the UCP
-   * operation. POOL_RESTARTING and POOL_RESTARTED events are
-   * silently ignored.
+   * operation.
    *
    * @param type UCP event type to record
    * @param ctx event context with pool metrics
    * @throws NullPointerException if parameters are null
    */
   public static void recordEvent(
-      UCPEventListener.EventType type, UCPEventContext ctx) {
-    if (type == UCPEventListener.EventType.POOL_RESTARTING
-        || type == UCPEventListener.EventType.POOL_RESTARTED) {
-      return;
-    }
+    UCPEventListener.EventType type, UCPEventContext ctx) {
     Event event = createEvent(type, ctx);
     event.commit();
   }
