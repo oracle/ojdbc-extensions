@@ -37,11 +37,10 @@ public final class OtelUCPEventListenerProvider
 
   /**
    * Internal listener that converts UCP events to OpenTelemetry
-   * metrics. Thread-safe and handles all 14 UCP event types.
+   * metrics. Thread-safe and handles all 12 UCP event types.
    */
   private static final class OtelUCPEventListener
     implements UCPEventListener {
-    private static final long serialVersionUID = 1L;
 
     private final Meter meter =
       GlobalOpenTelemetry.getMeter("oracle.ucp");
@@ -66,8 +65,6 @@ public final class OtelUCPEventListenerProvider
     private final LongCounter poolStartingCounter;
     private final LongCounter poolStartedCounter;
     private final LongCounter poolStoppedCounter;
-    private final LongCounter poolRestartingCounter;
-    private final LongCounter poolRestartedCounter;
     private final LongCounter poolDestroyedCounter;
     private final LongCounter connectionCreatedCounter;
     private final LongCounter connectionBorrowedCounter;
@@ -77,7 +74,7 @@ public final class OtelUCPEventListenerProvider
     private final LongCounter poolRecycledCounter;
     private final LongCounter poolPurgedCounter;
 
-    private final LongHistogram waitTimeHistogram;
+    private final ObservableLongGauge avgWaitTimeGauge;
 
     OtelUCPEventListener() {
       this.usedConnectionsGauge =
@@ -221,18 +218,6 @@ public final class OtelUCPEventListenerProvider
           .setUnit("{event}")
           .build();
 
-      this.poolRestartingCounter =
-        meter.counterBuilder("db.client.connection.pool.restarting")
-          .setDescription("Number of pool restarting events")
-          .setUnit("{event}")
-          .build();
-
-      this.poolRestartedCounter =
-        meter.counterBuilder("db.client.connection.pool.restarted")
-          .setDescription("Number of pool restarted events")
-          .setUnit("{event}")
-          .build();
-
       this.poolDestroyedCounter =
         meter.counterBuilder("db.client.connection.pool.destroyed")
           .setDescription(
@@ -282,13 +267,24 @@ public final class OtelUCPEventListenerProvider
           .setUnit("{operation}")
           .build();
 
-      this.waitTimeHistogram =
-        meter.histogramBuilder("db.client.connections.wait_time")
+      this.avgWaitTimeGauge =
+        meter.gaugeBuilder("db.client.connections.wait_time")
           .setDescription(
-            "The time it took to obtain an open connection from the pool")
+            "The average wait time to obtain a connection from the pool")
           .setUnit("ms")
           .ofLongs()
-          .build();
+          .buildWithCallback(
+            new Consumer<ObservableLongMeasurement>() {
+              @Override
+              public void accept(
+                  ObservableLongMeasurement measurement) {
+                for (UCPEventContext ctx : contextCache.values()) {
+                  measurement.record(
+                    ctx.getAverageConnectionWaitTime(),
+                    Attributes.of(POOL_NAME, ctx.poolName()));
+                }
+              }
+            });
     }
 
     @Override
@@ -314,24 +310,15 @@ public final class OtelUCPEventListenerProvider
         case POOL_STOPPED:
           poolStoppedCounter.add(1, attrs);
           break;
-        case POOL_RESTARTING:
-          poolRestartingCounter.add(1, attrs);
-          break;
-        case POOL_RESTARTED:
-          poolRestartedCounter.add(1, attrs);
-          break;
         case POOL_DESTROYED:
           poolDestroyedCounter.add(1, attrs);
+          contextCache.remove(context.poolName());
           break;
         case CONNECTION_CREATED:
           connectionCreatedCounter.add(1, attrs);
           break;
         case CONNECTION_BORROWED:
           connectionBorrowedCounter.add(1, attrs);
-          long waitTime = context.getAverageConnectionWaitTime();
-          if (waitTime > 0) {
-            waitTimeHistogram.record(waitTime, attrs);
-          }
           break;
         case CONNECTION_RETURNED:
           connectionReturnedCounter.add(1, attrs);
@@ -347,6 +334,8 @@ public final class OtelUCPEventListenerProvider
           break;
         case POOL_PURGED:
           poolPurgedCounter.add(1, attrs);
+          break;
+        default:
           break;
       }
     }

@@ -7,14 +7,16 @@ import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import oracle.ucp.events.core.UCPEventContext;
 import oracle.ucp.events.core.UCPEventListener;
 import oracle.ucp.provider.observability.otel.OtelUCPEventListenerProvider;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 
 import static oracle.ucp.events.core.UCPEventListener.EventType;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class OtelUCPTest {
 
@@ -22,7 +24,7 @@ public class OtelUCPTest {
   private OtelUCPEventListenerProvider provider;
   private UCPEventListener listener;
 
-  @Before
+  @BeforeEach
   public void setup() {
     GlobalOpenTelemetry.resetForTest();
 
@@ -39,7 +41,7 @@ public class OtelUCPTest {
     listener = provider.getListener(null);
   }
 
-  @After
+  @AfterEach
   public void cleanup() {
     GlobalOpenTelemetry.resetForTest();
   }
@@ -51,15 +53,15 @@ public class OtelUCPTest {
 
   @Test
   public void testProviderReturnsListener() {
-    assertNotNull("Provider should return a listener", listener);
+    assertNotNull(listener, "Provider should return a listener");
   }
 
   @Test
   public void testProviderReturnsSameListenerInstance() {
     UCPEventListener listener1 = provider.getListener(null);
     UCPEventListener listener2 = provider.getListener(new HashMap<>());
-    assertSame("Provider should return same listener instance", listener1,
-      listener2);
+    assertSame(listener1, listener2,
+      "Provider should return same listener instance");
   }
 
   @Test
@@ -76,7 +78,6 @@ public class OtelUCPTest {
     EventType[] allEvents = {
       EventType.POOL_CREATED, EventType.POOL_STARTING,
       EventType.POOL_STARTED, EventType.POOL_STOPPED,
-      EventType.POOL_RESTARTING, EventType.POOL_RESTARTED,
       EventType.POOL_DESTROYED, EventType.CONNECTION_CREATED,
       EventType.CONNECTION_BORROWED, EventType.CONNECTION_RETURNED,
       EventType.CONNECTION_CLOSED, EventType.POOL_REFRESHED,
@@ -212,9 +213,8 @@ public class OtelUCPTest {
 
       @Override
       public String formattedTimestamp() {
-        return new java.text.SimpleDateFormat(
-          "MMMM dd, yyyy HH:mm:ss.SSS z")
-          .format(new java.util.Date(timestamp()));
+        return new SimpleDateFormat("MMMM dd, yyyy HH:mm:ss.SSS z")
+          .format(new Date(timestamp()));
       }
     };
   }

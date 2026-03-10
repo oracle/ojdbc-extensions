@@ -10,27 +10,20 @@ import java.util.Map;
  * Provider that supplies a UCP event listener for recording JFR events.
  * Integrates UCP events with Java Flight Recorder for low-overhead monitoring.
  */
-public final class JFRUCPEventListenerProvider implements UCPEventListenerProvider {
-
-  private final UCPEventListener listener;
+public final class JFRUCPEventListenerProvider
+  implements UCPEventListenerProvider {
 
   /**
    * Singleton listener that records UCP events as JFR events.
    * Thread-safe and optimized for minimal overhead.
    */
-  public static final UCPEventListener TRACE_EVENT_LISTENER = new UCPEventListener() {
+  public static final UCPEventListener TRACE_EVENT_LISTENER =
+    new UCPEventListener() {
     @Override
     public void onUCPEvent(EventType eventType, UCPEventContext context) {
       UCPEventFactory.recordEvent(eventType, context);
     }
   };
-
-  /**
-   * Creates a new provider instance.
-   */
-  public JFRUCPEventListenerProvider() {
-    this.listener = TRACE_EVENT_LISTENER;
-  }
 
   /**
    * Returns the provider's unique identifier.
@@ -50,6 +43,6 @@ public final class JFRUCPEventListenerProvider implements UCPEventListenerProvid
    */
   @Override
   public UCPEventListener getListener(Map<String, String> config) {
-    return listener;
+    return TRACE_EVENT_LISTENER;
   }
 }

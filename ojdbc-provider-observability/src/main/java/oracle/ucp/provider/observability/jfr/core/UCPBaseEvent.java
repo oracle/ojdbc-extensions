@@ -6,8 +6,9 @@ import oracle.ucp.events.core.UCPEventContext;
 import java.util.Objects;
 
 /**
- * Abstract base class for UCP JFR events providing common fields and initialization.
- * All UCP events extend this class to inherit standard pool metrics and metadata.
+ * Abstract base class for UCP JFR events providing common fields
+ * and initialization. All UCP events extend this class to inherit
+ * standard pool metrics and metadata.
  */
 @Category("UCP Events")
 @Description("Base UCP Event")
@@ -19,6 +20,7 @@ public abstract class UCPBaseEvent extends Event {
 
   /** Event timestamp in milliseconds since epoch */
   @Label("Timestamp")
+  @Timestamp(Timestamp.MILLISECONDS_SINCE_EPOCH)
   protected long timestamp;
 
   /** Maximum configured pool size */

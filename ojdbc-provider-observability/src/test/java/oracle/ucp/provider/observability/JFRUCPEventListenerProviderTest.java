@@ -9,19 +9,21 @@ import oracle.ucp.events.core.UCPEventContext;
 import oracle.ucp.events.core.UCPEventListener;
 import oracle.ucp.provider.observability.jfr.core.JFRUCPEventListenerProvider;
 import oracle.ucp.provider.observability.jfr.core.UCPEventFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static oracle.ucp.events.core.UCPEventListener.EventType;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class JFRUCPEventListenerProviderTest {
 
@@ -29,7 +31,7 @@ public class JFRUCPEventListenerProviderTest {
   private UCPEventListener listener;
   private Recording recording;
 
-  @Before
+  @BeforeEach
   public void setup() {
     provider = new JFRUCPEventListenerProvider();
     listener = provider.getListener(null);
@@ -39,7 +41,7 @@ public class JFRUCPEventListenerProviderTest {
     recording.start();
   }
 
-  @After
+  @AfterEach
   public void cleanup() {
     if (recording != null) {
       try {
@@ -61,21 +63,21 @@ public class JFRUCPEventListenerProviderTest {
 
   @Test
   public void testProviderReturnsListener() {
-    assertNotNull("Provider should return a listener", listener);
+    assertNotNull(listener, "Provider should return a listener");
   }
 
   @Test
   public void testProviderReturnsSameListenerInstance() {
     UCPEventListener listener1 = provider.getListener(null);
     UCPEventListener listener2 = provider.getListener(new HashMap<>());
-    assertSame("Provider should return same listener instance", listener1,
-      listener2);
+    assertSame(listener1, listener2,
+      "Provider should return same listener instance");
   }
 
   @Test
   public void testProviderReturnsSingletonListener() {
-    assertSame("Listener should be singleton TRACE_EVENT_LISTENER",
-      JFRUCPEventListenerProvider.TRACE_EVENT_LISTENER, listener);
+    assertSame(JFRUCPEventListenerProvider.TRACE_EVENT_LISTENER, listener,
+      "Listener should be singleton TRACE_EVENT_LISTENER");
   }
 
   @Test
@@ -92,7 +94,6 @@ public class JFRUCPEventListenerProviderTest {
     EventType[] allEvents = {
       EventType.POOL_CREATED, EventType.POOL_STARTING,
       EventType.POOL_STARTED, EventType.POOL_STOPPED,
-      EventType.POOL_RESTARTING, EventType.POOL_RESTARTED,
       EventType.POOL_DESTROYED, EventType.CONNECTION_CREATED,
       EventType.CONNECTION_BORROWED, EventType.CONNECTION_RETURNED,
       EventType.CONNECTION_CLOSED, EventType.POOL_REFRESHED,
@@ -111,8 +112,8 @@ public class JFRUCPEventListenerProviderTest {
     UCPEventContext ctx = createTestContext("pool1", 1, 1, 10, 2);
 
     Event event = UCPEventFactory.createEvent(EventType.POOL_CREATED, ctx);
-    assertNotNull("Factory should create event", event);
-    assertTrue("Event should be a JFR Event", event instanceof Event);
+    assertNotNull(event, "Factory should create event");
+    assertTrue(event instanceof Event, "Event should be a JFR Event");
   }
 
   @Test
@@ -120,7 +121,6 @@ public class JFRUCPEventListenerProviderTest {
     EventType[] allEvents = {
       EventType.POOL_CREATED, EventType.POOL_STARTING,
       EventType.POOL_STARTED, EventType.POOL_STOPPED,
-      EventType.POOL_RESTARTING, EventType.POOL_RESTARTED,
       EventType.POOL_DESTROYED, EventType.CONNECTION_CREATED,
       EventType.CONNECTION_BORROWED, EventType.CONNECTION_RETURNED,
       EventType.CONNECTION_CLOSED, EventType.POOL_REFRESHED,
@@ -131,19 +131,21 @@ public class JFRUCPEventListenerProviderTest {
 
     for (EventType eventType : allEvents) {
       Event event = UCPEventFactory.createEvent(eventType, ctx);
-      assertNotNull("Factory should create event for " + eventType, event);
+      assertNotNull(event, "Factory should create event for " + eventType);
     }
   }
 
-  @Test(expected = NullPointerException.class)
+  @Test
   public void testEventFactoryRejectsNullContext() {
-    UCPEventFactory.createEvent(EventType.POOL_CREATED, null);
+    assertThrows(NullPointerException.class,
+      () -> UCPEventFactory.createEvent(EventType.POOL_CREATED, null));
   }
 
-  @Test(expected = NullPointerException.class)
+  @Test
   public void testEventFactoryRejectsNullEventType() {
     UCPEventContext ctx = createTestContext("pool1", 1, 1, 10, 2);
-    UCPEventFactory.createEvent(null, ctx);
+    assertThrows(NullPointerException.class,
+      () -> UCPEventFactory.createEvent(null, ctx));
   }
 
   @Test
@@ -164,8 +166,8 @@ public class JFRUCPEventListenerProviderTest {
       .filter(e -> e.getEventType().getName().startsWith("ucp."))
       .collect(Collectors.toList());
 
-    assertTrue("Should have recorded at least one UCP event",
-      ucpEvents.size() > 0);
+    assertTrue(ucpEvents.size() > 0,
+      "Should have recorded at least one UCP event");
 
     Files.deleteIfExists(recordingFile);
   }
@@ -188,7 +190,7 @@ public class JFRUCPEventListenerProviderTest {
       .findFirst()
       .orElse(null);
 
-    assertNotNull("Should find PoolCreated event", ucpEvent);
+    assertNotNull(ucpEvent, "Should find PoolCreated event");
     assertEquals("test-pool-name", ucpEvent.getString("poolName"));
 
     Files.deleteIfExists(recordingFile);
@@ -213,7 +215,7 @@ public class JFRUCPEventListenerProviderTest {
       .findFirst()
       .orElse(null);
 
-    assertNotNull("Should find ConnectionBorrowed event", ucpEvent);
+    assertNotNull(ucpEvent, "Should find ConnectionBorrowed event");
     assertEquals("metrics-pool", ucpEvent.getString("poolName"));
     assertEquals(5, ucpEvent.getInt("borrowedConnections"));
     assertEquals(3, ucpEvent.getInt("availableConnections"));
@@ -303,8 +305,6 @@ public class JFRUCPEventListenerProviderTest {
     listener.onUCPEvent(EventType.POOL_RECYCLED, ctx);
     listener.onUCPEvent(EventType.POOL_PURGED, ctx);
     listener.onUCPEvent(EventType.CONNECTION_CLOSED, ctx);
-    listener.onUCPEvent(EventType.POOL_RESTARTING, ctx);
-    listener.onUCPEvent(EventType.POOL_RESTARTED, ctx);
     listener.onUCPEvent(EventType.POOL_STOPPED, ctx);
     listener.onUCPEvent(EventType.POOL_DESTROYED, ctx);
   }
@@ -364,9 +364,8 @@ public class JFRUCPEventListenerProviderTest {
 
       @Override
       public String formattedTimestamp() {
-        return new java.text.SimpleDateFormat(
-          "MMMM dd, yyyy HH:mm:ss.SSS z")
-          .format(new java.util.Date(timestamp()));
+        return new SimpleDateFormat("MMMM dd, yyyy HH:mm:ss.SSS z")
+          .format(new Date(timestamp()));
       }
     };
   }
