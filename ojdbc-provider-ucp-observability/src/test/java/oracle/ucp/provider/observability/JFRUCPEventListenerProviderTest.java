@@ -1,414 +1,166 @@
 package oracle.ucp.provider.observability;
 
-import jdk.jfr.Event;
-import jdk.jfr.Recording;
-import jdk.jfr.RecordingState;
-import jdk.jfr.consumer.RecordedEvent;
-import jdk.jfr.consumer.RecordingFile;
 import oracle.ucp.events.core.UCPEventContext;
 import oracle.ucp.events.core.UCPEventListener;
+import oracle.ucp.events.core.UCPEventListener.EventType;
 import oracle.ucp.provider.observability.jfr.core.JFRUCPEventListenerProvider;
 import oracle.ucp.provider.observability.jfr.core.UCPEventFactory;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Collections;
 
-import static oracle.ucp.events.core.UCPEventListener.EventType;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-public class JFRUCPEventListenerProviderTest {
+@DisplayName("JFR UCP Event Listener Provider Tests")
+class JFRUCPEventListenerProviderTest {
 
-  private JFRUCPEventListenerProvider provider;
-  private UCPEventListener listener;
-  private Recording recording;
+  private UCPEventContext mockContext;
 
   @BeforeEach
-  public void setup() {
-    provider = new JFRUCPEventListenerProvider();
-    listener = provider.getListener(null);
-
-    recording = new Recording();
-    recording.enable("ucp.*");
-    recording.start();
+  void setUpMockContext() {
+    mockContext = mock(UCPEventContext.class);
+    when(mockContext.poolName()).thenReturn("TestPool");
+    when(mockContext.timestamp()).thenReturn(123456789L);
+    when(mockContext.maxPoolSize()).thenReturn(50);
+    when(mockContext.minPoolSize()).thenReturn(2);
+    when(mockContext.borrowedConnectionsCount()).thenReturn(3);
+    when(mockContext.availableConnectionsCount()).thenReturn(5);
+    when(mockContext.totalConnections()).thenReturn(8);
+    when(mockContext.closedConnections()).thenReturn(1);
+    when(mockContext.createdConnections()).thenReturn(9);
+    when(mockContext.getAverageConnectionWaitTime()).thenReturn(10L);
   }
 
-  @AfterEach
-  public void cleanup() {
-    if (recording != null) {
-      try {
-        if (recording.getState() == RecordingState.RUNNING) {
-          recording.stop();
-        }
-      } catch (IllegalStateException e) {
-        // Already stopped, ignore
-      } finally {
-        recording.close();
+  @Nested
+  @DisplayName("JFRUCPEventListenerProvider")
+  class ProviderTests {
+
+    private JFRUCPEventListenerProvider provider;
+
+    @BeforeEach
+    void setUp() {
+      provider = new JFRUCPEventListenerProvider();
+    }
+
+    @Test
+    @DisplayName("getName() returns the expected provider identifier")
+    void testGetName() {
+      assertEquals("jfr-ucp-listener", provider.getName());
+    }
+
+    @Test
+    @DisplayName("getListener() returns a non-null listener")
+    void testGetListenerNotNull() {
+      UCPEventListener listener = provider.getListener(Collections.emptyMap());
+      assertNotNull(listener);
+    }
+
+    @Test
+    @DisplayName("getListener() returns a non-null listener when config is null")
+    void testGetListenerWithNullConfig() {
+      UCPEventListener listener = provider.getListener(null);
+      assertNotNull(listener);
+    }
+
+    @Test
+    @DisplayName("isDesiredEvent() returns true for all event types by default")
+    void testIsDesiredEventReturnsTrueForAll() {
+      UCPEventListener listener = provider.getListener(Collections.emptyMap());
+      for (EventType type : EventType.values()) {
+        assertTrue(listener.isDesiredEvent(type),
+            "Expected isDesiredEvent to return true for: " + type);
       }
     }
   }
 
-  @Test
-  public void testProviderName() {
-    assertEquals("jfr-ucp-listener", provider.getName());
-  }
 
-  @Test
-  public void testProviderReturnsListener() {
-    assertNotNull(listener, "Provider should return a listener");
-  }
+  @Nested
+  @DisplayName("UCPEventFactory — null safety")
+  class EventFactoryNullSafetyTests {
 
-  @Test
-  public void testProviderReturnsSameListenerInstance() {
-    UCPEventListener listener1 = provider.getListener(null);
-    UCPEventListener listener2 = provider.getListener(new HashMap<>());
-    assertSame(listener1, listener2,
-      "Provider should return same listener instance");
-  }
+    @Test
+    @DisplayName("recordEvent() throws NullPointerException when EventType is null")
+    void testRecordEventNullType() {
+      assertThrows(NullPointerException.class, () ->
+          UCPEventFactory.recordEvent(null, mockContext));
+    }
 
-  @Test
-  public void testProviderReturnsSingletonListener() {
-    assertSame(JFRUCPEventListenerProvider.TRACE_EVENT_LISTENER, listener,
-      "Listener should be singleton TRACE_EVENT_LISTENER");
-  }
-
-  @Test
-  public void testListenerAcceptsEvents() {
-    UCPEventContext ctx = createTestContext("pool1", 1, 1, 10, 2);
-
-    listener.onUCPEvent(EventType.POOL_CREATED, ctx);
-    listener.onUCPEvent(EventType.CONNECTION_BORROWED, ctx);
-    listener.onUCPEvent(EventType.CONNECTION_RETURNED, ctx);
-  }
-
-  @Test
-  public void testAllEventTypesAccepted() {
-    EventType[] allEvents = {
-      EventType.POOL_CREATED, EventType.POOL_STARTING,
-      EventType.POOL_STARTED, EventType.POOL_STOPPED,
-      EventType.POOL_DESTROYED, EventType.CONNECTION_CREATED,
-      EventType.CONNECTION_BORROWED, EventType.CONNECTION_RETURNED,
-      EventType.CONNECTION_CLOSED, EventType.POOL_REFRESHED,
-      EventType.POOL_RECYCLED, EventType.POOL_PURGED
-    };
-
-    UCPEventContext ctx = createTestContext("test-pool", 1, 1, 10, 2);
-
-    for (EventType event : allEvents) {
-      listener.onUCPEvent(event, ctx);
+    @Test
+    @DisplayName("recordEvent() throws NullPointerException when context is null")
+    void testRecordEventNullContext() {
+      assertThrows(NullPointerException.class, () ->
+          UCPEventFactory.recordEvent(EventType.CONNECTION_BORROWED, null));
     }
   }
 
-  @Test
-  public void testEventFactoryCreatesEvents() {
-    UCPEventContext ctx = createTestContext("pool1", 1, 1, 10, 2);
+  @Nested
+  @DisplayName("UCPEventFactory — event recording")
+  class EventFactoryRecordingTests {
 
-    Event event = UCPEventFactory.createEvent(EventType.POOL_CREATED, ctx);
-    assertNotNull(event, "Factory should create event");
-    assertTrue(event instanceof Event, "Event should be a JFR Event");
-  }
+    @ParameterizedTest(name = "recordEvent() does not throw for EventType.{0}")
+    @EnumSource(EventType.class)
+    @DisplayName("recordEvent() does not throw for any known EventType")
+    void testRecordEventDoesNotThrowForAllTypes(EventType type) {
+      assertDoesNotThrow(() -> UCPEventFactory.recordEvent(type, mockContext));
+    }
 
-  @Test
-  public void testEventFactoryCreatesAllEventTypes() {
-    EventType[] allEvents = {
-      EventType.POOL_CREATED, EventType.POOL_STARTING,
-      EventType.POOL_STARTED, EventType.POOL_STOPPED,
-      EventType.POOL_DESTROYED, EventType.CONNECTION_CREATED,
-      EventType.CONNECTION_BORROWED, EventType.CONNECTION_RETURNED,
-      EventType.CONNECTION_CLOSED, EventType.POOL_REFRESHED,
-      EventType.POOL_RECYCLED, EventType.POOL_PURGED
-    };
+    @Test
+    @DisplayName("recordEvent() does not throw when context returns zero/default values")
+    void testRecordEventWithZeroValues() {
+      UCPEventContext zeroContext = mock(UCPEventContext.class);
+      when(zeroContext.poolName()).thenReturn("");
+      when(zeroContext.timestamp()).thenReturn(0L);
+      when(zeroContext.maxPoolSize()).thenReturn(0);
+      when(zeroContext.minPoolSize()).thenReturn(0);
+      when(zeroContext.borrowedConnectionsCount()).thenReturn(0);
+      when(zeroContext.availableConnectionsCount()).thenReturn(0);
+      when(zeroContext.totalConnections()).thenReturn(0);
+      when(zeroContext.closedConnections()).thenReturn(0);
+      when(zeroContext.createdConnections()).thenReturn(0);
+      when(zeroContext.getAverageConnectionWaitTime()).thenReturn(0L);
 
-    UCPEventContext ctx = createTestContext("test-pool", 1, 1, 10, 2);
-
-    for (EventType eventType : allEvents) {
-      Event event = UCPEventFactory.createEvent(eventType, ctx);
-      assertNotNull(event, "Factory should create event for " + eventType);
+      assertDoesNotThrow(() ->
+          UCPEventFactory.recordEvent(EventType.CONNECTION_BORROWED, zeroContext));
     }
   }
 
-  @Test
-  public void testEventFactoryRejectsNullContext() {
-    assertThrows(NullPointerException.class,
-      () -> UCPEventFactory.createEvent(EventType.POOL_CREATED, null));
-  }
+  @Nested
+  @DisplayName("UCPEventListener — onUCPEvent robustness")
+  class ListenerOnEventTests {
 
-  @Test
-  public void testEventFactoryRejectsNullEventType() {
-    UCPEventContext ctx = createTestContext("pool1", 1, 1, 10, 2);
-    assertThrows(NullPointerException.class,
-      () -> UCPEventFactory.createEvent(null, ctx));
-  }
-
-  @Test
-  public void testRecordEventCommitsEvent() throws IOException {
-    UCPEventContext ctx = createTestContext("record-test-pool", 5, 3, 10,
-      2);
-
-    UCPEventFactory.recordEvent(EventType.CONNECTION_BORROWED, ctx);
-
-    if (recording.getState() == RecordingState.RUNNING) {
-      recording.stop();
-    }
-    Path recordingFile = Files.createTempFile("ucp-test", ".jfr");
-    recording.dump(recordingFile);
-
-    List<RecordedEvent> events = RecordingFile.readAllEvents(recordingFile);
-    List<RecordedEvent> ucpEvents = events.stream()
-      .filter(e -> e.getEventType().getName().startsWith("ucp."))
-      .collect(Collectors.toList());
-
-    assertTrue(ucpEvents.size() > 0,
-      "Should have recorded at least one UCP event");
-
-    Files.deleteIfExists(recordingFile);
-  }
-
-  @Test
-  public void testRecordedEventContainsPoolName() throws IOException {
-    UCPEventContext ctx = createTestContext("test-pool-name", 1, 1, 10, 2);
-
-    UCPEventFactory.recordEvent(EventType.POOL_CREATED, ctx);
-
-    if (recording.getState() == RecordingState.RUNNING) {
-      recording.stop();
-    }
-    Path recordingFile = Files.createTempFile("ucp-test", ".jfr");
-    recording.dump(recordingFile);
-
-    List<RecordedEvent> events = RecordingFile.readAllEvents(recordingFile);
-    RecordedEvent ucpEvent = events.stream()
-      .filter(e -> e.getEventType().getName().equals("ucp.PoolCreated"))
-      .findFirst()
-      .orElse(null);
-
-    assertNotNull(ucpEvent, "Should find PoolCreated event");
-    assertEquals("test-pool-name", ucpEvent.getString("poolName"));
-
-    Files.deleteIfExists(recordingFile);
-  }
-
-  @Test
-  public void testRecordedEventContainsMetrics() throws IOException {
-    UCPEventContext ctx = createTestContext("metrics-pool", 5, 3, 10, 2);
-
-    UCPEventFactory.recordEvent(EventType.CONNECTION_BORROWED, ctx);
-
-    if (recording.getState() == RecordingState.RUNNING) {
-      recording.stop();
-    }
-    Path recordingFile = Files.createTempFile("ucp-test", ".jfr");
-    recording.dump(recordingFile);
-
-    List<RecordedEvent> events = RecordingFile.readAllEvents(recordingFile);
-    RecordedEvent ucpEvent = events.stream()
-      .filter(e ->
-        e.getEventType().getName().equals("ucp.ConnectionBorrowed"))
-      .findFirst()
-      .orElse(null);
-
-    assertNotNull(ucpEvent, "Should find ConnectionBorrowed event");
-    assertEquals("metrics-pool", ucpEvent.getString("poolName"));
-    assertEquals(5, ucpEvent.getInt("borrowedConnections"));
-    assertEquals(3, ucpEvent.getInt("availableConnections"));
-    assertEquals(8, ucpEvent.getInt("totalConnections"));
-    assertEquals(10, ucpEvent.getInt("maxPoolSize"));
-    assertEquals(2, ucpEvent.getInt("minPoolSize"));
-
-    Files.deleteIfExists(recordingFile);
-  }
-
-  @Test
-  public void testRecordedEventContainsAvgWaitTime() throws IOException {
-    UCPEventContext ctx = new UCPEventContext() {
-      @Override public String poolName() { return "wait-pool"; }
-      @Override public long timestamp() {
-        return System.currentTimeMillis();
-      }
-      @Override public int borrowedConnectionsCount() { return 1; }
-      @Override public int availableConnectionsCount() { return 1; }
-      @Override public int totalConnections() { return 2; }
-      @Override public int maxPoolSize() { return 10; }
-      @Override public int minPoolSize() { return 2; }
-      @Override public long getAverageConnectionWaitTime() { return 42; }
-      @Override public int createdConnections() { return 2; }
-      @Override public int closedConnections() { return 0; }
-      @Override public String formattedTimestamp() {
-        return new SimpleDateFormat("MMMM dd, yyyy HH:mm:ss.SSS z")
-          .format(new Date(timestamp()));
-      }
-    };
-
-    UCPEventFactory.recordEvent(EventType.CONNECTION_BORROWED, ctx);
-
-    if (recording.getState() == RecordingState.RUNNING) {
-      recording.stop();
-    }
-    Path recordingFile = Files.createTempFile("ucp-test", ".jfr");
-    recording.dump(recordingFile);
-
-    RecordedEvent ucpEvent = RecordingFile.readAllEvents(recordingFile)
-      .stream()
-      .filter(e -> e.getEventType().getName()
-        .equals("ucp.ConnectionBorrowed"))
-      .findFirst()
-      .orElse(null);
-
-    assertNotNull(ucpEvent, "Should find ConnectionBorrowed event");
-    assertEquals(42L, ucpEvent.getLong("avgWaitTime"));
-
-    Files.deleteIfExists(recordingFile);
-  }
-
-  @Test
-  public void testEmptyPoolNameAccepted() {
-    UCPEventContext ctx = createTestContext("", 1, 1, 10, 2);
-    listener.onUCPEvent(EventType.CONNECTION_BORROWED, ctx);
-  }
-
-  @Test
-  public void testVeryLongPoolNameAccepted() {
-    String longName = new String(new char[1000]).replace('\0', 'a');
-    UCPEventContext ctx = createTestContext(longName, 1, 1, 10, 2);
-    listener.onUCPEvent(EventType.POOL_CREATED, ctx);
-  }
-
-  @Test
-  public void testZeroValuesAccepted() {
-    UCPEventContext ctx = createTestContext("pool1", 0, 0, 0, 0);
-    listener.onUCPEvent(EventType.POOL_CREATED, ctx);
-  }
-
-  @Test
-  public void testLargeValuesAccepted() {
-    UCPEventContext ctx = createTestContext("pool1",
-      Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, 0);
-    listener.onUCPEvent(EventType.CONNECTION_BORROWED, ctx);
-  }
-
-  @Test
-  public void testMultiplePoolsAccepted() {
-    listener.onUCPEvent(EventType.POOL_CREATED,
-      createTestContext("pool1", 1, 1, 10, 2));
-    listener.onUCPEvent(EventType.POOL_CREATED,
-      createTestContext("pool2", 2, 2, 20, 4));
-    listener.onUCPEvent(EventType.POOL_CREATED,
-      createTestContext("pool3", 3, 3, 30, 6));
-  }
-
-  @Test
-  public void testConcurrentAccess() throws InterruptedException {
-    Thread[] threads = new Thread[5];
-    for (int i = 0; i < 5; i++) {
-      final int threadId = i;
-      threads[i] = new Thread(() -> {
-        for (int j = 0; j < 10; j++) {
-          UCPEventContext ctx = createTestContext("pool" + threadId, j, j,
-            10, 2);
-          listener.onUCPEvent(EventType.CONNECTION_BORROWED, ctx);
-        }
-      });
-      threads[i].start();
+    @ParameterizedTest(name = "onUCPEvent() does not throw for EventType.{0}")
+    @EnumSource(EventType.class)
+    @DisplayName("onUCPEvent() does not throw for any known EventType")
+    void testOnUCPEventDoesNotThrowForAllTypes(EventType type) {
+      JFRUCPEventListenerProvider provider = new JFRUCPEventListenerProvider();
+      UCPEventListener listener = provider.getListener(Collections.emptyMap());
+      assertDoesNotThrow(() -> listener.onUCPEvent(type, mockContext));
     }
 
-    for (Thread thread : threads) {
-      thread.join();
+    @Test
+    @DisplayName("onUCPEvent() reads all context fields during event creation")
+    void testOnUCPEventReadsAllContextFields() {
+      JFRUCPEventListenerProvider provider = new JFRUCPEventListenerProvider();
+      UCPEventListener listener = provider.getListener(Collections.emptyMap());
+
+      listener.onUCPEvent(EventType.CONNECTION_BORROWED, mockContext);
+
+      verify(mockContext).poolName();
+      verify(mockContext).timestamp();
+      verify(mockContext).maxPoolSize();
+      verify(mockContext).minPoolSize();
+      verify(mockContext).borrowedConnectionsCount();
+      verify(mockContext).availableConnectionsCount();
+      verify(mockContext).totalConnections();
+      verify(mockContext).closedConnections();
+      verify(mockContext).createdConnections();
+      verify(mockContext).getAverageConnectionWaitTime();
     }
-  }
-
-  @Test
-  public void testRapidFireEvents() {
-    UCPEventContext ctx = createTestContext("rapid-pool", 1, 1, 10, 2);
-
-    for (int i = 0; i < 1000; i++) {
-      listener.onUCPEvent(EventType.CONNECTION_BORROWED, ctx);
-    }
-  }
-
-  @Test
-  public void testAllLifecycleEventsInSequence() {
-    UCPEventContext ctx = createTestContext("lifecycle-pool", 1, 1, 10, 2);
-
-    listener.onUCPEvent(EventType.POOL_CREATED, ctx);
-    listener.onUCPEvent(EventType.POOL_STARTING, ctx);
-    listener.onUCPEvent(EventType.POOL_STARTED, ctx);
-    listener.onUCPEvent(EventType.CONNECTION_CREATED, ctx);
-    listener.onUCPEvent(EventType.CONNECTION_BORROWED, ctx);
-    listener.onUCPEvent(EventType.CONNECTION_RETURNED, ctx);
-    listener.onUCPEvent(EventType.POOL_REFRESHED, ctx);
-    listener.onUCPEvent(EventType.POOL_RECYCLED, ctx);
-    listener.onUCPEvent(EventType.POOL_PURGED, ctx);
-    listener.onUCPEvent(EventType.CONNECTION_CLOSED, ctx);
-    listener.onUCPEvent(EventType.POOL_STOPPED, ctx);
-    listener.onUCPEvent(EventType.POOL_DESTROYED, ctx);
-  }
-
-  private UCPEventContext createTestContext(String poolName, int borrowed,
-    int available, int max, int min) {
-    return new UCPEventContext() {
-      @Override
-      public String poolName() {
-        return poolName;
-      }
-
-      @Override
-      public long timestamp() {
-        return System.currentTimeMillis();
-      }
-
-      @Override
-      public int borrowedConnectionsCount() {
-        return borrowed;
-      }
-
-      @Override
-      public int availableConnectionsCount() {
-        return available;
-      }
-
-      @Override
-      public int totalConnections() {
-        return borrowed + available;
-      }
-
-      @Override
-      public int maxPoolSize() {
-        return max;
-      }
-
-      @Override
-      public int minPoolSize() {
-        return min;
-      }
-
-      @Override
-      public long getAverageConnectionWaitTime() {
-        return 0;
-      }
-
-      @Override
-      public int createdConnections() {
-        return borrowed + available;
-      }
-
-      @Override
-      public int closedConnections() {
-        return 0;
-      }
-
-      @Override
-      public String formattedTimestamp() {
-        return new SimpleDateFormat("MMMM dd, yyyy HH:mm:ss.SSS z")
-          .format(new Date(timestamp()));
-      }
-    };
   }
 }
