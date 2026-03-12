@@ -9,20 +9,19 @@ import oracle.ucp.events.core.UCPEventListener;
 import oracle.ucp.events.core.UCPEventListenerProvider;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 
 /**
  * OpenTelemetry provider for UCP connection pool metrics.
- * <p>
- * This provider converts Oracle UCP events into OpenTelemetry metrics
- * following database client semantic conventions.
+ *
+ * <p>Each UCP event carries a snapshot of pool data at the moment it fired.
+ * This provider simply records that data directly into OTel instruments
  * </p>
+ *
  */
 public final class OtelUCPEventListenerProvider
   implements UCPEventListenerProvider {
 
-  private final UCPEventListener listener = new OtelUCPEventListener();
+  private volatile UCPEventListener listener;
 
   @Override
   public String getName() {
@@ -31,311 +30,158 @@ public final class OtelUCPEventListenerProvider
 
   @Override
   public UCPEventListener getListener(Map<String, String> config) {
+    if (listener == null) {
+      synchronized (this) {
+        if (listener == null) {
+          listener = new OtelUCPEventListener();
+        }
+      }
+    }
     return listener;
   }
 
-  /**
-   * Internal listener that converts UCP events to OpenTelemetry
-   * metrics. Thread-safe and handles all 12 UCP event types.
-   */
-  private static final class OtelUCPEventListener
-    implements UCPEventListener {
+  private static final class OtelUCPEventListener implements UCPEventListener {
 
-    private final Meter meter =
-      GlobalOpenTelemetry.getMeter("oracle.ucp");
+    private static final long serialVersionUID = 1L;
+
+    private final Meter meter = GlobalOpenTelemetry.getMeter("oracle.ucp");
 
     private static final AttributeKey<String> POOL_NAME =
-      AttributeKey.stringKey("pool.name");
-    private static final AttributeKey<String> STATE =
-      AttributeKey.stringKey("state");
+      AttributeKey.stringKey("db.client.connection.pool.name");
 
-    private final Map<String, UCPEventContext> contextCache =
-      new ConcurrentHashMap<String, UCPEventContext>();
+    private final LongCounter poolCreatedCounter =
+      meter.counterBuilder("db.client.connection.pool.created")
+        .setDescription("Number of POOL_CREATED events.")
+        .setUnit("{event}").build();
 
-    private final ObservableLongGauge usedConnectionsGauge;
-    private final ObservableLongGauge idleConnectionsGauge;
-    private final ObservableLongGauge totalConnectionsGauge;
-    private final ObservableLongGauge maxConnectionsGauge;
-    private final ObservableLongGauge minConnectionsGauge;
-    private final ObservableLongGauge totalCreatedGauge;
-    private final ObservableLongGauge totalClosedGauge;
+    private final LongCounter poolStartingCounter =
+      meter.counterBuilder("db.client.connection.pool.starting")
+        .setDescription("Number of POOL_STARTING events.")
+        .setUnit("{event}").build();
 
-    private final LongCounter poolCreatedCounter;
-    private final LongCounter poolStartingCounter;
-    private final LongCounter poolStartedCounter;
-    private final LongCounter poolStoppedCounter;
-    private final LongCounter poolDestroyedCounter;
-    private final LongCounter connectionCreatedCounter;
-    private final LongCounter connectionBorrowedCounter;
-    private final LongCounter connectionReturnedCounter;
-    private final LongCounter connectionClosedCounter;
-    private final LongCounter poolRefreshedCounter;
-    private final LongCounter poolRecycledCounter;
-    private final LongCounter poolPurgedCounter;
+    private final LongCounter poolStartedCounter =
+      meter.counterBuilder("db.client.connection.pool.started")
+        .setDescription("Number of POOL_STARTED events.")
+        .setUnit("{event}").build();
 
-    private final ObservableLongGauge avgWaitTimeGauge;
+    private final LongCounter poolStoppedCounter =
+      meter.counterBuilder("db.client.connection.pool.stopped")
+        .setDescription("Number of POOL_STOPPED events.")
+        .setUnit("{event}").build();
 
-    OtelUCPEventListener() {
-      this.usedConnectionsGauge =
-        meter.gaugeBuilder("db.client.connections.used")
-          .setDescription(
-            "The number of connections that are currently in use")
-          .setUnit("{connection}")
-          .ofLongs()
-          .buildWithCallback(
-            new Consumer<ObservableLongMeasurement>() {
-              @Override
-              public void accept(ObservableLongMeasurement measurement) {
-                for (UCPEventContext ctx : contextCache.values()) {
-                  measurement.record(ctx.borrowedConnectionsCount(),
-                    Attributes.of(POOL_NAME, ctx.poolName(), STATE,
-                      "used"));
-                }
-              }
-            });
+    private final LongCounter poolDestroyedCounter =
+      meter.counterBuilder("db.client.connection.pool.destroyed")
+        .setDescription("Number of POOL_DESTROYED events.")
+        .setUnit("{event}").build();
 
-      this.idleConnectionsGauge =
-        meter.gaugeBuilder("db.client.connections.idle")
-          .setDescription(
-            "The number of available connections for use")
-          .setUnit("{connection}")
-          .ofLongs()
-          .buildWithCallback(
-            new Consumer<ObservableLongMeasurement>() {
-              @Override
-              public void accept(ObservableLongMeasurement measurement) {
-                for (UCPEventContext ctx : contextCache.values()) {
-                  measurement.record(ctx.availableConnectionsCount(),
-                    Attributes.of(POOL_NAME, ctx.poolName(), STATE,
-                      "idle"));
-                }
-              }
-            });
+    private final LongCounter poolRefreshedCounter =
+      meter.counterBuilder("db.client.connection.pool.refreshed")
+        .setDescription("Number of POOL_REFRESHED events.")
+        .setUnit("{event}").build();
 
-      this.totalConnectionsGauge =
-        meter.gaugeBuilder("db.client.connections.count")
-          .setDescription(
-            "The total number of connections (idle + used)")
-          .setUnit("{connection}")
-          .ofLongs()
-          .buildWithCallback(
-            new Consumer<ObservableLongMeasurement>() {
-              @Override
-              public void accept(ObservableLongMeasurement measurement) {
-                for (UCPEventContext ctx : contextCache.values()) {
-                  measurement.record(ctx.totalConnections(),
-                    Attributes.of(POOL_NAME, ctx.poolName()));
-                }
-              }
-            });
+    private final LongCounter poolRecycledCounter =
+      meter.counterBuilder("db.client.connection.pool.recycled")
+        .setDescription("Number of POOL_RECYCLED events.")
+        .setUnit("{event}").build();
 
-      this.maxConnectionsGauge =
-        meter.gaugeBuilder("db.client.connections.max")
-          .setDescription("The maximum size of the pool")
-          .setUnit("{connection}")
-          .ofLongs()
-          .buildWithCallback(
-            new Consumer<ObservableLongMeasurement>() {
-              @Override
-              public void accept(ObservableLongMeasurement measurement) {
-                for (UCPEventContext ctx : contextCache.values()) {
-                  measurement.record(ctx.maxPoolSize(),
-                    Attributes.of(POOL_NAME, ctx.poolName()));
-                }
-              }
-            });
+    private final LongCounter poolPurgedCounter =
+      meter.counterBuilder("db.client.connection.pool.purged")
+        .setDescription("Number of POOL_PURGED events.")
+        .setUnit("{event}").build();
 
-      this.minConnectionsGauge =
-        meter.gaugeBuilder("db.client.connections.min")
-          .setDescription("The minimum size of the pool")
-          .setUnit("{connection}")
-          .ofLongs()
-          .buildWithCallback(
-            new Consumer<ObservableLongMeasurement>() {
-              @Override
-              public void accept(ObservableLongMeasurement measurement) {
-                for (UCPEventContext ctx : contextCache.values()) {
-                  measurement.record(ctx.minPoolSize(),
-                    Attributes.of(POOL_NAME, ctx.poolName()));
-                }
-              }
-            });
+    private final LongCounter connectionCreatedCounter =
+      meter.counterBuilder("db.client.connection.created")
+        .setDescription("Number of CONNECTION_CREATED events.")
+        .setUnit("{event}").build();
 
-      this.totalCreatedGauge =
-        meter.gaugeBuilder("db.client.connections.created")
-          .setDescription("The total number of connections created")
-          .setUnit("{connection}")
-          .ofLongs()
-          .buildWithCallback(
-            new Consumer<ObservableLongMeasurement>() {
-              @Override
-              public void accept(ObservableLongMeasurement measurement) {
-                for (UCPEventContext ctx : contextCache.values()) {
-                  measurement.record(ctx.createdConnections(),
-                    Attributes.of(POOL_NAME, ctx.poolName()));
-                }
-              }
-            });
+    private final LongCounter connectionBorrowedCounter =
+      meter.counterBuilder("db.client.connection.borrowed")
+        .setDescription("Number of CONNECTION_BORROWED events.")
+        .setUnit("{event}").build();
 
-      this.totalClosedGauge =
-        meter.gaugeBuilder("db.client.connections.closed")
-          .setDescription("The total number of connections closed")
-          .setUnit("{connection}")
-          .ofLongs()
-          .buildWithCallback(
-            new Consumer<ObservableLongMeasurement>() {
-              @Override
-              public void accept(ObservableLongMeasurement measurement) {
-                for (UCPEventContext ctx : contextCache.values()) {
-                  measurement.record(ctx.closedConnections(),
-                    Attributes.of(POOL_NAME, ctx.poolName()));
-                }
-              }
-            });
+    private final LongCounter connectionReturnedCounter =
+      meter.counterBuilder("db.client.connection.returned")
+        .setDescription("Number of CONNECTION_RETURNED events.")
+        .setUnit("{event}").build();
 
-      this.poolCreatedCounter =
-        meter.counterBuilder("db.client.connection.pool.created")
-          .setDescription("Number of connection pool creation events")
-          .setUnit("{event}")
-          .build();
+    private final LongCounter connectionClosedCounter =
+      meter.counterBuilder("db.client.connection.closed")
+        .setDescription("Number of CONNECTION_CLOSED events.")
+        .setUnit("{event}").build();
 
-      this.poolStartingCounter =
-        meter.counterBuilder("db.client.connection.pool.starting")
-          .setDescription("Number of pool starting events")
-          .setUnit("{event}")
-          .build();
 
-      this.poolStartedCounter =
-        meter.counterBuilder("db.client.connection.pool.started")
-          .setDescription("Number of pool started events")
-          .setUnit("{event}")
-          .build();
+    private final LongHistogram borrowedConnectionsHistogram =
+      meter.histogramBuilder("db.client.connection.borrowed_count")
+        .setDescription("Snapshot of borrowed connections count at the time of the event.")
+        .setUnit("{connection}").ofLongs().build();
 
-      this.poolStoppedCounter =
-        meter.counterBuilder("db.client.connection.pool.stopped")
-          .setDescription("Number of pool stopped events")
-          .setUnit("{event}")
-          .build();
+    private final LongHistogram availableConnectionsHistogram =
+      meter.histogramBuilder("db.client.connection.available_count")
+        .setDescription("Snapshot of available connections count at the time of the event.")
+        .setUnit("{connection}").ofLongs().build();
 
-      this.poolDestroyedCounter =
-        meter.counterBuilder("db.client.connection.pool.destroyed")
-          .setDescription(
-            "Number of connection pool destruction events")
-          .setUnit("{event}")
-          .build();
+    private final LongHistogram totalConnectionsHistogram =
+      meter.histogramBuilder("db.client.connection.total_count")
+        .setDescription("Snapshot of total connections (borrowed + available) at the time of the event.")
+        .setUnit("{connection}").ofLongs().build();
 
-      this.connectionCreatedCounter =
-        meter.counterBuilder("db.client.connection.created")
-          .setDescription("Number of connection creation events")
-          .setUnit("{event}")
-          .build();
+    private final LongHistogram createdConnectionsHistogram =
+      meter.histogramBuilder("db.client.connection.created_count")
+        .setDescription("Snapshot of cumulative created connections at the time of the event.")
+        .setUnit("{connection}").ofLongs().build();
 
-      this.connectionBorrowedCounter =
-        meter.counterBuilder("db.client.connection.borrowed")
-          .setDescription("Number of connection borrowed events")
-          .setUnit("{event}")
-          .build();
+    private final LongHistogram closedConnectionsHistogram =
+      meter.histogramBuilder("db.client.connection.closed_count")
+        .setDescription("Snapshot of cumulative closed connections at the time of the event.")
+        .setUnit("{connection}").ofLongs().build();
 
-      this.connectionReturnedCounter =
-        meter.counterBuilder("db.client.connection.returned")
-          .setDescription("Number of connection returned events")
-          .setUnit("{event}")
-          .build();
+    private final LongHistogram avgWaitTimeHistogram =
+      meter.histogramBuilder("db.client.connection.wait_time")
+        .setDescription("Average connection wait time in milliseconds at the time of the event.")
+        .setUnit("ms").ofLongs().build();
 
-      this.connectionClosedCounter =
-        meter.counterBuilder("db.client.connection.closed")
-          .setDescription("Number of connection closed events")
-          .setUnit("{event}")
-          .build();
+    private final LongHistogram maxPoolSizeHistogram =
+      meter.histogramBuilder("db.client.connection.max_pool_size")
+        .setDescription("Snapshot of configured max pool size at the time of the event.")
+        .setUnit("{connection}").ofLongs().build();
 
-      this.poolRefreshedCounter =
-        meter.counterBuilder("db.client.connection.pool.refreshed")
-          .setDescription("Number of pool refresh operations")
-          .setUnit("{operation}")
-          .build();
+    private final LongHistogram minPoolSizeHistogram =
+      meter.histogramBuilder("db.client.connection.min_pool_size")
+        .setDescription("Snapshot of configured min pool size at the time of the event.")
+        .setUnit("{connection}").ofLongs().build();
 
-      this.poolRecycledCounter =
-        meter.counterBuilder("db.client.connection.pool.recycled")
-          .setDescription("Number of pool recycle operations")
-          .setUnit("{operation}")
-          .build();
-
-      this.poolPurgedCounter =
-        meter.counterBuilder("db.client.connection.pool.purged")
-          .setDescription("Number of pool purge operations")
-          .setUnit("{operation}")
-          .build();
-
-      this.avgWaitTimeGauge =
-        meter.gaugeBuilder("db.client.connections.wait_time")
-          .setDescription(
-            "The average wait time to obtain a connection from the pool")
-          .setUnit("ms")
-          .ofLongs()
-          .buildWithCallback(
-            new Consumer<ObservableLongMeasurement>() {
-              @Override
-              public void accept(
-                  ObservableLongMeasurement measurement) {
-                for (UCPEventContext ctx : contextCache.values()) {
-                  measurement.record(
-                    ctx.getAverageConnectionWaitTime(),
-                    Attributes.of(POOL_NAME, ctx.poolName()));
-                }
-              }
-            });
-    }
 
     @Override
-    public void onUCPEvent(EventType eventType, UCPEventContext context) {
-      if (context == null || eventType == null) {
+    public void onUCPEvent(EventType eventType, UCPEventContext ctx) {
+      if (eventType == null || ctx == null) {
         return;
       }
 
-      contextCache.put(context.poolName(), context);
+      Attributes attrs = Attributes.of(POOL_NAME, ctx.poolName());
 
-      Attributes attrs = Attributes.of(POOL_NAME, context.poolName());
+      borrowedConnectionsHistogram.record(ctx.borrowedConnectionsCount(), attrs);
+      availableConnectionsHistogram.record(ctx.availableConnectionsCount(), attrs);
+      totalConnectionsHistogram.record(ctx.totalConnections(), attrs);
+      createdConnectionsHistogram.record(ctx.createdConnections(), attrs);
+      closedConnectionsHistogram.record(ctx.closedConnections(), attrs);
+      avgWaitTimeHistogram.record(ctx.getAverageConnectionWaitTime(), attrs);
+      maxPoolSizeHistogram.record(ctx.maxPoolSize(), attrs);
+      minPoolSizeHistogram.record(ctx.minPoolSize(), attrs);
 
       switch (eventType) {
-        case POOL_CREATED:
-          poolCreatedCounter.add(1, attrs);
-          break;
-        case POOL_STARTING:
-          poolStartingCounter.add(1, attrs);
-          break;
-        case POOL_STARTED:
-          poolStartedCounter.add(1, attrs);
-          break;
-        case POOL_STOPPED:
-          poolStoppedCounter.add(1, attrs);
-          break;
-        case POOL_DESTROYED:
-          poolDestroyedCounter.add(1, attrs);
-          contextCache.remove(context.poolName());
-          break;
-        case CONNECTION_CREATED:
-          connectionCreatedCounter.add(1, attrs);
-          break;
-        case CONNECTION_BORROWED:
-          connectionBorrowedCounter.add(1, attrs);
-          break;
-        case CONNECTION_RETURNED:
-          connectionReturnedCounter.add(1, attrs);
-          break;
-        case CONNECTION_CLOSED:
-          connectionClosedCounter.add(1, attrs);
-          break;
-        case POOL_REFRESHED:
-          poolRefreshedCounter.add(1, attrs);
-          break;
-        case POOL_RECYCLED:
-          poolRecycledCounter.add(1, attrs);
-          break;
-        case POOL_PURGED:
-          poolPurgedCounter.add(1, attrs);
-          break;
-        default:
-          break;
+        case POOL_CREATED:    poolCreatedCounter.add(1, attrs);    break;
+        case POOL_STARTING:   poolStartingCounter.add(1, attrs);   break;
+        case POOL_STARTED:    poolStartedCounter.add(1, attrs);    break;
+        case POOL_STOPPED:    poolStoppedCounter.add(1, attrs);    break;
+        case POOL_DESTROYED:  poolDestroyedCounter.add(1, attrs);  break;
+        case POOL_REFRESHED:  poolRefreshedCounter.add(1, attrs);  break;
+        case POOL_RECYCLED:   poolRecycledCounter.add(1, attrs);   break;
+        case POOL_PURGED:     poolPurgedCounter.add(1, attrs);     break;
+        case CONNECTION_CREATED:  connectionCreatedCounter.add(1, attrs);  break;
+        case CONNECTION_BORROWED: connectionBorrowedCounter.add(1, attrs); break;
+        case CONNECTION_RETURNED: connectionReturnedCounter.add(1, attrs); break;
+        case CONNECTION_CLOSED:   connectionClosedCounter.add(1, attrs);   break;
+        default: break;
       }
     }
   }

@@ -10,7 +10,7 @@ import java.util.Objects;
  * and initialization. All UCP events extend this class to inherit
  * standard pool metrics and metadata.
  */
-@Category("UCP Events")
+@StackTrace(false)
 @Description("Base UCP Event")
 public abstract class UCPBaseEvent extends Event {
 
@@ -18,9 +18,14 @@ public abstract class UCPBaseEvent extends Event {
   @Label("Pool Name")
   protected String poolName;
 
-  /** Event timestamp in milliseconds since epoch */
-  @Label("Timestamp")
-  protected long timestamp;
+  /**
+   *
+   * <p>Note: This is the timestamp captured by UCP at event creation time,
+   * preserved for correlation purposes. JFR also records its own startTime
+   * automatically — this field complements it rather than replacing it.
+   */
+  @Label("UCP Timestamp (ms)")
+  protected long ucpTimestamp;
 
   /** Maximum configured pool size */
   @Label("Max Pool Size")
@@ -64,15 +69,15 @@ public abstract class UCPBaseEvent extends Event {
   protected void initCommonFields(UCPEventContext ctx) {
     Objects.requireNonNull(ctx, "UCPEventContext cannot be null");
 
-    this.poolName = ctx.poolName();
-    this.timestamp = ctx.timestamp();
-    this.maxPoolSize = ctx.maxPoolSize();
-    this.minPoolSize = ctx.minPoolSize();
+    this.poolName           = ctx.poolName();
+    this.ucpTimestamp       = ctx.timestamp();
+    this.maxPoolSize        = ctx.maxPoolSize();
+    this.minPoolSize        = ctx.minPoolSize();
     this.borrowedConnections = ctx.borrowedConnectionsCount();
     this.availableConnections = ctx.availableConnectionsCount();
-    this.totalConnections = ctx.totalConnections();
-    this.closedConnections = ctx.closedConnections();
+    this.totalConnections   = ctx.totalConnections();
+    this.closedConnections  = ctx.closedConnections();
     this.createdConnections = ctx.createdConnections();
-    this.avgWaitTime = ctx.getAverageConnectionWaitTime();
+    this.avgWaitTime        = ctx.getAverageConnectionWaitTime();
   }
 }
