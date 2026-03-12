@@ -51,13 +51,17 @@ the pool is started.
 ### Programmatic activation
 
 ```java
-PoolDataSource pds = PoolDataSourceFactory.getPoolDataSource();
-pds.setConnectionFactoryClassName("oracle.jdbc.pool.OracleDataSource");
-pds.setURL("jdbc:oracle:thin:@//host:1521/service");
+public class MyApp {
+  public static void main(String[] args) throws Exception {
+    PoolDataSource pds = PoolDataSourceFactory.getPoolDataSource();
+    pds.setConnectionFactoryClassName("oracle.jdbc.pool.OracleDataSource");
+    pds.setURL("jdbc:oracle:thin:@//host:1521/service");
 
-// Activate your provider
-pds.setUCPEventListenerProvider("jfr-ucp-listener");
-// pds.setUCPEventListenerProvider("otel-ucp-listener");
+    // Activate your provider
+    pds.setUCPEventListenerProvider("jfr-ucp-listener");
+    // pds.setUCPEventListenerProvider("otel-ucp-listener");
+  }
+}
 ```
 
 ---
@@ -171,22 +175,26 @@ The provider obtains its `Meter` on first listener instantiation using
 the pool is started. A minimal setup using the Prometheus exporter:
 
 ```java
-// 1. Register the SDK BEFORE pool creation
-PrometheusHttpServer prometheusServer = PrometheusHttpServer.builder()
-    .setPort(9464)
-    .build();
+public class MyApp {
+  public static void main(String[] args) throws Exception {
+    // 1. Register the SDK BEFORE pool creation
+    PrometheusHttpServer prometheusServer = PrometheusHttpServer.builder()
+            .setPort(9464)
+            .build();
 
-SdkMeterProvider meterProvider = SdkMeterProvider.builder()
-    .registerMetricReader(prometheusServer)
-    .build();
+    SdkMeterProvider meterProvider = SdkMeterProvider.builder()
+            .registerMetricReader(prometheusServer)
+            .build();
 
-OpenTelemetrySdk.builder()
-    .setMeterProvider(meterProvider)
-    .buildAndRegisterGlobal();
+    OpenTelemetrySdk.builder()
+            .setMeterProvider(meterProvider)
+            .buildAndRegisterGlobal();
 
-// 2. Then create and start the pool
-PoolDataSource pds = PoolDataSourceFactory.getPoolDataSource();
-pds.setUCPEventListenerProvider("otel-ucp-listener");
+    // 2. Then create and start the pool
+    PoolDataSource pds = PoolDataSourceFactory.getPoolDataSource();
+    pds.setUCPEventListenerProvider("otel-ucp-listener");
+  }
+}
 ```
 
 ### Exported metrics
@@ -243,16 +251,18 @@ All metrics carry the following attribute:
 **1. Add the Prometheus exporter (test / application scope)**
 
 ```xml
-<dependency>
+<dependencies>
+  <dependency>
     <groupId>io.opentelemetry</groupId>
     <artifactId>opentelemetry-sdk</artifactId>
     <version>1.44.1</version>
-</dependency>
-<dependency>
+  </dependency>
+  <dependency>
     <groupId>io.opentelemetry</groupId>
     <artifactId>opentelemetry-exporter-prometheus</artifactId>
     <version>1.44.1-alpha</version>
-</dependency>
+  </dependency>
+</dependencies>
 ```
 
 **2. Configure Prometheus to scrape the application**
