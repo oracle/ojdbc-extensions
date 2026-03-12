@@ -42,7 +42,8 @@ import oracle.jdbc.provider.aws.secrets.SecretsManagerFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
-import oracle.jdbc.util.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfiguration;
+import oracle.jdbc.util.configuration.OracleConfigurationCache;;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -55,6 +56,7 @@ import java.util.Map;
  * See {@link #getInputStream(String)} for the spec of the JSON payload.
  **/
 public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationParsableProvider {
+  private static final OracleConfigurationCache<String, OracleConfiguration> CACHE = OracleConfigurationCache.create(100);
 
   /**
    * Parser that recognizes the named parameters which appear in a URL,
@@ -113,7 +115,7 @@ public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationP
    * @return the parser type
    */
   @Override
-  public String getParserType(String location) {
+  public String getParserType() {
     return "json";
   }
 }

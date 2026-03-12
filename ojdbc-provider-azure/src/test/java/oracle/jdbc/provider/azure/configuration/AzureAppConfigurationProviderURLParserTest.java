@@ -43,7 +43,7 @@ import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.azure.AzureTestProperty;
 import oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod;
 import oracle.jdbc.spi.OracleConfigurationProvider;
-import oracle.jdbc.util.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfigurationCache;;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;

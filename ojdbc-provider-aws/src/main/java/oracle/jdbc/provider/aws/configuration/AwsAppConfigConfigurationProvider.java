@@ -42,7 +42,8 @@ import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.aws.appconfig.AppConfigFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
-import oracle.jdbc.util.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfiguration;
+import oracle.jdbc.util.configuration.OracleConfigurationCache;;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -58,6 +59,7 @@ import static oracle.jdbc.provider.aws.configuration.AwsConfigurationParameters.
  * See {@link #getInputStream(String)} for the spec of the JSON payload.
  **/
 public class AwsAppConfigConfigurationProvider extends OracleConfigurationParsableProvider {
+  private static final OracleConfigurationCache<String, OracleConfiguration> CACHE = OracleConfigurationCache.create(100);
 
   static final ParameterSetParser PARAMETER_SET_PARSER = AwsConfigurationParameters.configureBuilder(
     ParameterSetParser.builder()
@@ -110,7 +112,7 @@ public class AwsAppConfigConfigurationProvider extends OracleConfigurationParsab
    * @return the parser type
    */
   @Override
-  public String getParserType(String location) {
+  public String getParserType() {
     return "json";
   }
 }

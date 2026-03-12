@@ -45,7 +45,8 @@ import java.util.Map;
 import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.gcp.objectstorage.GcpCloudStorageFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.util.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfiguration;
+import oracle.jdbc.util.configuration.OracleConfigurationCache;;
 
 /**
  * A provider for JSON payload which contains configuration from GCP Cloud
@@ -53,6 +54,7 @@ import oracle.jdbc.util.OracleConfigurationCache;
  */
 public class GcpCloudStorageConfigurationProvider
     extends OracleConfigurationParsableProvider {
+  private static final OracleConfigurationCache<String, OracleConfiguration> CACHE = OracleConfigurationCache.create(100);
 
   public static final String PROJECT_PARAMETER = "project";
   public static final String BUCKET_PARAMETER = "bucket";

@@ -46,7 +46,8 @@ import java.util.Map;
 import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.gcp.secrets.GcpSecretManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.util.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfiguration;
+import oracle.jdbc.util.configuration.OracleConfigurationCache;;
 
 /**
  * A provider for JSON payload which contains configuration from GCP Secret
@@ -55,6 +56,7 @@ import oracle.jdbc.util.OracleConfigurationCache;
  **/
 public class GcpSecretManagerConfigurationProvider
     extends OracleConfigurationParsableProvider {
+  private static final OracleConfigurationCache<String, OracleConfiguration> CACHE = OracleConfigurationCache.create(100);
 
   @Override
   public String getType() {
@@ -90,7 +92,7 @@ public class GcpSecretManagerConfigurationProvider
   }
 
   @Override
-  public String getParserType(String arg0) {
+  public String getParserType() {
     return "json";
   }
 }

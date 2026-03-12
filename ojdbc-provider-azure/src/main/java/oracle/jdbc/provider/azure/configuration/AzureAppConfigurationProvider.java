@@ -49,8 +49,9 @@ import com.azure.security.keyvault.secrets.SecretClient;
 import com.azure.security.keyvault.secrets.SecretClientBuilder;
 import oracle.jdbc.OracleConnection;
 import oracle.jdbc.spi.OracleConfigurationCachableProvider;
-import oracle.jdbc.util.OracleConfigurationCache;
-import oracle.jdbc.util.OracleConfigurationProviderNetworkError;
+import oracle.jdbc.util.configuration.OracleConfiguration;
+import oracle.jdbc.util.configuration.OracleConfigurationCache;;
+import oracle.jdbc.util.configuration.OracleConfigurationProviderNetworkError;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.azure.authentication.TokenCredentialFactory;
 import oracle.sql.json.OracleJsonFactory;
@@ -60,6 +61,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -77,23 +79,11 @@ public class AzureAppConfigurationProvider
   private static final String WALLET_LOCATION_PROPERTIES_NAME =
     "wallet_location";
   private static final String JDBC_PROPERTIES_PREFIX = "jdbc/";
+  private static final String UCP_PROPERTIES_PREFIX = "ucp/";
   private static final String CONFIG_TTL_JSON_OBJECT_NAME =
     "config_time_to_live";
 
-  /**
-   * Timeout value of the background thread that requests the configuration from
-   * remote location during soft-expiration period. The task will be interrupted
-   * after 60 seconds.
-    */
-  private static final long MS_REFRESH_TIMEOUT = 60_000L;
-  /**
-   * Retry interval of the background thread that requests the configuration
-   * from remote location during soft-expiration period. The thread will retry
-   * in a frequency of 60 seconds if the remote location is unreachable.
-    */
-  private static final long MS_RETRY_INTERVAL = 60_000L;
-  private static final OracleConfigurationCache CACHE = OracleConfigurationCache
-    .create(100);
+  private static final OracleConfigurationCache<String, OracleConfiguration> CACHE = OracleConfigurationCache.create(100);
 
   /**
    * {@inheritDoc}
@@ -120,30 +110,13 @@ public class AzureAppConfigurationProvider
     }
 
     try {
-      Properties properties = getRemoteProperties(location);
-      if (properties.containsKey(CONFIG_TTL_JSON_OBJECT_NAME)) {
-        // Remove the TTL information from the properties, if presents
-        long configTimeToLive = Long.parseLong(
-                properties.getProperty(CONFIG_TTL_JSON_OBJECT_NAME));
+      OracleConfiguration config = getRemoteConfiguration(location);
+      CACHE.put(
+          location,
+          config,
+          () -> this.refreshConfiguration(location));
 
-        properties.remove(CONFIG_TTL_JSON_OBJECT_NAME);
-
-        CACHE.put(
-                location,
-                properties,
-                configTimeToLive,
-                () -> this.refreshProperties(location),
-                MS_REFRESH_TIMEOUT,
-                MS_RETRY_INTERVAL);
-      } else {
-        CACHE.put(location,
-                properties,
-                () -> this.refreshProperties(location),
-                MS_REFRESH_TIMEOUT,
-                MS_RETRY_INTERVAL);
-      }
-
-      return properties;
+      return config.connectionProperties();
     } catch (UncheckedIOException | AzureException e) {
       throw new SQLException("Unable to load Azure App Configuration at " + location, e
       );
@@ -171,7 +144,9 @@ public class AzureAppConfigurationProvider
     return CACHE;
   }
 
-  private Properties getRemoteProperties(String location) {
+  private OracleConfiguration getRemoteConfiguration(String location) {
+    OracleConfiguration.Builder builder = new OracleConfiguration.Builder();
+
     AzureAppConfigurationURLParser appConfig =
       new AzureAppConfigurationURLParser(location);
     ParameterSet parameters = appConfig.getParameters();
@@ -215,7 +190,9 @@ public class AzureAppConfigurationProvider
       .endpoint("https://" + appConfig.getName() + ".azconfig.io")
       .buildClient();
 
-    Properties properties = new Properties();
+    Properties connectionProps = new Properties();
+    Properties ucpProps = new Properties();
+
     for (ConfigurationSetting config : configurationClient
       .listConfigurationSettings(selector)) {
 
@@ -247,16 +224,29 @@ public class AzureAppConfigurationProvider
         value = "data:;base64," + value;
       }
 
-      properties.put(key, value);
+      // Check whether this is a connection property, UCP property, or TTL
+      if (key.startsWith(UCP_PROPERTIES_PREFIX)) {
+        key = key.substring(UCP_PROPERTIES_PREFIX.length());
+        ucpProps.put(key, value);
+      } else if (key.startsWith(CONFIG_TTL_JSON_OBJECT_NAME)) {
+        builder.ttl(Duration.ofSeconds(Long.parseLong(value)));
+      } else {
+        connectionProps.put(key, value);
+      }
     }
 
     // Check mandatory attributes
-    if (!properties.containsKey("URL")) {
+    if (!connectionProps.containsKey("URL")) {
       throw new IllegalArgumentException("Missing mandatory attributes: " +
         CONNECT_DESCRIPTOR_PROPERTIES_NAME);
     }
 
-    return properties;
+    // TODO: Configure UCP
+
+    return builder
+        .connectionProperties(connectionProps)
+        .ucpProperties(ucpProps)
+        .build();
   }
 
   /**
@@ -294,10 +284,10 @@ public class AzureAppConfigurationProvider
     return secretClient.getSecret(name).getValue();
   }
 
-  private Properties refreshProperties(String location)
+  private OracleConfiguration refreshConfiguration(String location)
     throws OracleConfigurationProviderNetworkError {
       try {
-        return getRemoteProperties(location);
+        return getRemoteConfiguration(location);
       } catch (AzureException e) {
         throw new OracleConfigurationProviderNetworkError(e);
       }

@@ -43,7 +43,8 @@ import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
-import oracle.jdbc.util.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfiguration;
+import oracle.jdbc.util.configuration.OracleConfigurationCache;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -55,6 +56,7 @@ import java.util.Map;
  * See {@link #getInputStream(String)} for the spec of the JSON payload.
  */
 public class AzureVaultJsonProvider extends OracleConfigurationParsableProvider {
+  private static final OracleConfigurationCache<String, OracleConfiguration> CACHE = OracleConfigurationCache.create(100);
 
   /**
    * Parser that recognizes the "key" and "value" field,
@@ -117,7 +119,7 @@ public class AzureVaultJsonProvider extends OracleConfigurationParsableProvider 
   }
 
   @Override
-  public String getParserType(String arg0) {
+  public String getParserType() {
     return "json";
   }
 

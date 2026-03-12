@@ -41,7 +41,8 @@ package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.configuration;
 import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.secrets.DedicatedVaultSecretsManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.util.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfiguration;
+import oracle.jdbc.util.configuration.OracleConfigurationCache;;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -52,6 +53,7 @@ import java.util.Map;
 import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.*;
 
 public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleConfigurationParsableProvider {
+  private static final OracleConfigurationCache<String, OracleConfiguration> CACHE = OracleConfigurationCache.create(100);
 
   @Override
   public InputStream getInputStream(String secretPath) {
@@ -76,7 +78,7 @@ public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleCon
   }
 
   @Override
-  public String getParserType(String location) {
+  public String getParserType() {
     return "json";
   }
 
