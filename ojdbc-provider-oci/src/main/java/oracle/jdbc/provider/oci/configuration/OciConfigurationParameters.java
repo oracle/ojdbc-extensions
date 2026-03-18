@@ -96,14 +96,10 @@ public final class OciConfigurationParameters {
       .addParameter("OCI_REGION", REGION, null, Region::fromRegionCodeOrId)
       .addParameter("OCI_INSTANCE_PRINCIPAL_TIMEOUT", INSTANCE_PRINCIPAL_TIMEOUT,
          5,
-         s -> {
-           try {
-            return Integer.parseInt(s);
-           }catch (NumberFormatException e) {
-              throw new IllegalArgumentException( "Invalid value for " +
-                "OCI_INSTANCE_PRINCIPAL_TIMEOUT: " + s + ". The value must be an integer.");
-           }
-         })
+         s -> parsePositiveInt("OCI_INSTANCE_PRINCIPAL_TIMEOUT", s))
+      .addParameter("OCI_INTERACTIVE_TIMEOUT", INTERACTIVE_TIMEOUT,
+         DEFAULT_INTERACTIVE_TIMEOUT_MINUTES,
+         s -> parsePositiveInt("OCI_INTERACTIVE_TIMEOUT", s))
       .build();
 
   /**
@@ -113,6 +109,24 @@ public final class OciConfigurationParameters {
    */
   public static ParameterSetParser getParser() {
     return PARAMETER_SET_PARSER;
+  }
+
+  /**
+   * Parses {@code s} as a positive integer for the named parameter.
+   * Throws {@link IllegalArgumentException} if the value is not a positive
+   * integer or cannot be parsed.
+   */
+  private static int parsePositiveInt(String paramName, String s) {
+    try {
+      int value = Integer.parseInt(s);
+      if (value <= 0)
+        throw new IllegalArgumentException("Invalid value for " + paramName
+          + ": " + s + ". The value must be a positive integer.");
+      return value;
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("Invalid value for " + paramName
+        + ": " + s + ". The value must be a positive integer.");
+    }
   }
 
   /**
