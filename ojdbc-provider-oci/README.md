@@ -257,7 +257,7 @@ in Optional Parameters</td>
   <td>
     <code>OCI_INSTANCE_PRINCIPAL_TIMEOUT</code> <br>
     <i>(Optional)</i> Specifies the maximum time, in seconds, to wait for the instance principal authentication process to complete.<br>
-    The value must be a valid integer (e.g., <code>5</code>, <code>30</code>). Decimal values are not allowed.<br>
+    The value must be a positive integer (e.g., <code>5</code>, <code>30</code>). Decimal values are not allowed.<br>
     <b>Default:</b> <code>5</code> seconds
   </td>
 </tr>
@@ -271,7 +271,14 @@ in Optional Parameters</td>
   <td><b>OCI_INTERACTIVE</b></td>
   <td>Session Token-Based Authentication</td>
   <td>Same as OCI_DEFAULT</td>
-  <td>Same as OCI_DEFAULT</td>
+  <td>
+    <code>OCI_INTERACTIVE_TIMEOUT</code> <br>
+    <i>(Optional)</i> Specifies the maximum time, in minutes, for the user to complete the browser login.
+    After the timeout, the local HTTP server on port <code>8181</code> is released automatically,
+    so a subsequent authentication attempt will not fail with a <code>BindException</code>.<br>
+    The value must be a positive integer. Decimal values are not allowed.<br>
+    <b>Default:</b> <code>5</code> minutes
+  </td>
 </tr>
 </tbody>
 </table>
@@ -813,7 +820,19 @@ common set of parameters.
       <td>instancePrincipalTimeout</td>
       <td>
         Specifies the maximum time, in seconds, to wait for instance principal authentication to complete.<br>
-        The value must be a valid integer (e.g., <code>5</code>, <code>10</code>). Decimal values are not accepted.
+        The value must be a positive integer (e.g., <code>5</code>, <code>10</code>). Decimal values are not accepted.
+      </td>
+      <td>A positive integer</td>
+      <td><code>5</code></td>
+    </tr>
+    <tr>
+      <td>interactiveTimeout</td>
+      <td>
+        Specifies the maximum time, in minutes, for the user to complete the browser login when
+        <code>authenticationMethod=interactive</code> is configured.
+        After the timeout, the local HTTP server on port <code>8181</code> is released automatically,
+        so a subsequent authentication attempt will not fail with a <code>BindException</code>.<br>
+        The value must be a positive integer. Decimal values are not accepted.
       </td>
       <td>A positive integer</td>
       <td><code>5</code></td>
@@ -889,6 +908,10 @@ Cloud Shell
 <dd>
 Authenticate interactively by logging in to a cloud account with your
 default web browser. The browser window is opened automatically.
+A local HTTP server is started on port <code>8181</code> to receive the OAuth2 redirect after login.
+The server is released automatically once the login completes or the <code>interactiveTimeout</code> expires,
+preventing a <code>BindException</code> if authentication is attempted again.
+You may configure the login timeout using the <code>interactiveTimeout</code> parameter.
 </dd>
 <dt>auto-detect</dt>
 <dd>
