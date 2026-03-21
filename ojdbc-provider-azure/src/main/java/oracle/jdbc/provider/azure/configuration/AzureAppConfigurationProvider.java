@@ -206,8 +206,6 @@ public class AzureAppConfigurationProvider
       }
 
       selector.setLabelFilter(label);
-    } else {
-      selector.setLabelFilter("%00");
     }
 
     ConfigurationClient configurationClient = new ConfigurationClientBuilder()
