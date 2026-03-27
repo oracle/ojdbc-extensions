@@ -190,7 +190,6 @@ public class AzureAppConfigurationProvider
     }
 
     // Only allow a single label.
-    // If not specified, use "%00" to match empty label.
     if (parameters.contains(AzureAppConfigurationURLParser.LABEL)) {
       String label =
         parameters.getOptional(AzureAppConfigurationURLParser.LABEL);
