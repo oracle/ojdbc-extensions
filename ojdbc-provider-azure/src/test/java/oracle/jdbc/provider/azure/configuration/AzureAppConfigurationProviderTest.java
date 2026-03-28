@@ -123,10 +123,6 @@ class AzureAppConfigurationProviderTest {
       APP_CONFIG_LABEL, originalKeyValue + "wrong");
 
     try {
-      String newKeyValue =
-          client.getConfigurationSetting(APP_CONFIG_KEY + username,
-              APP_CONFIG_LABEL).getValue();
-      System.out.println("============ key = " + APP_CONFIG_KEY + username + ", newKeyValue = " + newKeyValue);
       // Connection fails: hit 1017
       SQLException exception = assertThrows(SQLException.class,
         () -> tryConnection(url), "Should throw an SQLException");
