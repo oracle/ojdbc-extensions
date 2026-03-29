@@ -41,6 +41,7 @@ Add the module to your Maven project:
   <version>1.0.6</version>
 </dependency>
 ```
+
 ---
 
 ## Activation
@@ -69,7 +70,8 @@ public class MyApp {
 ## JFR Provider
 
 `JFRUCPEventListenerProvider` converts every UCP pool and connection event into a committed
-JFR event. Events are emitted with zero overhead when no JFR recording is active, making the provider safe to ship in production at all times.
+JFR event. Events are emitted with zero overhead when no JFR recording is active, making the
+provider safe to ship in production at all times.
 
 ### Recorded event types
 
@@ -162,7 +164,8 @@ thread activity, and I/O latency on the same timeline.
 `OtelUCPEventListenerProvider` publishes UCP pool and connection metrics through the
 [OpenTelemetry API](https://opentelemetry.io/docs/languages/java/). The provider is
 **event-driven**: every time a UCP event fires, the snapshot data it carries is recorded
-directly into OTel instruments.
+directly into OTel instruments. There are no background threads, no polling, and no cached
+state — each event is self-contained.
 
 The provider depends only on `opentelemetry-api` — it does **not** pull in the SDK or any
 exporter. The application is responsible for initialising an OpenTelemetry SDK and
@@ -179,16 +182,16 @@ public class MyApp {
   public static void main(String[] args) throws Exception {
     // 1. Register the SDK BEFORE pool creation
     PrometheusHttpServer prometheusServer = PrometheusHttpServer.builder()
-            .setPort(9464)
-            .build();
+        .setPort(9464)
+        .build();
 
     SdkMeterProvider meterProvider = SdkMeterProvider.builder()
-            .registerMetricReader(prometheusServer)
-            .build();
+        .registerMetricReader(prometheusServer)
+        .build();
 
     OpenTelemetrySdk.builder()
-            .setMeterProvider(meterProvider)
-            .buildAndRegisterGlobal();
+        .setMeterProvider(meterProvider)
+        .buildAndRegisterGlobal();
 
     // 2. Then create and start the pool
     PoolDataSource pds = PoolDataSourceFactory.getPoolDataSource();
@@ -197,46 +200,40 @@ public class MyApp {
 }
 ```
 
+For applications that already configure an OpenTelemetry SDK (e.g. via the Java agent or
+Spring Boot auto-configuration) no additional setup is required.
+
 ### Exported metrics
 
-All metrics use the `db.client.connection` prefix following
+All spec-aligned metrics use the `db.client.connection` prefix following
 [OpenTelemetry semantic conventions for database clients](https://opentelemetry.io/docs/specs/semconv/database/database-metrics/).
 
-#### Histograms — snapshot fields recorded on every event
+#### Spec-aligned metrics
 
-Each UCP event carries a snapshot of pool state at the moment it fired. These eight fields
-are recorded as histogram observations on **every** event regardless of type, giving a
-time-series view of pool state correlated with event activity.
+| Metric name | Instrument | Unit | Description |
+|---|---|---|---|
+| `db.client.connection.usage` | LongGauge | `{connection}` | Current connections in each state (attribute: `db.client.connection.state` = `used` \| `idle`). Recorded on every event. |
+| `db.client.connection.max` | LongGauge | `{connection}` | Configured maximum pool size. Recorded on pool lifecycle events only. |
+| `db.client.connection.idle.min` | LongGauge | `{connection}` | Configured minimum pool size (approximation — see Limitations). Recorded on pool lifecycle events only. |
+| `db.client.connection.wait_time` | DoubleHistogram | `s` | Borrow wait time approximation (see Limitations). Recorded on `CONNECTION_BORROWED` only, when > 0. |
 
-| Metric name | Unit | Description |
-|---|---|---|
-| `db.client.connection.borrowed_count` | `{connection}` | Snapshot of checked-out connections at event time |
-| `db.client.connection.available_count` | `{connection}` | Snapshot of idle connections at event time |
-| `db.client.connection.total_count` | `{connection}` | Snapshot of total connections (borrowed + available) at event time |
-| `db.client.connection.created_count` | `{connection}` | Cumulative connections created since pool start at event time |
-| `db.client.connection.closed_count` | `{connection}` | Cumulative connections closed since pool start at event time |
-| `db.client.connection.wait_time` | `ms` | Average connection wait time in milliseconds at event time |
-| `db.client.connection.max_pool_size` | `{connection}` | Configured maximum pool size at event time |
-| `db.client.connection.min_pool_size` | `{connection}` | Configured minimum pool size at event time |
+> **Note on spec deviations:**
+> The spec defines `db.client.connection.count` as an `UpDownCounter`. We use the name
+> `db.client.connection.usage` (to avoid the reserved `_count` Prometheus suffix) and
+> `LongGauge` (because UCP provides absolute snapshots, not incremental deltas).
+> The spec defines `db.client.connection.max` and `db.client.connection.idle.min` as
+> `UpDownCounter`. We use `LongGauge` for the same reason — these are configuration
+> constants, not incrementally updated values.
 
-#### Event counters
+#### UCP-specific metrics
 
-One counter is incremented by 1 each time the corresponding UCP event fires.
+These metrics have no equivalent in the OTel spec but expose data available from UCP's
+event context that is useful for observability.
 
-| Metric name | Incremented on |
-|---|---|
-| `db.client.connection.pool.created` | `POOL_CREATED` |
-| `db.client.connection.pool.starting` | `POOL_STARTING` |
-| `db.client.connection.pool.started` | `POOL_STARTED` |
-| `db.client.connection.pool.stopped` | `POOL_STOPPED` |
-| `db.client.connection.pool.destroyed` | `POOL_DESTROYED` |
-| `db.client.connection.pool.refreshed` | `POOL_REFRESHED` |
-| `db.client.connection.pool.recycled` | `POOL_RECYCLED` |
-| `db.client.connection.pool.purged` | `POOL_PURGED` |
-| `db.client.connection.created` | `CONNECTION_CREATED` |
-| `db.client.connection.borrowed` | `CONNECTION_BORROWED` |
-| `db.client.connection.returned` | `CONNECTION_RETURNED` |
-| `db.client.connection.closed` | `CONNECTION_CLOSED` |
+| Metric name | Instrument | Unit | Description |
+|---|---|---|---|
+| `db.client.connection.established` | LongGauge | `{connection}` | Cumulative physical connections opened since pool start. |
+| `db.client.connection.closed` | LongGauge | `{connection}` | Cumulative physical connections closed since pool start. |
 
 #### Common attributes
 
@@ -245,6 +242,34 @@ All metrics carry the following attribute:
 | Attribute key | Example value | Description |
 |---|---|---|
 | `db.client.connection.pool.name` | `"MyPool"` | Name of the UCP pool that emitted the event |
+
+The `db.client.connection.usage` metric additionally carries:
+
+| Attribute key | Values | Description |
+|---|---|---|
+| `db.client.connection.state` | `"used"` / `"idle"` | Whether connections are checked out or available |
+
+#### Limitations
+
+- **`db.client.connection.wait_time`**: The spec intends per-borrow wait durations.
+  `UCPEventContext.getAverageConnectionWaitTime()` returns a cumulative pool-wide average
+  since pool start, not a per-borrow value. This is the closest approximation UCP's event
+  API allows. Recorded only when the average is greater than zero to avoid histogram
+  pollution at pool startup.
+
+- **`db.client.connection.idle.min`**: The spec intends the minimum number of idle
+  connections. UCP's `minPoolSize()` returns the minimum total pool size (borrowed + idle),
+  not a dedicated idle floor. These differ when connections are actively borrowed.
+
+- **`db.client.connection.established` / `db.client.connection.closed`**: These are
+  monotonically increasing lifetime totals. `LongGauge` is used instead of `LongCounter`
+  because UCP exposes them as absolute values — a counter with delta=0 would produce no
+  data point when UCP reuses cached connections and never opens new physical sockets.
+
+> **Note on Prometheus metadata:** `db_client_connection_usage` may appear as `gauge`
+> with no issues. Some metrics may display `unknown` type in the Prometheus
+> `/api/v1/metadata` UI due to a known limitation of the OTel Java Prometheus exporter.
+> This does not affect queries or Grafana dashboards.
 
 ### Prometheus / Grafana quick-start
 
@@ -278,27 +303,29 @@ scrape_configs:
 **3. Useful Grafana PromQL queries**
 
 ```promql
-# Average borrowed connections over the last minute
-rate(db_client_connection_borrowed_count_sum[1m])
-  / rate(db_client_connection_borrowed_count_count[1m])
+# Current used connections
+db_client_connection_usage{db_client_connection_state="used"}
 
-# Average available connections over the last minute
-rate(db_client_connection_available_count_sum[1m])
-  / rate(db_client_connection_available_count_count[1m])
+# Current idle connections
+db_client_connection_usage{db_client_connection_state="idle"}
 
-# Average connection wait time over the last minute
-rate(db_client_connection_wait_time_milliseconds_sum[1m])
-  / rate(db_client_connection_wait_time_milliseconds_count[1m])
+# Total connections (used + idle)
+sum by (db_client_connection_pool_name) (db_client_connection_usage)
 
-# 95th-percentile connection wait time
+# Average borrow wait time over the last minute
+rate(db_client_connection_wait_time_seconds_sum[1m])
+  / rate(db_client_connection_wait_time_seconds_count[1m])
+
+# 95th-percentile borrow wait time
 histogram_quantile(0.95,
-  rate(db_client_connection_wait_time_milliseconds_bucket[1m]))
+  rate(db_client_connection_wait_time_seconds_bucket[1m]))
 
-# Total borrow events (cumulative counter)
-db_client_connection_borrowed_total
+# Physical connection churn rate (new sockets opened per minute)
+rate(db_client_connection_established[1m])
 
-# Borrow rate per minute
-rate(db_client_connection_borrowed_total[1m])
+# Pool capacity utilisation
+db_client_connection_usage{db_client_connection_state="used"}
+  / db_client_connection_max
 ```
 
 ---
@@ -337,6 +364,7 @@ Both providers handle all twelve event types defined by `UCPEventListener.EventT
 The JFR provider has no runtime dependencies beyond the Oracle UCP jar and a JDK that
 supports JFR (JDK 11+). The OpenTelemetry provider requires `opentelemetry-api` on the
 classpath; the SDK and exporter are the application's responsibility.
+
 ---
 
 ## See also
