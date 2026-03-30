@@ -40,12 +40,14 @@ package oracle.ucp.provider.observability.jfr.events.maintenance;
 
 import jdk.jfr.Category;
 import jdk.jfr.Label;
+import jdk.jfr.Description;
 import jdk.jfr.Name;
 import oracle.ucp.events.core.UCPEventContext;
 import oracle.ucp.provider.observability.jfr.core.UCPBaseEvent;
 
 @Name("ucp.PoolPurged")
 @Label("Pool Purged")
+@Description("Emitted when a pool purge operation completes")
 @Category({"UCP Events", "Maintenance Operations Events"})
 public class PoolPurgedEvent extends UCPBaseEvent {
 

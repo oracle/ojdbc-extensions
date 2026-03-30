@@ -49,7 +49,7 @@ import java.util.Map;
  * Integrates UCP events with Java Flight Recorder for low-overhead monitoring.
  */
 public final class JFRUCPEventListenerProvider
-  implements UCPEventListenerProvider {
+    implements UCPEventListenerProvider {
 
   private final UCPEventListener listener;
 
@@ -59,12 +59,14 @@ public final class JFRUCPEventListenerProvider
    * Thread-safe and optimized for minimal overhead.
    */
   public static final UCPEventListener TRACE_EVENT_LISTENER =
-    new UCPEventListener() {
-    @Override
-    public void onUCPEvent(EventType eventType, UCPEventContext context) {
-      UCPEventFactory.recordEvent(eventType, context);
-    }
-  };
+      new UCPEventListener() {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public void onUCPEvent(EventType eventType, UCPEventContext context) {
+          UCPEventFactory.recordEvent(eventType, context);
+        }
+      };
 
   /**
    * Creates a new provider instance.

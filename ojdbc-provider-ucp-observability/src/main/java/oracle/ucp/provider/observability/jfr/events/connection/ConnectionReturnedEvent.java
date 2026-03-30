@@ -40,12 +40,14 @@ package oracle.ucp.provider.observability.jfr.events.connection;
 
 import jdk.jfr.Category;
 import jdk.jfr.Label;
+import jdk.jfr.Description;
 import jdk.jfr.Name;
 import oracle.ucp.events.core.UCPEventContext;
 import oracle.ucp.provider.observability.jfr.core.UCPBaseEvent;
 
 @Name("ucp.ConnectionReturned")
 @Label("Connection Returned")
+@Description("Emitted when a connection is returned to the pool")
 @Category({"UCP Events", "Connection Lifecycle Events"})
 public class ConnectionReturnedEvent extends UCPBaseEvent {
 

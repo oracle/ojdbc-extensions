@@ -54,7 +54,7 @@ public abstract class UCPBaseEvent extends Event {
 
   /** Name of the connection pool */
   @Label("Pool Name")
-  protected String poolName;
+  private String poolName;
 
   /**
    *
@@ -63,40 +63,40 @@ public abstract class UCPBaseEvent extends Event {
    * automatically — this field complements it rather than replacing it.
    */
   @Label("UCP Timestamp (ms)")
-  protected long ucpTimestamp;
+  private long ucpTimestamp;
 
   /** Maximum configured pool size */
   @Label("Max Pool Size")
-  protected int maxPoolSize;
+  private int maxPoolSize;
 
   /** Minimum configured pool size */
   @Label("Min Pool Size")
-  protected int minPoolSize;
+  private int minPoolSize;
 
   /** Current count of borrowed connections */
   @Label("Borrowed Connections")
-  protected int borrowedConnections;
+  private int borrowedConnections;
 
   /** Current count of available connections */
   @Label("Available Connections")
-  protected int availableConnections;
+  private int availableConnections;
 
   /** Total active connections (borrowed + available) */
   @Label("Total Connections")
-  protected int totalConnections;
+  private int totalConnections;
 
   /** Lifetime count of closed connections */
   @Label("Closed Connections")
-  protected int closedConnections;
+  private int closedConnections;
 
   /** Lifetime count of created connections */
   @Label("Created Connections")
-  protected int createdConnections;
+  private int createdConnections;
 
   /** Average connection wait time in milliseconds */
   @Label("Average Wait Time (ms)")
   @Timespan(Timespan.MILLISECONDS)
-  protected long avgWaitTime;
+  private long avgWaitTime;
 
   /**
    * Initializes common fields from UCP event context.
@@ -107,7 +107,8 @@ public abstract class UCPBaseEvent extends Event {
   protected void initCommonFields(UCPEventContext ctx) {
     Objects.requireNonNull(ctx, "UCPEventContext cannot be null");
 
-    this.poolName           = ctx.poolName();
+    String name             = ctx.poolName();
+    this.poolName           = name != null ? name : "";
     this.ucpTimestamp       = ctx.timestamp();
     this.maxPoolSize        = ctx.maxPoolSize();
     this.minPoolSize        = ctx.minPoolSize();

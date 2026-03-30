@@ -53,10 +53,12 @@ import java.util.logging.Logger;
  * Maps UCP event types to specific JFR event classes and handles
  * recording.
  */
-public class UCPEventFactory {
+public final class UCPEventFactory {
+
+  private UCPEventFactory() {}
 
   private static final Logger LOGGER =
-    Logger.getLogger(UCPEventFactory.class.getName());
+      Logger.getLogger(UCPEventFactory.class.getName());
 
   /**
    * Creates a JFR event instance for the specified UCP event type.
@@ -67,7 +69,7 @@ public class UCPEventFactory {
    * @throws NullPointerException if parameters are null
    */
   static Event createEvent(
-    UCPEventListener.EventType type, UCPEventContext ctx) {
+      UCPEventListener.EventType type, UCPEventContext ctx) {
     Objects.requireNonNull(type, "EventType cannot be null");
     Objects.requireNonNull(ctx, "UCPEventContext cannot be null");
 
@@ -92,7 +94,7 @@ public class UCPEventFactory {
 
       default:
         LOGGER.fine(() ->
-          "Unrecognized UCP EventType ignored by JFR provider: " + type);
+            "Unrecognized UCP EventType ignored by JFR provider: " + type);
         return null;
     }
   }
@@ -106,7 +108,7 @@ public class UCPEventFactory {
    * @throws NullPointerException if parameters are null
    */
   public static void recordEvent(
-    UCPEventListener.EventType type, UCPEventContext ctx) {
+      UCPEventListener.EventType type, UCPEventContext ctx) {
     Objects.requireNonNull(type, "EventType cannot be null");
     Objects.requireNonNull(ctx, "UCPEventContext cannot be null");
 
@@ -116,8 +118,6 @@ public class UCPEventFactory {
       return;
     }
 
-    if (event.shouldCommit()) {
-      event.commit();
-    }
+    event.commit();
   }
 }
