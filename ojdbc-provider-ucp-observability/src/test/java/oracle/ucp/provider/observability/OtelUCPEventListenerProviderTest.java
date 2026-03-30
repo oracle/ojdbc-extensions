@@ -49,7 +49,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
+import java.io.ByteArrayOutputStream;
+import java.io.NotSerializableException;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -72,6 +81,46 @@ class OtelUCPEventListenerProviderTest {
     when(mockContext.getAverageConnectionWaitTime()).thenReturn(42L);
   }
 
+  /**
+   * Resets the shared mockContext and re-applies all standard stubs.
+   *
+   * <p>Use this helper in tests that call reset() mid-test (e.g. after a
+   * POOL_DESTROYED call) and need to verify interaction counts on subsequent
+   * events without contamination from earlier invocations.</p>
+   */
+  private void resetAndRestubContext() {
+    reset(mockContext);
+    when(mockContext.poolName()).thenReturn("TestPool");
+    when(mockContext.maxPoolSize()).thenReturn(50);
+    when(mockContext.minPoolSize()).thenReturn(2);
+    when(mockContext.borrowedConnectionsCount()).thenReturn(3);
+    when(mockContext.availableConnectionsCount()).thenReturn(5);
+    when(mockContext.closedConnections()).thenReturn(1);
+    when(mockContext.createdConnections()).thenReturn(9);
+    when(mockContext.getAverageConnectionWaitTime()).thenReturn(42L);
+  }
+
+  /**
+   * Creates a fully-stubbed mock context for the given pool name.
+   * Used in multi-pool and concurrency tests to avoid shared state.
+   */
+  private UCPEventContext newFullyStubbed(String poolName) {
+    UCPEventContext ctx = mock(UCPEventContext.class);
+    when(ctx.poolName()).thenReturn(poolName);
+    when(ctx.maxPoolSize()).thenReturn(10);
+    when(ctx.minPoolSize()).thenReturn(1);
+    when(ctx.borrowedConnectionsCount()).thenReturn(1);
+    when(ctx.availableConnectionsCount()).thenReturn(1);
+    when(ctx.closedConnections()).thenReturn(0);
+    when(ctx.createdConnections()).thenReturn(1);
+    when(ctx.getAverageConnectionWaitTime()).thenReturn(10L);
+    return ctx;
+  }
+
+
+  // ---------------------------------------------------------------------------
+  // Provider contract
+  // ---------------------------------------------------------------------------
 
   @Nested
   @DisplayName("OtelUCPEventListenerProvider")
@@ -99,6 +148,7 @@ class OtelUCPEventListenerProviderTest {
     @Test
     @DisplayName("getListener() returns a non-null listener when config is null")
     void testGetListenerWithNullConfig() {
+      // config is intentionally unused by the provider — null must be safe.
       assertNotNull(provider.getListener(null));
     }
 
@@ -116,11 +166,15 @@ class OtelUCPEventListenerProviderTest {
       UCPEventListener listener = provider.getListener(Collections.emptyMap());
       for (EventType type : EventType.values()) {
         assertTrue(listener.isDesiredEvent(type),
-          "Expected isDesiredEvent to return true for: " + type);
+            "Expected isDesiredEvent to return true for: " + type);
       }
     }
   }
 
+
+  // ---------------------------------------------------------------------------
+  // Null safety
+  // ---------------------------------------------------------------------------
 
   @Nested
   @DisplayName("UCPEventListener — null safety")
@@ -131,7 +185,7 @@ class OtelUCPEventListenerProviderTest {
     @BeforeEach
     void setUp() {
       listener = new OtelUCPEventListenerProvider()
-        .getListener(Collections.emptyMap());
+          .getListener(Collections.emptyMap());
     }
 
     @Test
@@ -144,7 +198,7 @@ class OtelUCPEventListenerProviderTest {
     @DisplayName("onUCPEvent() does not throw when context is null")
     void testOnUCPEventNullContext() {
       assertDoesNotThrow(() ->
-        listener.onUCPEvent(EventType.CONNECTION_BORROWED, null));
+          listener.onUCPEvent(EventType.CONNECTION_BORROWED, null));
     }
 
     @Test
@@ -154,13 +208,25 @@ class OtelUCPEventListenerProviderTest {
     }
 
     @Test
-    @DisplayName("onUCPEvent() does not throw when poolName() returns null")
+    @DisplayName("onUCPEvent() does not throw and reads no fields when poolName() returns null")
     void testOnUCPEventNullPoolName() {
+      // The null-poolName guard returns immediately — no context fields beyond
+      // poolName() itself should be accessed after the early return.
       when(mockContext.poolName()).thenReturn(null);
       assertDoesNotThrow(() ->
-        listener.onUCPEvent(EventType.CONNECTION_BORROWED, mockContext));
+          listener.onUCPEvent(EventType.CONNECTION_BORROWED, mockContext));
+
+      verify(mockContext, never()).borrowedConnectionsCount();
+      verify(mockContext, never()).availableConnectionsCount();
+      verify(mockContext, never()).maxPoolSize();
+      verify(mockContext, never()).createdConnections();
     }
   }
+
+
+  // ---------------------------------------------------------------------------
+  // Robustness — all event types
+  // ---------------------------------------------------------------------------
 
   @Nested
   @DisplayName("UCPEventListener — robustness")
@@ -171,9 +237,16 @@ class OtelUCPEventListenerProviderTest {
     @BeforeEach
     void setUp() {
       listener = new OtelUCPEventListenerProvider()
-        .getListener(Collections.emptyMap());
+          .getListener(Collections.emptyMap());
     }
 
+    /**
+     * Verifies that onUCPEvent() does not throw for any EventType.
+     *
+     * <p>The enum values are iterated in declaration order. POOL_DESTROYED
+     * removes the pool state entry — subsequent events simply re-create it
+     * via computeIfAbsent, so ordering has no correctness impact here.</p>
+     */
     @ParameterizedTest(name = "onUCPEvent() does not throw for EventType.{0}")
     @EnumSource(EventType.class)
     @DisplayName("onUCPEvent() does not throw for any known EventType")
@@ -195,9 +268,14 @@ class OtelUCPEventListenerProviderTest {
       when(zeroContext.minPoolSize()).thenReturn(0);
 
       assertDoesNotThrow(() ->
-        listener.onUCPEvent(EventType.CONNECTION_BORROWED, zeroContext));
+          listener.onUCPEvent(EventType.CONNECTION_BORROWED, zeroContext));
     }
   }
+
+
+  // ---------------------------------------------------------------------------
+  // Context field access — what gets read, when
+  // ---------------------------------------------------------------------------
 
   @Nested
   @DisplayName("UCPEventListener — context field access")
@@ -208,36 +286,60 @@ class OtelUCPEventListenerProviderTest {
     @BeforeEach
     void setUp() {
       listener = new OtelUCPEventListenerProvider()
-        .getListener(Collections.emptyMap());
+          .getListener(Collections.emptyMap());
     }
 
     @Test
-    @DisplayName("poolName() is always read — used as metric attribute key")
-    void testPoolNameAlwaysRead() {
+    @DisplayName("poolName() is read exactly once per event — used as metric attribute key")
+    void testPoolNameReadExactlyOnce() {
       listener.onUCPEvent(EventType.POOL_CREATED, mockContext);
-      verify(mockContext, atLeastOnce()).poolName();
+      verify(mockContext, times(1)).poolName();
     }
 
     @Test
-    @DisplayName("borrowedConnectionsCount() and availableConnectionsCount() are read on every event")
-    void testUsageFieldsReadOnEveryEvent() {
+    @DisplayName("borrowedConnectionsCount() and availableConnectionsCount() are read on a non-lifecycle event")
+    void testUsageFieldsReadOnNonLifecycleEvent() {
+      // "Every non-POOL_DESTROYED event" — CONNECTION_RETURNED is representative.
+      // POOL_DESTROYED is excluded because its snapshot is conditional on pool
+      // state existing; this test focuses on the unconditional snapshot path.
       listener.onUCPEvent(EventType.CONNECTION_RETURNED, mockContext);
       verify(mockContext).borrowedConnectionsCount();
       verify(mockContext).availableConnectionsCount();
     }
 
     @Test
-    @DisplayName("createdConnections() and closedConnections() are read on every event")
-    void testLifetimeFieldsReadOnEveryEvent() {
+    @DisplayName("borrowedConnectionsCount() and availableConnectionsCount() are read on a maintenance event")
+    void testUsageFieldsReadOnMaintenanceEvent() {
+      listener.onUCPEvent(EventType.POOL_REFRESHED, mockContext);
+      verify(mockContext).borrowedConnectionsCount();
+      verify(mockContext).availableConnectionsCount();
+    }
+
+    @Test
+    @DisplayName("createdConnections() and closedConnections() are read on a non-lifecycle event")
+    void testLifetimeFieldsReadOnNonLifecycleEvent() {
       listener.onUCPEvent(EventType.CONNECTION_RETURNED, mockContext);
       verify(mockContext).createdConnections();
       verify(mockContext).closedConnections();
     }
 
     @Test
-    @DisplayName("maxPoolSize() and minPoolSize() are read on POOL_CREATED")
-    void testConfigFieldsReadOnPoolCreated() {
-      listener.onUCPEvent(EventType.POOL_CREATED, mockContext);
+    @DisplayName("createdConnections() and closedConnections() are read on a maintenance event")
+    void testLifetimeFieldsReadOnMaintenanceEvent() {
+      listener.onUCPEvent(EventType.POOL_REFRESHED, mockContext);
+      verify(mockContext).createdConnections();
+      verify(mockContext).closedConnections();
+    }
+
+    // --- Config fields (maxPoolSize / minPoolSize) — lifecycle events only ----
+
+    @ParameterizedTest(name = "maxPoolSize() and minPoolSize() are read on {0}")
+    @EnumSource(value = EventType.class, names = {
+        "POOL_CREATED", "POOL_STARTING", "POOL_STARTED", "POOL_STOPPED"
+    })
+    @DisplayName("maxPoolSize() and minPoolSize() are read on all non-destroy lifecycle events")
+    void testConfigFieldsReadOnLifecycleEvents(EventType type) {
+      listener.onUCPEvent(type, mockContext);
       verify(mockContext).maxPoolSize();
       verify(mockContext).minPoolSize();
     }
@@ -245,17 +347,12 @@ class OtelUCPEventListenerProviderTest {
     @Test
     @DisplayName("maxPoolSize() and minPoolSize() are read on POOL_DESTROYED")
     void testConfigFieldsReadOnPoolDestroyed() {
-
+      // POOL_DESTROYED removes the poolStates entry before calling recordSnapshot.
+      // The entry must exist first — seed it via POOL_CREATED so that the remove
+      // finds a non-null PoolState and recordSnapshot is actually invoked.
       listener.onUCPEvent(EventType.POOL_CREATED, mockContext);
-      reset(mockContext);
-      when(mockContext.poolName()).thenReturn("TestPool");
-      when(mockContext.borrowedConnectionsCount()).thenReturn(3);
-      when(mockContext.availableConnectionsCount()).thenReturn(5);
-      when(mockContext.createdConnections()).thenReturn(9);
-      when(mockContext.closedConnections()).thenReturn(1);
-      when(mockContext.getAverageConnectionWaitTime()).thenReturn(42L);
-      when(mockContext.maxPoolSize()).thenReturn(50);
-      when(mockContext.minPoolSize()).thenReturn(2);
+      resetAndRestubContext();
+
       listener.onUCPEvent(EventType.POOL_DESTROYED, mockContext);
       verify(mockContext).maxPoolSize();
       verify(mockContext).minPoolSize();
@@ -269,78 +366,127 @@ class OtelUCPEventListenerProviderTest {
       verify(mockContext, never()).minPoolSize();
     }
 
-    @Test
-    @DisplayName("maxPoolSize() and minPoolSize() are NOT read on maintenance events")
-    void testConfigFieldsNotReadOnMaintenanceEvents() {
-      listener.onUCPEvent(EventType.POOL_REFRESHED, mockContext);
-      verify(mockContext, never()).maxPoolSize();
-      verify(mockContext, never()).minPoolSize();
-
-      reset(mockContext);
-      when(mockContext.poolName()).thenReturn("TestPool");
-      when(mockContext.borrowedConnectionsCount()).thenReturn(3);
-      when(mockContext.availableConnectionsCount()).thenReturn(5);
-      when(mockContext.createdConnections()).thenReturn(9);
-      when(mockContext.closedConnections()).thenReturn(1);
-      when(mockContext.getAverageConnectionWaitTime()).thenReturn(42L);
-
-      listener.onUCPEvent(EventType.POOL_RECYCLED, mockContext);
+    @ParameterizedTest(name = "maxPoolSize() and minPoolSize() are NOT read on {0}")
+    @EnumSource(value = EventType.class, names = {
+        "POOL_REFRESHED", "POOL_RECYCLED", "POOL_PURGED"
+    })
+    @DisplayName("maxPoolSize() and minPoolSize() are NOT read on any maintenance event")
+    void testConfigFieldsNotReadOnMaintenanceEvents(EventType type) {
+      listener.onUCPEvent(type, mockContext);
       verify(mockContext, never()).maxPoolSize();
       verify(mockContext, never()).minPoolSize();
     }
 
+    // --- Wait time ------------------------------------------------------------
+
     @Test
-    @DisplayName("getAverageConnectionWaitTime() is read on CONNECTION_BORROWED when > 0")
-    void testWaitTimeReadOnBorrowWhenPositive() {
+    @DisplayName("getAverageConnectionWaitTime() is read exactly once on CONNECTION_BORROWED when > 0")
+    void testWaitTimeReadOnceOnBorrowWhenPositive() {
       when(mockContext.getAverageConnectionWaitTime()).thenReturn(100L);
       listener.onUCPEvent(EventType.CONNECTION_BORROWED, mockContext);
-      verify(mockContext, atLeastOnce()).getAverageConnectionWaitTime();
+      // Verify exactly once: the provider caches the value in a local variable
+      // to avoid a redundant second call inside the zero-guard branch.
+      verify(mockContext, times(1)).getAverageConnectionWaitTime();
     }
 
     @Test
-    @DisplayName("getAverageConnectionWaitTime() is NOT recorded on CONNECTION_BORROWED when 0")
-    void testWaitTimeNotRecordedWhenZero() {
-
+    @DisplayName("getAverageConnectionWaitTime() is read but recording is suppressed when 0")
+    void testWaitTimeReadButNotRecordedWhenZero() {
       when(mockContext.getAverageConnectionWaitTime()).thenReturn(0L);
       assertDoesNotThrow(() ->
           listener.onUCPEvent(EventType.CONNECTION_BORROWED, mockContext));
+      // The branch was entered (CONNECTION_BORROWED) — the method must have been
+      // called once to evaluate the zero guard. No exception means zero was
+      // correctly suppressed rather than passed to histogram.record().
+      verify(mockContext, times(1)).getAverageConnectionWaitTime();
     }
 
-    @Test
-    @DisplayName("getAverageConnectionWaitTime() is NOT read on non-borrow events")
-    void testWaitTimeNotReadOnNonBorrowEvents() {
-      listener.onUCPEvent(EventType.CONNECTION_RETURNED, mockContext);
-      verify(mockContext, never()).getAverageConnectionWaitTime();
-
-      reset(mockContext);
-      when(mockContext.poolName()).thenReturn("TestPool");
-      when(mockContext.borrowedConnectionsCount()).thenReturn(3);
-      when(mockContext.availableConnectionsCount()).thenReturn(5);
-      when(mockContext.createdConnections()).thenReturn(9);
-      when(mockContext.closedConnections()).thenReturn(1);
-
-      listener.onUCPEvent(EventType.POOL_REFRESHED, mockContext);
+    @ParameterizedTest(name = "getAverageConnectionWaitTime() is NOT read on {0}")
+    @EnumSource(value = EventType.class, names = {
+        "CONNECTION_CREATED", "CONNECTION_RETURNED", "CONNECTION_CLOSED",
+        "POOL_CREATED", "POOL_STARTING", "POOL_STARTED", "POOL_STOPPED",
+        "POOL_REFRESHED", "POOL_RECYCLED", "POOL_PURGED"
+    })
+    @DisplayName("getAverageConnectionWaitTime() is NOT read on any non-borrow event")
+    void testWaitTimeNotReadOnNonBorrowEvents(EventType type) {
+      listener.onUCPEvent(type, mockContext);
       verify(mockContext, never()).getAverageConnectionWaitTime();
     }
 
+    // --- Removed fields -------------------------------------------------------
+
     @Test
-    @DisplayName("totalConnections() is never read — removed from provider")
+    @DisplayName("totalConnections() is never read — not used by the provider")
     void testTotalConnectionsNeverRead() {
       for (EventType type : EventType.values()) {
-        reset(mockContext);
-        when(mockContext.poolName()).thenReturn("TestPool");
-        when(mockContext.borrowedConnectionsCount()).thenReturn(3);
-        when(mockContext.availableConnectionsCount()).thenReturn(5);
-        when(mockContext.createdConnections()).thenReturn(9);
-        when(mockContext.closedConnections()).thenReturn(1);
-        when(mockContext.getAverageConnectionWaitTime()).thenReturn(42L);
-        when(mockContext.maxPoolSize()).thenReturn(50);
-        when(mockContext.minPoolSize()).thenReturn(2);
+        resetAndRestubContext();
         listener.onUCPEvent(type, mockContext);
         verify(mockContext, never()).totalConnections();
       }
     }
   }
+
+
+  // ---------------------------------------------------------------------------
+  // Pool state lifecycle
+  // ---------------------------------------------------------------------------
+
+  @Nested
+  @DisplayName("UCPEventListener — pool state lifecycle")
+  class ListenerPoolStateTests {
+
+    private UCPEventListener listener;
+
+    @BeforeEach
+    void setUp() {
+      listener = new OtelUCPEventListenerProvider()
+          .getListener(Collections.emptyMap());
+    }
+
+    @Test
+    @DisplayName("POOL_DESTROYED with no prior registration skips recordSnapshot gracefully")
+    void testPoolDestroyedWithoutPriorRegistration() {
+      // Fire POOL_DESTROYED on a pool that was never registered — the null-state
+      // guard inside onUCPEvent should prevent recordSnapshot from being called.
+      UCPEventContext unknownPool = mock(UCPEventContext.class);
+      when(unknownPool.poolName()).thenReturn("NeverRegisteredPool");
+
+      assertDoesNotThrow(() ->
+          listener.onUCPEvent(EventType.POOL_DESTROYED, unknownPool));
+
+      // recordSnapshot was skipped — no context fields should have been read.
+      verify(unknownPool, never()).borrowedConnectionsCount();
+      verify(unknownPool, never()).maxPoolSize();
+    }
+
+    @Test
+    @DisplayName("Second POOL_DESTROYED on same pool after first is already cleaned up skips silently")
+    void testDoublePoolDestroyed() {
+      // First destroy: pool state exists and is removed, recordSnapshot is called.
+      listener.onUCPEvent(EventType.POOL_CREATED, mockContext);
+      listener.onUCPEvent(EventType.POOL_DESTROYED, mockContext);
+
+      // Second destroy: pool state is gone — poolStates.remove() returns null
+      // and recordSnapshot must be skipped entirely.
+      UCPEventContext secondDestroy = mock(UCPEventContext.class);
+      when(secondDestroy.poolName()).thenReturn("TestPool");
+      assertDoesNotThrow(() ->
+          listener.onUCPEvent(EventType.POOL_DESTROYED, secondDestroy));
+      verify(secondDestroy, never()).borrowedConnectionsCount();
+    }
+
+    @Test
+    @DisplayName("Listener throws NotSerializableException on serialization attempt")
+    void testListenerIsNotSerializable() {
+      assertThrows(NotSerializableException.class, () ->
+          new ObjectOutputStream(new ByteArrayOutputStream()).writeObject(listener));
+    }
+  }
+
+
+  // ---------------------------------------------------------------------------
+  // Multi-pool independence and concurrency
+  // ---------------------------------------------------------------------------
 
   @Nested
   @DisplayName("UCPEventListener — multi-pool independence")
@@ -357,25 +503,8 @@ class OtelUCPEventListenerProviderTest {
     @Test
     @DisplayName("Multiple pools emit events independently without interference")
     void testMultiplePoolsIndependent() {
-      UCPEventContext pool1 = mock(UCPEventContext.class);
-      when(pool1.poolName()).thenReturn("Pool1");
-      when(pool1.borrowedConnectionsCount()).thenReturn(2);
-      when(pool1.availableConnectionsCount()).thenReturn(3);
-      when(pool1.getAverageConnectionWaitTime()).thenReturn(10L);
-      when(pool1.maxPoolSize()).thenReturn(10);
-      when(pool1.minPoolSize()).thenReturn(1);
-      when(pool1.createdConnections()).thenReturn(5);
-      when(pool1.closedConnections()).thenReturn(0);
-
-      UCPEventContext pool2 = mock(UCPEventContext.class);
-      when(pool2.poolName()).thenReturn("Pool2");
-      when(pool2.borrowedConnectionsCount()).thenReturn(7);
-      when(pool2.availableConnectionsCount()).thenReturn(1);
-      when(pool2.getAverageConnectionWaitTime()).thenReturn(50L);
-      when(pool2.maxPoolSize()).thenReturn(20);
-      when(pool2.minPoolSize()).thenReturn(2);
-      when(pool2.createdConnections()).thenReturn(8);
-      when(pool2.closedConnections()).thenReturn(1);
+      UCPEventContext pool1 = newFullyStubbed("Pool1");
+      UCPEventContext pool2 = newFullyStubbed("Pool2");
 
       assertDoesNotThrow(() -> {
         listener.onUCPEvent(EventType.CONNECTION_BORROWED, pool1);
@@ -383,6 +512,12 @@ class OtelUCPEventListenerProviderTest {
         listener.onUCPEvent(EventType.CONNECTION_RETURNED, pool1);
         listener.onUCPEvent(EventType.POOL_DESTROYED, pool2);
       });
+
+      // Each pool's context was accessed independently — poolName() is called
+      // exactly once per onUCPEvent() invocation (at the top of the method),
+      // so two events fired against a pool means two poolName() reads.
+      verify(pool1, atLeast(2)).poolName(); // CONNECTION_BORROWED + CONNECTION_RETURNED = 2 calls
+      verify(pool2, atLeast(2)).poolName(); // CONNECTION_BORROWED + POOL_DESTROYED = 2 calls
     }
 
     @Test
@@ -393,6 +528,35 @@ class OtelUCPEventListenerProviderTest {
         listener.onUCPEvent(EventType.POOL_CREATED, mockContext);
         listener.onUCPEvent(EventType.CONNECTION_BORROWED, mockContext);
       });
+    }
+
+    @Test
+    @DisplayName("Concurrent events from multiple pools do not cause errors")
+    void testConcurrentMultiPoolEvents() throws Exception {
+      // Validates that ConcurrentHashMap's thread-safety holds under concurrent
+      // access from multiple pools firing events simultaneously on the singleton
+      // listener. Each thread owns a distinct pool name to ensure independent
+      // map entries without artificial serialisation.
+      int threads = 8;
+      ExecutorService exec = Executors.newFixedThreadPool(threads);
+      List<Future<?>> futures = new ArrayList<>();
+
+      for (int i = 0; i < threads; i++) {
+        UCPEventContext ctx = newFullyStubbed("ConcurrentPool-" + i);
+        futures.add(exec.submit(() -> {
+          listener.onUCPEvent(EventType.POOL_CREATED, ctx);
+          listener.onUCPEvent(EventType.CONNECTION_BORROWED, ctx);
+          listener.onUCPEvent(EventType.CONNECTION_RETURNED, ctx);
+          listener.onUCPEvent(EventType.POOL_DESTROYED, ctx);
+        }));
+      }
+
+      exec.shutdown();
+      for (Future<?> f : futures) {
+        // get(timeout) re-throws any exception thrown on the worker thread and
+        // also fails fast if a thread deadlocks rather than hanging indefinitely.
+        assertDoesNotThrow(() -> f.get(5, TimeUnit.SECONDS));
+      }
     }
   }
 }

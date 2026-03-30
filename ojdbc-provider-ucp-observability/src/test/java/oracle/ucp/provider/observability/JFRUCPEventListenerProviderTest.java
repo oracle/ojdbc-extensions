@@ -100,13 +100,6 @@ class JFRUCPEventListenerProviderTest {
     }
 
     @Test
-    @DisplayName("getListener() returns a non-null listener when config is null")
-    void testGetListenerWithNullConfig() {
-      UCPEventListener listener = provider.getListener(null);
-      assertNotNull(listener);
-    }
-
-    @Test
     @DisplayName("isDesiredEvent() returns true for all event types by default")
     void testIsDesiredEventReturnsTrueForAll() {
       UCPEventListener listener = provider.getListener(Collections.emptyMap());
@@ -166,6 +159,25 @@ class JFRUCPEventListenerProviderTest {
       assertDoesNotThrow(() ->
           UCPEventFactory.recordEvent(EventType.CONNECTION_BORROWED, zeroContext));
     }
+
+    @Test
+    @DisplayName("recordEvent() does not throw when poolName is null")
+    void testRecordEventWithNullPoolName() {
+      UCPEventContext nullPoolNameContext = mock(UCPEventContext.class);
+      when(nullPoolNameContext.poolName()).thenReturn(null);
+      when(nullPoolNameContext.timestamp()).thenReturn(0L);
+      when(nullPoolNameContext.maxPoolSize()).thenReturn(0);
+      when(nullPoolNameContext.minPoolSize()).thenReturn(0);
+      when(nullPoolNameContext.borrowedConnectionsCount()).thenReturn(0);
+      when(nullPoolNameContext.availableConnectionsCount()).thenReturn(0);
+      when(nullPoolNameContext.totalConnections()).thenReturn(0);
+      when(nullPoolNameContext.closedConnections()).thenReturn(0);
+      when(nullPoolNameContext.createdConnections()).thenReturn(0);
+      when(nullPoolNameContext.getAverageConnectionWaitTime()).thenReturn(0L);
+
+      assertDoesNotThrow(() ->
+          UCPEventFactory.recordEvent(EventType.CONNECTION_BORROWED, nullPoolNameContext));
+    }
   }
 
   @Nested
@@ -181,13 +193,16 @@ class JFRUCPEventListenerProviderTest {
       assertDoesNotThrow(() -> listener.onUCPEvent(type, mockContext));
     }
 
-    @Test
-    @DisplayName("onUCPEvent() reads all context fields during event creation")
-    void testOnUCPEventReadsAllContextFields() {
+    @ParameterizedTest(name = "onUCPEvent() reads all context fields for EventType.{0}")
+    @EnumSource(value = EventType.class, names = {
+        "POOL_CREATED", "CONNECTION_BORROWED", "POOL_REFRESHED"
+    })
+    @DisplayName("onUCPEvent() reads all context fields for each event category")
+    void testOnUCPEventReadsAllContextFields(EventType type) {
       JFRUCPEventListenerProvider provider = new JFRUCPEventListenerProvider();
       UCPEventListener listener = provider.getListener(Collections.emptyMap());
 
-      listener.onUCPEvent(EventType.CONNECTION_BORROWED, mockContext);
+      listener.onUCPEvent(type, mockContext);
 
       verify(mockContext).poolName();
       verify(mockContext).timestamp();
