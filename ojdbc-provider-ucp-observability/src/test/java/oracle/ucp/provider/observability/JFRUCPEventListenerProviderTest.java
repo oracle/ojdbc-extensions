@@ -105,7 +105,7 @@ class JFRUCPEventListenerProviderTest {
       UCPEventListener listener = provider.getListener(Collections.emptyMap());
       for (EventType type : EventType.values()) {
         assertTrue(listener.isDesiredEvent(type),
-            "Expected isDesiredEvent to return true for: " + type);
+          "Expected isDesiredEvent to return true for: " + type);
       }
     }
   }
@@ -119,14 +119,14 @@ class JFRUCPEventListenerProviderTest {
     @DisplayName("recordEvent() throws NullPointerException when EventType is null")
     void testRecordEventNullType() {
       assertThrows(NullPointerException.class, () ->
-          UCPEventFactory.recordEvent(null, mockContext));
+        UCPEventFactory.recordEvent(null, mockContext));
     }
 
     @Test
     @DisplayName("recordEvent() throws NullPointerException when context is null")
     void testRecordEventNullContext() {
       assertThrows(NullPointerException.class, () ->
-          UCPEventFactory.recordEvent(EventType.CONNECTION_BORROWED, null));
+        UCPEventFactory.recordEvent(EventType.CONNECTION_BORROWED, null));
     }
   }
 
@@ -157,7 +157,7 @@ class JFRUCPEventListenerProviderTest {
       when(zeroContext.getAverageConnectionWaitTime()).thenReturn(0L);
 
       assertDoesNotThrow(() ->
-          UCPEventFactory.recordEvent(EventType.CONNECTION_BORROWED, zeroContext));
+        UCPEventFactory.recordEvent(EventType.CONNECTION_BORROWED, zeroContext));
     }
 
     @Test
@@ -176,7 +176,7 @@ class JFRUCPEventListenerProviderTest {
       when(nullPoolNameContext.getAverageConnectionWaitTime()).thenReturn(0L);
 
       assertDoesNotThrow(() ->
-          UCPEventFactory.recordEvent(EventType.CONNECTION_BORROWED, nullPoolNameContext));
+        UCPEventFactory.recordEvent(EventType.CONNECTION_BORROWED, nullPoolNameContext));
     }
   }
 
@@ -195,7 +195,7 @@ class JFRUCPEventListenerProviderTest {
 
     @ParameterizedTest(name = "onUCPEvent() reads all context fields for EventType.{0}")
     @EnumSource(value = EventType.class, names = {
-        "POOL_CREATED", "CONNECTION_BORROWED", "POOL_REFRESHED"
+      "POOL_CREATED", "CONNECTION_BORROWED", "POOL_REFRESHED"
     })
     @DisplayName("onUCPEvent() reads all context fields for each event category")
     void testOnUCPEventReadsAllContextFields(EventType type) {
