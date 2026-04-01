@@ -174,7 +174,7 @@ public final class OtelUCPEventListenerProvider
     // cohesive block. The Meter object itself is lightweight (no pooled resources),
     // so the marginal GC cost of holding the reference is negligible.
     private final Meter meter =
-        GlobalOpenTelemetry.getMeter("oracle.ucp");
+      GlobalOpenTelemetry.getMeter("oracle.ucp");
 
     // Spec-aligned: db.client.connection.usage  (LongGauge, state=used|idle)
     // Spec says UpDownCounter named db.client.connection.count. We deviate on
@@ -185,9 +185,9 @@ public final class OtelUCPEventListenerProvider
     // drift risk. A single instrument is registered; the state attribute
     // differentiates used vs idle at the data level.
     private final LongGauge connectionUsage =
-        meter.gaugeBuilder("db.client.connection.usage")
-            .setDescription("The number of connections that are currently in the state described by the state attribute.")
-            .setUnit("{connection}").ofLongs().build();
+      meter.gaugeBuilder("db.client.connection.usage")
+        .setDescription("The number of connections that are currently in the state described by the state attribute.")
+        .setUnit("{connection}").ofLongs().build();
 
     // Spec-aligned: db.client.connection.max  (LongGauge)
     // Spec says UpDownCounter, but maxPoolSize is a configuration value set at
@@ -195,9 +195,9 @@ public final class OtelUCPEventListenerProvider
     // value directly, which is semantically correct for a configured constant.
     // Recorded only on pool lifecycle events to avoid per-connection overhead.
     private final LongGauge connectionMax =
-        meter.gaugeBuilder("db.client.connection.max")
-            .setDescription("The maximum number of open connections allowed.")
-            .setUnit("{connection}").ofLongs().build();
+      meter.gaugeBuilder("db.client.connection.max")
+        .setDescription("The maximum number of open connections allowed.")
+        .setUnit("{connection}").ofLongs().build();
 
     // Spec-aligned: db.client.connection.idle.min  (LongGauge)
     // Same reasoning as db.client.connection.max above.
@@ -205,13 +205,13 @@ public final class OtelUCPEventListenerProvider
     // idle floor. See class-level Javadoc for the full limitation note.
     // Recorded only on pool lifecycle events to avoid per-connection overhead.
     private final LongGauge connectionIdleMin =
-        meter.gaugeBuilder("db.client.connection.idle.min")
-            .setDescription(
-                "Approximation of the minimum number of idle open connections allowed. " +
-                    "Sourced from UCP's minPoolSize (minimum total pool size), which is the " +
-                    "closest value UCP's event API exposes. May differ from true idle minimum " +
-                    "when connections are actively borrowed.")
-            .setUnit("{connection}").ofLongs().build();
+      meter.gaugeBuilder("db.client.connection.idle.min")
+        .setDescription(
+          "Approximation of the minimum number of idle open connections allowed. " +
+          "Sourced from UCP's minPoolSize (minimum total pool size), which is the " +
+          "closest value UCP's event API exposes. May differ from true idle minimum " +
+          "when connections are actively borrowed.")
+        .setUnit("{connection}").ofLongs().build();
 
     // Spec-aligned: db.client.connection.wait_time  (DoubleHistogram, unit: s)
     // DoubleHistogram (not Long) because fractional seconds matter:
@@ -221,11 +221,11 @@ public final class OtelUCPEventListenerProvider
     // UCP value is in ms — divided by 1000.0 before recording.
     // See class-level Javadoc for the full limitation note.
     private final DoubleHistogram waitTime =
-        meter.histogramBuilder("db.client.connection.wait_time")
-            .setDescription(
-                "Approximation of borrow wait time based on UCP's pool-wide cumulative " +
-                    "average. Recorded on CONNECTION_BORROWED events only when wait time > 0.")
-            .setUnit("s").build();
+      meter.histogramBuilder("db.client.connection.wait_time")
+        .setDescription(
+          "Approximation of borrow wait time based on UCP's pool-wide cumulative " +
+          "average. Recorded on CONNECTION_BORROWED events only when wait time > 0.")
+        .setUnit("s").build();
 
     // UCP-specific: db.client.connection.established  (LongGauge)
     // Cumulative count of physical connections ever opened since pool start.
@@ -235,16 +235,16 @@ public final class OtelUCPEventListenerProvider
     // with delta=0 produces no data point at all, making the metric invisible.
     // LongGauge.set() always records the current value, even when it is 0.
     private final LongGauge connectionEstablished =
-        meter.gaugeBuilder("db.client.connection.established")
-            .setDescription("Cumulative number of physical connections opened since pool start.")
-            .setUnit("{connection}").ofLongs().build();
+      meter.gaugeBuilder("db.client.connection.established")
+        .setDescription("Cumulative number of physical connections opened since pool start.")
+        .setUnit("{connection}").ofLongs().build();
 
     // UCP-specific: db.client.connection.closed  (LongGauge)
     // Same reasoning as db.client.connection.established above.
     private final LongGauge connectionClosed =
-        meter.gaugeBuilder("db.client.connection.closed")
-            .setDescription("Cumulative number of physical connections closed since pool start.")
-            .setUnit("{connection}").ofLongs().build();
+      meter.gaugeBuilder("db.client.connection.closed")
+        .setDescription("Cumulative number of physical connections closed since pool start.")
+        .setUnit("{connection}").ofLongs().build();
 
     // -------------------------------------------------------------------------
     // Per-pool state — holds pre-built Attributes objects reused on every event
@@ -262,8 +262,8 @@ public final class OtelUCPEventListenerProvider
       final Attributes attrsIdle;
 
       PoolState(String poolName,
-                AttributeKey<String> poolNameKey,
-                AttributeKey<String> stateKey) {
+        AttributeKey<String> poolNameKey,
+        AttributeKey<String> stateKey) {
         this.attrs     = Attributes.of(poolNameKey, poolName);
         this.attrsUsed = Attributes.of(poolNameKey, poolName, stateKey, "used");
         this.attrsIdle = Attributes.of(poolNameKey, poolName, stateKey, "idle");
@@ -271,7 +271,7 @@ public final class OtelUCPEventListenerProvider
     }
 
     private final ConcurrentHashMap<String, PoolState> poolStates =
-        new ConcurrentHashMap<>();
+      new ConcurrentHashMap<>();
 
     // -------------------------------------------------------------------------
     // Serialization guard
@@ -283,8 +283,8 @@ public final class OtelUCPEventListenerProvider
 
     private void writeObject(ObjectOutputStream ignored) throws java.io.IOException {
       throw new NotSerializableException(
-          OtelUCPEventListener.class.getName() +
-              ": OTel instrument fields are not serializable.");
+        OtelUCPEventListener.class.getName() +
+          ": OTel instrument fields are not serializable.");
     }
 
     // -------------------------------------------------------------------------
@@ -346,7 +346,7 @@ public final class OtelUCPEventListenerProvider
       }
 
       PoolState state = poolStates.computeIfAbsent(
-          poolName, k -> new PoolState(k, POOL_NAME, STATE));
+        poolName, k -> new PoolState(k, POOL_NAME, STATE));
 
       recordSnapshot(eventType, ctx, state);
     }
