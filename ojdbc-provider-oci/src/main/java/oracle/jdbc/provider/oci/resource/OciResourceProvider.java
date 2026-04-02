@@ -48,6 +48,7 @@ import oracle.jdbc.provider.resource.AbstractResourceProvider;
 import oracle.jdbc.provider.resource.ResourceParameter;
 import oracle.jdbc.provider.util.Wallet;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -129,9 +130,9 @@ public abstract class OciResourceProvider
    * {@link AuthenticationMethod}
    * recognized by the {@link AuthenticationDetailsFactory}.
    */
-  private static AuthenticationMethod parseAuthenticationMethod(
+   static AuthenticationMethod parseAuthenticationMethod(
       String authenticationMethod) {
-    switch (authenticationMethod) {
+    switch (authenticationMethod.toLowerCase(Locale.ROOT)) {
       case "config-file": return CONFIG_FILE;
       case "instance-principal": return INSTANCE_PRINCIPAL;
       case "resource-principal": return RESOURCE_PRINCIPAL;
