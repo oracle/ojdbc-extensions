@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2025 Oracle and/or its affiliates.
+ ** Copyright (c) 2026 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -46,6 +46,7 @@ import oracle.ucp.events.core.UCPEventContext;
 import oracle.ucp.events.core.UCPEventListener;
 import oracle.ucp.events.core.UCPEventListenerProvider;
 
+import java.io.IOException;
 import java.io.NotSerializableException;
 import java.io.ObjectOutputStream;
 import java.util.Map;
@@ -281,7 +282,7 @@ public final class OtelUCPEventListenerProvider
     // serialization rather than letting it fail with an opaque stack trace.
     // -------------------------------------------------------------------------
 
-    private void writeObject(ObjectOutputStream ignored) throws java.io.IOException {
+    private void writeObject(ObjectOutputStream ignored) throws IOException {
       throw new NotSerializableException(
         OtelUCPEventListener.class.getName() +
           ": OTel instrument fields are not serializable.");
