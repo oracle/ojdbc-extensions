@@ -355,15 +355,13 @@ Both providers handle all twelve event types defined by `UCPEventListener.EventT
 
 | Requirement | Minimum version |
 |---|---|
-| Oracle JDBC driver | 23.26.0.0.0 |
 | Oracle UCP | 23.26.1.0.0 |
-| Java (compile) | 11 |
-| Java (runtime) | 11+ |
+| Java | 11+ |
 | OpenTelemetry API *(OTel provider only)* | 1.44.1 |
 
-The JFR provider has no runtime dependencies beyond the Oracle UCP jar and a JDK that
-supports JFR (JDK 11+). The OpenTelemetry provider requires `opentelemetry-api` on the
-classpath; the SDK and exporter are the application's responsibility.
+The JFR provider has no dependencies beyond the Oracle UCP jar and a JDK that supports JFR
+(JDK 11+). The OpenTelemetry provider requires `opentelemetry-api` on the classpath; the
+SDK and exporter are the application's responsibility.
 
 ---
 
