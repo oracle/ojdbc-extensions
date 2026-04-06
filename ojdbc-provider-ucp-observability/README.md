@@ -25,11 +25,13 @@ Both providers are registered automatically via `java.util.ServiceLoader` — no
 ## Installation
 
 ```xml
-<dependency>
-  <groupId>com.oracle.database.jdbc</groupId>
-  <artifactId>ojdbc-provider-ucp-observability</artifactId>
-  <version>1.0.6</version>
-</dependency>
+<dependencies>
+  <dependency>
+    <groupId>com.oracle.database.jdbc</groupId>
+    <artifactId>ojdbc-provider-ucp-observability</artifactId>
+    <version>1.0.6</version>
+  </dependency>
+</dependencies>
 ```
 
 ---
@@ -41,8 +43,13 @@ Two ways to activate a provider, in priority order:
 **1. Pool-level property** (highest priority) — set directly on the data source before the pool starts:
 
 ```java
-pds.setUCPEventListenerProvider("jfr-ucp-listener");
-// pds.setUCPEventListenerProvider("otel-ucp-listener");
+public class MyApp {
+  public static void main(String[] args) throws Exception {
+    PoolDataSource pds = PoolDataSourceFactory.getPoolDataSource();
+    pds.setUCPEventListenerProvider("jfr-ucp-listener");
+    // pds.setUCPEventListenerProvider("otel-ucp-listener");
+  }
+}
 ```
 
 **2. JVM system property** — applies globally to all pools in the JVM:
@@ -54,7 +61,12 @@ java -DUCPEventListenerProvider=jfr-ucp-listener -jar myapp.jar
 Or programmatically:
 
 ```java
-System.setProperty("UCPEventListenerProvider", "jfr-ucp-listener");
+public class MyApp {
+  public static void main(String[] args) throws Exception {
+    System.setProperty("UCPEventListenerProvider", "jfr-ucp-listener");
+    // System.setProperty("UCPEventListenerProvider", "otel-ucp-listener");
+  }
+}
 ```
 
 If no provider is configured, a no-op provider is used automatically with zero overhead.
@@ -140,18 +152,24 @@ Publishes UCP metrics through the [OpenTelemetry API](https://opentelemetry.io/d
 The SDK must be registered with `GlobalOpenTelemetry` **before** the pool is started. Example using the Prometheus exporter:
 
 ```java
-PrometheusHttpServer prometheusServer = PrometheusHttpServer.builder().setPort(9464).build();
+public class MyApp {
+  public static void main(String[] args) throws Exception {
+    // 1. Register the SDK before pool creation
+    PrometheusHttpServer prometheusServer = PrometheusHttpServer.builder().setPort(9464).build();
 
-SdkMeterProvider meterProvider = SdkMeterProvider.builder()
-    .registerMetricReader(prometheusServer)
-    .build();
+    SdkMeterProvider meterProvider = SdkMeterProvider.builder()
+        .registerMetricReader(prometheusServer)
+        .build();
 
-OpenTelemetrySdk.builder()
-    .setMeterProvider(meterProvider)
-    .buildAndRegisterGlobal();
+    OpenTelemetrySdk.builder()
+        .setMeterProvider(meterProvider)
+        .buildAndRegisterGlobal();
 
-// Then create and start the pool
-pds.setUCPEventListenerProvider("otel-ucp-listener");
+    // 2. Then create and start the pool
+    PoolDataSource pds = PoolDataSourceFactory.getPoolDataSource();
+    pds.setUCPEventListenerProvider("otel-ucp-listener");
+  }
+}
 ```
 
 ### Exported metrics
@@ -184,16 +202,18 @@ pds.setUCPEventListenerProvider("otel-ucp-listener");
 **1. Add the Prometheus exporter:**
 
 ```xml
-<dependency>
-  <groupId>io.opentelemetry</groupId>
-  <artifactId>opentelemetry-sdk</artifactId>
-  <version>1.44.1</version>
-</dependency>
-<dependency>
-  <groupId>io.opentelemetry</groupId>
-  <artifactId>opentelemetry-exporter-prometheus</artifactId>
-  <version>1.44.1-alpha</version>
-</dependency>
+<dependencies>
+  <dependency>
+    <groupId>io.opentelemetry</groupId>
+    <artifactId>opentelemetry-sdk</artifactId>
+    <version>1.44.1</version>
+  </dependency>
+  <dependency>
+    <groupId>io.opentelemetry</groupId>
+    <artifactId>opentelemetry-exporter-prometheus</artifactId>
+    <version>1.44.1-alpha</version>
+  </dependency>
+</dependencies>
 ```
 
 **2. Configure Prometheus:**
