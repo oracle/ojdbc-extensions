@@ -54,8 +54,6 @@ import java.time.Instant;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mockito;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -100,20 +98,8 @@ public class ObservabilityTraceEventListenerTest {
   private static final MeterBuilder meterBuilder = Mockito.mock(MeterBuilder.class);
 
   static {
-    configureOTEL();
-  }
-
-  @BeforeEach
-  void prepareGlobalOpenTelemetryAndListenerState() {
-    GlobalOpenTelemetry.resetForTest();
     GlobalOpenTelemetry.set(openTelemetry);
-    ObservabilityTraceEventListener.resetForTest();
     configureOTEL();
-  }
-
-  @AfterAll
-  static void resetGlobalOpenTelemetry() {
-    GlobalOpenTelemetry.resetForTest();
   }
 
   @ParameterizedTest(name = "JFRTraceTest - {arguments}")

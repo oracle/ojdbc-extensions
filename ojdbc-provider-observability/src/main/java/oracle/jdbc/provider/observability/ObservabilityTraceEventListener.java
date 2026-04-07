@@ -40,7 +40,6 @@ package oracle.jdbc.provider.observability;
 import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -271,26 +270,6 @@ public class ObservabilityTraceEventListener implements TraceEventListener {
   static ObservabilityTraceEventListener getOrCreateInstance(String uniqueIdentifier, 
       ObservabilityConfigurationType configurationType) {
     return INSTANCES.computeIfAbsent(uniqueIdentifier, n -> new ObservabilityTraceEventListener(n, configurationType));
-  }
-
-  static void resetForTest() {
-    INSTANCES.clear();
-    unregisterMBeans(MBEAN_OBJECT_NAME);
-    unregisterMBeans(MBEAN_OBJECT_NAME_OTEL);
-  }
-
-  private static void unregisterMBeans(String mBeanObjectNamePattern) {
-    try {
-      ObjectName pattern = new ObjectName(String.format(mBeanObjectNamePattern, "*"));
-      Set<ObjectName> objectNames = server.queryNames(pattern, null);
-      for (ObjectName objectName : objectNames) {
-        if (server.isRegistered(objectName)) {
-          server.unregisterMBean(objectName);
-        }
-      }
-    } catch (Exception e) {
-      logger.log(Level.FINE, "Could not unregister MBeans for test reset", e);
-    }
   }
 
 }
