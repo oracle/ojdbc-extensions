@@ -58,18 +58,18 @@ public final class UCPEventFactory {
   private UCPEventFactory() {}
 
   private static final Logger LOGGER =
-    Logger.getLogger(UCPEventFactory.class.getName());
+      Logger.getLogger(UCPEventFactory.class.getName());
 
   /**
    * Creates a JFR event instance for the specified UCP event type.
    *
    * @param type UCP event type
    * @param ctx  event context with pool metrics
-   * @return configured JFR event ready for recording
+   * @return configured JFR event, or {@code null} for unrecognized types
    * @throws NullPointerException if parameters are null
    */
   static Event createEvent(
-    UCPEventListener.EventType type, UCPEventContext ctx) {
+      UCPEventListener.EventType type, UCPEventContext ctx) {
     Objects.requireNonNull(type, "EventType cannot be null");
     Objects.requireNonNull(ctx, "UCPEventContext cannot be null");
 
@@ -94,21 +94,23 @@ public final class UCPEventFactory {
 
       default:
         LOGGER.fine(() ->
-          "Unrecognized UCP EventType ignored by JFR provider: " + type);
+            "Unrecognized UCP EventType ignored by JFR provider: " + type);
         return null;
     }
   }
 
   /**
-   * Creates and records a JFR event for the given UCP operation,
-   * only if JFR recording is currently active.
+   * Creates and records a JFR event for the given UCP operation.
+   *
+   * <p>Skips {@link Event#commit()} when JFR has no active recording for
+   * this event type, avoiding serialisation overhead on the hot path.
    *
    * @param type UCP event type to record
    * @param ctx  event context with pool metrics
    * @throws NullPointerException if parameters are null
    */
   public static void recordEvent(
-    UCPEventListener.EventType type, UCPEventContext ctx) {
+      UCPEventListener.EventType type, UCPEventContext ctx) {
     Objects.requireNonNull(type, "EventType cannot be null");
     Objects.requireNonNull(ctx, "UCPEventContext cannot be null");
 
@@ -118,6 +120,8 @@ public final class UCPEventFactory {
       return;
     }
 
-    event.commit();
+    if (event.isEnabled()) {
+      event.commit();
+    }
   }
 }

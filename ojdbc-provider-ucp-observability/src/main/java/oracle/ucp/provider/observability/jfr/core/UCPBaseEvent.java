@@ -49,7 +49,6 @@ import java.util.Objects;
  * standard pool metrics and metadata.
  */
 @StackTrace(false)
-@Description("Base UCP Event")
 public abstract class UCPBaseEvent extends Event {
 
   /** Name of the connection pool */
@@ -57,10 +56,9 @@ public abstract class UCPBaseEvent extends Event {
   private String poolName;
 
   /**
+   * UCP event timestamp in milliseconds since epoch.
    *
-   * <p>Note: This is the timestamp captured by UCP at event creation time,
-   * preserved for correlation purposes. JFR also records its own startTime
-   * automatically — this field complements it rather than replacing it.
+   * <p>Complements JFR's own {@code startTime} — preserved for correlation.
    */
   @Label("UCP Timestamp (ms)")
   private long ucpTimestamp;
