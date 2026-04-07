@@ -48,6 +48,7 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 
 import oracle.jdbc.spi.TraceEventListenerProvider;
 import oracle.jdbc.spi.OracleResourceProvider.Parameter;
@@ -64,6 +65,11 @@ public class ObservabilityConfigurationTest {
   static {
     System.setProperty("oracle.jdbc.provider.observability.enabledTracers", "JFR");
     System.setProperty("oracle.jdbc.provider.observability.sensitiveDataEnabled", "true");
+  }
+
+  @BeforeEach
+  public void resetObservabilityState() {
+    ObservabilityTraceEventListener.resetForTest();
   }
 
   @Test
