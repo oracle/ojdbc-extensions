@@ -24,6 +24,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AzureAppConfigurationProviderTest {
 
+  private static final long AUTH_FAILURE_WAIT_TIMEOUT_MS = 30_000L;
+  private static final long AUTH_FAILURE_WAIT_INTERVAL_MS = 1_000L;
+
   private static OracleConfigurationCache CACHE;
 
   @BeforeAll
@@ -140,8 +143,7 @@ class AzureAppConfigurationProviderTest {
 
     try {
       // Connection fails: hit 1017
-      SQLException exception = assertThrows(SQLException.class,
-        () -> tryConnection(url), "Should throw an SQLException");
+      SQLException exception = waitForInvalidCredentialError(url);
       Assertions.assertEquals(exception.getErrorCode(), 1017);
     } finally {
       // Set value of 'user' correct
@@ -231,5 +233,37 @@ class AzureAppConfigurationProviderTest {
     String location =
       url.replaceFirst("jdbc:oracle:thin:@config-azure://", "");
     CACHE.remove(location);
+  }
+
+  private SQLException waitForInvalidCredentialError(String url)
+    throws SQLException {
+    long deadline = System.currentTimeMillis() + AUTH_FAILURE_WAIT_TIMEOUT_MS;
+
+    while (System.currentTimeMillis() < deadline) {
+      removeCacheEntry(url);
+      try (Connection ignored = tryConnection(url)) {
+        // Configuration updates can take time to propagate.
+      } catch (SQLException e) {
+        if (e.getErrorCode() == 1017) {
+          return e;
+        }
+        throw e;
+      }
+
+      sleepBeforeRetry();
+    }
+
+    throw new AssertionError(
+      "Expected ORA-1017 while testing cache purge, but connection kept " +
+        "succeeding after " + AUTH_FAILURE_WAIT_TIMEOUT_MS + "ms");
+  }
+
+  private static void sleepBeforeRetry() {
+    try {
+      Thread.sleep(AUTH_FAILURE_WAIT_INTERVAL_MS);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new AssertionError("Interrupted while waiting for retry", e);
+    }
   }
 }
