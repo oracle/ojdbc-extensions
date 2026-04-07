@@ -8,10 +8,7 @@ import oracle.jdbc.datasource.impl.OracleDataSource;
 import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.azure.AzureTestProperty;
 import oracle.jdbc.provider.azure.authentication.AzureAuthenticationMethod;
-import oracle.jdbc.spi.OracleConfigurationProvider;
-import oracle.jdbc.util.OracleConfigurationCache;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -23,16 +20,6 @@ import java.sql.Statement;
 import static org.junit.jupiter.api.Assertions.*;
 
 class AzureAppConfigurationProviderTest {
-
-  private static OracleConfigurationCache CACHE;
-
-  @BeforeAll
-  static void init() {
-    OracleConfigurationProvider.allowedProviders.add("azure");
-    CACHE = ((AzureAppConfigurationProvider) OracleConfigurationProvider
-        .find("azure"))
-        .getCache();
-  }
 
   /**
    * Label-related tests
@@ -125,9 +112,6 @@ class AzureAppConfigurationProviderTest {
             "?key=" + APP_CONFIG_KEY + "&label=" + APP_CONFIG_LABEL;
 
     String url = composeUrlWithServicePrincipleAuthentication(originalUrl);
-
-    // Clear cache to ensure we fetch fresh credentials from Azure App Config
-    removeCacheEntry(url);
 
     // Retrieve original value of 'user'
     String originalKeyValue =
@@ -225,11 +209,5 @@ class AzureAppConfigurationProviderTest {
       baseUrl += "&label=" + label;
     }
     return composeUrlWithServicePrincipleAuthentication(baseUrl);
-  }
-
-  private static void removeCacheEntry(String url) {
-    String location =
-      url.replaceFirst("jdbc:oracle:thin:@config-azure://", "");
-    CACHE.remove(location);
   }
 }
