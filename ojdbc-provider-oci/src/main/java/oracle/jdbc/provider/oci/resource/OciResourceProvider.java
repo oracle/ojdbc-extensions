@@ -83,14 +83,13 @@ public abstract class OciResourceProvider
       new ResourceParameter("instancePrincipalTimeout",
         AuthenticationDetailsFactory.INSTANCE_PRINCIPAL_TIMEOUT,
         "5",
-          s -> {
-            try {
-              return Integer.parseInt(s);
-            } catch (NumberFormatException e) {
-              throw new IllegalArgumentException("Invalid value for instancePrincipalTimeout: " + s +
-                " – must be an integer.");
-            }
-        }),
+        s -> parsePositiveInt("instancePrincipalTimeout", s)),
+      new ResourceParameter(
+        "interactiveTimeout",
+        AuthenticationDetailsFactory.INTERACTIVE_TIMEOUT,
+        String.valueOf(
+          AuthenticationDetailsFactory.DEFAULT_INTERACTIVE_TIMEOUT_MINUTES),
+        s -> parsePositiveInt("interactiveTimeout", s)),
       new ResourceParameter(
         "region",
         AuthenticationDetailsFactory.REGION,
@@ -122,6 +121,26 @@ public abstract class OciResourceProvider
           Stream.of(PARAMETERS),
           Stream.of(parameters))
         .toArray(ResourceParameter[]::new));
+  }
+
+  /**
+   * Parses {@code s} as a positive integer for the named parameter.
+   * Throws {@link IllegalArgumentException} if the value is not a positive
+   * integer or cannot be parsed.
+   */
+  private static int parsePositiveInt(String paramName, String s) {
+    try {
+      int value = Integer.parseInt(s);
+      if (value <= 0)
+        throw new IllegalArgumentException(
+          "Invalid value for " + paramName + ": " + s
+          + " – must be a positive integer.");
+      return value;
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException(
+        "Invalid value for " + paramName + ": " + s
+        + " – must be a positive integer.");
+    }
   }
 
   /**
