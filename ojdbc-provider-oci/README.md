@@ -231,7 +231,7 @@ share the same sets of parameters for authentication configuration.
 
 The Centralized Config Providers in this module use the
 [OCI SDK Authentication Methods](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdk_authentication_methods.htm) to provide authorization and authentication to the Object Storage, Database Tools Connection and Vault services.
-The user can provide an optional parameter `AUTHENTICATION` (case-ignored) which is mapped with the following Credential Class.
+The user can provide an optional parameter `AUTHENTICATION` (case-ignored), and its values are also parsed case-insensitively. It is mapped with the following Credential Class.
 
 <table>
 <thead><tr>
@@ -885,7 +885,7 @@ not supported.
 Providers in this module must authenticate with OCI. By default, a provider will
 automatically detect any available credentials.  A specific credential
 may be configured using the "authenticationMethod" parameter. The parameter may
-be set to any of the following values:
+be set to any of the following values (case-insensitive):
 <dl>
 <dt>config-file</dt>
 <dd>

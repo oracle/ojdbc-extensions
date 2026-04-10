@@ -44,6 +44,8 @@ import oracle.jdbc.provider.oci.authentication.AuthenticationMethod;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 
+import java.util.Locale;
+
 import static oracle.jdbc.provider.oci.authentication.AuthenticationDetailsFactory.*;
 import static oracle.jdbc.provider.oci.authentication.AuthenticationMethod.*;
 import static oracle.jdbc.provider.oci.objectstorage.ObjectFactory.OBJECT_URL;
@@ -136,7 +138,7 @@ public final class OciConfigurationParameters {
    */
   private static AuthenticationMethod parseAuthentication(
       String authentication) {
-    switch (authentication) {
+    switch (authentication.toUpperCase(Locale.ROOT)) {
       case "OCI_DEFAULT": return API_KEY;
       case "OCI_INSTANCE_PRINCIPAL": return INSTANCE_PRINCIPAL;
       case "OCI_RESOURCE_PRINCIPAL": return RESOURCE_PRINCIPAL;
