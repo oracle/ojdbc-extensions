@@ -89,6 +89,14 @@ The Oracle Data Source uses a new prefix `jdbc:oracle:thin:@config-ociobject://`
 jdbc:oracle:thin:@config-ociobject://{url_path}[?option1=value1&option2=value2...]
 </pre>
 
+Supported URL path forms include:
+<pre>
+objectstorage.{region}.oraclecloud.com/n/{namespace}/b/{bucket}/o/{object}
+objectstorage.{region}.oraclecloud.com/p/{par-token}/n/{namespace}/b/{bucket}/o/{object}
+{namespace}.objectstorage.{region}.oci.customer-oci.com/n/{namespace}/b/{bucket}/o/{object}
+{namespace}.objectstorage.{region}.oci.customer-oci.com/p/{par-token}/n/{namespace}/b/{bucket}/o/{object}
+</pre>
+
 The instructions of obtaining a URL Path can be found in [Get the URI or Pre-Authenticated Request URL to Access the Object Store](https://docs.oracle.com/en/cloud/paas/autonomous-database/csgru/get-uri-access-object-store.html).
 
 For more details about the option-value pairs, see [Common Parameters for Centralized Config Providers](#common-parameters-for-centralized-config-providers).
