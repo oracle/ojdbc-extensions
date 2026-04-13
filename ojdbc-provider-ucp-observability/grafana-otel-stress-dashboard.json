@@ -103,7 +103,7 @@
       "pluginVersion": "12.1.0-pre",
       "targets": [
         {
-          "expr": "db_client_connection_usage{db_client_connection_pool_name=\"OtelTestPool\",db_client_connection_state=\"used\"}",
+          "expr": "db_client_connection_usage{db_client_connection_pool_name=\"${pool_name}\",db_client_connection_state=\"used\"}",
           "legendFormat": "used",
           "refId": "A"
         }
@@ -193,7 +193,7 @@
       "pluginVersion": "12.1.0-pre",
       "targets": [
         {
-          "expr": "db_client_connection_usage{db_client_connection_pool_name=\"OtelTestPool\",db_client_connection_state=\"idle\"}",
+          "expr": "db_client_connection_usage{db_client_connection_pool_name=\"${pool_name}\",db_client_connection_state=\"idle\"}",
           "legendFormat": "idle",
           "refId": "A"
         }
@@ -283,7 +283,7 @@
       "pluginVersion": "12.1.0-pre",
       "targets": [
         {
-          "expr": "sum by (db_client_connection_pool_name) (db_client_connection_usage{db_client_connection_pool_name=\"OtelTestPool\"})",
+          "expr": "sum by (db_client_connection_pool_name) (db_client_connection_usage{db_client_connection_pool_name=\"${pool_name}\"})",
           "legendFormat": "total",
           "refId": "A"
         }
@@ -373,7 +373,7 @@
       "pluginVersion": "12.1.0-pre",
       "targets": [
         {
-          "expr": "rate(db_client_connection_wait_time_seconds_sum{db_client_connection_pool_name=\"OtelTestPool\"}[1m]) / rate(db_client_connection_wait_time_seconds_count{db_client_connection_pool_name=\"OtelTestPool\"}[1m])",
+          "expr": "rate(db_client_connection_wait_time_seconds_sum{db_client_connection_pool_name=\"${pool_name}\"}[1m]) / rate(db_client_connection_wait_time_seconds_count{db_client_connection_pool_name=\"${pool_name}\"}[1m])",
           "legendFormat": "avg wait time",
           "refId": "A"
         }
@@ -463,7 +463,7 @@
       "pluginVersion": "12.1.0-pre",
       "targets": [
         {
-          "expr": "db_client_connection_established{db_client_connection_pool_name=\"OtelTestPool\"}",
+          "expr": "db_client_connection_established{db_client_connection_pool_name=\"${pool_name}\"}",
           "legendFormat": "created",
           "refId": "A"
         }
@@ -553,7 +553,7 @@
       "pluginVersion": "12.1.0-pre",
       "targets": [
         {
-          "expr": "db_client_connection_closed{db_client_connection_pool_name=\"OtelTestPool\"}",
+          "expr": "db_client_connection_closed{db_client_connection_pool_name=\"${pool_name}\"}",
           "legendFormat": "closed",
           "refId": "A"
         }
@@ -610,7 +610,7 @@
       "pluginVersion": "12.1.0-pre",
       "targets": [
         {
-          "expr": "db_client_connection_max{db_client_connection_pool_name=\"OtelTestPool\"}",
+          "expr": "db_client_connection_max{db_client_connection_pool_name=\"${pool_name}\"}",
           "legendFormat": "",
           "refId": "A"
         }
@@ -667,7 +667,7 @@
       "pluginVersion": "12.1.0-pre",
       "targets": [
         {
-          "expr": "db_client_connection_idle_min{db_client_connection_pool_name=\"OtelTestPool\"}",
+          "expr": "db_client_connection_idle_min{db_client_connection_pool_name=\"${pool_name}\"}",
           "legendFormat": "",
           "refId": "A"
         }
@@ -724,7 +724,7 @@
       "pluginVersion": "12.1.0-pre",
       "targets": [
         {
-          "expr": "db_client_connection_usage{db_client_connection_pool_name=\"OtelTestPool\",db_client_connection_state=\"used\"}",
+          "expr": "db_client_connection_usage{db_client_connection_pool_name=\"${pool_name}\",db_client_connection_state=\"used\"}",
           "legendFormat": "",
           "refId": "A"
         }
@@ -781,7 +781,7 @@
       "pluginVersion": "12.1.0-pre",
       "targets": [
         {
-          "expr": "db_client_connection_usage{db_client_connection_pool_name=\"OtelTestPool\",db_client_connection_state=\"idle\"}",
+          "expr": "db_client_connection_usage{db_client_connection_pool_name=\"${pool_name}\",db_client_connection_state=\"idle\"}",
           "legendFormat": "",
           "refId": "A"
         }
@@ -838,7 +838,7 @@
       "pluginVersion": "12.1.0-pre",
       "targets": [
         {
-          "expr": "db_client_connection_established{db_client_connection_pool_name=\"OtelTestPool\"}",
+          "expr": "db_client_connection_established{db_client_connection_pool_name=\"${pool_name}\"}",
           "legendFormat": "",
           "refId": "A"
         }
@@ -895,7 +895,7 @@
       "pluginVersion": "12.1.0-pre",
       "targets": [
         {
-          "expr": "db_client_connection_closed{db_client_connection_pool_name=\"OtelTestPool\"}",
+          "expr": "db_client_connection_closed{db_client_connection_pool_name=\"${pool_name}\"}",
           "legendFormat": "",
           "refId": "A"
         }
@@ -952,7 +952,7 @@
       "pluginVersion": "12.1.0-pre",
       "targets": [
         {
-          "expr": "sum by (db_client_connection_pool_name) (db_client_connection_usage{db_client_connection_pool_name=\"OtelTestPool\"})",
+          "expr": "sum by (db_client_connection_pool_name) (db_client_connection_usage{db_client_connection_pool_name=\"${pool_name}\"})",
           "legendFormat": "",
           "refId": "A"
         }
@@ -966,7 +966,22 @@
   "schemaVersion": 41,
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "OtelTestPool",
+          "value": "OtelTestPool"
+        },
+        "hide": 0,
+        "label": "Pool Name",
+        "name": "pool_name",
+        "options": [],
+        "query": "OtelTestPool",
+        "skipUrlSync": false,
+        "type": "textbox"
+      }
+    ]
   },
   "time": {
     "from": "now-5m",

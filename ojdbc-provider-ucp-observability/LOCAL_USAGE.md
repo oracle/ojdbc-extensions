@@ -1,162 +1,59 @@
 # Local Guide for JFR and OpenTelemetry UCP Providers
 
-This guide is for running the UCP observability providers locally from this repository.
+This guide explains how to run the UCP observability demos locally from this repository.
 
-Available providers:
+Providers covered:
 
 - `jfr-ucp-listener`
 - `otel-ucp-listener`
 
-## Files used in this walkthrough
+Main sample classes:
 
-- JFR sample:
-  - `src/main/java/oracle/ucp/provider/observability/stress/JfrSampleTestUCP.java`
-- OTel simple sample:
-  - `src/main/java/oracle/ucp/provider/observability/stress/OtelSampleTestUCP.java`
-- OTel stress sample:
-  - `src/main/java/oracle/ucp/provider/observability/stress/OtelUCPTest.java`
-- Grafana dashboard for the stress test:
-  - `grafana-otel-stress-dashboard.json`
+- JFR: `src/main/java/oracle/ucp/provider/observability/stress/JfrSampleTestUCP.java`
+- OTel: `src/main/java/oracle/ucp/provider/observability/stress/OtelUCPTest.java`
 
-## Prerequisites
+Dashboard file:
+
+- `grafana-otel-stress-dashboard.json`
+
+## 1. Tool setup
+
+Before running anything, make sure the local machine has the following:
 
 - JDK 11 or newer
 - Maven
-- Access to an Oracle database reachable from the machine
-- If using ATP/ADB, a valid wallet directory
-- For JFR viewing: JDK Mission Control
-- For OTel dashboarding: Prometheus and Grafana on macOS
+- IntelliJ IDEA
+- Oracle database access
+- wallet directory if using ATP/ADB
+- JDK Mission Control for viewing `.jfr` recordings
+- Prometheus
+- Grafana
 
-## Recommended order
-
-Follow the steps in this order:
-
-1. Update the sample with your local database connection details
-2. Build the module
-3. If needed, install Prometheus and Grafana
-4. Run the JFR sample
-5. Run the OTel sample
-6. Configure Prometheus
-7. Start Grafana
-8. Add Prometheus as a Grafana data source
-9. Run the OTel stress sample and import the Grafana dashboard
-
-## Step 1: Update the local connection details
-
-The sample classes use hardcoded local database values. Before running anything, update the sample you plan to use with your own:
-
-- JDBC URL
-- `TNS_ADMIN` wallet location if needed
-- database user
-- database password
-- pool name if you want a different label in JFR or metrics
-
-Minimum required connection setup:
-
-```java
-pds.setURL("jdbc:oracle:thin:@<service>?TNS_ADMIN=<wallet-path>");
-pds.setUser("<db-user>");
-pds.setPassword("<db-password>");
-```
-
-## Step 2: Build the module
-
-From the repo root:
-
-```bash
-mvn -pl ojdbc-provider-ucp-observability -DskipTests package
-```
-
-## Step 3: Install Prometheus and Grafana on macOS
-
-If Prometheus and Grafana are not already installed:
+### Install Prometheus and Grafana on macOS
 
 ```bash
 brew update
 brew install prometheus grafana
 ```
 
-## Step 4: Run the JFR provider
-
-The JFR sample uses `jfr-ucp-listener` and emits UCP events into a flight recording.
-
-Run:
+### Start Grafana
 
 ```bash
-mvn -pl ojdbc-provider-ucp-observability \
-  -Dexec.mainClass=oracle.ucp.provider.observability.stress.JfrSampleTestUCP \
-  -Dexec.classpathScope=runtime \
-  -Dexec.jvmArgs="-XX:StartFlightRecording=filename=recording.jfr,settings=profile" \
-  org.codehaus.mojo:exec-maven-plugin:3.5.0:java
+brew services start grafana
 ```
 
-What this sample does:
+Grafana UI:
 
-- creates and starts a pool
-- borrows connections
-- closes and returns connections
-- triggers purge, recycle, and refresh
-- stops and destroys the pool
+- `http://localhost:3000`
 
-How to verify:
+First login:
 
-- confirm `recording.jfr` was created
-- open it in JDK Mission Control
-- go to `Event Browser -> ucp`
+- username: `admin`
+- password: `admin`
 
-Expected event groups:
+### Prepare Prometheus
 
-- pool lifecycle
-- connection lifecycle
-- maintenance events
-
-## Step 5: Run the OpenTelemetry provider
-
-The OTel samples use `otel-ucp-listener` and expose metrics on `localhost:9464`.
-
-### Option A: simple OTel demo
-
-Run:
-
-```bash
-mvn -pl ojdbc-provider-ucp-observability \
-  -Dexec.mainClass=oracle.ucp.provider.observability.stress.OtelSampleTestUCP \
-  -Dexec.classpathScope=runtime \
-  org.codehaus.mojo:exec-maven-plugin:3.5.0:java
-```
-
-### Option B: stress OTel demo
-
-Run:
-
-```bash
-mvn -pl ojdbc-provider-ucp-observability \
-  -Dexec.mainClass=oracle.ucp.provider.observability.stress.OtelUCPTest \
-  -Dexec.classpathScope=runtime \
-  org.codehaus.mojo:exec-maven-plugin:3.5.0:java
-```
-
-How to verify:
-
-- open `http://localhost:9464/metrics`
-- or run:
-
-```bash
-curl http://localhost:9464/metrics | grep db_client_connection
-```
-
-Expected metrics include:
-
-- `db_client_connection_usage`
-- `db_client_connection_max`
-- `db_client_connection_idle_min`
-- `db_client_connection_wait_time_seconds`
-- `db_client_connection_established`
-- `db_client_connection_closed`
-
-## Step 6: Configure Prometheus
-
-Create a local `prometheus.yml` file:
+Create a local `prometheus.yml` file with:
 
 ```yaml
 global:
@@ -178,26 +75,7 @@ Prometheus UI:
 
 - `http://localhost:9090`
 
-## Step 7: Start Grafana
-
-Run:
-
-```bash
-brew services start grafana
-```
-
-Grafana UI:
-
-- `http://localhost:3000`
-
-First login:
-
-- username: `admin`
-- password: `admin`
-
-Grafana will ask for a password change on first sign-in.
-
-## Step 8: Add Prometheus as a Grafana data source
+### Add Prometheus to Grafana
 
 In Grafana:
 
@@ -206,18 +84,110 @@ In Grafana:
 3. Set the URL to `http://localhost:9090`
 4. Save and test
 
-## Step 9: Import the OTel stress dashboard
+## 2. Project setup
 
-This step is intended for the stress sample:
+Open the repository in IntelliJ.
+
+### Build the full project
+
+From the repo root:
 
 ```bash
-mvn -pl ojdbc-provider-ucp-observability \
-  -Dexec.mainClass=oracle.ucp.provider.observability.stress.OtelUCPTest \
-  -Dexec.classpathScope=runtime \
-  org.codehaus.mojo:exec-maven-plugin:3.5.0:java
+mvn clean install -DskipTests
 ```
 
-Import this dashboard file:
+This builds the full repository locally and makes sure all modules are resolved.
+
+### Reload Maven in IntelliJ
+
+After the build, reload the Maven project.
+
+In IntelliJ:
+
+1. Open the Maven tool window
+2. Click `Reload All Maven Projects`
+3. Wait for indexing to finish
+
+## 3. Sample configuration
+
+Before running the samples, update the database connection values in the sample class you want to use.
+
+Fields to update:
+
+- JDBC URL
+- `TNS_ADMIN` wallet location if needed
+- database user
+- database password
+
+Minimum required configuration looks like:
+
+```java
+pds.setURL("jdbc:oracle:thin:@<service>?TNS_ADMIN=<wallet-path>");
+pds.setUser("<db-user>");
+pds.setPassword("<db-password>");
+```
+
+## 4. Run the JFR demo
+
+Open `JfrSampleTestUCP.java` in IntelliJ and run its `main` method.
+
+Add this VM option in the run configuration:
+
+```text
+-XX:StartFlightRecording=filename=recording.jfr,settings=profile
+```
+
+What this demo does:
+
+- creates and starts a pool
+- borrows connections
+- closes and returns connections
+- triggers purge, recycle, and refresh
+- stops and destroys the pool
+
+How to verify:
+
+- confirm `recording.jfr` was created
+- open it in JDK Mission Control
+- go to `Event Browser -> ucp`
+
+Expected JFR event groups:
+
+- pool lifecycle
+- connection lifecycle
+- maintenance events
+
+## 5. Run the OpenTelemetry demo
+
+Open `OtelUCPTest.java` in IntelliJ and run its `main` method.
+
+This demo uses:
+
+- provider: `otel-ucp-listener`
+- pool name: `OtelTestPool`
+- Prometheus endpoint: `http://localhost:9464/metrics`
+
+How to verify:
+
+- open `http://localhost:9464/metrics`
+- or run:
+
+```bash
+curl http://localhost:9464/metrics | grep db_client_connection
+```
+
+Expected metrics include:
+
+- `db_client_connection_usage`
+- `db_client_connection_max`
+- `db_client_connection_idle_min`
+- `db_client_connection_wait_time_seconds`
+- `db_client_connection_established`
+- `db_client_connection_closed`
+
+## 6. Import the Grafana dashboard
+
+Use the OTel stress sample first, then import:
 
 - `ojdbc-provider-ucp-observability/grafana-otel-stress-dashboard.json`
 
@@ -230,7 +200,9 @@ In Grafana:
 5. Select the Prometheus data source
 6. Save the dashboard
 
-This dashboard is built for the stress sample pool name `OtelTestPool` and visualizes:
+This dashboard is built for pool name `OtelTestPool`.
+
+It visualizes:
 
 - used connections
 - idle connections
@@ -240,51 +212,21 @@ This dashboard is built for the stress sample pool name `OtelTestPool` and visua
 - closed physical connections
 - current pool size stats
 
-## Provider activation note
+## 7. Customize the demos
 
-The samples set the provider directly on the pool:
+The sample classes are only starting points. They can be edited freely, or copied to create custom local scenarios.
 
-```java
-pds.setUCPEventListenerProvider("jfr-ucp-listener");
-```
+Typical changes:
 
-or:
+- increase or decrease pool sizes
+- change borrow and return patterns
+- add more threads
+- increase wait times
+- add SQL execution loops
+- adjust pool names for easier dashboard reading
+- create a new stress scenario derived from `OtelUCPTest.java`
 
-```java
-pds.setUCPEventListenerProvider("otel-ucp-listener");
-```
+Best starting points:
 
-There is also a JVM-wide option:
-
-```bash
-java -DUCPEventListenerProvider=jfr-ucp-listener ...
-```
-
-For local demos, use the sample code as-is and keep the pool-level setting.
-
-## Troubleshooting
-
-- No JFR events:
-  - confirm the sample uses `jfr-ucp-listener`
-  - confirm flight recording was enabled on the JVM
-  - confirm the pool actually started and emitted events
-
-- No OTel metrics:
-  - confirm the sample uses `otel-ucp-listener`
-  - confirm the OTel SDK is registered before the pool starts
-  - confirm port `9464` is free
-
-- Prometheus shows no UCP metrics:
-  - confirm the OTel sample is still running
-  - confirm Prometheus is scraping `localhost:9464`
-  - open `http://localhost:9464/metrics` directly and verify data exists
-
-- Grafana dashboard is empty:
-  - confirm the Prometheus data source is working
-  - confirm the imported dashboard is being used with `OtelUCPTest`
-  - confirm the pool name is still `OtelTestPool`
-
-- Database connection failures:
-  - verify wallet path
-  - verify JDBC URL and service name
-  - verify user and password
+- `JfrSampleTestUCP.java` for JFR experiments
+- `OtelUCPTest.java` for OTel stress and dashboard experiments
