@@ -73,6 +73,10 @@ public class ParameterStoreUsernameProvider
    */
   @Override
   public String getUsername(Map<Parameter, CharSequence> parameterValues) {
-    return getSecret(parameterValues);
+    String username = getSecret(parameterValues);
+    if (username == null || username.trim().isEmpty()) {
+      throw new IllegalArgumentException("Username parameter content is blank.");
+    }
+    return username;
   }
 }

@@ -44,6 +44,8 @@ import oracle.jdbc.provider.oci.authentication.AuthenticationMethod;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
 
+import java.util.Locale;
+
 import static oracle.jdbc.provider.oci.authentication.AuthenticationDetailsFactory.*;
 import static oracle.jdbc.provider.oci.authentication.AuthenticationMethod.*;
 import static oracle.jdbc.provider.oci.objectstorage.ObjectFactory.OBJECT_URL;
@@ -96,14 +98,10 @@ public final class OciConfigurationParameters {
       .addParameter("OCI_REGION", REGION, null, Region::fromRegionCodeOrId)
       .addParameter("OCI_INSTANCE_PRINCIPAL_TIMEOUT", INSTANCE_PRINCIPAL_TIMEOUT,
          5,
-         s -> {
-           try {
-            return Integer.parseInt(s);
-           }catch (NumberFormatException e) {
-              throw new IllegalArgumentException( "Invalid value for " +
-                "OCI_INSTANCE_PRINCIPAL_TIMEOUT: " + s + ". The value must be an integer.");
-           }
-         })
+         s -> parsePositiveInt("OCI_INSTANCE_PRINCIPAL_TIMEOUT", s))
+      .addParameter("OCI_INTERACTIVE_TIMEOUT", INTERACTIVE_TIMEOUT,
+         DEFAULT_INTERACTIVE_TIMEOUT_MINUTES,
+         s -> parsePositiveInt("OCI_INTERACTIVE_TIMEOUT", s))
       .build();
 
   /**
@@ -116,13 +114,31 @@ public final class OciConfigurationParameters {
   }
 
   /**
+   * Parses {@code s} as a positive integer for the named parameter.
+   * Throws {@link IllegalArgumentException} if the value is not a positive
+   * integer or cannot be parsed.
+   */
+  private static int parsePositiveInt(String paramName, String s) {
+    try {
+      int value = Integer.parseInt(s);
+      if (value <= 0)
+        throw new IllegalArgumentException("Invalid value for " + paramName
+          + ": " + s + ". The value must be a positive integer.");
+      return value;
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("Invalid value for " + paramName
+        + ": " + s + ". The value must be a positive integer.");
+    }
+  }
+
+  /**
    * Parses the AUTHENTICATION URI parameter, mapping it to an
    * {@link AuthenticationMethod} recognized by
    * {@link AuthenticationDetailsFactory}.
    */
   private static AuthenticationMethod parseAuthentication(
       String authentication) {
-    switch (authentication) {
+    switch (authentication.toUpperCase(Locale.ROOT)) {
       case "OCI_DEFAULT": return API_KEY;
       case "OCI_INSTANCE_PRINCIPAL": return INSTANCE_PRINCIPAL;
       case "OCI_RESOURCE_PRINCIPAL": return RESOURCE_PRINCIPAL;

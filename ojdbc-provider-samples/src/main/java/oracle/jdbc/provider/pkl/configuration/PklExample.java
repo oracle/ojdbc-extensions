@@ -35,26 +35,44 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
+package oracle.jdbc.provider.pkl.configuration;
 
-package oracle.jdbc.provider.hashicorp.util;
+import oracle.jdbc.datasource.impl.OracleDataSource;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
- * Utility class for parameter resolution.
+ * A standalone example that configures Oracle JDBC to be provided with the
+ * connection properties retrieved from "myJdbcConfig.pkl" file.
  */
-public final class Parameterutil {
-
-  private Parameterutil() {
-    // Prevent instantiation.
-  }
+public class PklExample {
+  private static String url;
 
   /**
-   * Returns the fallback value for the given key by checking system properties first,
-   * then environment variables.
-   *
-   * @param key the key to look up
-   * @return the fallback value, or null if not found
+   * @param args the command line arguments
+   * @throws SQLException if an error occurs during the database calls
    */
-  public static String getFallback(String key) {
-    return System.getProperty(key, System.getenv(key));
+  public static void main(String[] args) throws SQLException {
+    // Sample default URL if non present
+    if (args.length == 0) {
+      url = "jdbc:oracle:thin:@config-file://myJdbcConfig.pkl?parser=pkl";
+    } else {
+      url = args[0];
+    }
+
+    // No changes required, configuration provider is loaded at runtime
+    OracleDataSource ds = new OracleDataSource();
+    ds.setURL(url);
+
+    // Standard JDBC code
+    Connection cn = ds.getConnection();
+    Statement st = cn.createStatement();
+    ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
+    if (rs.next())
+      System.out.println(rs.getString(1));
+
   }
 }

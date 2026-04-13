@@ -38,10 +38,10 @@
 
 package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication;
 
-import oracle.jdbc.provider.hashicorp.util.Parameterutil;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
+import oracle.jdbc.provider.util.ParameterUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -213,37 +213,37 @@ public class DedicatedVaultParameters {
     DedicatedVaultAuthenticationMethod authMethod =
             DedicatedVaultAuthenticationMethod.valueOf(authStr.toUpperCase());
 
-    opts.computeIfAbsent(PARAM_VAULT_ADDR, Parameterutil::getFallback);
-    opts.computeIfAbsent(PARAM_VAULT_NAMESPACE, Parameterutil::getFallback);
+    opts.computeIfAbsent(PARAM_VAULT_ADDR, ParameterUtils::getFallback);
+    opts.computeIfAbsent(PARAM_VAULT_NAMESPACE, ParameterUtils::getFallback);
 
     switch (authMethod) {
       case VAULT_TOKEN:
-        opts.computeIfAbsent(PARAM_VAULT_TOKEN, Parameterutil::getFallback);
+        opts.computeIfAbsent(PARAM_VAULT_TOKEN, ParameterUtils::getFallback);
         break;
       case GITHUB:
-        opts.computeIfAbsent(PARAM_GITHUB_TOKEN, Parameterutil::getFallback);
-        opts.computeIfAbsent(PARAM_GITHUB_AUTH_PATH, Parameterutil::getFallback);
+        opts.computeIfAbsent(PARAM_GITHUB_TOKEN, ParameterUtils::getFallback);
+        opts.computeIfAbsent(PARAM_GITHUB_AUTH_PATH, ParameterUtils::getFallback);
         break;
       case APPROLE:
-        opts.computeIfAbsent(PARAM_VAULT_ROLE_ID, Parameterutil::getFallback);
-        opts.computeIfAbsent(PARAM_VAULT_SECRET_ID, Parameterutil::getFallback);
-        opts.computeIfAbsent(PARAM_APPROLE_AUTH_PATH, Parameterutil::getFallback);
+        opts.computeIfAbsent(PARAM_VAULT_ROLE_ID, ParameterUtils::getFallback);
+        opts.computeIfAbsent(PARAM_VAULT_SECRET_ID, ParameterUtils::getFallback);
+        opts.computeIfAbsent(PARAM_APPROLE_AUTH_PATH, ParameterUtils::getFallback);
         break;
       case USERPASS:
-        opts.computeIfAbsent(PARAM_VAULT_USERNAME, Parameterutil::getFallback);
-        opts.computeIfAbsent(PARAM_VAULT_PASSWORD, Parameterutil::getFallback);
-        opts.computeIfAbsent(PARAM_USERPASS_AUTH_PATH, Parameterutil::getFallback);
+        opts.computeIfAbsent(PARAM_VAULT_USERNAME, ParameterUtils::getFallback);
+        opts.computeIfAbsent(PARAM_VAULT_PASSWORD, ParameterUtils::getFallback);
+        opts.computeIfAbsent(PARAM_USERPASS_AUTH_PATH, ParameterUtils::getFallback);
         break;
       case AUTO_DETECT:
-        opts.computeIfAbsent(PARAM_VAULT_TOKEN, Parameterutil::getFallback);
-        opts.computeIfAbsent(PARAM_VAULT_USERNAME, Parameterutil::getFallback);
-        opts.computeIfAbsent(PARAM_VAULT_PASSWORD, Parameterutil::getFallback);
-        opts.computeIfAbsent(PARAM_USERPASS_AUTH_PATH, Parameterutil::getFallback);
-        opts.computeIfAbsent(PARAM_VAULT_ROLE_ID, Parameterutil::getFallback);
-        opts.computeIfAbsent(PARAM_VAULT_SECRET_ID, Parameterutil::getFallback);
-        opts.computeIfAbsent(PARAM_APPROLE_AUTH_PATH, Parameterutil::getFallback);
-        opts.computeIfAbsent(PARAM_GITHUB_TOKEN, Parameterutil::getFallback);
-        opts.computeIfAbsent(PARAM_GITHUB_AUTH_PATH, Parameterutil::getFallback);
+        opts.computeIfAbsent(PARAM_VAULT_TOKEN, ParameterUtils::getFallback);
+        opts.computeIfAbsent(PARAM_VAULT_USERNAME, ParameterUtils::getFallback);
+        opts.computeIfAbsent(PARAM_VAULT_PASSWORD, ParameterUtils::getFallback);
+        opts.computeIfAbsent(PARAM_USERPASS_AUTH_PATH, ParameterUtils::getFallback);
+        opts.computeIfAbsent(PARAM_VAULT_ROLE_ID, ParameterUtils::getFallback);
+        opts.computeIfAbsent(PARAM_VAULT_SECRET_ID, ParameterUtils::getFallback);
+        opts.computeIfAbsent(PARAM_APPROLE_AUTH_PATH, ParameterUtils::getFallback);
+        opts.computeIfAbsent(PARAM_GITHUB_TOKEN, ParameterUtils::getFallback);
+        opts.computeIfAbsent(PARAM_GITHUB_AUTH_PATH, ParameterUtils::getFallback);
         break;
       default:
         break;

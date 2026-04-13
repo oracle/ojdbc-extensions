@@ -130,11 +130,12 @@ public class ObjectFactory extends OciResourceFactory<InputStream> {
     }
   }
 
-  private static class ObjectUrl {
+   static class ObjectUrl {
     // The OCI resource name may contain only letters, numbers, dashes and underscores
-    private static final String NAME = "([-_\\w]*)";
+    private static final String NAME = "([-_\\w]+)";
     private static final Pattern URL_PATTERN = Pattern
       .compile("https://objectstorage\\." + NAME + "\\.oraclecloud\\.com"
+          + "(?:\\/p\\/[^\\/]+)?"
           + "\\/n\\/" + NAME
           + "\\/b\\/" + NAME
           + "\\/o\\/(.*)", // parameters to the provider
@@ -142,6 +143,7 @@ public class ObjectFactory extends OciResourceFactory<InputStream> {
     private static final Pattern NEW_URL_PATTERN = Pattern
       .compile("https://" + NAME +
           "\\.objectstorage\\." + NAME + "\\.oci\\.customer-oci\\.com"
+          + "(?:\\/p\\/[^\\/]+)?"
           + "\\/n\\/" + "\\1" // namespace should be the same as 1st NAME
           + "\\/b\\/" + NAME
           + "\\/o\\/(.*)", // parameters to the provider (new)
