@@ -5,7 +5,7 @@
   <name>Oracle JDBC Provider Code Samples</name>
 
   <artifactId>ojdbc-provider-samples</artifactId>
-  <version>${project.parent.version}</version>
+  <version>1.0.6</version>
   <packaging>jar</packaging>
 
   <parent>

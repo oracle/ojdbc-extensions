@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2024 Oracle and/or its affiliates.
+ ** Copyright (c) 2025 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -35,64 +35,44 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.gcp.configuration;
+package oracle.jdbc.provider.observability;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.Map;
 
-import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
-import oracle.jdbc.provider.gcp.secrets.GcpSecretManagerFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.util.OracleConfigurationCache;
+import oracle.jdbc.TraceEventListener;
+import oracle.jdbc.provider.observability.ObservabilityConfiguration.ObservabilityConfigurationType;
 
 /**
- * A provider for JSON payload which contains configuration from GCP Secret
- * Manager.
- * See {@link #getInputStream(String)} for the spec of the JSON payload.
- **/
-public class GcpSecretManagerConfigurationProvider
-    extends OracleConfigurationParsableProvider {
-
-  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
-
-  @Override
-  public String getType() {
-    return "gcpsecretmanager";
-  }
+ * <p>
+ * This class implements the TraceEventListenerProvider interface exposed by the
+ * Oracle JDBC driver. It provides TraceEventListeners of type {@link
+ * oracle.jdbc.provider.observability.ObservabilityTraceEventListener}.
+ * </p>
+ */
+public class OpenTelemetryTraceEventListenerProvider extends ObservabilityTraceEventListenerProvider {
 
   /**
-   * {@inheritDoc}
-   * <p>
-   * Returns the JSON payload stored in GCP Secret Manager secret.
-   * </p>
-   * 
-   * @param location resource name of the secret version (to obtain the resource
-   *                 name, click on "Actions" and "Copy resource name")
-   * @return JSON payload
+   * Name of the provider
    */
-  @Override
-  public InputStream getInputStream(String location) throws SQLException {
-    Map<String, String> namedValues = new HashMap<>();
-    namedValues.put("secretVersionName", location);
-    ParameterSet parameterSet = GcpConfigurationParameters.getParser().parseNamedValues(namedValues);
-    return new ByteArrayInputStream(
-        GcpSecretManagerFactory.getInstance().request(parameterSet).getContent().getData().toByteArray());
-  }
+  private static final String PROVIDER_NAME = "open-telemetry-trace-event-listener-provider";
 
   /**
-   * {@inheritDoc}
-   * @return cache of this provider which is used to store configuration
+   * Constructs a new instance of OpenTelemetryTraceEventListenerProvider. This
+   * constructor will be called by the driver's service provider to create a new
+   * instance.
    */
+  public OpenTelemetryTraceEventListenerProvider() { }
+
   @Override
-  public OracleConfigurationCache getCache() {
-    return CACHE;
+  public String getName() {
+    return PROVIDER_NAME;
   }
 
   @Override
-  public String getParserType(String arg0) {
-    return "json";
+  public TraceEventListener getTraceEventListener(Map<Parameter, CharSequence> map) {
+    String uniqueIdentifier = map.get(uniqueIdentifierParameter).toString();
+    return ObservabilityTraceEventListener.getOrCreateInstance(uniqueIdentifier, 
+        ObservabilityConfigurationType.OTEL);
   }
+
 }

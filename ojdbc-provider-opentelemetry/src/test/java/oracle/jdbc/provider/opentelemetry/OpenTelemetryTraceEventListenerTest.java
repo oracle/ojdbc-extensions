@@ -97,8 +97,8 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @Test
   void testPropertiesDisabled() throws Exception {
-    System.setProperty(OpenTelemetryTraceEventListener.OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_ENABLED, "false");
-    System.setProperty(OpenTelemetryTraceEventListener.OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED, "false");
+    System.setProperty(OpenTelemetryTraceEventListener.OPEN_TELEMETRY_TRACE_EVENT_LISTENER_ENABLED, "false");
+    System.setProperty(OpenTelemetryTraceEventListener.OPEN_TELEMETRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED, "false");
     OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
     Assertions.assertFalse(traceEventListener.isEnabled(), "Set to false using system property");
     Assertions.assertFalse(traceEventListener.isSensitiveDataEnabled(), "Set to false using system property");
@@ -106,8 +106,8 @@ public class OpenTelemetryTraceEventListenerTest {
 
   @Test
   void testPropertiesEnabled() throws Exception {
-    System.setProperty(OpenTelemetryTraceEventListener.OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_ENABLED, "true");
-    System.setProperty(OpenTelemetryTraceEventListener.OPEN_TELEMENTRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED, "true");
+    System.setProperty(OpenTelemetryTraceEventListener.OPEN_TELEMETRY_TRACE_EVENT_LISTENER_ENABLED, "true");
+    System.setProperty(OpenTelemetryTraceEventListener.OPEN_TELEMETRY_TRACE_EVENT_LISTENER_SENSITIVE_ENABLED, "true");
     OpenTelemetryTraceEventListener traceEventListener = new OpenTelemetryTraceEventListener(tracer);
     Assertions.assertTrue(traceEventListener.isEnabled(), "Set to false using system property");
     Assertions.assertTrue(traceEventListener.isSensitiveDataEnabled(), "Set to false using system property");

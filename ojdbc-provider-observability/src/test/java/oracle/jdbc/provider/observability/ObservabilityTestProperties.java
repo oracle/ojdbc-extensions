@@ -35,56 +35,10 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
+package oracle.jdbc.provider.observability;
 
-package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.configuration;
-
-import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
-import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.secrets.DedicatedVaultSecretsManagerFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.util.OracleConfigurationCache;
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-
-import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.*;
-
-public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleConfigurationParsableProvider {
-
-  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
-
-  @Override
-  public InputStream getInputStream(String secretPath) {
-    final String valueFieldName = "value";
-
-    Map<String, String> optionsWithSecret = new HashMap<>(options);
-    optionsWithSecret.put(valueFieldName, secretPath);
-
-    ParameterSet finalParameters = buildResolvedParameterSet(optionsWithSecret);
-
-    String secretString = DedicatedVaultSecretsManagerFactory
-      .getInstance()
-      .request(finalParameters)
-      .getContent();
-
-    return new ByteArrayInputStream(secretString.getBytes(StandardCharsets.UTF_8));
-  }
-
-  @Override
-  public String getType() {
-    return "hcpvaultdedicated";
-  }
-
-  @Override
-  public String getParserType(String location) {
-    return "json";
-  }
-
-  @Override
-  public OracleConfigurationCache getCache() {
-    return CACHE;
-  }
-
+public enum ObservabilityTestProperties {
+  OBSERVABILITY_URL,
+  OBSERVABILITY_USERNAME,
+  OBSERVABILITY_PASSWORD
 }
