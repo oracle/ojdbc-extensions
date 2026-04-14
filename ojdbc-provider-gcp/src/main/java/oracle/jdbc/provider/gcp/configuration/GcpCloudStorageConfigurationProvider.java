@@ -54,6 +54,8 @@ import oracle.jdbc.util.OracleConfigurationCache;
 public class GcpCloudStorageConfigurationProvider
     extends OracleConfigurationParsableProvider {
 
+  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
+
   public static final String PROJECT_PARAMETER = "project";
   public static final String BUCKET_PARAMETER = "bucket";
   public static final String OBJECT_PARAMETER = "object";

@@ -54,6 +54,8 @@ import java.util.Map;
 public class OciObjectStorageProvider
   extends OracleConfigurationParsableProvider {
 
+  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
+
   /**
    * {@inheritDoc}
    * <p>

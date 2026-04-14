@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2024 Oracle and/or its affiliates.
+ ** Copyright (c) 2025 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -35,64 +35,74 @@
  ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  ** SOFTWARE.
  */
-package oracle.jdbc.provider.gcp.configuration;
+package oracle.jdbc.provider.observability;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.sql.SQLException;
-import java.util.HashMap;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
-import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
-import oracle.jdbc.provider.gcp.secrets.GcpSecretManagerFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.util.OracleConfigurationCache;
+import oracle.jdbc.TraceEventListener;
+import oracle.jdbc.provider.observability.ObservabilityConfiguration.ObservabilityConfigurationType;
+import oracle.jdbc.spi.TraceEventListenerProvider;
 
 /**
- * A provider for JSON payload which contains configuration from GCP Secret
- * Manager.
- * See {@link #getInputStream(String)} for the spec of the JSON payload.
- **/
-public class GcpSecretManagerConfigurationProvider
-    extends OracleConfigurationParsableProvider {
-
-  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
-
-  @Override
-  public String getType() {
-    return "gcpsecretmanager";
-  }
+ * Implementation of Oracle JDBC {@link TraceEventListenerProvider} for 
+ * {@link ObservabilityTraceEventListener}.
+ */
+public class ObservabilityTraceEventListenerProvider implements TraceEventListenerProvider {
 
   /**
-   * {@inheritDoc}
-   * <p>
-   * Returns the JSON payload stored in GCP Secret Manager secret.
-   * </p>
-   * 
-   * @param location resource name of the secret version (to obtain the resource
-   *                 name, click on "Actions" and "Copy resource name")
-   * @return JSON payload
+   * Provider name
    */
-  @Override
-  public InputStream getInputStream(String location) throws SQLException {
-    Map<String, String> namedValues = new HashMap<>();
-    namedValues.put("secretVersionName", location);
-    ParameterSet parameterSet = GcpConfigurationParameters.getParser().parseNamedValues(namedValues);
-    return new ByteArrayInputStream(
-        GcpSecretManagerFactory.getInstance().request(parameterSet).getContent().getData().toByteArray());
-  }
+  private static final String PROVIDER_NAME = "observability-trace-event-listener-provider";
 
   /**
-   * {@inheritDoc}
-   * @return cache of this provider which is used to store configuration
+   * Name Parameter name, identifies the listener
    */
+  private static final String UNIQUE_IDENTIFIER_PARAMETER_NAME = "UNIQUE_IDENTIFIER";
+
+
+  /**
+   * Unique identifier, identifies a {@link ObservabilityTraceEventListener}. 
+   */
+  protected static final Parameter uniqueIdentifierParameter = new Parameter() {
+
+    @Override
+    public boolean isSensitive() {
+      return false;
+    }
+
+    @Override
+    public String name() {
+      return UNIQUE_IDENTIFIER_PARAMETER_NAME;
+    }
+    
+  };
+  
+  /**
+   * Constructs a new instance of ObservabilityTraceEventListenerProvider. This
+   * constructor will be called by the driver's service provider to create a new
+   * instance.
+   */
+  public ObservabilityTraceEventListenerProvider() { }
+  
   @Override
-  public OracleConfigurationCache getCache() {
-    return CACHE;
+  public TraceEventListener getTraceEventListener(Map<Parameter, CharSequence> map) {
+    String uniqueIdentifier = 
+        map.getOrDefault(
+            uniqueIdentifierParameter, 
+            (CharSequence)ObservabilityTraceEventListener.DEFAULT_UNIQUE_IDENTIFIER).toString();
+    return ObservabilityTraceEventListener.getOrCreateInstance(uniqueIdentifier, ObservabilityConfigurationType.OBSERVABILITY);
   }
 
   @Override
-  public String getParserType(String arg0) {
-    return "json";
+  public String getName() {
+    return PROVIDER_NAME;
   }
+
+  @Override
+  public Collection<? extends Parameter> getParameters() {
+    return Collections.singletonList(uniqueIdentifierParameter);
+  }
+
 }

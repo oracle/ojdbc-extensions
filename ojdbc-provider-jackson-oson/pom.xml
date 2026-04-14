@@ -15,6 +15,7 @@
     <properties>
         <jackson-version>2.21.2</jackson-version>
         <jakarta-persistence-api>3.1.0</jakarta-persistence-api>
+        <maven.javadoc.skip>true</maven.javadoc.skip> 
     </properties>
 
     <dependencies>
