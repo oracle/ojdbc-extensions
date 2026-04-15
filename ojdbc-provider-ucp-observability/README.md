@@ -183,6 +183,8 @@ public class MyApp {
 | `db.client.connection.idle.min` | LongGauge | `{connection}` | Configured minimum pool size. |
 | `db.client.connection.wait_time` | DoubleHistogram | `s` | Average borrow wait time. Recorded on `CONNECTION_BORROWED` only, when > 0. |
 
+Note: `db.client.connection.usage` intentionally deviates from the OpenTelemetry semantic convention name `db.client.connection.count` to avoid the reserved Prometheus `_count` suffix.
+
 #### UCP-specific
 
 | Metric name | Instrument | Unit | Description |

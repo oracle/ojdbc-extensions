@@ -157,10 +157,10 @@ public final class OtelUCPEventListenerProvider
     private final LongGauge connectionIdleMin =
       meter.gaugeBuilder("db.client.connection.idle.min")
         .setDescription(
-            "Approximation of the minimum number of idle open connections allowed. " +
-            "Sourced from UCP's minPoolSize (minimum total pool size), which is the " +
-            "closest value UCP's event API exposes. May differ from true idle minimum " +
-            "when connections are actively borrowed.")
+          "Approximation of the minimum number of idle open connections allowed. " +
+          "Sourced from UCP's minPoolSize (minimum total pool size), which is the " +
+          "closest value UCP's event API exposes. May differ from true idle minimum " +
+          "when connections are actively borrowed.")
         .setUnit("{connection}").ofLongs().build();
 
     // db.client.connection.wait_time (DoubleHistogram, seconds)
@@ -170,8 +170,8 @@ public final class OtelUCPEventListenerProvider
     private final DoubleHistogram waitTime =
       meter.histogramBuilder("db.client.connection.wait_time")
         .setDescription(
-            "Approximation of borrow wait time based on UCP's pool-wide cumulative " +
-            "average. Recorded on CONNECTION_BORROWED events only when wait time > 0.")
+          "Approximation of borrow wait time based on UCP's pool-wide cumulative " +
+          "average. Recorded on CONNECTION_BORROWED events only when wait time > 0.")
         .setUnit("s").build();
 
     // db.client.connection.established (LongGauge)
@@ -283,7 +283,6 @@ public final class OtelUCPEventListenerProvider
         }
       }
 
-      // UCP-specific metrics.
       connectionEstablished.set(ctx.createdConnections(), state.attrs);
       connectionClosed.set(ctx.closedConnections(), state.attrs);
     }
