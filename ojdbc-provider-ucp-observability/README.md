@@ -117,8 +117,8 @@ Converts every UCP pool and connection event into a committed JFR event. Zero ov
 | `borrowedConnectionsCount` | `int` | Currently checked-out connections |
 | `availableConnectionsCount` | `int` | Ready-to-use connections |
 | `totalConnections` | `int` | Current active connections (borrowed + available) |
-| `createdConnections` | `long` | Total connections ever created |
-| `closedConnections` | `long` | Total connections closed |
+| `createdConnections` | `int` | Total connections ever created |
+| `closedConnections` | `int` | Total connections closed |
 | `averageConnectionWaitTime` | `long` | Average milliseconds a thread waited to obtain a connection |
 
 ### Enabling a JFR recording
