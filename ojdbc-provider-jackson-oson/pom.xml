@@ -15,7 +15,6 @@
     <properties>
         <jackson-version>2.21.2</jackson-version>
         <jakarta-persistence-api>3.1.0</jakarta-persistence-api>
-        <maven.javadoc.skip>true</maven.javadoc.skip> 
     </properties>
 
     <dependencies>
@@ -85,6 +84,20 @@
                         </manifestEntries>
                     </archive>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <configuration>
+                            <additionalOptions>
+                                <additionalOption>--add-exports=com.fasterxml.jackson.datatype.jsr310/com.fasterxml.jackson.datatype.jsr310.util=com.oracle.database.jdbc.provider.jackson.oson</additionalOption>
+                            </additionalOptions>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
