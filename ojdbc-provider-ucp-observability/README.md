@@ -117,8 +117,8 @@ Converts every UCP pool and connection event into a committed JFR event. Zero ov
 | `borrowedConnectionsCount` | `int` | Currently checked-out connections |
 | `availableConnectionsCount` | `int` | Ready-to-use connections |
 | `totalConnections` | `int` | Current active connections (borrowed + available) |
-| `createdConnections` | `long` | Total connections ever created |
-| `closedConnections` | `long` | Total connections closed |
+| `createdConnections` | `int` | Total connections ever created |
+| `closedConnections` | `int` | Total connections closed |
 | `averageConnectionWaitTime` | `long` | Average milliseconds a thread waited to obtain a connection |
 
 ### Enabling a JFR recording
@@ -182,6 +182,8 @@ public class MyApp {
 | `db.client.connection.max` | LongGauge | `{connection}` | Configured maximum pool size. |
 | `db.client.connection.idle.min` | LongGauge | `{connection}` | Configured minimum pool size. |
 | `db.client.connection.wait_time` | DoubleHistogram | `s` | Average borrow wait time. Recorded on `CONNECTION_BORROWED` only, when > 0. |
+
+Note: `db.client.connection.usage` intentionally deviates from the OpenTelemetry semantic convention name `db.client.connection.count` to avoid the reserved Prometheus `_count` suffix.
 
 #### UCP-specific
 

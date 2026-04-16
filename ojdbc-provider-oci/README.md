@@ -56,7 +56,7 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-oci</artifactId>
-  <version>1.0.6</version>
+  <version>1.0.7</version>
 </dependency>
 ```
 
@@ -87,6 +87,14 @@ The Oracle Data Source uses a new prefix `jdbc:oracle:thin:@config-ociobject://`
 
 <pre>
 jdbc:oracle:thin:@config-ociobject://{url_path}[?option1=value1&option2=value2...]
+</pre>
+
+Supported URL path forms include:
+<pre>
+objectstorage.{region}.oraclecloud.com/n/{namespace}/b/{bucket}/o/{object}
+objectstorage.{region}.oraclecloud.com/p/{par-token}/n/{namespace}/b/{bucket}/o/{object}
+{namespace}.objectstorage.{region}.oci.customer-oci.com/n/{namespace}/b/{bucket}/o/{object}
+{namespace}.objectstorage.{region}.oci.customer-oci.com/p/{par-token}/n/{namespace}/b/{bucket}/o/{object}
 </pre>
 
 The instructions of obtaining a URL Path can be found in [Get the URI or Pre-Authenticated Request URL to Access the Object Store](https://docs.oracle.com/en/cloud/paas/autonomous-database/csgru/get-uri-access-object-store.html).
@@ -223,7 +231,7 @@ share the same sets of parameters for authentication configuration.
 
 The Centralized Config Providers in this module use the
 [OCI SDK Authentication Methods](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdk_authentication_methods.htm) to provide authorization and authentication to the Object Storage, Database Tools Connection and Vault services.
-The user can provide an optional parameter `AUTHENTICATION` (case-ignored) which is mapped with the following Credential Class.
+The user can provide an optional parameter `AUTHENTICATION` (case-ignored), and its values are also parsed case-insensitively. It is mapped with the following Credential Class.
 
 <table>
 <thead><tr>
@@ -257,7 +265,7 @@ in Optional Parameters</td>
   <td>
     <code>OCI_INSTANCE_PRINCIPAL_TIMEOUT</code> <br>
     <i>(Optional)</i> Specifies the maximum time, in seconds, to wait for the instance principal authentication process to complete.<br>
-    The value must be a valid integer (e.g., <code>5</code>, <code>30</code>). Decimal values are not allowed.<br>
+    The value must be a positive integer (e.g., <code>5</code>, <code>30</code>). Decimal values are not allowed.<br>
     <b>Default:</b> <code>5</code> seconds
   </td>
 </tr>
@@ -271,7 +279,14 @@ in Optional Parameters</td>
   <td><b>OCI_INTERACTIVE</b></td>
   <td>Session Token-Based Authentication</td>
   <td>Same as OCI_DEFAULT</td>
-  <td>Same as OCI_DEFAULT</td>
+  <td>
+    <code>OCI_INTERACTIVE_TIMEOUT</code> <br>
+    <i>(Optional)</i> Specifies the maximum time, in minutes, for the user to complete the browser login.
+    After the timeout, the local HTTP server on port <code>8181</code> is released automatically,
+    so a subsequent authentication attempt will not fail with a <code>BindException</code>.<br>
+    The value must be a positive integer. Decimal values are not allowed.<br>
+    <b>Default:</b> <code>5</code> minutes
+  </td>
 </tr>
 </tbody>
 </table>
@@ -813,7 +828,19 @@ common set of parameters.
       <td>instancePrincipalTimeout</td>
       <td>
         Specifies the maximum time, in seconds, to wait for instance principal authentication to complete.<br>
-        The value must be a valid integer (e.g., <code>5</code>, <code>10</code>). Decimal values are not accepted.
+        The value must be a positive integer (e.g., <code>5</code>, <code>10</code>). Decimal values are not accepted.
+      </td>
+      <td>A positive integer</td>
+      <td><code>5</code></td>
+    </tr>
+    <tr>
+      <td>interactiveTimeout</td>
+      <td>
+        Specifies the maximum time, in minutes, for the user to complete the browser login when
+        <code>authenticationMethod=interactive</code> is configured.
+        After the timeout, the local HTTP server on port <code>8181</code> is released automatically,
+        so a subsequent authentication attempt will not fail with a <code>BindException</code>.<br>
+        The value must be a positive integer. Decimal values are not accepted.
       </td>
       <td>A positive integer</td>
       <td><code>5</code></td>
@@ -858,7 +885,7 @@ not supported.
 Providers in this module must authenticate with OCI. By default, a provider will
 automatically detect any available credentials.  A specific credential
 may be configured using the "authenticationMethod" parameter. The parameter may
-be set to any of the following values:
+be set to any of the following values (case-insensitive):
 <dl>
 <dt>config-file</dt>
 <dd>
@@ -889,6 +916,10 @@ Cloud Shell
 <dd>
 Authenticate interactively by logging in to a cloud account with your
 default web browser. The browser window is opened automatically.
+A local HTTP server is started on port <code>8181</code> to receive the OAuth2 redirect after login.
+The server is released automatically once the login completes or the <code>interactiveTimeout</code> expires,
+preventing a <code>BindException</code> if authentication is attempted again.
+You may configure the login timeout using the <code>interactiveTimeout</code> parameter.
 </dd>
 <dt>auto-detect</dt>
 <dd>

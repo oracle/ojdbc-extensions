@@ -8,19 +8,21 @@
     <parent>
         <groupId>com.oracle.database.jdbc</groupId>
         <artifactId>ojdbc-extensions</artifactId>
-        <version>1.0.6</version>
+        <version>1.0.7</version>
     </parent>
 
     <artifactId>ojdbc-provider-jackson-oson</artifactId>
     <properties>
-        <jackson-version>2.18.1</jackson-version>
+        <jackson-version>2.21.2</jackson-version>
         <jakarta-persistence-api>3.1.0</jakarta-persistence-api>
+        <maven.javadoc.skip>true</maven.javadoc.skip> 
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.oracle.database.jdbc</groupId>
             <artifactId>ojdbc-provider-common</artifactId>
+            <version>1.0.7</version>
         </dependency>
         <dependency>
             <groupId>com.oracle.database.jdbc</groupId>
@@ -71,6 +73,17 @@
                         <artifactId>${project.artifactId}</artifactId>
                         <version>${project.version}</version>
                     </systemPropertyVariables>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Automatic-Module-Name>com.oracle.database.jdbc.provider.jackson.oson</Automatic-Module-Name>
+                        </manifestEntries>
+                    </archive>
                 </configuration>
             </plugin>
         </plugins>

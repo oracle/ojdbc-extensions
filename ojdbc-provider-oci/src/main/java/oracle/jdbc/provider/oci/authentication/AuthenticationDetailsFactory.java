@@ -116,6 +116,28 @@ public final class AuthenticationDetailsFactory
     Parameter.create();
 
   /**
+   * Default number of minutes to wait for the user to complete the browser
+   * login during interactive authentication. Used when
+   * {@link #INTERACTIVE_TIMEOUT} is not explicitly configured.
+   */
+  public static final int DEFAULT_INTERACTIVE_TIMEOUT_MINUTES = 5;
+
+  /**
+   * Timeout in minutes for interactive (browser-based) authentication.
+   * Controls how long the provider waits for the user to complete the login
+   * in their web browser before giving up.
+   * <p>
+   * When the timeout expires, the local HTTP server on port 8181 is stopped
+   * automatically, releasing the port so that a subsequent authentication
+   * attempt can bind it again.
+   * </p>
+   * Optional – defaults to {@value #DEFAULT_INTERACTIVE_TIMEOUT_MINUTES}
+   * minutes if not explicitly configured.
+   */
+  public static final Parameter<Integer> INTERACTIVE_TIMEOUT =
+    Parameter.create();
+
+  /**
    * <p>
    * An OCI region provided by instances of
    * {@link AbstractAuthenticationDetailsProvider} which implement the

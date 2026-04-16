@@ -44,7 +44,7 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-azure</artifactId>
-  <version>1.0.6</version>
+  <version>1.0.7</version>
 </dependency>
 ```
 
@@ -623,7 +623,7 @@ common set of parameters.
       Active Directory tenant ID
       </a>
       <td><i>
-        No default value. If <code>TENANT_ID</code> is configured as an 
+        No default value. If <code>AZURE_TENANT_ID</code> is configured as an 
         <a href="https://learn.microsoft.com/en-us/java/api/overview/azure/identity-readme?view=azure-java-stable#environment-variables">
         Azure SDK environment variable
         </a>, it will be used.
@@ -640,7 +640,7 @@ common set of parameters.
       Active Directory application ID
       </a>
       <td><i>
-        No default value. If <code>CLIENT_ID</code> is configured as an 
+        No default value. If <code>AZURE_CLIENT_ID</code> is configured as an 
         <a href="https://learn.microsoft.com/en-us/java/api/overview/azure/identity-readme?view=azure-java-stable#environment-variables">
         Azure SDK environment variable
         </a>, it will be used.
@@ -658,7 +658,7 @@ common set of parameters.
       Active Directory application certificate
       </a>. The file may be use PEM or PFX encoding.
       <td><i>
-        No default value. If <code>CLIENT_CERTIFICATE_PATH</code> is configured as an 
+        No default value. If <code>AZURE_CLIENT_CERTIFICATE_PATH</code> is configured as an 
         <a href="https://learn.microsoft.com/en-us/java/api/overview/azure/identity-readme?view=azure-java-stable#service-principal-with-certificate">
         Azure SDK environment variable
         </a>, it will be used.
@@ -673,7 +673,7 @@ common set of parameters.
       <td>
       An PFX certificate password.
       <td><i>
-        No default value. If <code>CLIENT_CERTIFICATE_PASSWORD</code> is configured as an 
+        No default value. If <code>AZURE_CLIENT_CERTIFICATE_PASSWORD</code> is configured as an 
         <a href="https://learn.microsoft.com/en-us/java/api/overview/azure/identity-readme?view=azure-java-stable#service-principal-with-certificate">
         Azure SDK environment variable
         </a>, it will be used.
@@ -690,7 +690,7 @@ common set of parameters.
       Active Directory application secret
       </a>.
       <td><i>
-        No default value. If <code>CLIENT_SECRET</code> is configured as an 
+        No default value. If <code>AZURE_CLIENT_SECRET</code> is configured as an 
         <a href="https://learn.microsoft.com/en-us/java/api/overview/azure/identity-readme?view=azure-java-stable#service-principal-with-secret">
         Azure SDK environment variable
         </a>, it will be used.

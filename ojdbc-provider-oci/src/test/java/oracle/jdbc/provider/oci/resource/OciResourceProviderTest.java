@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2025 Oracle and/or its affiliates.
+ ** Copyright (c) 2026 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -36,25 +36,56 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.hashicorp.util;
+package oracle.jdbc.provider.oci.resource;
+
+import oracle.jdbc.provider.oci.authentication.AuthenticationMethod;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * Utility class for parameter resolution.
+ * Verifies shared authentication parsing behavior in {@link OciResourceProvider}.
  */
-public final class Parameterutil {
+public class OciResourceProviderTest {
 
-  private Parameterutil() {
-    // Prevent instantiation.
+  /**
+   *  Verifies lowercase resource authentication values are parsed.
+   */
+  @Test
+  public void testResourceAuthenticationValueLowerCase() {
+    assertEquals(
+      AuthenticationMethod.CONFIG_FILE,
+      OciResourceProvider.parseAuthenticationMethod("config-file"));
   }
 
   /**
-   * Returns the fallback value for the given key by checking system properties first,
-   * then environment variables.
-   *
-   * @param key the key to look up
-   * @return the fallback value, or null if not found
+   * Verifies uppercase resource authentication values are parsed.
    */
-  public static String getFallback(String key) {
-    return System.getProperty(key, System.getenv(key));
+  @Test
+  public void testResourceAuthenticationValueUpperCase() {
+    assertEquals(
+      AuthenticationMethod.CONFIG_FILE,
+      OciResourceProvider.parseAuthenticationMethod("CONFIG-FILE"));
+  }
+
+  /**
+   * Verifies mixed-case resource authentication values are parsed.
+   */
+  @Test
+  public void testResourceAuthenticationValueMixedCase() {
+    assertEquals(
+      AuthenticationMethod.INSTANCE_PRINCIPAL,
+      OciResourceProvider.parseAuthenticationMethod("Instance-PRINCIPAL"));
+  }
+
+  /**
+   * Verifies unknown resource authentication values are rejected.
+   */
+  @Test
+  public void testResourceAuthenticationValueUnknownRejected() {
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> OciResourceProvider.parseAuthenticationMethod("not-a-method"));
   }
 }

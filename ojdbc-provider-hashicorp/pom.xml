@@ -11,7 +11,7 @@
     <parent>
         <groupId>com.oracle.database.jdbc</groupId>
         <artifactId>ojdbc-extensions</artifactId>
-        <version>1.0.6</version>
+        <version>1.0.7</version>
     </parent>
 
     <dependencies>
@@ -39,5 +39,22 @@
             <artifactId>junit-jupiter-engine</artifactId>
         </dependency>
     </dependencies>
+
+    <build>
+      <plugins>
+          <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-jar-plugin</artifactId>
+              <version>3.3.0</version>
+              <configuration>
+                  <archive>
+                      <manifestEntries>
+                          <Automatic-Module-Name>com.oracle.database.jdbc.provider.hashicorp</Automatic-Module-Name>
+                      </manifestEntries>
+                  </archive>
+              </configuration>
+          </plugin>
+      </plugins>
+    </build>
 
 </project>

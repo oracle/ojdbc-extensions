@@ -67,10 +67,10 @@ import java.util.concurrent.ConcurrentHashMap;
  *       UCP provides absolute snapshots rather than incremental deltas.</li>
  *   <li>{@code db.client.connection.max} (LongGauge) — recorded on pool lifecycle events
  *       only, since maxPoolSize is a configuration constant.</li>
- *   <li>{@code db.client.connection.idle.min} (LongGauge) — approximated from
+ *   <li>{@code db.client.connection.idle.min} (LongGauge) — sourced from
  *       {@link UCPEventContext#minPoolSize()} (minimum total pool size, not idle-only).
  *       Recorded on pool lifecycle events only.</li>
- *   <li>{@code db.client.connection.wait_time} (DoubleHistogram, seconds) — approximated
+ *   <li>{@code db.client.connection.wait_time} (DoubleHistogram, seconds) — sourced
  *       from UCP's cumulative pool-wide average; recorded on {@code CONNECTION_BORROWED}
  *       only when {@literal >} 0.</li>
  * </ul>
@@ -157,10 +157,8 @@ public final class OtelUCPEventListenerProvider
     private final LongGauge connectionIdleMin =
       meter.gaugeBuilder("db.client.connection.idle.min")
         .setDescription(
-            "Approximation of the minimum number of idle open connections allowed. " +
-            "Sourced from UCP's minPoolSize (minimum total pool size), which is the " +
-            "closest value UCP's event API exposes. May differ from true idle minimum " +
-            "when connections are actively borrowed.")
+            "The minimum number of idle open connections allowed. " +
+            "Sourced from UCP's minPoolSize (minimum total pool size).")
         .setUnit("{connection}").ofLongs().build();
 
     // db.client.connection.wait_time (DoubleHistogram, seconds)
@@ -170,8 +168,8 @@ public final class OtelUCPEventListenerProvider
     private final DoubleHistogram waitTime =
       meter.histogramBuilder("db.client.connection.wait_time")
         .setDescription(
-            "Approximation of borrow wait time based on UCP's pool-wide cumulative " +
-            "average. Recorded on CONNECTION_BORROWED events only when wait time > 0.")
+            "Borrow wait time based on UCP's pool-wide cumulative average. " +
+            "Recorded on CONNECTION_BORROWED events only when wait time > 0.")
         .setUnit("s").build();
 
     // db.client.connection.established (LongGauge)
@@ -283,7 +281,6 @@ public final class OtelUCPEventListenerProvider
         }
       }
 
-      // UCP-specific metrics.
       connectionEstablished.set(ctx.createdConnections(), state.attrs);
       connectionClosed.set(ctx.closedConnections(), state.attrs);
     }

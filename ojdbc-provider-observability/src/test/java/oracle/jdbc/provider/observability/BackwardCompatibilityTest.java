@@ -38,6 +38,7 @@
 package oracle.jdbc.provider.observability;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.lang.management.ManagementFactory;
 import java.util.HashMap;
@@ -47,6 +48,7 @@ import javax.management.Attribute;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import oracle.jdbc.spi.OracleResourceProvider.Parameter;
@@ -58,62 +60,67 @@ public class BackwardCompatibilityTest {
  @Test
   public void testConfiguration() throws Exception {
     
-    // System properties
-    System.setProperty("oracle.jdbc.provider.opentelemetry.enabled", "true");
-    System.setProperty("oracle.jdbc.provider.opentelemetry.sensitive-enabled", "true");
+    try {
+      // System properties
+      System.setProperty("oracle.jdbc.provider.opentelemetry.enabled", "true");
+      System.setProperty("oracle.jdbc.provider.opentelemetry.sensitive-enabled", "true");
 
-    TraceEventListenerProvider provider = new OpenTelemetryTraceEventListenerProvider();
-    Map<Parameter, CharSequence> parameters = new HashMap<>();
-    provider.getParameters().forEach(parameter -> {
-      parameters.put(parameter, (CharSequence)INSTANCE_NAME);
-    });
-    ObservabilityTraceEventListener listener = (ObservabilityTraceEventListener)provider.getTraceEventListener(parameters);
-    ObservabilityConfiguration configuration = listener.getObservabilityConfiguration();
+      TraceEventListenerProvider provider = new OpenTelemetryTraceEventListenerProvider();
+      Map<Parameter, CharSequence> parameters = new HashMap<>();
+      provider.getParameters().forEach(parameter -> {
+        parameters.put(parameter, (CharSequence)INSTANCE_NAME);
+      });
+      ObservabilityTraceEventListener listener = (ObservabilityTraceEventListener)provider.getTraceEventListener(parameters);
+      ObservabilityConfiguration configuration = listener.getObservabilityConfiguration();
 
-    assertEquals(true, configuration.getEnabled());
-    assertEquals("OTEL", configuration.getEnabledTracers());
-    assertEquals(true, configuration.getSensitiveDataEnabled());
+      assertEquals(true, configuration.getEnabled());
+      assertEquals("OTEL", configuration.getEnabledTracers());
+      assertEquals(true, configuration.getSensitiveDataEnabled());
 
-    assertEquals(1, configuration.getEnabledTracersAsList().size());
-    assertEquals("OTEL", configuration.getEnabledTracersAsList().get(0));
+      assertEquals(1, configuration.getEnabledTracersAsList().size());
+      assertEquals("OTEL", configuration.getEnabledTracersAsList().get(0));
 
-    // MBean
-    ObjectName objectName = listener.getMBeanObjectName();
-    MBeanServer server = ManagementFactory.getPlatformMBeanServer();
-    String enabled = server.getAttribute(objectName, "Enabled").toString();
-    String enabledTracers = server.getAttribute(objectName, "EnabledTracers").toString();
-    String sensitiveDataEnabled = server.getAttribute(objectName, "SensitiveDataEnabled").toString();
+      // MBean
+      ObjectName objectName = listener.getMBeanObjectName();
+      MBeanServer server = ManagementFactory.getPlatformMBeanServer();
+      String enabled = server.getAttribute(objectName, "Enabled").toString();
+      String enabledTracers = server.getAttribute(objectName, "EnabledTracers").toString();
+      String sensitiveDataEnabled = server.getAttribute(objectName, "SensitiveDataEnabled").toString();
 
-    assertEquals(enabled, "true");
-    assertEquals(enabledTracers, "OTEL");
-    assertEquals(sensitiveDataEnabled, "true");
+      assertEquals(enabled, "true");
+      assertEquals(enabledTracers, "OTEL");
+      assertEquals(sensitiveDataEnabled, "true");
 
-    server.setAttribute(objectName, new Attribute("Enabled", false));
-    server.setAttribute(objectName, new Attribute("SensitiveDataEnabled", false));
+      server.setAttribute(objectName, new Attribute("Enabled", false));
+      server.setAttribute(objectName, new Attribute("SensitiveDataEnabled", false));
 
-    assertEquals(false, configuration.getEnabled());
-    assertEquals(false, configuration.getSensitiveDataEnabled());
+      assertEquals(false, configuration.getEnabled());
+      assertEquals(false, configuration.getSensitiveDataEnabled());
 
-    assertEquals("OTEL", configuration.getEnabledTracers());
-    assertEquals(false, configuration.getSensitiveDataEnabled());
+      assertEquals("OTEL", configuration.getEnabledTracers());
+      assertEquals(false, configuration.getSensitiveDataEnabled());
 
-    assertEquals(1, configuration.getEnabledTracersAsList().size());
-    assertEquals("OTEL", configuration.getEnabledTracersAsList().get(0));
+      assertEquals(1, configuration.getEnabledTracersAsList().size());
+      assertEquals("OTEL", configuration.getEnabledTracersAsList().get(0));
 
-    // Singleton
-    configuration.setEnabled(true);
-    configuration.setSensitiveDataEnabled(true);
+      // Singleton
+      configuration.setEnabled(true);
+      configuration.setSensitiveDataEnabled(true);
 
-    enabled = server.getAttribute(objectName, "Enabled").toString();
-    enabledTracers = server.getAttribute(objectName, "EnabledTracers").toString();
-    sensitiveDataEnabled = server.getAttribute(objectName, "SensitiveDataEnabled").toString();
+      enabled = server.getAttribute(objectName, "Enabled").toString();
+      enabledTracers = server.getAttribute(objectName, "EnabledTracers").toString();
+      sensitiveDataEnabled = server.getAttribute(objectName, "SensitiveDataEnabled").toString();
 
-    assertEquals("true", enabled);
-    assertEquals("OTEL", enabledTracers);
-    assertEquals("true", sensitiveDataEnabled);
+      assertEquals("true", enabled);
+      assertEquals("OTEL", enabledTracers);
+      assertEquals("true", sensitiveDataEnabled);
 
-    assertEquals(1, configuration.getEnabledTracersAsList().size());
-    assertEquals("OTEL", configuration.getEnabledTracersAsList().get(0));
+      assertEquals(1, configuration.getEnabledTracersAsList().size());
+      assertEquals("OTEL", configuration.getEnabledTracersAsList().get(0));
+  } catch (Throwable throwable) {
+    throwable.printStackTrace();
+    Assertions.fail("Failed", throwable);
+  }
 
   }
 }
