@@ -4,7 +4,7 @@
 
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-extensions</artifactId>
-  <version>1.0.6</version>
+  <version>1.0.7</version>
   <packaging>pom</packaging>
 
   <name>Extensions for the Oracle JDBC Driver</name>
@@ -32,7 +32,7 @@
   <properties>
     <maven.compiler.target>1.8</maven.compiler.target>
     <maven.compiler.source>1.8</maven.compiler.source>
-    <jdbc.version>23.26.0.0.0</jdbc.version>
+    <jdbc.version>23.26.1.0.0</jdbc.version>
     <junit.version>5.9.0</junit.version>
     <mockito.version>4.11.0</mockito.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -74,6 +74,7 @@
     <module>ojdbc-provider-gcp</module>
     <module>ojdbc-provider-jackson-oson</module>
     <module>ojdbc-provider-observability</module>
+    <module>ojdbc-provider-ucp-observability</module>
     <module>ojdbc-provider-hashicorp</module>
     <module>ojdbc-provider-pkl</module>
   </modules>
@@ -83,7 +84,7 @@
       <dependency>
         <groupId>com.oracle.database.jdbc</groupId>
         <artifactId>ojdbc-provider-common</artifactId>
-        <version>1.0.6</version>
+        <version>1.0.7</version>
       </dependency>
       <dependency>
         <groupId>com.oracle.database.jdbc</groupId>
@@ -117,7 +118,7 @@
       <dependency>
         <groupId>com.oracle.database.jdbc</groupId>
         <artifactId>ojdbc-provider-common</artifactId>
-        <version>1.0.6</version>
+        <version>1.0.7</version>
         <classifier>tests</classifier>
         <type>test-jar</type>
         <scope>test</scope>
@@ -216,6 +217,7 @@
         <directory>${project.basedir}/src/main/resources/META-INF/services/</directory>
         <includes>
           <include>oracle.jdbc.spi.*</include>
+          <include>oracle.ucp.events.core.*</include>
         </includes>
         <targetPath>META-INF/services/</targetPath>
       </resource>
