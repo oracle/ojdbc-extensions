@@ -217,6 +217,7 @@
         <directory>${project.basedir}/src/main/resources/META-INF/services/</directory>
         <includes>
           <include>oracle.jdbc.spi.*</include>
+          <include>oracle.ucp.events.core.*</include>
         </includes>
         <targetPath>META-INF/services/</targetPath>
       </resource>
