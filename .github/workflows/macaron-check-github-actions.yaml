@@ -24,12 +24,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@<FULL_COMMIT_SHA>
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           persist-credentials: false
 
       - name: Run Macaron check-github-actions policy
-        uses: oracle/macaron@<FULL_COMMIT_SHA>
+        uses: oracle/macaron@b31acfe389133a5587d9639063ec70cb84e7bc47 # v0.23.0
         with:
           repo_path: https://github.com/${{ github.repository }}
           policy_file: check-github-actions
