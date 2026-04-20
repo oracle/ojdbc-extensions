@@ -13,6 +13,10 @@
     <version>1.0.7</version>
   </parent>
 
+  <properties>
+    <maven.javadoc.skip>true</maven.javadoc.skip> 
+  </properties>
+
   <dependencyManagement>
     <dependencies>
       <dependency>
