@@ -14,6 +14,14 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.TEST_AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.TEST_AWS_SECRET_ACCESS_KEY }}
     steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Run Macaron Security Analysis Action
+        uses: oracle/macaron@b31acfe389133a5587d9639063ec70cb84e7bc47 # v0.23.0
+        with:
+          repo_path: 'https://github.com/oracle/ojdbc-extensions'
+          policy_file: check-github-actions
+          policy_purl: 'pkg:github.com/oracle/ojdbc-extensions@.*'
+          reports_retention_days: 90
       - name: Checkout the repository
         uses: actions/checkout@v4
       - name: Set up JDK 21
