@@ -75,3 +75,5 @@ jobs:
           repo_path: https://github.com/${{ github.repository }}
           policy_file: check-github-actions
           policy_purl: pkg:github/${{ github.repository }}@${{ github.sha }}
+          # Skip provenance check since this project doesn't produce artifacts
+          skip_provenance_check: true
