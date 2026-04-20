@@ -46,6 +46,10 @@
           <groupId>com.github.tomakehurst</groupId>
           <artifactId>wiremock-jre8</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-lang3</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -59,6 +63,10 @@
         <exclusion>
           <groupId>com.github.tomakehurst</groupId>
           <artifactId>wiremock-jre8</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-lang3</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
