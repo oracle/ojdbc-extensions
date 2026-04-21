@@ -20,10 +20,12 @@ Each module of this project contains a set of providers.
 <dt><a href="ojdbc-provider-aws/README.md">Oracle JDBC AWS Providers</a></dt>
 <dd>Providers for integration with AWS</dd>
 </dl>
-<u>The next one contains a provider for Open Telemetry:</u>
+<u>The next modules contain providers for observability:</u>
 <dl>
 <dt><a href="ojdbc-provider-observability/README.md">Oracle JDBC Observability Provider</a></dt>
 <dd>Provider for integration with Open Telemetry and Java Flight Recorder.</dd>
+<dt><a href="ojdbc-provider-ucp-observability/README.md">Oracle JDBC UCP Observability Provider</a></dt>
+<dd>Providers for integration with Oracle UCP observability through Open Telemetry metrics and Java Flight Recorder events.</dd>
 </dl>
 <u>And the last one contains a provider for Jackson-OSON:</u>
 <dl>
@@ -141,6 +143,10 @@ this project:
 [ojdbc-provider-aws](ojdbc-provider-aws/README.md#installation)
 
 [ojdbc-provider-gcp](ojdbc-provider-gcp/README.md#installation)
+
+[ojdbc-provider-observability](ojdbc-provider-observability/README.md#installation)
+
+[ojdbc-provider-ucp-observability](ojdbc-provider-ucp-observability/README.md#installation)
 
 [ojdbc-provider-opentelemetry](ojdbc-provider-opentelemetry/README.md#installation)
 
