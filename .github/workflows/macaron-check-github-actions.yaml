@@ -47,11 +47,11 @@ on:
       - ".github/workflows/**"
       - ".github/actions/**"
   push:
-    # branches:
-    #   - main
-    # paths:
-    #   - ".github/workflows/**"
-    #   - ".github/actions/**"
+    branches:
+      - main
+    paths:
+      - ".github/workflows/**"
+      - ".github/actions/**"
   workflow_dispatch:
   schedule:
     - cron: "20 15 * * 3"
