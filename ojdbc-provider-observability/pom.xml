@@ -15,7 +15,7 @@
   <artifactId>ojdbc-provider-observability</artifactId>
 
   <properties>
-      <opentelemetry.version>1.44.1</opentelemetry.version>
+      <opentelemetry.version>1.62.0</opentelemetry.version>
       <maven.compiler.source>11</maven.compiler.source>
       <maven.compiler.target>11</maven.compiler.target>
   </properties>
