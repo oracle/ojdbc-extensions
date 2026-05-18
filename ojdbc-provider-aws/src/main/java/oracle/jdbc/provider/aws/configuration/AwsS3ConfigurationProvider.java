@@ -55,6 +55,9 @@ import static oracle.jdbc.provider.aws.s3.S3Factory.S3_URL;
  * See {@link #getInputStream(String)} for the spec of the JSON payload.
  **/
 public class AwsS3ConfigurationProvider extends OracleConfigurationParsableProvider {
+
+    private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
+
     private static final ParameterSetParser PARAMETER_SET_PARSER =
         AwsConfigurationParameters.configureBuilder(
                 ParameterSetParser.builder()

@@ -69,9 +69,9 @@ public class SecretsManagerSEPSProvider
   implements UsernameProvider, PasswordProvider {
 
   private static final ResourceParameter[] PARAMETERS = {
-    new ResourceParameter(AwsSecretsManagerResourceParameterNames.WALLET_PASSWORD,
+    new ResourceParameter(AwsResourceParameterNames.WALLET_PASSWORD,
       PASSWORD),
-    new ResourceParameter(AwsSecretsManagerResourceParameterNames.CONNECTION_STRING_INDEX,
+    new ResourceParameter(AwsResourceParameterNames.CONNECTION_STRING_INDEX,
       CONNECTION_STRING_INDEX)
   };
 

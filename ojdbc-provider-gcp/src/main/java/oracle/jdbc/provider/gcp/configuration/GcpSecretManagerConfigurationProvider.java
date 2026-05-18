@@ -56,6 +56,8 @@ import oracle.jdbc.util.OracleConfigurationCache;
 public class GcpSecretManagerConfigurationProvider
     extends OracleConfigurationParsableProvider {
 
+  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
+
   @Override
   public String getType() {
     return "gcpsecretmanager";

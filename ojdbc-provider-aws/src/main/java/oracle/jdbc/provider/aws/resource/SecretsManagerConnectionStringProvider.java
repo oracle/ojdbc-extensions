@@ -45,12 +45,10 @@ import oracle.jdbc.provider.util.TNSNames;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.IOException;
-import java.util.Base64;
 import java.util.Map;
 
 import static oracle.jdbc.provider.util.CommonParameters.TNS_ALIAS;
 import static oracle.jdbc.provider.util.FileUtils.decodeIfBase64;
-import static oracle.jdbc.provider.util.FileUtils.isBase64Encoded;
 
 /**
  * <p>
@@ -70,7 +68,7 @@ public class SecretsManagerConnectionStringProvider
   implements ConnectionStringProvider {
 
   private static final ResourceParameter[] PARAMETERS = {
-    new ResourceParameter(AwsSecretsManagerResourceParameterNames.TNS_ALIAS,
+    new ResourceParameter(AwsResourceParameterNames.TNS_ALIAS,
       TNS_ALIAS)
   };
 
@@ -115,6 +113,10 @@ public class SecretsManagerConnectionStringProvider
       return connectionString;
     } catch (IOException e) {
       throw new IllegalStateException("Failed to read tnsnames.ora content", e);
+    } catch (StringIndexOutOfBoundsException | IllegalStateException parseException) {
+      throw new IllegalStateException(
+        "Invalid or corrupted tnsnames.ora content. Ensure the secret contains valid, complete tnsnames.ora data (base64-encoded or plain text).", parseException
+      );
     }
   }
 

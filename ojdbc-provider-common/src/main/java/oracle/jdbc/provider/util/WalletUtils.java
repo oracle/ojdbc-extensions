@@ -114,7 +114,8 @@ public final class WalletUtils {
    * </p>
    * <ol>
    *   <li>
-   *     <strong>If {@code connectionStringIndex} is {@code null}:</strong>
+   *     <strong>If {@code connectionStringIndex} is {@code null}, empty,
+   *     or blank:</strong>
    *     <ul>
    *       <li>
    *         The method first attempts to retrieve credentials using the default
@@ -183,12 +184,21 @@ public final class WalletUtils {
   public static Credentials getCredentials(
     byte[] walletBytes, char[] walletPassword, String connectionStringIndex) {
 
+    // treat blank as missing
+    if (connectionStringIndex != null && connectionStringIndex.trim().isEmpty()) {
+      connectionStringIndex = null;
+    }
+
     OracleWallet wallet = new OracleWallet();
     try {
       wallet.setWalletArray(walletBytes, walletPassword);
     }
     catch (IOException ioException) {
-      throw new IllegalStateException("Failed to open wallet", ioException);
+      String message = "Failed to open wallet. The wallet content may be corrupted or incomplete.";
+      if (walletPassword != null) {
+        message += " If a walletPassword is required and was provided, it may be incorrect.";
+      }
+      throw new IllegalStateException(message, ioException);
     }
 
     try {

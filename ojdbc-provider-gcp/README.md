@@ -146,7 +146,6 @@ For the JSON type of provider (GCP Object Storage, HTTP/HTTPS, File) the passwor
     - `base64` (Base64)
     - `awssecretsmanager` (AWS Secrets Manager)
     - `hcpvaultdedicated` (HCP Vault Dedicated)
-    - `hcpvaultsecret` (HCP Vault Secrets)
 - `value`
   - Mandatory
   - Possible values
@@ -156,7 +155,6 @@ For the JSON type of provider (GCP Object Storage, HTTP/HTTPS, File) the passwor
     - Base64 Encoded password (if base64)
     - AWS Secret name (if awssecretsmanager)
     - Secret path (if hcpvaultdedicated)
-    - Secret name (if hcpvaultsecret)
 - `authentication`
   - Optional
   - Possible Values

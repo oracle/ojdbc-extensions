@@ -53,6 +53,8 @@ import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.De
 
 public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleConfigurationParsableProvider {
 
+  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
+
   @Override
   public InputStream getInputStream(String secretPath) {
     final String valueFieldName = "value";

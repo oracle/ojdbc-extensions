@@ -1,2 +1,1 @@
 oracle.jdbc.provider.hashicorp.hcpvaultdedicated.configuration.DedicatedVaultSecretsManagerConfigurationProvider
-oracle.jdbc.provider.hashicorp.hcpvaultsecret.configuration.HcpVaultSecretsManagerConfigurationProvider

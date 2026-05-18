@@ -52,6 +52,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 import static oracle.jdbc.provider.aws.configuration.AwsConfigurationParameters.*;
+import static oracle.jdbc.provider.util.ParameterUtils.getParameterWithFallback;
 
 /**
  * A factory for retrieving <b>Freeform Configurations</b> data from AWS
@@ -131,30 +132,5 @@ public class AppConfigFactory extends AwsResourceFactory<InputStream> {
               new ByteArrayInputStream(configResponse.configuration().asByteArray()),
               false);
     }
-  }
-
-  /**
-   * Retrieves a parameter value with fallback to system property and environment variable.
-   * @param parameter The Parameter object to retrieve from ParameterSet.
-   * @param sysPropKey The system property key to check.
-   * @param envVarKey The environment variable key to check.
-   * @param paramSet The ParameterSet to check first.
-   * @return The parameter value, or throws an exception if not found.
-   * @throws IllegalArgumentException if the parameter is not found in any source.
-   */
-  private static String getParameterWithFallback(Parameter<String> parameter, String sysPropKey, String envVarKey, ParameterSet paramSet) {
-    String value = paramSet.getOptional(parameter);
-    if (value == null) {
-      value = System.getProperty(sysPropKey);
-      if (value == null) {
-        value = System.getenv(envVarKey);
-        if (value == null) {
-          throw new IllegalArgumentException(
-            String.format("Parameter '%s' is required and not found in ParameterSet, system property '%s', or environment variable '%s'",
-              paramSet.getName(parameter), sysPropKey, envVarKey));
-        }
-      }
-    }
-    return value;
   }
 }

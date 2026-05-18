@@ -47,6 +47,7 @@ import oracle.jdbc.provider.util.JsonWebTokenParser;
 import java.awt.*;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -61,6 +62,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
@@ -118,6 +121,9 @@ final class InteractiveAuthentication {
 
     Region region = parameterSet.getOptional(AuthenticationDetailsFactory.REGION);
 
+    int timeoutMinutes =
+      parameterSet.getOptional(AuthenticationDetailsFactory.INTERACTIVE_TIMEOUT);
+
     // The OCI CLI listens on port 8181, so this method will do the same. It is
     // believed that the redirect URI of "http://localhost:8181" is registered
     // with the login endpoint of Oracle Cloud, and so it would reject an
@@ -134,8 +140,11 @@ final class InteractiveAuthentication {
       KeyPair keyPair = generateKeyPair();
       openBrowser(region, keyPair.getPublic(), redirectAddress);
 
-      // Wait for the browser login to complete
-      LoginResult loginResult = awaitLogin(loginFuture);
+      // Wait for the browser login to complete, up to the configured timeout.
+      // When the timeout expires the finally block cancels loginFuture, which
+      // triggers the whenComplete callback in acceptRedirect() to stop the
+      // HTTP server and release port 8181.
+      LoginResult loginResult = awaitLogin(loginFuture, timeoutMinutes);
 
       // If a region has not been configured, then extract it from the
       // "issuer_region" claim of the ID token.
@@ -194,6 +203,19 @@ final class InteractiveAuthentication {
     final HttpServer server;
     try {
       server = HttpServer.create(redirectAddress, 0);
+    }
+    catch (BindException bindException) {
+      // Port 8181 is already held — most likely by a previous interactive
+      // authentication session whose browser login was never completed.
+      // The previous server will release the port automatically once its
+      // login timeout expires (default: 5 minutes).
+      throw new IllegalStateException(
+        "OCI interactive authentication failed: port "
+        + redirectAddress.getPort() + " is already in use."
+        + " A previous interactive authentication session may still be"
+        + " running. Please complete the login in your browser, or wait"
+        + " for the previous session to time out and then try again.",
+        bindException);
     }
     catch (IOException ioException) {
       throw new IllegalStateException(
@@ -389,16 +411,32 @@ final class InteractiveAuthentication {
   }
 
   /**
-   * Awaits the completion of a {@code loginFuture}.
+   * Awaits the completion of a {@code loginFuture}, up to
+   * {@code timeoutMinutes}.
+   * <p>
+   * When the timeout expires the {@code IllegalStateException} propagates to
+   * the caller, whose {@code finally} block cancels the future. Cancelling
+   * the future triggers the {@code whenComplete} callback registered in
+   * {@link #acceptRedirect}, which stops the HTTP server and releases port
+   * 8181 so that the next authentication attempt can bind it.
+   * </p>
    * @param loginFuture Future to await. Not null.
+   * @param timeoutMinutes Maximum minutes to wait for the browser login.
    * @return The result that {@code loginFuture} completes with.
-   * @throws IllegalStateException If the current thread is interrupted, or
-   * the timeout expires, or the {@code loginFuture} completes exceptionally.
+   * @throws IllegalStateException If the current thread is interrupted, the
+   * timeout expires, or the {@code loginFuture} completes exceptionally.
    */
   private static LoginResult awaitLogin(
-    CompletableFuture<LoginResult> loginFuture) {
+    CompletableFuture<LoginResult> loginFuture, int timeoutMinutes) {
     try {
-      return loginFuture.get();
+      return loginFuture.get(timeoutMinutes, TimeUnit.MINUTES);
+    }
+    catch (TimeoutException timeoutException) {
+      throw new IllegalStateException(
+        "Interactive OCI authentication timed out after "
+        + timeoutMinutes + " minute(s). The browser login was not completed"
+        + " in time. Port 8181 has been released.",
+        timeoutException);
     }
     catch (InterruptedException interruptedException) {
       throw new IllegalStateException(
