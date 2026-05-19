@@ -4,10 +4,10 @@ Implementations of service provider interfaces (SPIs) that extend the
 Oracle JDBC Driver for integration with cloud services and other specialized
 APIs. These SPI implementations are referred as "providers" for short.
 
-Each module of this project contains a set of providers.
+Each module of this project will integrate Oracle JDBC with a different 
+technology.
 
-<u>The following modules contain providers for a particular cloud platform:</u>
-
+<h3>Cloud Platform Integration</h3>
 <dl>
 <dt><a href="ojdbc-provider-oci/README.md">Oracle JDBC OCI Providers</a></dt>
 <dd>Providers for integration with Oracle Cloud Infrastructure (OCI).</dd>
@@ -20,13 +20,10 @@ Each module of this project contains a set of providers.
 <dt><a href="ojdbc-provider-aws/README.md">Oracle JDBC AWS Providers</a></dt>
 <dd>Providers for integration with AWS</dd>
 </dl>
-<u>The next one contains a provider for Open Telemetry:</u>
+<h3>Library and Framework Integration</h3>
 <dl>
 <dt><a href="ojdbc-provider-observability/README.md">Oracle JDBC Observability Provider</a></dt>
 <dd>Provider for integration with Open Telemetry and Java Flight Recorder.</dd>
-</dl>
-<u>And the last one contains a provider for Jackson-OSON:</u>
-<dl>
 <dt><a href="ojdbc-provider-jackson-oson/README.md">Oracle JDBC Jackson OSON</a></dt>
 <dd>Provider for <a href="https://docs.oracle.com/en/database/oracle/oracle-database/23/adjsn/json-in-oracle-database.html#GUID-A8A58B49-13A5-4F42-8EA0-508951DAE0BB">OSON</a> through the JACKSON APIs. 
 This provider can be used for seamless integration of applications that use the JACKSON APIs with the Oracle JSON type.</dd>
