@@ -45,13 +45,11 @@ import java.io.*;
 import java.nio.CharBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -156,26 +154,8 @@ public class JsonWebTokenParser {
     Map<String, String> claims = JsonWebTokenParser.parseClaims(jwt);
 
     String exp = claims.get("exp");
-    if (exp == null) {
-      try {
-        Files.write(
-          Paths.get(System.getenv("HOME"), "michael-debug.log"),
-          Arrays.asList("No exp claim found"));
-      }
-      catch (Exception exception) {
-        throw new RuntimeException(exception);
-      }
+    if (exp == null)
       return OffsetDateTime.MAX;
-    }
-
-    try {
-      Files.write(
-        Paths.get(System.getenv("HOME"), "michael-debug.log"),
-        Arrays.asList("exp=" + exp));
-    }
-    catch (Exception exception) {
-      throw new RuntimeException(exception);
-    }
 
     return Instant.ofEpochSecond(Long.parseLong(exp))
       .atOffset(ZoneOffset.UTC);
