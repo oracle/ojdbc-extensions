@@ -4,10 +4,10 @@ Implementations of service provider interfaces (SPIs) that extend the
 Oracle JDBC Driver for integration with cloud services and other specialized
 APIs. These SPI implementations are referred as "providers" for short.
 
-Each module of this project contains a set of providers.
+Each module of this project will integrate Oracle JDBC with a different
+technology.
 
-<u>The following modules contain providers for a particular cloud platform:</u>
-
+<h3>Cloud Platform Integration</h3>
 <dl>
 <dt><a href="ojdbc-provider-oci/README.md">Oracle JDBC OCI Providers</a></dt>
 <dd>Providers for integration with Oracle Cloud Infrastructure (OCI).</dd>
@@ -20,18 +20,17 @@ Each module of this project contains a set of providers.
 <dt><a href="ojdbc-provider-aws/README.md">Oracle JDBC AWS Providers</a></dt>
 <dd>Providers for integration with AWS</dd>
 </dl>
-<u>The next one contains a provider for Open Telemetry:</u>
+<h3>Library and Framework Integration</h3>
 <dl>
 <dt><a href="ojdbc-provider-observability/README.md">Oracle JDBC Observability Provider</a></dt>
 <dd>Provider for integration with Open Telemetry and Java Flight Recorder.</dd>
-</dl>
-<u>And the last one contains a provider for Jackson-OSON:</u>
-<dl>
 <dt><a href="ojdbc-provider-jackson-oson/README.md">Oracle JDBC Jackson OSON</a></dt>
 <dd>Provider for <a href="https://docs.oracle.com/en/database/oracle/oracle-database/23/adjsn/json-in-oracle-database.html#GUID-A8A58B49-13A5-4F42-8EA0-508951DAE0BB">OSON</a> through the JACKSON APIs. 
 This provider can be used for seamless integration of applications that use the JACKSON APIs with the Oracle JSON type.</dd>
 <dt><a href="ojdbc-provider-pkl/README.md">Oracle JDBC Pkl Parser</a></dt>
 <dd>Parser for integration with Pkl that can be used by providers</dd>
+<dt><a href="ojdbc-provider-spring/README.md">Oracle JDBC Spring Providers</a></dt>
+<dd>Providers for integration with Spring</dd>
 </dl>
 Visit any of the links above to learn about providers which are available for 
 a particular platform.
@@ -67,12 +66,12 @@ for TLS communication.
 
 ## General Usage
 
-When a provider is present in a JVM's class path, Oracle JDBC can be configured 
+When a provider is present in a JVM's class path, Oracle JDBC can be configured
 to use it.
 
-The providers are designed to be added into an existing system without requiring 
+The providers are designed to be added into an existing system without requiring
 code changes. This means that no application code needs to be modified, and
-no updates are required for the various frameworks, libraries, and tools that 
+no updates are required for the various frameworks, libraries, and tools that
 consume the JDBC driver.
 
 The requirements for using a provider are:
@@ -98,7 +97,7 @@ jdbc:oracle:thin:@config-azure://myappconfig?key=/sales_app1/&label=dev
 </pre>
 
 URLs of this form may be used with any framework, library, or tool that already
-accepts a JDBC URL. For instance, the URL might appear in the 
+accepts a JDBC URL. For instance, the URL might appear in the
 application.properties file of a Spring application:
 
 ```properties
@@ -107,7 +106,7 @@ spring.datasource.url=jdbc:oracle:thin:@config-azure://myappconfig?key=/sales_ap
 
 ### Using Resource Providers
 
-Providers of individual resources are identified and configured using connection 
+Providers of individual resources are identified and configured using connection
 properties of the following form:
 
 ```
@@ -115,7 +114,7 @@ oracle.jdbc.provider.{resource-type}={provider-name}
 oracle.jdbc.provider.{resource-type}.{parameter-name}={parameter-value}
 ```
 
-For example, the connection properties below would identify and configure the 
+For example, the connection properties below would identify and configure the
 OAUTH Token Provider for OCI:
 
 ```properties
@@ -123,7 +122,7 @@ oracle.jdbc.provider.accessToken=ojdbc-provider-oci-token
 oracle.jdbc.provider.accessToken.scope=urn:oracle:db::id::ocid1.compartment.oc1..aaaaaaaajx2fpr7szach4vpdsjegvkbjirronlnwkxiivwmp6qfrissxgyia
 ```
 
-These connection properties can appear in a 
+These connection properties can appear in a
 [connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE),
 or anywhere else that JDBC connection properties might be configured.
 
@@ -147,6 +146,8 @@ this project:
 [ojdbc-provider-jackson-oson](ojdbc-provider-jackson-oson/README.md#installation)
 
 [ojdbc-provider-pkl](ojdbc-provider-pkl/README.md#installation)
+
+[ojdbc-provider-spring](ojdbc-provider-spring/README.md#installation)
 
 
 Each module listed above is distributed on the Maven Central Repository as a
@@ -175,7 +176,7 @@ request, please [review our contribution guide](./CONTRIBUTING.md)
 
 ## Security
 
-Please consult the [security guide](./SECURITY.md) for our responsible security 
+Please consult the [security guide](./SECURITY.md) for our responsible security
 vulnerability disclosure process
 
 ## Building from Source

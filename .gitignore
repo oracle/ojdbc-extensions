@@ -24,3 +24,8 @@ out/
 
 # Vim
 **/*.swp
+**/*.swo
+
+# Environment variables
+**/*.env
+!**/*.example.env

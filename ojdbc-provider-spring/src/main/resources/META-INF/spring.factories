@@ -1,0 +1,1 @@
+org.springframework.context.ApplicationListener=oracle.jdbc.provider.spring.context.ApplicationContextHolder
