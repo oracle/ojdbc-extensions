@@ -42,6 +42,12 @@ import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -224,6 +230,18 @@ public final class CachedResourceFactory<T> implements ResourceFactory<T> {
       return future.get();
     }
     catch (ExecutionException executionException) {
+      try (
+        Writer writer = Files.newBufferedWriter(
+          Paths.get(System.getenv("HOME"), "michael-debug.log"));
+        PrintWriter printWriter = new PrintWriter(writer);
+      ){
+        executionException.printStackTrace(printWriter);
+      }
+      catch (Exception exception) {
+        exception.addSuppressed(executionException);
+        throw new RuntimeException(exception);
+      }
+
       Throwable cause = executionException.getCause();
 
       if (cause instanceof Error)
