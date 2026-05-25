@@ -47,7 +47,7 @@ spring:
     url: >
       jdbc:oracle:thin:@example
         ?oracle.jdbc.provider.endUserSecurityContext=ojdbc-provider-spring-end-user-security-context
-        &oracle.jdbc.provider.endUserSecurityContext.registrationId=azure_client
+        &oracle.jdbc.provider.endUserSecurityContext.registrationId=azure
     username: db_user
     password: db_password
 ```
