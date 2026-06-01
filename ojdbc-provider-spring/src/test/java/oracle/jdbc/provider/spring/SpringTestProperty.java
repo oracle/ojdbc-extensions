@@ -71,8 +71,7 @@ public enum SpringTestProperty {
   OCI_TOKEN_URI(SpringPropertyType.PROVIDER, "token-uri"),
   OCI_CLIENT_ID(SpringPropertyType.REGISTRATION, "client-id"),
   OCI_CLIENT_SECRET(SpringPropertyType.REGISTRATION, "client-secret"),
-  OCI_SCOPE(SpringPropertyType.REGISTRATION, "scope"),
-  OCI_USER_OCID(SpringPropertyType.NONE, null);
+  OCI_SCOPE(SpringPropertyType.REGISTRATION, "scope");
 
   /**
    * Prefix of the Spring property that this test property maps to, such as
