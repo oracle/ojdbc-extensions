@@ -45,6 +45,9 @@ import oracle.jdbc.provider.spring.context.ApplicationContextHolder;
 import oracle.jdbc.provider.util.JsonWebTokenParser;
 import oracle.jdbc.spi.EndUserSecurityContextProvider;
 import oracle.jdbc.spi.OracleResourceProvider.Parameter;
+import oracle.sql.json.OracleJsonFactory;
+import oracle.sql.json.OracleJsonObject;
+import oracle.sql.json.OracleJsonValue;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
@@ -52,15 +55,19 @@ import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.AbstractOAuth2TokenAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
+import java.io.StringReader;
 import java.net.URI;
 import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
@@ -68,11 +75,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static oracle.jdbc.provider.TestProperties.getOptional;
 import static oracle.jdbc.provider.TestProperties.getOrAbort;
 import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.getParameter;
 import static oracle.jdbc.provider.spring.SpringTestProperty.AZURE_CLIENT_ID;
@@ -83,7 +91,6 @@ import static oracle.jdbc.provider.spring.SpringTestProperty.OCI_CLIENT_ID;
 import static oracle.jdbc.provider.spring.SpringTestProperty.OCI_CLIENT_SECRET;
 import static oracle.jdbc.provider.spring.SpringTestProperty.OCI_SCOPE;
 import static oracle.jdbc.provider.spring.SpringTestProperty.OCI_TOKEN_URI;
-import static oracle.jdbc.provider.spring.SpringTestProperty.OCI_USER_OCID;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -112,6 +119,25 @@ public class SpringSecurityContextProviderTest {
   private static final Parameter ROLES_PARAMETER =
     getParameter(PROVIDER, "dataRoles");
 
+  /**
+   * Optional parameter that configures END USER CONTEXT attributes
+   */
+  private static final Parameter ATTRIBUTES_PARAMETER =
+    getParameter(PROVIDER, "endUserContextAttributes");
+
+  /**
+   * Optional parameter that configures a prefix for GrantedAuthority objects
+   * that are mapped to data roles
+   */
+  private static final Parameter ROLE_PREFIX_PARAMETER =
+    getParameter(PROVIDER, "authorityRolePrefix");
+
+  /**
+   * Optional parameter that configures a prefix for GrantedAuthority objects
+   * that are mapped to END USER CONTEXT attributes.
+   */
+  private static final Parameter ATTRIBUTE_PREFIX_PARAMETER =
+    getParameter(PROVIDER, "authorityAttributesPrefix");
 
   /**
    * Value set as the {@link #REGISTRATION_ID_PARAMETER}. Repeated use of the
@@ -125,6 +151,17 @@ public class SpringSecurityContextProviderTest {
   */
   private static final String TEST_REGISTRATION_ID = "test";
 
+  /**
+   * Prefix for {@link GrantedAuthority} objects which this test will use when
+   * verifying the {@link #ROLE_PREFIX_PARAMETER}
+   */
+  private static final String TEST_ROLE_PREFIX= "TEST_ROLE_";
+
+  /**
+   * Prefix for {@link GrantedAuthority} objects which this test will use when
+   * verifying the {@link #ATTRIBUTE_PREFIX_PARAMETER}
+   */
+  private static final String TEST_ATTRIBUTE_PREFIX= "TEST_ATTRIBUTE_";
 
   /**
    * Verifies the claims of a database access token issued by Azure.
@@ -257,11 +294,10 @@ public class SpringSecurityContextProviderTest {
    */
   @Test
   public void testAzureClientCredentialsSpringProperties() {
-    Map<Parameter, CharSequence> springPropertyParameters =
-      getSpringPropertyParameters(
-        AuthorizationGrantType.CLIENT_CREDENTIALS.getValue(),
-        AZURE_TOKEN_URI, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_SCOPE);
-    verifyAuthenticatedUser(springPropertyParameters, AZURE_CLAIM_VERIFIER);
+    configureSpringProperties(
+      AuthorizationGrantType.CLIENT_CREDENTIALS.getValue(),
+      AZURE_TOKEN_URI, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_SCOPE);
+    test(AZURE_CLAIM_VERIFIER);
   }
 
   /**
@@ -271,66 +307,214 @@ public class SpringSecurityContextProviderTest {
    */
   @Test
   public void testOciClientCredentialsSpringProperties() {
-    Map<Parameter, CharSequence> springPropertyParameters =
-      getSpringPropertyParameters(
-        AuthorizationGrantType.CLIENT_CREDENTIALS.getValue(),
-        OCI_TOKEN_URI, OCI_CLIENT_ID, OCI_CLIENT_SECRET, OCI_SCOPE);
-    verifyAuthenticatedUser(springPropertyParameters, OCI_CLAIM_VERIFIER);
+    configureSpringProperties(
+      AuthorizationGrantType.CLIENT_CREDENTIALS.getValue(),
+      OCI_TOKEN_URI, OCI_CLIENT_ID, OCI_CLIENT_SECRET, OCI_SCOPE);
+    test(OCI_CLAIM_VERIFIER);
   }
 
   /**
-   * Verifies the case where an application user is authenticated and
-   * {@link SpringSecurityContextProvider#getEndUserSecurityContext(Map)} is
-   * invoked with a given set of parameters when. Test methods can configure the
-   * parameters to use a specific grant type and authorization endpoint. This
-   * method may invoke getEndUserSecurityContext multiple times to verify
-   * handling of parameters such as
-   * {@link #ROLES_PARAMETER} which do not influence OAUTH 2.0.
+   * Executes a series of tests with the given JWT claims verifier.
    *
-   * @param parameters Parameter for the provider. Not null.
+   * @param claimVerifier Verifies the claims of the 
+   * {@link EndUserSecurityContext#databaseAccessToken()}. Not null.
    */
-  private void verifyAuthenticatedUser(
-    Map<Parameter, CharSequence> parameters,
-    Consumer<Map<String,String>> claimVerifier) {
+  private void test(Consumer<Map<String,String>> claimVerifier) {
 
-    JwtAuthenticationToken userAuthentication = createUserAuthentication();
+    test(
+      claimVerifier,
+      createUserAuthentication());
+
+    test(
+      claimVerifier,
+      createUserAuthentication(
+        new SimpleGrantedAuthority("ROLE_APP_NEGATIVE_TEST0"),
+        new SimpleGrantedAuthority("ORACLE_DATA_ROLE_NEGATIVE_TEST1"),
+        new SimpleGrantedAuthority(TEST_ROLE_PREFIX + "DATA_ROLE1"),
+        new SimpleGrantedAuthority(TEST_ROLE_PREFIX + "DATA_ROLE2"),
+        new SimpleGrantedAuthority(TEST_ROLE_PREFIX + "MERGED_ROLE"),
+        new SimpleGrantedAuthority(TEST_ROLE_PREFIX), // NEGATIVE TEST
+        new SimpleGrantedAuthority("_" + TEST_ROLE_PREFIX + "NEGATIVE_TEST_2")
+      ));
+
+    test(
+      claimVerifier,
+      createUserAuthentication(
+        new SimpleGrantedAuthority("ATTRIBUTE_APP_NEGATIVE_TEST0"),
+        new SimpleGrantedAuthority("ATTRIBUTE_{"
+          + "\"a\" : {\"negative\" : \"test\"}"
+          + "}"),
+        new SimpleGrantedAuthority("ORACLE_CONTEXT_ATTRIBUTES_NEGATIVE_TEST1"),
+        new SimpleGrantedAuthority(TEST_ATTRIBUTE_PREFIX + "{"
+          + "  \"test\" : {"
+          + "    \"a\" : 0,"
+          + "    \"b\" : \"bee\""
+          + "  }"
+          + "}"),
+        new SimpleGrantedAuthority(TEST_ATTRIBUTE_PREFIX + "{\n"
+          // The intent of including escaped double-quotes in the JSON field
+          // names is to verify that the provider will support quoted
+          // identifiers, as in:
+          //   CREATE USER "app_schema_1" ...
+          //   CREATE END USER CONTEXT "test2" ...
+          + "  \"\\\"app_schema_1\\\".test1\" : {\n"
+          + "    \"a\" : 1.25,\n"
+          + "    \"b\" : {\n"
+          + "      \"b_1\" : \"bee\",\n"
+          + "      \"b_2\" : \"bee" + Stream.generate(() -> "e").limit(4000).collect(Collectors.joining()) + "\"\n"
+          + "    }\n"
+          + "  },\n"
+          + "  \"app_schema_2.\\\"test2\\\"\" : {\n"
+          + "    \"c\" : {\n"
+          + "      \"c_1\" : \"sea\",\n"
+          + "      \"c_2\" : -0.0009\n"
+          + "    },\n"
+          + "    \"d\" : { }\n"
+          + "  },\n"
+          + "  \"merged_context\" : {\n"
+          // The testAttributesParameter method creates a GrantedAuthority with
+          // a "merged_context" JSON object, but the object does not contain a
+          // "not_merged_1" value, so the value of 1 here should be included in
+          // the EndUserSecurityContext.
+          + "    \"not_merged_1\" : 1,"
+          // The value of 1 here should overwrite by the value of 0 in the
+          // testAttributesParameter method.
+          + "    \"merged\" : 1"
+          + "  }\n"
+          + "}"),
+        new SimpleGrantedAuthority(TEST_ATTRIBUTE_PREFIX), // NEGATIVE TEST
+        new SimpleGrantedAuthority("_" + TEST_ATTRIBUTE_PREFIX + "NEGATIVE_TEST_2")
+      ));
+  }
+
+  private void test(
+    Consumer<Map<String,String>> claimVerifier,
+    Authentication authentication) {
+
     SecurityContext securityContext =
       SecurityContextHolder.createEmptyContext();
-    securityContext.setAuthentication(userAuthentication);
+    securityContext.setAuthentication(authentication);
 
     SecurityContextHolder.setContext(securityContext);
     try {
-      parameters = new HashMap<>(parameters);
-//      verifyEndUserSecurityContext(
-//        userAuthentication,
-//        parameters,
-//        PROVIDER.getEndUserSecurityContext(parameters),
-//        claimVerifier);
-
-      parameters.put(ROLES_PARAMETER, "role1");
-      verifyEndUserSecurityContext(
-        userAuthentication,
-        parameters,
-        PROVIDER.getEndUserSecurityContext(parameters),
-        claimVerifier);
-
-      parameters.put(ROLES_PARAMETER, "role1,role2");
-      verifyEndUserSecurityContext(
-        userAuthentication,
-        parameters,
-        PROVIDER.getEndUserSecurityContext(parameters),
-        claimVerifier);
-
-      parameters.put(ROLES_PARAMETER, "role1, role2, role3");
-      verifyEndUserSecurityContext(
-        userAuthentication,
-        parameters,
-        PROVIDER.getEndUserSecurityContext(parameters),
-        claimVerifier);
+      testBasic(claimVerifier);
+      testRolesParameter(claimVerifier);
+      testAttributesParameter(claimVerifier);
+      testRolePrefixParameter(claimVerifier);
+      testAttributePrefixParameter(claimVerifier);
     }
     finally {
       SecurityContextHolder.clearContext();
     }
+  }
+
+  private static void testBasic(
+    Consumer<Map<String, String>> claimVerifier) {
+    test(
+      Collections.emptyMap(),
+      claimVerifier);
+  }
+
+  private static void testRolesParameter(
+    Consumer<Map<String, String>> claimVerifier
+  ) {
+    test(
+      Map.of(ROLES_PARAMETER, "role1"),
+      claimVerifier);
+
+    test(
+      Map.of(ROLES_PARAMETER, "role1,role2"),
+      claimVerifier);
+
+    test(
+      Map.of(ROLES_PARAMETER, "role1, role2, MERGED_ROLE"),
+      claimVerifier);
+  }
+
+  private static void testAttributesParameter(
+    Consumer<Map<String, String>> claimVerifier
+  ) {
+
+    test(
+      Map.of(ATTRIBUTES_PARAMETER, "{}"),
+      claimVerifier);
+
+    test(
+      Map.of(ATTRIBUTES_PARAMETER, "{"
+        + "  \"test\" : {"
+        + "    \"a\" : 0,"
+        + "    \"b\" : \"bee\""
+        + "  }"
+        + "}"),
+      claimVerifier);
+
+    test(
+      Map.of(ATTRIBUTES_PARAMETER, "{\n"
+        + "  \"app_schema.\\\"test1\\\"\" : {\n"
+        + "    \"a\" : 1.25,\n"
+        + "    \"b\" : {\n"
+        + "      \"b_1\" : \"bee\",\n"
+        + "      \"b_2\" : \"bee" + Stream.generate(() -> "e").limit(4000).collect(Collectors.joining()) + "\"\n"
+        + "    }\n"
+        + "  },\n"
+        + "  \"\\\"app_schema\\\".\\\"test2\\\"\" : {\n"
+        + "    \"c\" : {\n"
+        + "      \"c_1\" : \"sea\",\n"
+        + "      \"c_2\" : -0.0009\n"
+        + "    },\n"
+        + "    \"d\" : { }\n"
+        + "  }\n"
+        + "}"),
+      claimVerifier);
+  }
+
+  private static void testRolePrefixParameter(
+    Consumer<Map<String, String>> claimVerifier
+  ) {
+    test(
+      Map.of(ROLE_PREFIX_PARAMETER, TEST_ROLE_PREFIX),
+      claimVerifier);
+  }
+
+  private static void testAttributePrefixParameter(
+    Consumer<Map<String, String>> claimVerifier
+  ) {
+    test(
+      Map.of(
+        ATTRIBUTE_PREFIX_PARAMETER, TEST_ATTRIBUTE_PREFIX,
+        ATTRIBUTES_PARAMETER, "{"
+          + "  \"merged_context\" : {\n"
+          // The test method creates a GrantedAuthority with a "merged_context"
+          // JSON object, but the object does not contain a "not_merged_0" value,
+          // so the value here should be included in the EndUserSecurityContext.
+          + "    \"not_merged_0\" : 0,"
+          // The GrantedAuthority also have a value for "merged", and it should
+          // overwrite the value of 0 here.
+          + "    \"merged\" : 0"
+          + "  }"
+          + "}"),
+      claimVerifier);
+  }
+
+  /**
+   * Invokes {@link SpringSecurityContextProvider#getEndUserSecurityContext(Map)}
+   * with the given parameters, and then verifies the provided
+   * {@link EndUserSecurityContext}. This method will always set the required
+   * {@link #REGISTRATION_ID_PARAMETER} parameter, if it is not set already.
+   */
+  private static void test(
+    Map<Parameter, CharSequence> parameters,
+    Consumer<Map<String, String>> claimVerifier) {
+
+    if (! parameters.containsKey(REGISTRATION_ID_PARAMETER)) {
+      parameters = new HashMap<>(parameters);
+      parameters.put(REGISTRATION_ID_PARAMETER, TEST_REGISTRATION_ID);
+    }
+
+    verifyEndUserSecurityContext(
+      parameters,
+      PROVIDER.getEndUserSecurityContext(parameters),
+      claimVerifier);
   }
 
   /**
@@ -338,35 +522,51 @@ public class SpringSecurityContextProviderTest {
    * {@link SpringSecurityContextProvider#getEndUserSecurityContext(Map)}
    * is correct for a given set of parameters.
    *
-   * @param endUserToken Authentication set on the {@link SecurityContext} when
-   * the end user security context was provided. Not null.
    * @param parameters Parameters passed to the provider. Not null.
    * @param endUserSecurityContext The end user security context provided for
    * the parameters. Not null.
    */
-  private void verifyEndUserSecurityContext(
-    JwtAuthenticationToken endUserToken,
+  private static void verifyEndUserSecurityContext(
     Map<Parameter, CharSequence> parameters,
     EndUserSecurityContext endUserSecurityContext,
     Consumer<Map<String,String>> claimVerifier) {
 
-    assertArrayEquals(
-      endUserToken.getToken().getTokenValue().toCharArray(),
-      endUserSecurityContext.endUserToken().get());
+    verifyEndUserToken(endUserSecurityContext);
+    verifyDatabaseAccessToken(endUserSecurityContext, claimVerifier);
+    verifyDataRoles(parameters, endUserSecurityContext);
+    verifyAttributes(parameters, endUserSecurityContext);
+  }
 
-    Set<String> dataRoles = new HashSet<>();
-
-    CharSequence sessionRoles = parameters.get(ROLES_PARAMETER);
-    if (sessionRoles != null) {
-      Collections.addAll(dataRoles, sessionRoles.toString().split(","));
+  /**
+   * Verifies that a provided EndUserSecurityContext has an end user token
+   * present in the {@link SecurityContextHolder}
+   */
+  private static void verifyEndUserToken(EndUserSecurityContext endUserSecurityContext) {
+    Authentication authentication =
+      SecurityContextHolder.getContext().getAuthentication();
+    final char[] endUserToken;
+    if (
+      authentication instanceof AbstractOAuth2TokenAuthenticationToken<?> token
+    ) {
+      endUserToken = token.getToken().getTokenValue().toCharArray();
+    }
+    else {
+      throw new IllegalStateException("Unrecognized: " + authentication);
     }
 
-    dataRoles =
-      dataRoles.stream()
-        .map(String::trim)
-        .collect(Collectors.toSet());
-    assertEquals(dataRoles, endUserSecurityContext.dataRoles());
+    assertArrayEquals(
+      endUserToken,
+      endUserSecurityContext.endUserToken().get());
+  }
 
+  /**
+   * Verifies that a provided EndUserSecurityContext has a database access token
+   * with the expected claims.
+   */
+  private static void verifyDatabaseAccessToken(
+    EndUserSecurityContext endUserSecurityContext,
+    Consumer<Map<String, String>> claimVerifier
+  ) {
     char[] databaseAccessToken =
       endUserSecurityContext.databaseAccessToken();
     assertNotNull(databaseAccessToken);
@@ -374,9 +574,111 @@ public class SpringSecurityContextProviderTest {
     Map<String,String> claims =
       JsonWebTokenParser.parseClaims(CharBuffer.wrap(databaseAccessToken));
     claimVerifier.accept(claims);
+
     int exp = Integer.parseInt(claims.get("exp"));
     long now = System.currentTimeMillis() / 1000;
     assertTrue(exp >= now, exp + " < " + now);
+  }
+
+  /**
+   * Verifies that a provided EndUserSecurityContext has data roles configured
+   * both by the dataRoles parameter, and matching the authorityRolePrefix
+   * of GrantedAuthority objects present in the {@link SecurityContextHolder}.
+   */
+  private static void verifyDataRoles(
+    Map<Parameter, CharSequence> parameters,
+    EndUserSecurityContext endUserSecurityContext) {
+
+    Set<String> expectedDataRoles = new HashSet<>();
+
+    CharSequence fixedDataRoles = parameters.get(ROLES_PARAMETER);
+    if (fixedDataRoles != null) {
+      Collections.addAll(expectedDataRoles, fixedDataRoles.toString().split(","));
+    }
+
+    expectedDataRoles.addAll(
+      matchAuthorityPrefix(parameters.get(ROLE_PREFIX_PARAMETER)));
+
+    expectedDataRoles =
+      expectedDataRoles.stream()
+        .map(String::trim)
+        .filter(role -> !role.isEmpty())
+        .collect(Collectors.toSet());
+
+    assertEquals(
+      expectedDataRoles,
+      endUserSecurityContext.dataRoles());
+  }
+
+  /**
+   * Verifies that a provided EndUserSecurityContext has END USER CONTEXT
+   * attributes configured both by the endUserContextAttributes parameter, and
+   * matching the authorityAttributesPrefix of GrantedAuthority objects present
+   * in the {@link SecurityContextHolder}.
+   */
+  private static void verifyAttributes(
+    Map<Parameter, CharSequence> parameters,
+    EndUserSecurityContext endUserSecurityContext) {
+
+    OracleJsonFactory jsonFactory = new OracleJsonFactory();
+    Map<String, OracleJsonObject> expectedAttributes = new HashMap<>();
+
+    CharSequence fixedAttributes = parameters.get(ATTRIBUTES_PARAMETER);
+    if (fixedAttributes != null) {
+      jsonFactory.createJsonTextValue(
+        new StringReader(fixedAttributes.toString()))
+        .asJsonObject()
+        .forEach((contextName, attributes) ->
+          expectedAttributes.put(
+            contextName,
+            attributes.asJsonObject()));
+    }
+
+    matchAuthorityPrefix(parameters.get(ATTRIBUTE_PREFIX_PARAMETER))
+      .stream()
+      .map(StringReader::new)
+      .map(jsonFactory::createJsonTextValue)
+      .map(OracleJsonValue::asJsonObject)
+      .forEach(attributesObject ->
+        attributesObject.forEach((contextName, attributes) ->
+          expectedAttributes.merge(
+            contextName,
+            attributes.asJsonObject(),
+            (existing, current) -> {
+              existing.putAll(current);
+              return existing;
+            })));
+
+    assertEquals(
+      expectedAttributes,
+      endUserSecurityContext.attributes());
+  }
+
+  /**
+   * Returns the String representation of all GrantedAuthority objects present
+   * in the {@link SecurityContextHolder} which match a given prefix.
+   * @param prefix Prefix to match. May be null.
+   * @return All matching authorities. Not null. May be empty.
+   */
+  private static Set<String> matchAuthorityPrefix(CharSequence prefix) {
+
+    if (prefix == null) {
+      return Collections.emptySet();
+    }
+
+    return SecurityContextHolder.getContext()
+      .getAuthentication()
+      .getAuthorities()
+      .stream()
+      .map(GrantedAuthority::getAuthority)
+      .filter(Objects::nonNull)
+      .filter(authorityString ->
+        authorityString.length() > prefix.length())
+      .filter(authorityString ->
+        authorityString.startsWith(prefix.toString()))
+      .map(authorityString ->
+        authorityString.substring(prefix.length()))
+      .collect(Collectors.toSet());
   }
 
   /**
@@ -387,40 +689,50 @@ public class SpringSecurityContextProviderTest {
    *
    * @return Authentication representing an authenticated application user.
    * Not null.
-   *
-   * @implNote This method creates a fake JWT with just enough claims to get
-   * past basic validations:
-   * The exp claim is checked when
-   * {@link EndUserSecurityContext#createWithToken(CharSequence, CharSequence)} is
-   * called.
-   * The alg and sub claims are required when {@link Jwt.Builder#build()}
-   * is called.
-   * The userOcid claim is required when using OCI as an identity provider
    */
-  private static JwtAuthenticationToken createUserAuthentication() {
+  private static JwtAuthenticationToken createUserAuthentication(
+    GrantedAuthority... grantedAuthorities
+  ) {
+    Jwt jwt = createJwt();
+    JwtAuthenticationToken jwtAuthenticationToken =
+      new JwtAuthenticationToken(jwt, Arrays.asList(grantedAuthorities));
+    jwtAuthenticationToken.setAuthenticated(true);
+    return jwtAuthenticationToken;
+  }
+
+  /**
+   * Creates a fake JWT with just enough claims to get past basic validations:
+   * <ul><li>
+   * The exp claim is checked when
+   * {@link EndUserSecurityContext#createWithToken(CharSequence, CharSequence)}
+   * is called.
+   * </li><li>
+   * The "alg" and "sub" claims are required when {@link Jwt.Builder#build()}
+   * is called.
+   * </li></ul>
+   * @return A fake JWT. Not null.
+   */
+  private static Jwt createJwt() {
+
     String alg = "HS256";
     String sub = "yellow";
     long exp = 3600 + (System.currentTimeMillis() / 1000);
-    String userOcid = getOptional(OCI_USER_OCID);
 
     Base64.Encoder base64Encoder = Base64.getEncoder();
     String jwtString =
       base64Encoder.encodeToString(
         ("{"
           + "\"typ\" : \"JWT\","
-          + "\"alg\" : \"" + alg  + "\","
+          + "\"alg\" : \"" + alg + "\","
           + "}")
           .getBytes(StandardCharsets.US_ASCII))
         + "."
         + base64Encoder.encodeToString(
-          ("{"
-            + "\"sub\" : \"" + sub + "\","
-            + "\"exp\" : " + exp + ","
-            + (userOcid != null
-              ? "\"userOcid\" : \"" + userOcid + "\""
-              : "")
-            + "}")
-            .getBytes(StandardCharsets.US_ASCII))
+        ("{"
+          + "\"sub\" : \"" + sub + "\","
+          + "\"exp\" : " + exp
+          + "}")
+          .getBytes(StandardCharsets.US_ASCII))
         + ".dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk";
 
     Jwt.Builder jwtBuilder =
@@ -428,15 +740,7 @@ public class SpringSecurityContextProviderTest {
         .header("alg", alg)
         .claim("sub", sub);
 
-    if (userOcid != null) {
-      jwtBuilder.claim("userOcid", userOcid);
-    }
-
-    Jwt jwt = jwtBuilder.build();
-    JwtAuthenticationToken jwtAuthenticationToken =
-      new JwtAuthenticationToken(jwt);
-    jwtAuthenticationToken.setAuthenticated(true);
-    return jwtAuthenticationToken;
+    return jwtBuilder.build();
   }
 
   /**
@@ -457,23 +761,15 @@ public class SpringSecurityContextProviderTest {
 
   /**
    * <p>
-   * Returns provider parameters for test cases that configure OAuth 2.0 client
-   * registration properties using the environment of an
-   * {@link ApplicationContext}. The client registration is configured values
-   * from of a given set of SpringTestProperties. A test will be aborted if any
-   * of those test properties are not configured. This method will ignore any
-   * test property that doesn't have a {@link SpringTestProperty#springName()}.
+   * Configures OAuth 2.0 client registration and client provider parameters
+   * in the environment of an {@link ApplicationContext}.
    * </p>
    * @param grantType Value of an {@link AuthorizationGrantType} to configure
    * for the OAuth 2.0 client. Not null.
    * @param testProperties Test properties that configure an OAuth 2.0 client
    * registration.
-   *
-   * @return Parameters that can be passed to
-   * {@link SpringSecurityContextProvider#getEndUserSecurityContext(Map)}. Not
-   * null.
    */
-  private static Map<Parameter, CharSequence> getSpringPropertyParameters(
+  private static void configureSpringProperties(
     String grantType,
     SpringTestProperty... testProperties) {
 
@@ -492,7 +788,8 @@ public class SpringSecurityContextProviderTest {
       grantType);
 
     for (SpringTestProperty property : testProperties) {
-      String springPropertyName = property.toSpringProperty(TEST_REGISTRATION_ID);
+      String springPropertyName =
+        property.toSpringProperty(TEST_REGISTRATION_ID);
 
       if (springPropertyName == null) {
         continue;
@@ -511,10 +808,6 @@ public class SpringSecurityContextProviderTest {
     applicationContext.setEnvironment(environment);
     applicationContext.addApplicationListener(new ApplicationContextHolder());
     applicationContext.refresh();
-
-    Map<Parameter, CharSequence> parameters = new HashMap<>();
-    parameters.put(REGISTRATION_ID_PARAMETER, TEST_REGISTRATION_ID);
-    return parameters;
   }
 
   /**

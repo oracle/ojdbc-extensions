@@ -18,8 +18,8 @@ compatible with later JDK versions. The coordinates for the latest release are:
 
 ## End User Security Context Provider
 The End User Security Context Provider provides a security context that enables
-Deep Data Security features in Oracle Database. This is a
-[Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/26/jajdb/oracle/jdbc/spi/OracleResourceProvider.html)
+[Deep Data Security features in Oracle Database](https://docs.oracle.com/en/database/oracle/oracle-database/26/ddscg/understand-oracle-deep-data-security.html).
+This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/26/jajdb/oracle/jdbc/spi/OracleResourceProvider.html)
 identified by the name `ojdbc-provider-spring-end-user-security-context`.
 
 This provider must be configured to authenticate as an OAuth 2.0 client. The
@@ -112,7 +112,8 @@ SecurityContextHolder
 If one or more <code>GrantedAuthority</code> objects have <code>String</code> 
 representations beginning with a specified prefix, then the provider will 
 recognize them as application managed <code>DATA ROLE</code> names that 
-should be enabled for the end user.
+should be enabled for the end user. The prefix is specified by the
+`oracle.jdbc.provider.endUserSecurityContext.authorityRolePrefix` parameter.
 <p>
 The name of a <code>DATA ROLE</code> should appear
 after the specified prefix. For example: If the prefix is configured as 
@@ -120,21 +121,28 @@ after the specified prefix. For example: If the prefix is configured as
 <code>String</code> representation of <code>ORACLE_DATA_ROLE_ADMIN</code>. The 
 provider will recognize that <code>GrantedAuthority</code> as a 
 <code>DATA ROLE</code> named "ADMIN".
+<p>
+In addition to the <code>GrantedAuthority</code> prefix, the provider can also
+be configured with a fixed set of data role names using the
+<code>oracle.jdbc.provider.endUserSecurityContext.dataRoles</code> parameter.
+</p>
 </dd>
 <dt>End User Context Attributes</dt>
 <dd>
 If one or more <code>GrantedAuthority</code> objects have <code>String</code> 
 representations beginning with a specified prefix, then the provider will 
-recognize them as attributes of an <code>END USER CONTEXT</code>.
+recognize them as attributes of an <code>END USER CONTEXT</code>. The prefix is
+specified by the
+`oracle.jdbc.provider.endUserSecurityContext.authorityAttributesPrefix` 
+parameter.
 <p>
 A JSON object containing the attributes of one or more 
-<code>END USER CONTEXT</code> should appear
-after the <code>ORACLE_CONTEXT_ATTRIBUTE_</code> prefix. For example: If the 
-prefix is configured as "ORACLE_CONTEXT_ATTRIBUTE_", then a 
+<code>END USER CONTEXT</code> should appear after the specified prefix. For 
+example: If the prefix is configured as "ORACLE_CONTEXT_ATTRIBUTES_", then a 
 <code>GrantedAuthority</code> might have the following <code>String</code> 
 representation, including the line breaks:
 <pre>
-ORACLE_CONTEXT_ATTRIBUTE_{
+ORACLE_CONTEXT_ATTRIBUTES_{
   "app_schema.user_details" : {
     "first_name" : "George",
     "last_name" : "Washington"
@@ -149,6 +157,12 @@ ORACLE_CONTEXT_ATTRIBUTE_{
 The provider will recognize that <code>GrantedAuthority</code> as the attributes
 of two <code>END USER CONTEXT</code> objects named "user_details" and 
 "location_info", each declared within a database schema named "app_schema". 
+<p>
+In addition to the <code>GrantedAuthority</code> prefix, the provider can also
+be configured with a fixed set of attributes using the
+<code>oracle.jdbc.provider.endUserSecurityContext.endUserContextAttributes</code> 
+parameter.
+</p>
 </dd>
 </dl>
 
@@ -231,18 +245,18 @@ This should be a unique string that is unlikely to collide with a
 </td><td>
 <i>No default value. This parameter is optional.</i>
 </td></tr><tr><td>
-oracle.jdbc.provider.endUserSecurityContext.authorityAttributePrefix
+oracle.jdbc.provider.endUserSecurityContext.authorityAttributesPrefix
 </td><td>
 The prefix used in the <code>String</code> representation of a
 <code>GrantedAuthority</code> that the provider should recognize as 
 a JSON object containing the attributes of one or more 
 <code>END USER CONTEXT</code>. The JSON object should appear
 after the prefix. For example, this parameter might be set to 
-"ORACLE_CONTEXT_ATTRIBUTE_" and a <code>GrantedAuthority</code> 
+"ORACLE_CONTEXT_ATTRIBUTES_" and a <code>GrantedAuthority</code> 
 might have the following <code>String</code> representation, including the line
 breaks:
 <pre>
-ORACLE_CONTEXT_ATTRIBUTE_{
+ORACLE_CONTEXT_ATTRIBUTES_{
   "app_schema.user_details" : {
     "first_name" : "George",
     "last_name" : "Washington"
@@ -264,5 +278,5 @@ This should be a unique string that is unlikely to collide with a
 <code>GrantedAuthority</code> that is not intended to be recognized as 
 <code>END USER CONTEXT</code> attributes.
 </td><td>
-ORACLE_CONTEXT_ATTRIBUTE_
+<i>No default value. This parameter is optional.</i>
 </td></tr></tbody></table>
