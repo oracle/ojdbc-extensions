@@ -173,6 +173,9 @@ public class OciDatabaseToolsConnectionProvider
 
         DatabaseToolsKeyStorePassword keyStorePassword =
           keyStore.getKeyStorePassword();
+        String keyStorePasswordValue = keyStorePassword == null
+          ? null
+          : String.valueOf(getSecret(keyStorePassword).toCharArray());
 
         switch (keyStore.getKeyStoreType()) {
         case JavaKeyStore:
@@ -205,6 +208,14 @@ public class OciDatabaseToolsConnectionProvider
           walletProps.put(
             OracleConnection.CONNECTION_PROPERTY_WALLET_LOCATION,
             "data:;base64," + base64KeyStoreContent);
+          break;
+        case Pem:
+          walletProps.put(
+            OracleConnection.CONNECTION_PROPERTY_WALLET_LOCATION,
+            "data:;base64," + base64KeyStoreContent);
+          if (keyStorePasswordValue != null) {
+            walletProps.put("oracle.net.wallet_password", keyStorePasswordValue);
+          }
           break;
         case UnknownEnumValue:
         default:
@@ -323,4 +334,3 @@ public class OciDatabaseToolsConnectionProvider
     }
   }
 }
-

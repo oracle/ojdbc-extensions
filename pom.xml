@@ -76,6 +76,7 @@
     <module>ojdbc-provider-observability</module>
     <module>ojdbc-provider-hashicorp</module>
     <module>ojdbc-provider-pkl</module>
+    <module>ojdbc-provider-spring</module>
   </modules>
 
   <dependencyManagement>
@@ -219,6 +220,14 @@
         </includes>
         <targetPath>META-INF/services/</targetPath>
       </resource>
+      <!--
+     This allows child modules to include additional resources, such as the
+     spring.factories file in the ojdbc-provider-spring-security module.
+     -->
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+
     </resources>
   </build>
 </project>

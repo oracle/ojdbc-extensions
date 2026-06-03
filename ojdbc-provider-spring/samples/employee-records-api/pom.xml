@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~  Copyright (c) 2026 Oracle and/or its affiliates.
+  ~
+  ~  The Universal Permissive License (UPL), Version 1.0
+  ~
+  ~  Subject to the condition set forth below, permission is hereby granted to any
+  ~  person obtaining a copy of this software, associated documentation and/or data
+  ~  (collectively the "Software"), free of charge and under any and all copyright
+  ~  rights in the Software, and any and all patent rights owned or freely
+  ~  licensable by each licensor hereunder covering either (i) the unmodified
+  ~  Software as contributed to or provided by such licensor, or (ii) the Larger
+  ~  Works (as defined below), to deal in both
+  ~
+  ~  (a) the Software, and
+  ~  (b) any piece of software and/or hardware listed in the lrgrwrks.txt file if
+  ~  one is included with the Software (each a "Larger Work" to which the Software
+  ~  is contributed by such licensors),
+  ~
+  ~  without restriction, including without limitation the rights to copy, create
+  ~  derivative works of, display, perform, and distribute the Software and make,
+  ~  use, sell, offer for sale, import, export, have made, and have sold the
+  ~  Software and the Larger Work(s), and to sublicense the foregoing rights on
+  ~  either these or other terms.
+  ~
+  ~  This license is subject to the following condition:
+  ~  The above copyright notice and either this complete permission notice or at
+  ~  a minimum a reference to the UPL must be included in all copies or
+  ~  substantial portions of the Software.
+  ~
+  ~  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  ~  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  ~  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  ~  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  ~  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ~  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  ~  SOFTWARE.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.3.4</version>
+    <relativePath/> <!-- lookup parent from repository -->
+  </parent>
+
+  <groupId>com.example</groupId>
+  <artifactId>employee-records-api</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>employee-records-api</name>
+  <description>Spring Boot REST API to list employees from Oracle HR.EMPLOYEES, secured by Azure AD</description>
+
+  <properties>
+    <java.version>17</java.version>
+    <oracle.jdbc.version>23.26.2.0.0</oracle.jdbc.version>
+    <oracle.security.version>23.8.0.25.04</oracle.security.version>
+  </properties>
+
+  <dependencies>
+    <!-- Oracle OJDBC Spring provider -->
+    <dependency>
+      <groupId>com.oracle.database.jdbc</groupId>
+      <artifactId>ojdbc-provider-spring</artifactId>
+      <version>1.0.6</version>
+    </dependency>
+
+    <!-- Azure token provider for JDBC -->
+    <dependency>
+      <groupId>com.oracle.database.jdbc</groupId>
+      <artifactId>ojdbc-provider-azure</artifactId>
+      <version>1.0.6</version>
+    </dependency>
+
+    <!-- Oracle JDBC driver -->
+    <dependency>
+      <groupId>com.oracle.database.jdbc</groupId>
+      <artifactId>ojdbc8</artifactId>
+      <version>23.26.2.0.0</version>
+    </dependency>
+
+    <!-- Oracle Wallet/SSL jars for TCPS -->
+    <dependency>
+      <groupId>com.oracle.database.security</groupId>
+      <artifactId>oraclepki</artifactId>
+      <version>${oracle.security.version}</version>
+    </dependency>
+
+    <!-- Web + MVC -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+    <!-- JPA (Hibernate) with HikariCP (Hikari is Boot's default pool) -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+
+    <!-- OAuth2 Resource Server (JWT) for Azure AD -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+    </dependency>
+
+    <!-- Actuator for health/info endpoints -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+
+
+    <!-- AOP -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-aop</artifactId>
+    </dependency>
+
+    <!-- Test -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <release>${java.version}</release>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
