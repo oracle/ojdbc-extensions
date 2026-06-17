@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2025 Oracle and/or its affiliates.
+ ** Copyright (c) 2026 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -36,36 +36,57 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.hashicorp.hcpvaultdedicated;
+package oracle.jdbc.provider.util;
 
-import oracle.jdbc.provider.factory.Resource;
-import oracle.jdbc.provider.factory.ResourceFactory;
-import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultToken;
-import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultTokenFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
+import org.junit.jupiter.api.Test;
+
+import java.util.Base64;
+import java.util.Random;
+
+import static java.nio.charset.StandardCharsets.US_ASCII;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * Common super class for ResourceFactory implementations that request
- * a resource from Vault using a {@link DedicatedVaultToken}.
+ * Verifies error handling in {@link TlsUtils} for malformed or incomplete TLS
+ * configuration inputs.
  */
-public abstract class DedicatedVaultResourceFactory<T> implements ResourceFactory<T> {
+public class TlsUtilsTest {
 
-  @Override
-  public final Resource<T> request(ParameterSet parameterSet) {
-    // Retrieve the Vault credentials from the credentials factory
-    DedicatedVaultToken credentials = DedicatedVaultTokenFactory
-            .getInstance()
-            .request(parameterSet)
-            .getContent();
+  @Test
+  public void testEncryptedPemRequiresPasswordWhenNull() {
+    IllegalArgumentException exception = assertThrows(
+      IllegalArgumentException.class,
+      () -> TlsUtils.createPEMKeyStore(createEncryptedPrivateKeyPem(), null));
 
-    try {
-      return request(credentials, parameterSet);
-    } catch (Exception e) {
-      throw new IllegalStateException(
-              "Request failed while accessing HashiCorp Vault resource.", e);
-    }
+    assertEquals("Encrypted PEM private key requires a password", exception.getMessage());
   }
 
-  public abstract Resource<T> request(
-          DedicatedVaultToken credentials, ParameterSet parameterSet);
+  @Test
+  public void testEncryptedPemRequiresPasswordWhenEmpty() {
+    IllegalArgumentException exception = assertThrows(
+      IllegalArgumentException.class,
+      () -> TlsUtils.createPEMKeyStore(
+        createEncryptedPrivateKeyPem(), new char[0]));
+
+    assertEquals("Encrypted PEM private key requires a password",
+      exception.getMessage());
+  }
+
+  /**
+   * Creates PEM text containing an encrypted private key label with deterministic
+   * test bytes, which is sufficient to exercise pre-decryption validation.
+   *
+   * @return ASCII bytes of a PEM document containing an encrypted private key
+   * label.
+   */
+  private static byte[] createEncryptedPrivateKeyPem() {
+    byte[] encryptedKey = new byte[64];
+    new Random(0L).nextBytes(encryptedKey);
+    String pemString = String.join("\n",
+      "-----BEGIN ENCRYPTED PRIVATE KEY-----",
+      Base64.getMimeEncoder().encodeToString(encryptedKey),
+      "-----END ENCRYPTED PRIVATE KEY-----");
+    return pemString.getBytes(US_ASCII);
+  }
 }

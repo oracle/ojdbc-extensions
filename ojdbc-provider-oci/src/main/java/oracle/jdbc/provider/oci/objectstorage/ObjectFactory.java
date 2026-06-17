@@ -47,6 +47,7 @@ import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.oci.OciResourceFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.provider.util.CommonConstants;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -118,6 +119,15 @@ public class ObjectFactory extends OciResourceFactory<InputStream> {
             .bucketName(objectUrl.bucketName)
             .objectName(objectUrl.objectName)
             .build());
+
+      Long objectSize = getResponse.getContentLength();
+      if (objectSize != null
+        && objectSize > CommonConstants.MAX_REMOTE_CONFIGURATION_LENGTH) {
+        throw new IllegalStateException(
+          "Configuration response exceeds maximum allowed size of "
+            + CommonConstants.MAX_REMOTE_CONFIGURATION_LENGTH
+            + " bytes");
+      }
 
       return Resource.createPermanentResource(
         cloneInputStream(getResponse.getInputStream()), false);

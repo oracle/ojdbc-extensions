@@ -81,7 +81,7 @@ public class OsonOffsetDateTimeDeserializer extends InstantDeserializer<OffsetDa
             a -> OffsetDateTime.ofInstant(Instant.ofEpochMilli(a.value), a.zoneId),
             a -> OffsetDateTime.ofInstant(Instant.ofEpochSecond(a.integer, a.fraction), a.zoneId),
             (d, z) -> (d.isEqual(OffsetDateTime.MIN) || d.isEqual(OffsetDateTime.MAX) ? d : d.withOffsetSameInstant(z.getRules().getOffset(d.toLocalDateTime()))),
-            true);
+            true, true, true);
   }
 
   protected OsonOffsetDateTimeDeserializer(OsonOffsetDateTimeDeserializer base, DateTimeFormatter f)
@@ -102,7 +102,7 @@ public class OsonOffsetDateTimeDeserializer extends InstantDeserializer<OffsetDa
   }
 
   @Override
-  protected OsonOffsetDateTimeDeserializer withDateFormat(DateTimeFormatter dtf) {
+  public OsonOffsetDateTimeDeserializer withDateFormat(DateTimeFormatter dtf) {
     if (dtf == _formatter) {
       return this;
     }

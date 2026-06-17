@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2023 Oracle and/or its affiliates.
+ ** Copyright (c) 2026 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -64,7 +64,7 @@ public final class AzureVaultSecretProvider
     AzureConfigurationParameters.configureBuilder(
       ParameterSetParser.builder()
         .addParameter("type", Parameter.create())
-        .addParameter("value", AzureVaultURLParser::parseVaultSecretUri))
+        .addParameter("value", AzureVaultSecretUriParameterParser::parseVaultSecretUri))
         .build();
 
   /**

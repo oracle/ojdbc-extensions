@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2023 Oracle and/or its affiliates.
+ ** Copyright (c) 2026 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -40,7 +40,6 @@ package oracle.jdbc.provider.azure.configuration;
 
 import com.azure.core.credential.TokenCredential;
 import com.azure.core.exception.AzureException;
-import com.azure.core.util.UrlBuilder;
 import com.azure.data.appconfiguration.ConfigurationClient;
 import com.azure.data.appconfiguration.ConfigurationClientBuilder;
 import com.azure.data.appconfiguration.models.ConfigurationSetting;
@@ -53,6 +52,7 @@ import oracle.jdbc.util.OracleConfigurationCache;
 import oracle.jdbc.util.OracleConfigurationProviderNetworkError;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.azure.authentication.TokenCredentialFactory;
+import oracle.jdbc.provider.azure.keyvault.AzureKeyVaultUriValidator;
 import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonObject;
 
@@ -260,14 +260,14 @@ public class AzureAppConfigurationProvider
    * Returns the value of a Secret from Azure Key Vault.
    * @param credential the credential to use for authenticating the Azure
    *                   request
-   * @param secretReference reference to the Secret which has a format of {@code
+   * @param secretReferenceJson reference to the Secret which has a format of {@code
    *        {"uri":"https://mykeyvault.vault.azure.net/secrets/mySecret"}}
    * @return the value of the Secret
    */
   private String getSecretValue(TokenCredential credential,
-                                String secretReference) {
+                                String secretReferenceJson) {
     InputStream secretRefStream = new ByteArrayInputStream(
-      secretReference.getBytes());
+      secretReferenceJson.getBytes());
     OracleJsonObject json = JSON_FACTORY
         .createJsonTextValue(secretRefStream)
         .asJsonObject();
@@ -276,19 +276,19 @@ public class AzureAppConfigurationProvider
         .asJsonString()
         .getString();
 
-    UrlBuilder urlBuilder = UrlBuilder.parse(vaultUrlAndName);
-
-    String vaultUrl = "https://" + urlBuilder
-        .getHost();
-    String name = urlBuilder
-        .getPath()
-        .replace("/secrets", "");
+    AzureKeyVaultUriValidator.SecretReference keyVaultSecretReference =
+      AzureKeyVaultUriValidator.parseSecretUri(vaultUrlAndName);
 
     SecretClient secretClient = new SecretClientBuilder()
-        .vaultUrl(vaultUrl)
+        .vaultUrl(keyVaultSecretReference.getVaultUrl())
         .credential(credential)
         .buildClient();
-    return secretClient.getSecret(name).getValue();
+    return keyVaultSecretReference.getSecretVersion() == null
+      ? secretClient.getSecret(keyVaultSecretReference.getSecretName()).getValue()
+      : secretClient.getSecret(
+        keyVaultSecretReference.getSecretName(),
+        keyVaultSecretReference.getSecretVersion())
+        .getValue();
   }
 
   private Properties refreshProperties(String location)
@@ -300,5 +300,3 @@ public class AzureAppConfigurationProvider
       }
   }
 }
-
-
