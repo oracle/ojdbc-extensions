@@ -52,6 +52,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.time.Instant;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
@@ -163,7 +164,7 @@ public class ObservabilityTraceEventListenerTest {
                 assertNull(event.getString("originalSQLText"));
                 assertNull(event.getString("actualSQLText"));
                 assertEquals(sensitiveDataEnabled, event.getString("databaseUser") != null);
-                break;            
+                break;
               default:
                 fail("Unexpected event");
             }
@@ -215,6 +216,42 @@ public class ObservabilityTraceEventListenerTest {
     }
     Mockito.verify(span, atLeast(4)).end(Mockito.any(Instant.class));
 
+  }
+
+  @Test
+  public void testMaxConfigurationCount() {
+    // Clear any existing instances for clean test
+    // Since INSTANCES is private, we need to access via reflection or assume clean start
+    // For simplicity, we'll create instances and check via getTraceEventListener
+
+    int maxCount = 100; // MAX_CONFIGURATION_COUNT
+    int testCount = maxCount + 1; // One more than max
+
+    // Create more instances than allowed
+    for (int i = 0; i < testCount; i++) {
+      String uniqueId = "test-instance-" + i;
+      ObservabilityTraceEventListener listener = ObservabilityTraceEventListener.getOrCreateInstance(uniqueId, oracle.jdbc.provider.observability.ObservabilityConfiguration.ObservabilityConfigurationType.OBSERVABILITY);
+      assertNotNull(listener, "Listener should be created for " + uniqueId);
+    }
+
+    // Verify that only up to maxCount instances are retrievable (LRU eviction)
+    int retrievableCount = 0;
+    for (int i = 0; i < testCount; i++) {
+      String uniqueId = "test-instance-" + i;
+      if (ObservabilityTraceEventListener.getTraceEventListener(uniqueId) != null) {
+        retrievableCount++;
+      }
+    }
+
+    assertEquals(maxCount, retrievableCount, "Number of retrievable instances should not exceed MAX_CONFIGURATION_COUNT");
+
+    // Additionally, verify that the first (least recently used) instance is evicted
+    String firstId = "test-instance-0";
+    assertNull(ObservabilityTraceEventListener.getTraceEventListener(firstId), "First instance should be evicted due to LRU");
+
+    // Last instance should still be there
+    String lastId = "test-instance-" + (testCount - 1);
+    assertNotNull(ObservabilityTraceEventListener.getTraceEventListener(lastId), "Last instance should still exist");
   }
 
   private static void configureOTEL() {

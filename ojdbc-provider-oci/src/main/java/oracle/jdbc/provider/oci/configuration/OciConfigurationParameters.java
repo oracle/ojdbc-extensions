@@ -89,6 +89,7 @@ public final class OciConfigurationParameters {
       .addParameter("AUTHENTICATION", AUTHENTICATION_METHOD,
         API_KEY,
         OciConfigurationParameters::parseAuthentication)
+      .addParameter("OCI_CONFIG_FILE", CONFIG_FILE_PATH)
       .addParameter("OCI_PROFILE", CONFIG_PROFILE, "DEFAULT")
       .addParameter("OCI_TENANCY", TENANT_ID)
       .addParameter("OCI_USER", USER_ID)

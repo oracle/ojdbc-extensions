@@ -66,14 +66,14 @@
     <dependency>
       <groupId>com.oracle.database.jdbc</groupId>
       <artifactId>ojdbc-provider-spring</artifactId>
-      <version>1.0.6</version>
+      <version>1.1.0</version>
     </dependency>
 
     <!-- Azure token provider for JDBC -->
     <dependency>
       <groupId>com.oracle.database.jdbc</groupId>
       <artifactId>ojdbc-provider-azure</artifactId>
-      <version>1.0.6</version>
+      <version>1.1.0</version>
     </dependency>
 
     <!-- Oracle JDBC driver -->

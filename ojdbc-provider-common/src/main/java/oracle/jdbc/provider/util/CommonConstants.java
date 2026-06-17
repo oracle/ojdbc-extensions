@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2025 Oracle and/or its affiliates.
+ ** Copyright (c) 2026 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -36,36 +36,23 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.hashicorp.hcpvaultdedicated;
-
-import oracle.jdbc.provider.factory.Resource;
-import oracle.jdbc.provider.factory.ResourceFactory;
-import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultToken;
-import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultTokenFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
+package oracle.jdbc.provider.util;
 
 /**
- * Common super class for ResourceFactory implementations that request
- * a resource from Vault using a {@link DedicatedVaultToken}.
+ * A utility class that defines common constants shared across various
+ * Oracle JDBC providers.
+ *
  */
-public abstract class DedicatedVaultResourceFactory<T> implements ResourceFactory<T> {
+public final class CommonConstants {
 
-  @Override
-  public final Resource<T> request(ParameterSet parameterSet) {
-    // Retrieve the Vault credentials from the credentials factory
-    DedicatedVaultToken credentials = DedicatedVaultTokenFactory
-            .getInstance()
-            .request(parameterSet)
-            .getContent();
+  private CommonConstants() {}
 
-    try {
-      return request(credentials, parameterSet);
-    } catch (Exception e) {
-      throw new IllegalStateException(
-              "Request failed while accessing HashiCorp Vault resource.", e);
-    }
-  }
-
-  public abstract Resource<T> request(
-          DedicatedVaultToken credentials, ParameterSet parameterSet);
+  /**
+   * The maximum length of a remote configuration object.
+   * Defining this limit protects against abnormally large inputs
+   * that could exhaust memory during configuration loading. Configuration
+   * payloads are expected to remain small, and 1 MB is intended to be a
+   * strict upper bound for supported objects.
+   */
+  public static final long MAX_REMOTE_CONFIGURATION_LENGTH = 1024L * 1024L;
 }

@@ -42,7 +42,7 @@ The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-hashicorp</artifactId>
-  <version>1.0.6</version>
+  <version>1.1.0</version>
 </dependency>
 ```
 
@@ -57,6 +57,50 @@ The provider searches for these parameters in the following locations in a prede
 1. Explicitly provided in the URL
 2. System properties
 3. Environment variables
+
+### Endpoint Security Policy
+
+To avoid sending credentials to the wrong server, the provider checks the Vault endpoint before any network request:
+
+- `VAULT_ADDR` / `vaultAddr` must be a valid URL with a host.
+- HTTPS is required by default.
+- Sensitive credentials (for example `VAULT_TOKEN`, `VAULT_PASSWORD`,
+  `SECRET_ID`, `GITHUB_TOKEN`) are allowed only when the target Vault host
+  is trusted.
+- This applies to credentials provided explicitly and to credentials resolved
+  from system properties or environment variables.
+
+Two global controls are supported (as system property or environment variable):
+
+1. `ALLOW_INSECURE_VAULT_ADDR`
+    - Default: not set (`false`)
+    - When `true`, `http://` Vault addresses are allowed.
+    - Intended only for local/dev test scenarios.
+
+2. `TRUSTED_VAULT_HOSTS`
+    - Default: not set
+    - Comma-separated list of trusted hosts:
+        - `host`
+        - `host:port`
+    - Required when using sensitive credentials.
+      If not set, sensitive-credential authentication requests are rejected.
+    - Example:
+        - `TRUSTED_VAULT_HOSTS=vault.company.com,vault-dr.company.com:8200`
+
+Examples:
+
+```bash
+# Production (recommended)
+export VAULT_ADDR="https://vault.company.com:8200"
+export TRUSTED_VAULT_HOSTS="vault.company.com:8200"
+```
+
+```bash
+# Local/dev with HTTP Vault
+export ALLOW_INSECURE_VAULT_ADDR=true
+export VAULT_ADDR="http://127.0.0.1:8200"
+export TRUSTED_VAULT_HOSTS="127.0.0.1:8200"
+```
 
 ### HCP Vault Dedicated
 
@@ -763,6 +807,10 @@ An example of a [connection properties file](https://docs.oracle.com/en/database
 
 Providers classified as Resource Providers in this module all support a common set of parameters.
 
+<i>Note: `ALLOW_INSECURE_VAULT_ADDR` and `TRUSTED_VAULT_HOSTS` are global endpoint-security controls.
+They are not provider parameters and are configured only via system properties or environment variables.
+`TRUSTED_VAULT_HOSTS` must be configured when using sensitive credentials.</i>
+
 <table>
 <thead>
 <tr>
@@ -897,3 +945,17 @@ the number of RPC requests to remote location. See
 [Caching configuration](../ojdbc-provider-azure/README.md#caching-configuration) for more
 details of the caching mechanism.
 
+For HCP Vault Dedicated token caching, `TOKEN_CACHE_MAX_ENTRIES` controls the maximum
+number of cached token entries (default: `100`).
+
+Examples:
+
+```bash
+# Configure token cache size via environment variable
+export TOKEN_CACHE_MAX_ENTRIES=200
+```
+
+```bash
+# Configure token cache size via JVM system property
+java -DTOKEN_CACHE_MAX_ENTRIES=200 ...
+```
