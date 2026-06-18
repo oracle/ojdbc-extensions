@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2025 Oracle and/or its affiliates.
+ ** Copyright (c) 2026 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -36,36 +36,46 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.hashicorp.hcpvaultdedicated;
+package oracle.jdbc.provider.parameter;
 
-import oracle.jdbc.provider.factory.Resource;
-import oracle.jdbc.provider.factory.ResourceFactory;
-import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultToken;
-import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultTokenFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
+import org.junit.jupiter.api.Test;
+
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * Common super class for ResourceFactory implementations that request
- * a resource from Vault using a {@link DedicatedVaultToken}.
+ * Verifies {@link UriParameters} with regression coverage for query parsing
+ * edge cases that are security-relevant for provider URL handling.
  */
-public abstract class DedicatedVaultResourceFactory<T> implements ResourceFactory<T> {
+class UriParametersTest {
 
-  @Override
-  public final Resource<T> request(ParameterSet parameterSet) {
-    // Retrieve the Vault credentials from the credentials factory
-    DedicatedVaultToken credentials = DedicatedVaultTokenFactory
-            .getInstance()
-            .request(parameterSet)
-            .getContent();
+  @Test
+  void preservesEncodedSeparatorsWithinValues() {
+    Map<String, String> values = UriParameters.parse(
+      "config-provider-name://config?value=/path%26mode%3Dstrict&tag=dev");
 
-    try {
-      return request(credentials, parameterSet);
-    } catch (Exception e) {
-      throw new IllegalStateException(
-              "Request failed while accessing HashiCorp Vault resource.", e);
-    }
+    assertEquals("/path&mode=strict", values.get("value"));
+    assertEquals("dev", values.get("tag"));
   }
 
-  public abstract Resource<T> request(
-          DedicatedVaultToken credentials, ParameterSet parameterSet);
+  @Test
+  void preservesEqualsWithinValues() {
+    Map<String, String> values = UriParameters.parse(
+      "config-provider-name://config?secret=abc=def&tag=dev");
+
+    assertEquals("abc=def", values.get("secret"));
+    assertEquals("dev", values.get("tag"));
+  }
+
+  @Test
+  void rejectsDuplicateParameterNamesIgnoringCase() {
+    IllegalArgumentException exception = assertThrows(
+      IllegalArgumentException.class,
+      () -> UriParameters.parse(
+        "config-provider-name://config?mode=default&MODE=interactive"));
+
+    assertEquals("Duplicate parameter name: \"MODE\"", exception.getMessage());
+  }
 }

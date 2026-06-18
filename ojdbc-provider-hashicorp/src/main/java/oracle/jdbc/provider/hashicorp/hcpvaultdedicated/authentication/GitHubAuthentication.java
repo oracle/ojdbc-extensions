@@ -66,7 +66,7 @@ public class GitHubAuthentication extends AbstractDedicatedVaultAuthentication {
 
     String authEndpoint = buildAuthEndpoint(vaultAddr, GITHUB_LOGIN_TEMPLATE, githubAuthPath);
     String payload = createJsonPayload(GITHUB_PAYLOAD_TEMPLATE, githubToken);
-    return performAuthentication(authEndpoint, payload, namespace, githubToken, "Failed to authenticate with GitHub");
+    return performAuthentication(authEndpoint, payload, namespace, "Failed to authenticate with GitHub");
   }
 
   @Override

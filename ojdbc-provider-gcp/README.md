@@ -44,7 +44,7 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-gcp</artifactId>
-  <version>1.0.6</version>
+  <version>1.1.0</version>
 </dependency>
 ```
 
@@ -82,6 +82,23 @@ The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-gcpstorage:` t
 <pre>
 jdbc:oracle:thin:@config-gcpstorage://project={project};bucket={bucket};object={object}
 </pre>
+
+The `project` key is optional. When it is omitted, the provider uses the
+default Google Cloud Storage client configuration resolved by the Google Cloud
+Java SDK.
+
+The provider also accepts these location formats:
+
+<pre>
+jdbc:oracle:thin:@config-gcpstorage://gs://{bucket}/{object}
+jdbc:oracle:thin:@config-gcpstorage://https://storage.googleapis.com/{bucket}/{object}
+</pre>
+
+When using `gs://...` or `https://storage.googleapis.com/...`, the provider
+uses the default Google Cloud Storage client configuration resolved by the
+Google Cloud Java SDK. See the Google Cloud Storage documentation for
+[gs:// URIs](https://docs.cloud.google.com/storage/docs/downloading-objects)
+and [storage.googleapis.com object URLs](https://docs.cloud.google.com/storage/docs/access-public-data).
 
 ### JSON Payload format
 

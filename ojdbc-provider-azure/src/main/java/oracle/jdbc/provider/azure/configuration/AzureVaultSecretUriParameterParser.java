@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2025 Oracle and/or its affiliates.
+ ** Copyright (c) 2026 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -36,36 +36,41 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.hashicorp.hcpvaultdedicated;
+package oracle.jdbc.provider.azure.configuration;
 
-import oracle.jdbc.provider.factory.Resource;
-import oracle.jdbc.provider.factory.ResourceFactory;
-import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultToken;
-import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultTokenFactory;
-import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.provider.azure.keyvault.AzureKeyVaultUriValidator;
+import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
+import oracle.jdbc.provider.parameter.ParameterSetBuilder;
 
 /**
- * Common super class for ResourceFactory implementations that request
- * a resource from Vault using a {@link DedicatedVaultToken}.
+ * Parses an Azure Key Vault secret URI into provider parameters.
  */
-public abstract class DedicatedVaultResourceFactory<T> implements ResourceFactory<T> {
+public final class AzureVaultSecretUriParameterParser {
 
-  @Override
-  public final Resource<T> request(ParameterSet parameterSet) {
-    // Retrieve the Vault credentials from the credentials factory
-    DedicatedVaultToken credentials = DedicatedVaultTokenFactory
-            .getInstance()
-            .request(parameterSet)
-            .getContent();
+  private AzureVaultSecretUriParameterParser() { }
 
-    try {
-      return request(credentials, parameterSet);
-    } catch (Exception e) {
-      throw new IllegalStateException(
-              "Request failed while accessing HashiCorp Vault resource.", e);
-    }
+  /**
+   * Parses the "value" field of a JSON object as a vault URI with the path
+   * of a named secret. An example URI is:
+   * <pre>
+   * https://mykeyvaultpfs.vault.azure.net/secrets/mySecret2
+   * </pre>
+   * This parser configures the given {@code builder} with two distinct
+   * parameters accepted by {@link KeyVaultSecretFactory}: One parameter for the
+   * vault URL, and another for the secret name.
+   * @param vaultSecretUri Vault Secret URI which contains the path of a secret.
+   *                      Not null.
+   * @param builder Builder to configure with parsed parameters. Not null.
+   */
+  static void parseVaultSecretUri(
+    String vaultSecretUri, ParameterSetBuilder builder) {
+
+    AzureKeyVaultUriValidator.SecretReference secretReference =
+      AzureKeyVaultUriValidator.parseSecretUri(vaultSecretUri);
+
+    builder.add("value", KeyVaultSecretFactory.VAULT_URL,
+      secretReference.getVaultUrl());
+    builder.add("value", KeyVaultSecretFactory.SECRET_NAME,
+      secretReference.getSecretName());
   }
-
-  public abstract Resource<T> request(
-          DedicatedVaultToken credentials, ParameterSet parameterSet);
 }

@@ -39,6 +39,7 @@ package oracle.provider.aws;
 
 public enum AwsTestProperty {
   AWS_S3_URL,
+  AWS_S3_URL_TOO_LARGE,
   AWS_SECRETS_MANAGER_URL,
   AWS_APP_CONFIG_URL,
   AWS_REGION,

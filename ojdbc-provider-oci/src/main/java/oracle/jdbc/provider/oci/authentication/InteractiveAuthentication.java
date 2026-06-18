@@ -46,14 +46,17 @@ import oracle.jdbc.provider.util.JsonWebTokenParser;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -96,14 +99,39 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 final class InteractiveAuthentication {
 
+  private static final int RANDOM_VALUE_LENGTH = 64;
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
   /**
-   *
+   * <p>
+   * The base of a URI where a local server is running. After a web browser
+   * visits the OCI login page, it will be redirected to the host and port of
+   * this URI. Query parameters may be added to this, such as the state
+   * parameter.
+   * </p><p>
    * The OCI CLI listens on port 8181, so this class will do the same. It is
    * believed that the redirect URI of "http://localhost:8181" is registered
    * with the login endpoint of Oracle Cloud, and so it would reject an
    * attempt to use any other redirect URI.
+   * </p>
    */
   private static final URI REDIRECT_URI = URI.create("http://localhost:8181");
+
+  /**
+   * The OCI authorization server will redirect a web browser to this endpoint
+   * of the local server. This endpoint returns a JS document that the web
+   * browser will execute. The script has the web browser send the token issued
+   * by the authorization server to the {@link #TOKEN_ENDPOINT} of the local
+   * server.
+   */
+  private static final String SCRIPT_ENDPOINT = "/script/";
+
+  /**
+   * Web browser sends the issued token this endpoint of the local server. This
+   * action occurs when the browser executes the script returned from the
+   * {@link #SCRIPT_ENDPOINT}.
+   */
+  private static final String TOKEN_ENDPOINT = "/token/";
 
   private InteractiveAuthentication() {}
 
@@ -119,37 +147,41 @@ final class InteractiveAuthentication {
    * </p>
    */
   static InteractiveAuthenticationDetails getSessionToken(
-    ParameterSet parameterSet) {
+      ParameterSet parameterSet) {
 
-    int timeoutMinutes = parameterSet.getOptional(
+    // Since this is optional it can be null
+    Integer parameterTimeOutValue = parameterSet.getOptional(
       AuthenticationDetailsFactory.INTERACTIVE_TIMEOUT);
+    int timeoutMinutes = parameterTimeOutValue == null
+      ? Integer.MAX_VALUE
+      : parameterTimeOutValue.intValue();
 
     Region region = parameterSet.getOptional(AuthenticationDetailsFactory.REGION);
     try (
       RedirectServer<LoginResult> redirectServer =
         new RedirectServer<>(REDIRECT_URI);
     ) {
+      String state = getRandomValue();
+
       // The HTTP server expects an initial GET request for the root path "/",
       // and responds with a script that has the browser send a second
       // request. The second request is expected to be a GET request
       // for the "/token" path with a "security_token" parameter.
       // This protocol is derived from the OCI CLI's Python implementation here:
       // https://github.com/oracle/oci-cli/blob/ed9f755092a1ba9702cb1a133c152944da819df8/src/oci_cli/cli_setup_bootstrap.py#L271
-
       redirectServer.setHandler(
-        "/", InteractiveAuthentication::handleScriptRequest);
-
+        SCRIPT_ENDPOINT, exchange -> handleScriptRequest(exchange, state));
       redirectServer.setResultHandler(
-        "/token", InteractiveAuthentication::handleTokenRequest);
+        TOKEN_ENDPOINT, exchange -> handleTokenRequest(exchange, state));
 
       // The token uses a key pair for proof of possession.
       KeyPair keyPair = generateKeyPair();
 
-      // A web browser is opened to an authorization endpoint that may result
-      // in a session token.
+      // Send a web browser to the authorization endpoint, and then wait for it
+      // to be redirected back to us with a session token.
       LoginResult loginResult =
         redirectServer.awaitResult(
-          createAuthorizationURI(region, keyPair.getPublic(), REDIRECT_URI),
+          createAuthorizationURI(region, keyPair.getPublic(), state),
           timeoutMinutes,
           TimeUnit.MINUTES);
 
@@ -162,6 +194,13 @@ final class InteractiveAuthentication {
       return new InteractiveAuthenticationDetails(
         region, loginResult.securityToken, keyPair);
     }
+  }
+
+  // Generates a random byte array of length RANDOM_VALUE_LENGTH
+  private static String getRandomValue() {
+    byte[] bytes = new byte[RANDOM_VALUE_LENGTH];
+    SECURE_RANDOM.nextBytes(bytes);
+    return Base64.getEncoder().encodeToString(bytes);
   }
 
   /**
@@ -189,19 +228,35 @@ final class InteractiveAuthentication {
    * </a>.
    * </p>
    * @param httpExchange The HTTP request. Not null.
-   * @throws IllegalStateException If the request does not include a
-   * "security_token" query parameter.
+   * @param expectedState The generated state to verify that the redirect url has
+   *                      been generated by this application
+   * @throws IllegalStateException If the request does not include the
+   *                               expected state value.
    */
   @SuppressWarnings("try")
-  private static void handleScriptRequest(HttpExchange httpExchange) {
-     try (AutoCloseable autoClose = httpExchange::close) {
-       httpExchange.sendResponseHeaders(200, SCRIPT_RESPONSE.length);
-       httpExchange.getResponseBody().write(SCRIPT_RESPONSE);
-     }
-     catch (Exception exception) {
-       throw new IllegalStateException(
-         "Failed to handle HTTP request", exception);
-     }
+  private static void handleScriptRequest(
+    HttpExchange httpExchange,  String expectedState
+  ) {
+    try (AutoCloseable autoClose = httpExchange::close) {
+      Map<String, String> queryParameters =
+        parseQueryParameters(httpExchange.getRequestURI().getRawQuery());
+
+      String state = queryParameters.get("state");
+      if (!expectedState.equals(state)) {
+        httpExchange.sendResponseHeaders(401, ERROR_SCRIPT_RESPONSE.length);
+        httpExchange.getResponseBody().write(ERROR_SCRIPT_RESPONSE);
+        throw new IllegalStateException(
+          "Query section does not include the expected state on the"
+            + " /script endpoint");
+      } else {
+        httpExchange.sendResponseHeaders(200, SCRIPT_RESPONSE.length);
+        httpExchange.getResponseBody().write(SCRIPT_RESPONSE);
+      }
+    }
+    catch (Exception exception) {
+      throw new IllegalStateException(
+        "Failed to handle HTTP request", exception);
+    }
   }
 
   /**
@@ -220,10 +275,24 @@ final class InteractiveAuthentication {
    * "security_token" query parameter.
    */
   @SuppressWarnings("try")
-  private static LoginResult handleTokenRequest(HttpExchange httpExchange) {
+  private static LoginResult handleTokenRequest(
+    HttpExchange httpExchange, String expectedState
+  ) {
     try (AutoCloseable autoClose = httpExchange::close) {
-      String query = httpExchange.getRequestURI().getQuery();
-      LoginResult loginResult = LoginResult.fromUriQuery(query);
+
+      Map<String, String> queryParameters =
+        parseQueryParameters(httpExchange.getRequestURI().getRawQuery());
+
+      String state = queryParameters.get("state");
+      if (!expectedState.equals(state)) {
+        httpExchange.sendResponseHeaders(401, ERROR_SCRIPT_RESPONSE.length);
+        httpExchange.getResponseBody().write(ERROR_SCRIPT_RESPONSE);
+        throw new IllegalStateException(
+          "Query section does not include the expected state on the"
+            + " /token endpoint");
+      }
+
+      LoginResult loginResult = LoginResult.fromQueryParameters(queryParameters);
       httpExchange.sendResponseHeaders(200, -1);
       return loginResult;
     }
@@ -239,7 +308,8 @@ final class InteractiveAuthentication {
    * browser. The login page may redirect
    * the session token to the given {@code redirectURI} upon successful
    * authentication.
-   * </p><p>
+   * </p>
+   * <p>
    * The implementation of this method is derived from the
    * <a href="https://github.com/oracle/oci-cli/blob/ed9f755092a1ba9702cb1a133c152944da819df8/src/oci_cli/cli_setup_bootstrap.py#L143">
    * OCI CLI's Python implementation
@@ -250,14 +320,18 @@ final class InteractiveAuthentication {
    * that; It can be configured with the OCID of tenant, but it is not clear how
    * to get the name from the OCID.
    * </p>
-   * @param region OCI region to connect to. Not null.
-   * @param publicKey Public key used for proof of possession with the session
-   * token. Not null.
-   * @param redirectURI Address to redirect the session token to. Not null.
+   * @param region          OCI region to connect to. Not null.
+   * @param publicKey       Public key used for proof of possession with the
+   *                        session
+   *                        token. Not null.
+   * @param state           The state will be added to the redirectUrl so that
+   *                        when we receive the token, we know it is from the
+   *                        user who initiated a login in the current
+   *                        application.
    * @throws IllegalStateException If a browser can not be opened.
    */
   private static URI createAuthorizationURI(
-    Region region, PublicKey publicKey, URI redirectURI) {
+    Region region, PublicKey publicKey, String state) {
       return URI.create(
         format("https://login.%s.%s/v1/oauth2/authorize",
           region == null ? "oci" : region.getRegionId(),
@@ -265,15 +339,28 @@ final class InteractiveAuthentication {
           "?action=login" +
           "&client_id=iaas_console" +
           "&response_type=" +
-          encodeUrlParameter("token id_token") +
+            encodeUrlParameter("token id_token") +
+          // The browser may send a cached token from a previous login, and the
+          // token contains a "nonce" claim that was randomly generated in a
+          // previous request. We don't validate the nonce claim, because we don't
+          // know if it was generated here, or by a previous request.
+          // Instead, we validate the state parameter of the redirect URI.
           "&nonce=" +
-          encodeUrlParameter(UUID.randomUUID().toString()) +
+            encodeUrlParameter(UUID.randomUUID().toString()) +
           "&scope=openid" +
           "&public_key=" +
-          encodeUrlParameter(Base64.getUrlEncoder().encodeToString(
-            encodeJwk(publicKey).getBytes(UTF_8))) +
+            encodeUrlParameter(Base64.getUrlEncoder().encodeToString(
+              encodeJwk(publicKey).getBytes(UTF_8))) +
           "&redirect_uri=" +
-          encodeUrlParameter(redirectURI.toString()));
+            encodeUrlParameter(format("http://%s:%d%s?state=%s",
+              REDIRECT_URI.getHost(),
+              REDIRECT_URI.getPort(),
+              SCRIPT_ENDPOINT,
+              // double-encode: When the OCI server decodes this parameter, it
+              // should result in a redirect URI having a percent-encoded state
+              // parameter. The server will redirect the browser to this URI, with
+              // its percent-encoded state parameter.
+              encodeUrlParameter(state))));
   }
 
   /**
@@ -287,15 +374,17 @@ final class InteractiveAuthentication {
    * </a>.
    * </p><p>
    * The implementation of this method is derived from the
-   * <a href="https://github.com/oracle/oci-cli/blob/acbb4b98d4c47d223135a20faf160b9f0fe6046b/src/oci_cli/cli_util.py#L2369">
+   * <a href=
+   * "https://github.com/oracle/oci-cli/blob/acbb4b98d4c47d223135a20faf160b9f0fe6046b/src/oci_cli/cli_util.py#L2369">
    * OCI CLI's Python implementation
    * </a>. The JWK returned by this method only include fields which the CLI
    * would include: kty, n, e, and kid.
    * </p>
+   * 
    * @param publicKey Key to encode. Not null.
    * @return JWK encoding of the key. Not null.
    * @implNote This implementation assumes the modulus (n) and exponent (e) of
-   * the key are both positive integers.
+   *           the key are both positive integers.
    */
   private static String encodeJwk(PublicKey publicKey) {
     if (! (publicKey instanceof RSAPublicKey)) {
@@ -364,23 +453,16 @@ final class InteractiveAuthentication {
     /**
      * Parses the result of a login from the query section of the URI for the
      * /token endpoint of the local HTTP server.
-     * @param query Query section, composed as name=value[&name=value*] pairs.
-     * Not null.
+     * @param queryParameters Parameters parsed from the query section of the
+     * request URI. Not null.
      * @return The parsed login result.
      */
-    static LoginResult fromUriQuery(String query) {
+    static LoginResult fromQueryParameters(Map<String, String> queryParameters) {
 
-      if (query == null) {
+      if (queryParameters.isEmpty()) {
         throw new IllegalStateException(
           "Query section not included in request on /token endpoint");
       }
-
-      Map<String, String> queryParameters =
-        Arrays.stream(query.split("&"))
-          .map(nameEqualsValue -> nameEqualsValue.split("="))
-          .collect(Collectors.toMap(
-            nameValue -> nameValue[0],
-            nameValue -> nameValue.length == 1 ? "" : nameValue[1]));
 
       String securityToken = queryParameters.get("security_token");
       if (securityToken == null) {
@@ -425,12 +507,19 @@ final class InteractiveAuthentication {
    */
   private static final byte[] SCRIPT_RESPONSE =
     ("<script type='text/javascript'>\n" +
-    "  hash = window.location.hash\n" +
+    "  var hash = window.location.hash;\n" +
     "  window.location.hash = '';\n" +
     "  \n" +
     "  // Remove the leading '#' from the URL fragment\n" +
-    "  if (hash[0] === '#') {\n" +
-    "      hash = hash.substr(1)\n" +
+    "  if (hash && hash[0] === '#') {\n" +
+    "      hash = hash.substr(1);\n" +
+    "  }\n" +
+    "  \n" +
+    "  var hashParams = new URLSearchParams(hash);\n" +
+    "  var searchParams = new URLSearchParams(window.location.search);\n" +
+    "  var stateParam = searchParams.get('state');\n" +
+    "  if (stateParam !== null) {\n" +
+    "      hashParams.set('state', stateParam);\n" +
     "  }\n" +
     "  \n" +
     "  function reqListener () {\n" +
@@ -440,8 +529,24 @@ final class InteractiveAuthentication {
     "  \n" +
     "  var oReq = new XMLHttpRequest();\n" +
     "  oReq.addEventListener(\"load\", reqListener);\n" +
-    "  oReq.open(\"GET\", \"/token?\" + hash);\n" +
+    "  oReq.open(\"GET\", \"" + TOKEN_ENDPOINT + "?\" + hashParams.toString());\n" +
     "  oReq.send();\n" +
     "</script>").getBytes(UTF_8);
+
+    private static final byte[] ERROR_SCRIPT_RESPONSE =
+      ("Unauthorized login! Please close this window and return to your application.").getBytes(UTF_8);
+
+  private static Map<String, String> parseQueryParameters(String rawQuery) {
+    if (rawQuery == null || rawQuery.isEmpty()) {
+      return Collections.emptyMap();
+    }
+
+    return Arrays.stream(rawQuery.split("&"))
+      .map(nameEqualsValue -> nameEqualsValue.split("=", 2))
+      .collect(Collectors.toMap(
+        nameValue -> URLDecoder.decode(nameValue[0], UTF_8),
+        nameValue -> nameValue.length == 1 ? "" : URLDecoder.decode(nameValue[1], UTF_8)
+      ));
+  }
 
 }

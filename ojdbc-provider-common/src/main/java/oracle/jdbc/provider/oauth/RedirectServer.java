@@ -248,7 +248,8 @@ public final class RedirectServer<T> implements AutoCloseable {
       System.out.println(
         "Unable to open web browser due to: " + exception);
       System.out.println(
-        "Visit the URL below to authorize access:\n" + authorizationURI);
+        "Visit the URL below to authorize access.");
+      System.out.println(authorizationURI);
     }
   }
 

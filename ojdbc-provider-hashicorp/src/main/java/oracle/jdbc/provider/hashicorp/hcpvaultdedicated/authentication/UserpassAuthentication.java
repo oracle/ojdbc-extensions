@@ -68,7 +68,7 @@ public class UserpassAuthentication extends AbstractDedicatedVaultAuthentication
 
     String authEndpoint = buildAuthEndpoint(vaultAddr, USERPASS_LOGIN_TEMPLATE, authPath, username);
     String payload = createJsonPayload(USERPASS_PAYLOAD_TEMPLATE, password);
-    return performAuthentication(authEndpoint, payload, namespace, null, "Failed to authenticate using Userpass");
+    return performAuthentication(authEndpoint, payload, namespace, "Failed to authenticate using Userpass");
   }
 
   @Override
