@@ -40,15 +40,11 @@ package oracle.jdbc.provider.oci.authentication;
 
 import com.oracle.bmc.Region;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpServer;
+import oracle.jdbc.provider.oauth.RedirectServer;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.util.JsonWebTokenParser;
 
-import java.awt.*;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.BindException;
-import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.security.KeyPair;
@@ -60,10 +56,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
@@ -103,6 +96,15 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 final class InteractiveAuthentication {
 
+  /**
+   *
+   * The OCI CLI listens on port 8181, so this class will do the same. It is
+   * believed that the redirect URI of "http://localhost:8181" is registered
+   * with the login endpoint of Oracle Cloud, and so it would reject an
+   * attempt to use any other redirect URI.
+   */
+  private static final URI REDIRECT_URI = URI.create("http://localhost:8181");
+
   private InteractiveAuthentication() {}
 
   /**
@@ -119,43 +121,46 @@ final class InteractiveAuthentication {
   static InteractiveAuthenticationDetails getSessionToken(
     ParameterSet parameterSet) {
 
+    int timeoutMinutes = parameterSet.getOptional(
+      AuthenticationDetailsFactory.INTERACTIVE_TIMEOUT);
+
     Region region = parameterSet.getOptional(AuthenticationDetailsFactory.REGION);
+    try (
+      RedirectServer<LoginResult> redirectServer =
+        new RedirectServer<>(REDIRECT_URI);
+    ) {
+      // The HTTP server expects an initial GET request for the root path "/",
+      // and responds with a script that has the browser send a second
+      // request. The second request is expected to be a GET request
+      // for the "/token" path with a "security_token" parameter.
+      // This protocol is derived from the OCI CLI's Python implementation here:
+      // https://github.com/oracle/oci-cli/blob/ed9f755092a1ba9702cb1a133c152944da819df8/src/oci_cli/cli_setup_bootstrap.py#L271
 
-    int timeoutMinutes =
-      parameterSet.getOptional(AuthenticationDetailsFactory.INTERACTIVE_TIMEOUT);
+      redirectServer.setHandler(
+        "/", InteractiveAuthentication::handleScriptRequest);
 
-    // The OCI CLI listens on port 8181, so this method will do the same. It is
-    // believed that the redirect URI of "http://localhost:8181" is registered
-    // with the login endpoint of Oracle Cloud, and so it would reject an
-    // attempt to use any other redirect URI.
-    InetSocketAddress redirectAddress =
-      new InetSocketAddress("localhost", 8181);
+      redirectServer.setResultHandler(
+        "/token", InteractiveAuthentication::handleTokenRequest);
 
-    // Asynchronously receive the session token from the browser
-    CompletableFuture<LoginResult> loginFuture =
-      acceptRedirect(redirectAddress);
-    try {
-      // Open the browser to generate a session token. The token uses a key pair
-      // for proof of possession.
+      // The token uses a key pair for proof of possession.
       KeyPair keyPair = generateKeyPair();
-      openBrowser(region, keyPair.getPublic(), redirectAddress);
 
-      // Wait for the browser login to complete, up to the configured timeout.
-      // When the timeout expires the finally block cancels loginFuture, which
-      // triggers the whenComplete callback in acceptRedirect() to stop the
-      // HTTP server and release port 8181.
-      LoginResult loginResult = awaitLogin(loginFuture, timeoutMinutes);
+      // A web browser is opened to an authorization endpoint that may result
+      // in a session token.
+      LoginResult loginResult =
+        redirectServer.awaitResult(
+          createAuthorizationURI(region, keyPair.getPublic(), REDIRECT_URI),
+          timeoutMinutes,
+          TimeUnit.MINUTES);
 
       // If a region has not been configured, then extract it from the
       // "issuer_region" claim of the ID token.
-      if (region == null)
+      if (region == null) {
         region = loginResult.getIssuerRegion();
+      }
 
       return new InteractiveAuthenticationDetails(
         region, loginResult.securityToken, keyPair);
-    }
-    finally {
-      loginFuture.cancel(true);
     }
   }
 
@@ -171,88 +176,6 @@ final class InteractiveAuthentication {
     catch (NoSuchAlgorithmException rsaNotAvailable) {
       throw new IllegalStateException(rsaNotAvailable);
     }
-  }
-
-  /**
-   * <p>
-   * Asynchronously accepts HTTP requests from the web browser to the given
-   * {@code redirectAddress}. The HTTP server expects an initial GET request
-   * for the root path "/", and responds with a script that has the browser
-   * send a second request. The second request is expected to be a GET request
-   * for the "/token" path with a "security_token" parameter.
-   * </p><p>
-   * The implementation of this method is derived from the
-   * <a href="https://github.com/oracle/oci-cli/blob/ed9f755092a1ba9702cb1a133c152944da819df8/src/oci_cli/cli_setup_bootstrap.py#L271">
-   * OCI CLI's Python implementation
-   * </a>.
-   * </p><p>
-   * <em>
-   *   Resources allocated by this method will only be released after the
-   *   returned future completes or is cancelled.
-   * </em>
-   * </p>
-   * @param redirectAddress Server redirectAddress. Not null.
-   * @return A future that completes normally with the session token, or
-   * exceptionally with an {@code IOException} if network I/O fails, or with
-   * an {@code IllegalStateException} if the server receives an unexpected
-   * request.
-   */
-  private static CompletableFuture<LoginResult> acceptRedirect(
-    InetSocketAddress redirectAddress) {
-
-    final HttpServer server;
-    try {
-      server = HttpServer.create(redirectAddress, 0);
-    }
-    catch (BindException bindException) {
-      // Port 8181 is already held — most likely by a previous interactive
-      // authentication session whose browser login was never completed.
-      // The previous server will release the port automatically once its
-      // login timeout expires (default: 5 minutes).
-      throw new IllegalStateException(
-        "OCI interactive authentication failed: port "
-        + redirectAddress.getPort() + " is already in use."
-        + " A previous interactive authentication session may still be"
-        + " running. Please complete the login in your browser, or wait"
-        + " for the previous session to time out and then try again.",
-        bindException);
-    }
-    catch (IOException ioException) {
-      throw new IllegalStateException(
-        "Failed to create an HTTP server", ioException);
-    }
-
-    CompletableFuture<LoginResult> loginFuture = new CompletableFuture<>();
-
-    server.createContext("/", httpExchange -> {
-      try {
-        handleScriptRequest(httpExchange);
-      }
-      catch (Exception exception) {
-        loginFuture.completeExceptionally(exception);
-      }
-    });
-
-    server.createContext("/token", httpExchange -> {
-      try {
-        loginFuture.complete(handleTokenRequest(httpExchange));
-      }
-      catch (Exception exception) {
-        loginFuture.completeExceptionally(exception);
-      }
-    });
-
-    server.setExecutor(null); // Use default executor
-    server.start();
-
-    // Stop the server when the token is received, a request fails, or the
-    // future is cancelled. The CompletionStage returned by whenComplete should
-    // not be returned by this method. If that stage is cancelled, then the
-    // whenComplete callback is not executed. However, the callback will be
-    // executed if the upstream stage is cancelled, so return that one.
-    loginFuture.whenComplete((result, error) -> server.stop(0));
-
-    return loginFuture;
   }
 
   /**
@@ -299,7 +222,6 @@ final class InteractiveAuthentication {
   @SuppressWarnings("try")
   private static LoginResult handleTokenRequest(HttpExchange httpExchange) {
     try (AutoCloseable autoClose = httpExchange::close) {
-
       String query = httpExchange.getRequestURI().getQuery();
       LoginResult loginResult = LoginResult.fromUriQuery(query);
       httpExchange.sendResponseHeaders(200, -1);
@@ -313,8 +235,9 @@ final class InteractiveAuthentication {
 
   /**
    * <p>
-   * Opens a web browser that connects to an OCI login page, and redirects
-   * the session token to the given {@code redirectAddress} upon successful
+   * Creates a URI that connects to an OCI login page when opened in a web
+   * browser. The login page may redirect
+   * the session token to the given {@code redirectURI} upon successful
    * authentication.
    * </p><p>
    * The implementation of this method is derived from the
@@ -330,34 +253,27 @@ final class InteractiveAuthentication {
    * @param region OCI region to connect to. Not null.
    * @param publicKey Public key used for proof of possession with the session
    * token. Not null.
-   * @param redirectAddress Address to redirect the session token to. Not null.
+   * @param redirectURI Address to redirect the session token to. Not null.
    * @throws IllegalStateException If a browser can not be opened.
    */
-  private static void openBrowser(
-      Region region, PublicKey publicKey, InetSocketAddress redirectAddress) {
-    try {
-      Desktop.getDesktop().browse(URI.create(
+  private static URI createAuthorizationURI(
+    Region region, PublicKey publicKey, URI redirectURI) {
+      return URI.create(
         format("https://login.%s.%s/v1/oauth2/authorize",
           region == null ? "oci" : region.getRegionId(),
           region == null ? "oraclecloud.com" : region.getRealm().getSecondLevelDomain()) +
-        "?action=login" +
-        "&client_id=iaas_console" +
-        "&response_type=" +
+          "?action=login" +
+          "&client_id=iaas_console" +
+          "&response_type=" +
           encodeUrlParameter("token id_token") +
-        "&nonce=" +
+          "&nonce=" +
           encodeUrlParameter(UUID.randomUUID().toString()) +
-        "&scope=openid" +
-        "&public_key=" +
+          "&scope=openid" +
+          "&public_key=" +
           encodeUrlParameter(Base64.getUrlEncoder().encodeToString(
             encodeJwk(publicKey).getBytes(UTF_8))) +
-        "&redirect_uri=" +
-          encodeUrlParameter(format("http://%s:%d",
-            redirectAddress.getHostName(), redirectAddress.getPort()))));
-    }
-    catch (IOException ioException) {
-      throw new IllegalStateException(
-        "Failed to open a web browser", ioException);
-    }
+          "&redirect_uri=" +
+          encodeUrlParameter(redirectURI.toString()));
   }
 
   /**
@@ -407,43 +323,6 @@ final class InteractiveAuthentication {
     }
     catch (UnsupportedEncodingException utf8NotSupported) {
       throw new IllegalStateException(utf8NotSupported);
-    }
-  }
-
-  /**
-   * Awaits the completion of a {@code loginFuture}, up to
-   * {@code timeoutMinutes}.
-   * <p>
-   * When the timeout expires the {@code IllegalStateException} propagates to
-   * the caller, whose {@code finally} block cancels the future. Cancelling
-   * the future triggers the {@code whenComplete} callback registered in
-   * {@link #acceptRedirect}, which stops the HTTP server and releases port
-   * 8181 so that the next authentication attempt can bind it.
-   * </p>
-   * @param loginFuture Future to await. Not null.
-   * @param timeoutMinutes Maximum minutes to wait for the browser login.
-   * @return The result that {@code loginFuture} completes with.
-   * @throws IllegalStateException If the current thread is interrupted, the
-   * timeout expires, or the {@code loginFuture} completes exceptionally.
-   */
-  private static LoginResult awaitLogin(
-    CompletableFuture<LoginResult> loginFuture, int timeoutMinutes) {
-    try {
-      return loginFuture.get(timeoutMinutes, TimeUnit.MINUTES);
-    }
-    catch (TimeoutException timeoutException) {
-      throw new IllegalStateException(
-        "Interactive OCI authentication timed out after "
-        + timeoutMinutes + " minute(s). The browser login was not completed"
-        + " in time. Port 8181 has been released.",
-        timeoutException);
-    }
-    catch (InterruptedException interruptedException) {
-      throw new IllegalStateException(
-        "Interactive authentication interrupted", interruptedException);
-    }
-    catch (ExecutionException executionException) {
-      throw new IllegalStateException(executionException);
     }
   }
 
