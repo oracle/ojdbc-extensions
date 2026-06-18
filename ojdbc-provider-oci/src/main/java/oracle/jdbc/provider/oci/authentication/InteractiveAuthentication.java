@@ -149,6 +149,8 @@ final class InteractiveAuthentication {
   static InteractiveAuthenticationDetails getSessionToken(
       ParameterSet parameterSet) {
 
+    Region region = parameterSet.getOptional(AuthenticationDetailsFactory.REGION);
+
     // Since this is optional it can be null
     Integer parameterTimeOutValue = parameterSet.getOptional(
       AuthenticationDetailsFactory.INTERACTIVE_TIMEOUT);
@@ -156,7 +158,7 @@ final class InteractiveAuthentication {
       ? Integer.MAX_VALUE
       : parameterTimeOutValue.intValue();
 
-    Region region = parameterSet.getOptional(AuthenticationDetailsFactory.REGION);
+
     try (
       RedirectServer<LoginResult> redirectServer =
         new RedirectServer<>(REDIRECT_URI);

@@ -253,7 +253,22 @@ public final class RedirectServer<T> implements AutoCloseable {
     }
   }
 
+  /**
+   * A function that handles a request from a web browser and returns a result.
+   * An implementation should behave just like an {@link HttpHandler}, except
+   * that it returns a result for the {@link #awaitResult(URI, int, TimeUnit)}
+   * method.
+   */
+  @FunctionalInterface
   public interface ResultHandler<T> {
+
+    /**
+     * Handle a request, akin to {@link HttpHandler#handle(HttpExchange)}.
+     *
+     * @param exchange A request from a web browser. Not null.
+     * @return The result of handling the browser's request. May be null.
+     * @throws IOException If I/O fails.
+     */
     T handle(HttpExchange exchange) throws IOException;
   }
 }
