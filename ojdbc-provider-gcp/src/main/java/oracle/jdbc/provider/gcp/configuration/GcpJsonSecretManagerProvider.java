@@ -46,12 +46,16 @@ import oracle.jdbc.provider.gcp.secrets.GcpSecretManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.spi.OracleConfigurationSecretProvider;
 
+import static oracle.jdbc.provider.util.FileUtils.isBase64Encoded;
+
 public class GcpJsonSecretManagerProvider implements OracleConfigurationSecretProvider {
 
   /**
    * {@inheritDoc}
    * <p>
-   * Returns the password of the Secret that is retrieved from GCP Secrets.
+   * Returns the content of a Secret that is retrieved from GCP Secret Manager.
+   * This provider can be used for {@code password}, {@code wallet_location},
+   * or both.
    * </p>
    * <p>
    * The JSON object has the following form:
@@ -59,8 +63,12 @@ public class GcpJsonSecretManagerProvider implements OracleConfigurationSecretPr
    * 
    * <pre>{@code
    *   "password": {
-  *       "type": "gcpsecretmanager",
-  *       "value": "projects/<project_name>/secrets/<secret_name>/versions/<version>",
+   *       "type": "gcpsecretmanager",
+   *       "value": "projects/<project_name>/secrets/<secret_name>/versions/<version>",
+   *   },
+   *   "wallet_location": {
+   *       "type": "gcpsecretmanager",
+   *       "value": "projects/<project_name>/secrets/<secret_name>/versions/<version>"
    *   }
    * }</pre>
    *
@@ -74,8 +82,15 @@ public class GcpJsonSecretManagerProvider implements OracleConfigurationSecretPr
     ParameterSet parameterSet = GcpConfigurationParameters.getParser().parseNamedValues(
       secretProperties);
 
-    ByteString stringData = GcpSecretManagerFactory.getInstance().request(parameterSet).getContent().getData();
-    return Base64.getEncoder().encodeToString(stringData.toByteArray()).toCharArray();
+    ByteString stringData = GcpSecretManagerFactory.getInstance()
+      .request(parameterSet)
+      .getContent()
+      .getData();
+
+    byte[] secretBytes = stringData.toByteArray();
+    return isBase64Encoded(secretBytes)
+      ? stringData.toStringUtf8().toCharArray()
+      : Base64.getEncoder().encodeToString(secretBytes).toCharArray();
   }
 
   @Override

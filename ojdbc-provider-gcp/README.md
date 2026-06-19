@@ -180,7 +180,7 @@ For the JSON type of provider (GCP Object Storage, HTTP/HTTPS, File) the passwor
 
 ### Wallet_location JSON Object
 
-The `oracle.net.wallet_location` connection property is not allowed in the "jdbc" object due to security reasons. Instead, users should use the `wallet_location object to specify the wallet in the configuration.
+The `oracle.net.wallet_location` connection property is not allowed in the "jdbc" object due to security reasons. Instead, users should use the `wallet_location` object to specify the wallet in the configuration.
 
 For the JSON type of provider (GCP Cloud Storage, HTTPS, File) the `wallet_location` is an object itself with the same spec as the [password JSON object](#password-json-object) mentioned above.
 
@@ -189,7 +189,7 @@ The value stored in the secret can be either:
   - The Base64 representation of a supported wallet file.
   - The raw bytes of the wallet file, stored as an imported secret.
 
-In both cases, the provider will automatically handle the content. If the secret contains raw bytes (e.g., an imported `cwallet.sso` or `ewallet.pem` file), the provider will perform Base64 encoding as needed. The resulting format is equivalent to setting the oracle.net.wallet_location` connection property in a regular JDBC application using the following format:
+In both cases, the provider will automatically handle the content. If the secret contains raw bytes (e.g., an imported `cwallet.sso` or `ewallet.pem` file), the provider will perform Base64 encoding as needed. The resulting format is equivalent to setting the `oracle.net.wallet_location` connection property in a regular JDBC application using the following format:
 ```
 data:;base64,<Base64 representation of the wallet file>
 ```
