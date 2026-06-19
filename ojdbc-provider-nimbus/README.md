@@ -16,7 +16,7 @@ compatible with later JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-nimbus</artifactId>
-  <version>1.0.7</version>
+  <version>1.1.0</version>
 </dependency>
 ```
 
@@ -150,7 +150,7 @@ This should be a secret of a registered client.
 the client_credentials grant type. It most cases, it will be required for the
 password grant type as well.</i>
 </td></tr><tr><td>
-oracle.jdbc.provider.accessToken.userName
+oracle.jdbc.provider.accessToken.username
 </td><td>
 The 
 <a href="https://datatracker.ietf.org/doc/html/rfc6749#autoid-45">
