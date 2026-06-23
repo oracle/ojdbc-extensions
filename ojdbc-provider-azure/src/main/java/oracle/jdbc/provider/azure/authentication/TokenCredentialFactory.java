@@ -202,15 +202,15 @@ public final class TokenCredentialFactory
 
   /**
    * Returns credentials for interactive authentication in a web browser.
-   * @param parameterSet Configures the request with a client ID (optional), and
-   * redirect URL (required).
+   * @param parameterSet Configures the request with optional tenant ID, client ID,
+   * and redirect URL.
    * @return Credentials for interactive authentication
-   * //throws //TODO: What does this throw?
    */
   private static InteractiveBrowserCredential interactiveCredentials(
     ParameterSet parameterSet) {
     return new InteractiveBrowserCredentialBuilder()
       .clientId(parameterSet.getOptional(CLIENT_ID))
+      .tenantId(parameterSet.getOptional(TENANT_ID))
       .redirectUrl(parameterSet.getOptional(REDIRECT_URL))
       .build();
   }

@@ -43,10 +43,13 @@ import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.hashicorp.util.HttpUtil;
 import oracle.jdbc.provider.hashicorp.util.JsonUtil;
+import oracle.jdbc.provider.hashicorp.util.VaultUrlBuilder;
 import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.DedicatedVaultResourceFactory;
 import oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultToken;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.sql.json.OracleJsonObject;
+
+import java.net.URI;
 
 import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.*;
 
@@ -69,7 +72,8 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
     String vaultAddr = parameterSet.getRequired(VAULT_ADDR);
 
     if (credentials.getVaultToken() != null) {
-      String secretString = fetchSecretFromVaultWithToken(vaultAddr + secretPath, credentials.getVaultToken());
+      String secretUrl = buildSecretEndpoint(vaultAddr, secretPath);
+      String secretString = fetchSecretFromVaultWithToken(secretUrl, credentials.getVaultToken());
       return Resource.createPermanentResource(parseSecretJson(secretString, secretPath), true);
     }
 
@@ -89,7 +93,7 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
     try {
       return HttpUtil.sendGetRequest(vaultUrl, token, null);
     } catch (Exception e) {
-      throw new IllegalArgumentException("Failed to read secret from Vault at " + vaultUrl, e);
+      throw new IllegalArgumentException("Failed to read secret from Vault.", e);
     }
   }
 
@@ -107,8 +111,28 @@ public final class DedicatedVaultSecretsManagerFactory extends DedicatedVaultRes
       OracleJsonObject nestedData = dataNode.getObject("data");
       return nestedData.toString();
     } catch (Exception e) {
-      throw new IllegalArgumentException(
-              "Failed to parse JSON for secret at path: " + secretPath, e);
+      throw new IllegalArgumentException("Failed to parse JSON for secret response." , e);
     }
+  }
+
+  /**
+   * Builds a canonical Vault secret endpoint while rejecting path-shaping tokens.
+   *
+   * @param vaultAddr Vault base URL.
+   * @param secretPath Secret API path.
+   * @return Canonical secret endpoint URL.
+   */
+  private static String buildSecretEndpoint(String vaultAddr, String secretPath) {
+    if (secretPath == null || secretPath.isEmpty()) {
+      throw new IllegalArgumentException("secretPath must not be null or empty");
+    }
+
+    VaultUrlBuilder.rejectDangerousPathTokens(secretPath, "secretPath");
+    VaultUrlBuilder.rejectDotSegments(secretPath, "secretPath");
+
+    URI baseUri = VaultUrlBuilder.parseBaseUri(vaultAddr);
+    String endpointPath = VaultUrlBuilder.joinPaths(baseUri.getPath(), secretPath);
+    return VaultUrlBuilder.buildCanonicalUrl(
+            baseUri, endpointPath, "Failed to build Vault secret endpoint");
   }
 }

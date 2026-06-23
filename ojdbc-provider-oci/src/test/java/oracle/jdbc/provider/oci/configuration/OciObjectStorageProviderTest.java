@@ -39,6 +39,7 @@
 package oracle.jdbc.provider.oci.configuration;
 
 import oracle.jdbc.provider.TestProperties;
+import oracle.jdbc.provider.util.CommonConstants;
 import oracle.jdbc.provider.oci.OciTestProperty;
 import oracle.jdbc.spi.OracleConfigurationProvider;
 import org.junit.jupiter.api.Test;
@@ -46,7 +47,10 @@ import org.junit.jupiter.api.Test;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Verifies the {@link OciObjectStorageProvider} as implementing behavior
@@ -88,6 +92,20 @@ public class OciObjectStorageProviderTest {
       "key=" + TestProperties.getOrAbort(OciTestProperty.OCI_OBJECT_STORAGE_URL_KEY)};
     String url = composeUrl(baseUrl, options);
     verifyProperties(url);
+  }
+
+  /**
+   * Verifies that an object larger than the maximum remote configuration
+   * length is rejected.
+   */
+  @Test
+  public void testDefaultAuthenticationWithRemoteConfigurationExceedingMaxLength() {
+    String baseUrl = TestProperties.getOrAbort(
+      OciTestProperty.OCI_OBJECT_STORAGE_URL_TOO_LARGE);
+    String url = composeUrl(baseUrl, "AUTHENTICATION=OCI_DEFAULT");
+
+    assertThrows(IllegalStateException.class,
+      () -> PROVIDER.getConnectionProperties(url));
   }
 
   /** Verifies a properties object returned with a given URL. */

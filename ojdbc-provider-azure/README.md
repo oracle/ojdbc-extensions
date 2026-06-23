@@ -44,7 +44,7 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-azure</artifactId>
-  <version>1.0.7</version>
+  <version>1.1.0</version>
 </dependency>
 ```
 
@@ -219,11 +219,13 @@ The user can provide an optional parameter `AUTHENTICATION` (case-ignored) which
   <td><b>AZURE_CLIENT_ID</b> (only required for user assigned)</td>
 </tr>
 <tr>
-  <td rowspan="2"><b>AZURE_INTERACTIVE</b></td>
-  <td rowspan="2">InteractiveBrowserCredential</td>
-  <td><b>AZURE_CLIENT_ID</b></td>
-  <td><b>AZURE_REDIRECT_URL</b></td>
+  <td rowspan="3"><b>AZURE_INTERACTIVE</b></td>
+  <td rowspan="3">InteractiveBrowserCredential</td>
+  <td rowspan="3">&nbsp;</td>
+  <td><b>AZURE_TENANT_ID</b></td>
 </tr>
+  <tr><td><b>AZURE_CLIENT_ID</b></td></tr>
+  <tr><td><b>AZURE_REDIRECT_URL</b></td></tr>
 </tbody>
 </table>
 
@@ -732,7 +734,7 @@ common set of parameters.
       <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/reply-url">
       Redirect URL
       </a>
-      for <code>authentication-method=interactive</code>
+      for <code>authenticationMethod=interactive</code>
       </td>
       <td>
       A URL of the form <code>http://localhost[:port-number]</code> is accepted.
@@ -813,7 +815,8 @@ A browser link is output to the standard output stream.
 <dt>interactive</dt>
 <dd>
 Authenticate interactively by logging in to a cloud account with your
-default web browser. The browser window is opened automatically.
+default web browser. The browser window is opened automatically. The optional
+<code>tenantId</code> parameter may be configured to target a specific tenant.
 </dd>
 <dt>auto-detect</dt>
 <dd>

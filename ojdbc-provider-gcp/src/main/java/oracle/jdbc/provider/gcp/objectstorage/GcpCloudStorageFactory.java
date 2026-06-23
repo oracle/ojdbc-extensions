@@ -42,6 +42,7 @@ import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
+import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 
@@ -50,14 +51,15 @@ import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.provider.util.CommonConstants;
 
-public class GcpCloudStorageFactory implements ResourceFactory<InputStream> {
+public class GcpCloudStorageFactory implements ResourceFactory<byte[]> {
   /** The secret version name for the secret */
-  public static final Parameter<String> PROJECT = Parameter.create(REQUIRED);
+  public static final Parameter<String> PROJECT = Parameter.create();
   public static final Parameter<String> BUCKET = Parameter.create(REQUIRED);
   public static final Parameter<String> OBJECT = Parameter.create(REQUIRED);
 
-  private static final ResourceFactory<InputStream> INSTANCE = CachedResourceFactory
+  private static final ResourceFactory<byte[]> INSTANCE = CachedResourceFactory
       .create(new GcpCloudStorageFactory());
 
   private GcpCloudStorageFactory() {
@@ -68,19 +70,31 @@ public class GcpCloudStorageFactory implements ResourceFactory<InputStream> {
    * 
    * @return a singleton of {@code GcpVaultSecretFactory}
    */
-  public static ResourceFactory<InputStream> getInstance() {
+  public static ResourceFactory<byte[]> getInstance() {
     return INSTANCE;
   }
 
-  public Resource<InputStream> request(ParameterSet parameterSet)
+  public Resource<byte[]> request(ParameterSet parameterSet)
       throws IllegalStateException, IllegalArgumentException {
-    String projectName = parameterSet.getRequired(PROJECT);
+    String projectName = parameterSet.getOptional(PROJECT);
     String bucketName = parameterSet.getRequired(BUCKET);
     String objectName = parameterSet.getRequired(OBJECT);
 
-    Storage storage = (Storage) StorageOptions.newBuilder().setProjectId(projectName).build().getService();
+    Storage storage = projectName == null || projectName.isBlank()
+        ?  StorageOptions.getDefaultInstance().getService()
+        :  StorageOptions.newBuilder().setProjectId(projectName).build().getService();
+    Blob blob = storage.get(bucketName, objectName);
+    if (blob == null) {
+      throw new IllegalStateException("Remote configuration object was not found");
+    }
+    if (blob.getSize() > CommonConstants.MAX_REMOTE_CONFIGURATION_LENGTH) {
+      throw new IllegalStateException(
+          "Configuration response exceeds maximum allowed size of "
+              + CommonConstants.MAX_REMOTE_CONFIGURATION_LENGTH
+              + " bytes");
+    }
+
     byte[] data = storage.readAllBytes(bucketName, objectName);
-    InputStream stream = new ByteArrayInputStream(data);
-    return Resource.createPermanentResource(stream, false);
+    return Resource.createPermanentResource(data, false);
   }
 }

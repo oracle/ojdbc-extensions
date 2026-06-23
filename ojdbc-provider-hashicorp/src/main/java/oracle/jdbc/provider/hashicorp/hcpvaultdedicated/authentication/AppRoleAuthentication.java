@@ -67,7 +67,7 @@ public class AppRoleAuthentication extends AbstractDedicatedVaultAuthentication 
 
     String authEndpoint = buildAuthEndpoint(vaultAddr, APPROLE_LOGIN_TEMPLATE, authPath);
     String payload = createJsonPayload(APPROLE_PAYLOAD_TEMPLATE, roleId, secretId);
-    return performAuthentication(authEndpoint, payload, namespace, null, "Failed to authenticate with AppRole");
+    return performAuthentication(authEndpoint, payload, namespace, "Failed to authenticate with AppRole");
   }
 
   @Override

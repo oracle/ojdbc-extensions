@@ -40,10 +40,13 @@ package  oracle.jdbc.provider.parameter;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /** Utility methods for processing "name=value" style parameters of a URI */
 public final class UriParameters {
@@ -78,7 +81,10 @@ public final class UriParameters {
       return "";
 
     return namedValues.entrySet().stream()
-      .map(entry -> entry.getKey() + "=" + entry.getValue())
+      .map(entry ->
+        encodeQueryComponent(entry.getKey())
+          + "="
+          + encodeQueryComponent(String.valueOf(entry.getValue())))
       .collect(Collectors.joining("&"));
   }
 
@@ -126,23 +132,83 @@ public final class UriParameters {
   private static Map<String, String> parseQuery(URI uri) {
     Map<String, String> values = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
-    String query = uri.getQuery();
+    String query = uri.getRawQuery();
 
     if (query == null)
       return Collections.emptyMap();
 
-    for (String nameEqualsValue : query.split("&")) {
-      String[] nameValue = nameEqualsValue.split("=");
-
-      final int expectedLength = 2;
-
-      // Not storing a value if query contains "name=" without a value
-      if (nameValue.length < expectedLength)
+    for (String nameEqualsValue : query.split("&", -1)) {
+      if (nameEqualsValue.isEmpty())
         continue;
 
-      values.put(nameValue[0], nameValue[1]);
+      int valueSeparatorIndex = nameEqualsValue.indexOf('=');
+      if (valueSeparatorIndex < 0)
+        continue;
+
+      String name = decodeQueryComponent(
+        nameEqualsValue.substring(0, valueSeparatorIndex));
+      String value = decodeQueryComponent(
+        nameEqualsValue.substring(valueSeparatorIndex + 1));
+
+      if (values.containsKey(name))
+        throw new IllegalArgumentException(
+          "Duplicate parameter name: \"" + name + "\"");
+
+      values.put(name, value);
     }
 
     return values;
+  }
+
+  /**
+   * Decodes a single query name or value after structural parsing has already
+   * isolated the component from '&' and '=' separators.
+   *
+   * @param queryComponent Encoded query component.
+   * @return Decoded query component.
+   */
+  private static String decodeQueryComponent(String queryComponent) {
+    return URLDecoder.decode(
+      queryComponent.replace("+", "%2B"), UTF_8);
+  }
+
+  /**
+   * Percent-encodes a single query name or value so reserved characters do not
+   * alter query structure when serialized into a URI.
+   *
+   * @param queryComponent Query component to encode.
+   * @return Percent-encoded query component.
+   */
+  private static String encodeQueryComponent(String queryComponent) {
+    StringBuilder encoded = new StringBuilder(queryComponent.length());
+
+    for (byte queryByte : queryComponent.getBytes(UTF_8)) {
+      int unsignedByte = queryByte & 0xFF;
+      if (isUnreserved(unsignedByte))
+        encoded.append((char)unsignedByte);
+      else {
+        encoded.append('%');
+        encoded.append(Character.forDigit((unsignedByte >>> 4) & 0xF, 16));
+        encoded.append(Character.forDigit(unsignedByte & 0xF, 16));
+      }
+    }
+
+    return encoded.toString();
+  }
+
+  /**
+   * Indicates whether a byte value is an RFC 3986 "unreserved" character that
+   * may be emitted directly in a query component without percent-encoding.
+   * See <a href="https://datatracker.ietf.org/doc/html/rfc3986#section-2.3">
+   * RFC 3986 Section 2.3</a>
+   */
+  private static boolean isUnreserved(int value) {
+    return (value >= 'A' && value <= 'Z')
+      || (value >= 'a' && value <= 'z')
+      || (value >= '0' && value <= '9')
+      || value == '-'
+      || value == '.'
+      || value == '_'
+      || value == '~';
   }
 }

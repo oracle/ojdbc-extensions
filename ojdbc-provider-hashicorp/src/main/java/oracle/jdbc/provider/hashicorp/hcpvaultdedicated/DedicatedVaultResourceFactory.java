@@ -46,7 +46,7 @@ import oracle.jdbc.provider.parameter.ParameterSet;
 
 /**
  * Common super class for ResourceFactory implementations that request
- * a resource from Vault using HashiCredentials.
+ * a resource from Vault using a {@link DedicatedVaultToken}.
  */
 public abstract class DedicatedVaultResourceFactory<T> implements ResourceFactory<T> {
 
@@ -62,7 +62,7 @@ public abstract class DedicatedVaultResourceFactory<T> implements ResourceFactor
       return request(credentials, parameterSet);
     } catch (Exception e) {
       throw new IllegalStateException(
-              "Request failed with parameters: " + parameterSet, e);
+              "Request failed while accessing HashiCorp Vault resource.", e);
     }
   }
 
