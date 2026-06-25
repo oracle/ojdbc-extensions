@@ -1,55 +1,63 @@
 # Oracle JDBC UCP Observability Providers
 
-Implementations of the `UCPEventListenerProvider` SPI that expose Oracle UCP telemetry through two observability backends:
+This module contains providers that add observability capabilities to Oracle
+Universal Connection Pool (UCP). Two providers are available:
+
+* JFR: exports UCP pool and connection lifecycle events to Java Flight Recorder.
+* OTEL: publishes UCP connection pool metrics through OpenTelemetry.
+
+These providers implement the `UCPEventListenerProvider` interface provided by
+UCP. They are notified when UCP emits pool, connection, and maintenance events,
+and expose those events as either JFR events or OpenTelemetry metrics.
+
+The exported telemetry includes:
+
+* pool lifecycle events, such as pool creation, startup, shutdown, and destroy
+* connection lifecycle events, such as connection creation, borrow, return, and close
+* maintenance events, such as refresh, recycle, and purge
+* pool state metrics, such as borrowed, available, total, created, and closed connections
+* UCP-reported average borrow wait time
 
 | Provider | Listener name | Backend |
 |---|---|---|
 | `JFRUCPEventListenerProvider` | `jfr-ucp-listener` | Java Flight Recorder (JFR) |
 | `OtelUCPEventListenerProvider` | `otel-ucp-listener` | OpenTelemetry (metrics) |
 
-Both providers are registered automatically via `java.util.ServiceLoader` — no code changes required.
-
----
-
-## Contents
-
-- [Installation](#installation)
-- [Activation](#activation)
-- [JFR Provider](#jfr-provider)
-- [OpenTelemetry Provider](#opentelemetry-provider)
-- [Supported UCP event types](#supported-ucp-event-types)
-- [Requirements](#requirements)
+Both providers are discovered automatically via `java.util.ServiceLoader`;
+activate one by setting the UCP listener provider name on the pool or through
+the JVM system property.
 
 ---
 
 ## Installation
 
+This provider is distributed as a single jar on the Maven Central Repository.
+The jar is compiled for JDK 11 and is forward compatible with later JDK
+versions. Add the UCP observability provider artifact to the application
+classpath:
+
 ```xml
-<dependencies>
-  <dependency>
-    <groupId>com.oracle.database.jdbc</groupId>
-    <artifactId>ojdbc-provider-ucp-observability</artifactId>
-    <version>1.1.0</version>
-  </dependency>
-</dependencies>
+<dependency>
+  <groupId>com.oracle.database.jdbc</groupId>
+  <artifactId>ojdbc-provider-ucp-observability</artifactId>
+  <version>1.1.0</version>
+</dependency>
 ```
 
 ---
 
 ## Activation
 
-Two ways to activate a provider, in priority order:
+To use one of the UCP observability providers, add the artifact to the
+application classpath and configure UCP with the listener provider name. Two
+activation modes are supported, in priority order:
 
 **1. Pool-level property** (highest priority) — set directly on the data source before the pool starts:
 
 ```java
-public class MyApp {
-  public static void main(String[] args) throws Exception {
-    PoolDataSource pds = PoolDataSourceFactory.getPoolDataSource();
-    pds.setUCPEventListenerProvider("jfr-ucp-listener");
-    // pds.setUCPEventListenerProvider("otel-ucp-listener");
-  }
-}
+PoolDataSource pds = PoolDataSourceFactory.getPoolDataSource();
+pds.setUCPEventListenerProvider("jfr-ucp-listener");
+// pds.setUCPEventListenerProvider("otel-ucp-listener");
 ```
 
 **2. JVM system property** — applies globally to all pools in the JVM:
@@ -61,23 +69,24 @@ java -DUCPEventListenerProvider=jfr-ucp-listener -jar myapp.jar
 Or programmatically:
 
 ```java
-public class MyApp {
-  public static void main(String[] args) throws Exception {
-    System.setProperty("UCPEventListenerProvider", "jfr-ucp-listener");
-    // System.setProperty("UCPEventListenerProvider", "otel-ucp-listener");
-  }
-}
+System.setProperty("UCPEventListenerProvider", "jfr-ucp-listener");
+// System.setProperty("UCPEventListenerProvider", "otel-ucp-listener");
 ```
 
-If no provider is configured, a no-op provider is used automatically with zero overhead.
+If no provider is configured, UCP uses its default no-op behavior.
 
 ---
 
 ## JFR Provider
 
-Converts every UCP pool and connection event into a committed JFR event. Zero overhead when no recording is active.
+The JFR provider converts UCP pool, connection, and maintenance events into
+custom Java Flight Recorder events. When a UCP JFR event type is not enabled by
+an active recording, the provider returns before reading and populating UCP
+context fields.
 
 ### Recorded event types
+
+The following UCP event categories are exported as custom JFR events.
 
 #### Pool lifecycle
 
@@ -108,6 +117,9 @@ Converts every UCP pool and connection event into a committed JFR event. Zero ov
 
 ### Fields recorded on every event
 
+Each JFR event records a snapshot of the pool state reported by UCP when the
+event is emitted.
+
 | Field | Type | Description |
 |---|---|---|
 | `ucpTimestamp` | `long` | Event occurrence time in milliseconds since epoch |
@@ -123,6 +135,9 @@ Converts every UCP pool and connection event into a committed JFR event. Zero ov
 
 ### Enabling a JFR recording
 
+JFR events can be collected either when the JVM starts or dynamically from a
+running process.
+
 **At JVM start:**
 
 ```bash
@@ -137,44 +152,23 @@ jcmd <pid> JFR.dump name=ucp filename=ucp.jfr
 jcmd <pid> JFR.stop name=ucp
 ```
 
-### Analysing events in JDK Mission Control
-
-Open the `.jfr` file in [JDK Mission Control](https://www.oracle.com/java/technologies/jdk-mission-control.html). UCP events appear under **Event Browser → ucp**.
-
 ---
 
 ## OpenTelemetry Provider
 
-Publishes UCP metrics through the [OpenTelemetry API](https://opentelemetry.io/docs/languages/java/). Event-driven — no background threads or polling. Depends only on `opentelemetry-api`; the SDK and exporter are the application's responsibility.
-
-### SDK initialisation
-
-The SDK must be registered with `GlobalOpenTelemetry` **before** the pool is started. Example using the Prometheus exporter:
-
-```java
-public class MyApp {
-  public static void main(String[] args) throws Exception {
-    // 1. Register the SDK before pool creation
-    PrometheusHttpServer prometheusServer = PrometheusHttpServer.builder().setPort(9464).build();
-
-    SdkMeterProvider meterProvider = SdkMeterProvider.builder()
-        .registerMetricReader(prometheusServer)
-        .build();
-
-    OpenTelemetrySdk.builder()
-        .setMeterProvider(meterProvider)
-        .buildAndRegisterGlobal();
-
-    // 2. Then create and start the pool
-    PoolDataSource pds = PoolDataSourceFactory.getPoolDataSource();
-    pds.setUCPEventListenerProvider("otel-ucp-listener");
-  }
-}
-```
+The OpenTelemetry provider publishes UCP connection pool metrics through the
+[OpenTelemetry API](https://opentelemetry.io/docs/languages/java/). It is
+event-driven and does not create background polling threads. This module depends
+only on `opentelemetry-api`; the OpenTelemetry SDK and exporter are configured
+by the application.
 
 ### Exported metrics
 
-#### Spec-aligned (`db.client.connection` prefix)
+The provider emits metrics when UCP events are received. Some metrics use the
+OpenTelemetry database client connection namespace, while UCP-specific metrics
+use the `oracle.ucp` namespace.
+
+#### Database client connection metrics (`db.client.connection` prefix)
 
 | Metric name | Instrument | Unit | Description |
 |---|---|---|---|
@@ -190,54 +184,16 @@ public class MyApp {
 | `oracle.ucp.connection.closed` | LongGauge | `{connection}` | Cumulative physical connections closed. |
 | `oracle.ucp.connection.borrow_wait_time.avg` | DoubleGauge | `s` | Cumulative pool-wide average time spent waiting to borrow a connection, as reported by UCP. |
 
-#### Common attributes
+#### Metric attributes
 
-| Attribute | Description |
-|---|---|
-| `db.client.connection.pool.name` | Pool name |
-| `db.client.connection.state` | `used` / `idle` (on `count` metric only) |
+Metric attributes are labels attached to the exported metric points. They allow
+monitoring backends such as Prometheus and Grafana to group, filter, and chart
+values by pool and connection state.
 
-### Prometheus / Grafana quick-start
-
-**1. Add the Prometheus exporter:**
-
-```xml
-<dependencies>
-  <dependency>
-    <groupId>io.opentelemetry</groupId>
-    <artifactId>opentelemetry-sdk</artifactId>
-    <version>1.44.1</version>
-  </dependency>
-  <dependency>
-    <groupId>io.opentelemetry</groupId>
-    <artifactId>opentelemetry-exporter-prometheus</artifactId>
-    <version>1.44.1-alpha</version>
-  </dependency>
-</dependencies>
-```
-
-**2. Configure Prometheus:**
-
-```yaml
-scrape_configs:
-  - job_name: ucp
-    static_configs:
-      - targets: ["localhost:9464"]
-```
-
-**3. Useful PromQL queries:**
-
-```promql
-db_client_connection_count{db_client_connection_state="used"}
-db_client_connection_count{db_client_connection_state="idle"}
-sum by (db_client_connection_pool_name) (db_client_connection_count)
-oracle_ucp_connection_established
-oracle_ucp_connection_closed
-oracle_ucp_connection_borrow_wait_time_avg_seconds
-db_client_connection_count{db_client_connection_state="used"} / db_client_connection_max
-```
-
----
+| Attribute | Applied to | Description |
+|---|---|---|
+| `db.client.connection.pool.name` | All metrics | UCP connection pool name |
+| `db.client.connection.state` | `db.client.connection.count` only | Connection state: `used` or `idle` |
 
 ## Supported UCP event types
 
