@@ -193,27 +193,18 @@ class JFRUCPEventListenerProviderTest {
       assertDoesNotThrow(() -> listener.onUCPEvent(type, mockContext));
     }
 
-    @ParameterizedTest(name = "onUCPEvent() reads all context fields for EventType.{0}")
+    @ParameterizedTest(name = "onUCPEvent() skips context reads for disabled EventType.{0}")
     @EnumSource(value = EventType.class, names = {
       "POOL_CREATED", "CONNECTION_BORROWED", "POOL_REFRESHED"
     })
-    @DisplayName("onUCPEvent() reads all context fields for each event category")
-    void testOnUCPEventReadsAllContextFields(EventType type) {
+    @DisplayName("onUCPEvent() does not read context fields when JFR event is disabled")
+    void testOnUCPEventSkipsContextReadsWhenEventDisabled(EventType type) {
       JFRUCPEventListenerProvider provider = new JFRUCPEventListenerProvider();
       UCPEventListener listener = provider.getListener(Collections.emptyMap());
 
       listener.onUCPEvent(type, mockContext);
 
-      verify(mockContext).poolName();
-      verify(mockContext).timestamp();
-      verify(mockContext).maxPoolSize();
-      verify(mockContext).minPoolSize();
-      verify(mockContext).borrowedConnectionsCount();
-      verify(mockContext).availableConnectionsCount();
-      verify(mockContext).totalConnections();
-      verify(mockContext).closedConnections();
-      verify(mockContext).createdConnections();
-      verify(mockContext).getAverageConnectionWaitTime();
+      verifyNoInteractions(mockContext);
     }
   }
 }

@@ -42,7 +42,6 @@ import jdk.jfr.Category;
 import jdk.jfr.Label;
 import jdk.jfr.Description;
 import jdk.jfr.Name;
-import oracle.ucp.events.core.UCPEventContext;
 import oracle.ucp.provider.observability.jfr.core.UCPBaseEvent;
 
 @Name("ucp.ConnectionClosed")
@@ -51,7 +50,6 @@ import oracle.ucp.provider.observability.jfr.core.UCPBaseEvent;
 @Category({"UCP Events", "Connection Lifecycle Events"})
 public class ConnectionClosedEvent extends UCPBaseEvent {
 
-  public ConnectionClosedEvent(UCPEventContext ctx) {
-    initCommonFields(ctx);
+  public ConnectionClosedEvent() {
   }
 }

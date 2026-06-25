@@ -38,7 +38,6 @@
 
 package oracle.ucp.provider.observability.jfr.core;
 
-import jdk.jfr.Event;
 import oracle.ucp.events.core.UCPEventContext;
 import oracle.ucp.events.core.UCPEventListener;
 import oracle.ucp.provider.observability.jfr.events.connection.*;
@@ -64,33 +63,30 @@ public final class UCPEventFactory {
    * Creates a JFR event instance for the specified UCP event type.
    *
    * @param type UCP event type
-   * @param ctx  event context with pool metrics
-   * @return configured JFR event, or {@code null} for unrecognized types
+   * @return empty JFR event, or {@code null} for unrecognized types
    * @throws NullPointerException if parameters are null
    */
-  static Event createEvent(
-      UCPEventListener.EventType type, UCPEventContext ctx) {
+  static UCPBaseEvent createEvent(UCPEventListener.EventType type) {
     Objects.requireNonNull(type, "EventType cannot be null");
-    Objects.requireNonNull(ctx, "UCPEventContext cannot be null");
 
     switch (type) {
       // Pool Lifecycle Events
-      case POOL_CREATED:    return new PoolCreatedEvent(ctx);
-      case POOL_STARTING:   return new PoolStartingEvent(ctx);
-      case POOL_STARTED:    return new PoolStartedEvent(ctx);
-      case POOL_STOPPED:    return new PoolStoppedEvent(ctx);
-      case POOL_DESTROYED:  return new PoolDestroyedEvent(ctx);
+      case POOL_CREATED:    return new PoolCreatedEvent();
+      case POOL_STARTING:   return new PoolStartingEvent();
+      case POOL_STARTED:    return new PoolStartedEvent();
+      case POOL_STOPPED:    return new PoolStoppedEvent();
+      case POOL_DESTROYED:  return new PoolDestroyedEvent();
 
       // Connection Lifecycle Events
-      case CONNECTION_CREATED:   return new ConnectionCreatedEvent(ctx);
-      case CONNECTION_BORROWED:  return new ConnectionBorrowedEvent(ctx);
-      case CONNECTION_RETURNED:  return new ConnectionReturnedEvent(ctx);
-      case CONNECTION_CLOSED:    return new ConnectionClosedEvent(ctx);
+      case CONNECTION_CREATED:   return new ConnectionCreatedEvent();
+      case CONNECTION_BORROWED:  return new ConnectionBorrowedEvent();
+      case CONNECTION_RETURNED:  return new ConnectionReturnedEvent();
+      case CONNECTION_CLOSED:    return new ConnectionClosedEvent();
 
       // Maintenance Operations
-      case POOL_REFRESHED: return new PoolRefreshedEvent(ctx);
-      case POOL_RECYCLED:  return new PoolRecycledEvent(ctx);
-      case POOL_PURGED:    return new PoolPurgedEvent(ctx);
+      case POOL_REFRESHED: return new PoolRefreshedEvent();
+      case POOL_RECYCLED:  return new PoolRecycledEvent();
+      case POOL_PURGED:    return new PoolPurgedEvent();
 
       default:
         LOGGER.fine(() ->
@@ -102,8 +98,8 @@ public final class UCPEventFactory {
   /**
    * Creates and records a JFR event for the given UCP operation.
    *
-   * <p>Skips {@link Event#commit()} when JFR has no active recording for
-   * this event type, avoiding serialisation overhead on the hot path.
+   * <p>When no active recording enables this event type, this method returns
+   * before reading UCP context fields.
    *
    * @param type UCP event type to record
    * @param ctx  event context with pool metrics
@@ -114,14 +110,13 @@ public final class UCPEventFactory {
     Objects.requireNonNull(type, "EventType cannot be null");
     Objects.requireNonNull(ctx, "UCPEventContext cannot be null");
 
-    Event event = createEvent(type, ctx);
+    UCPBaseEvent event = createEvent(type);
 
-    if (event == null) {
+    if (event == null || !event.isEnabled()) {
       return;
     }
 
-    if (event.isEnabled()) {
-      event.commit();
-    }
+    event.initCommonFields(ctx);
+    event.commit();
   }
 }

@@ -61,6 +61,7 @@ public abstract class UCPBaseEvent extends Event {
    * <p>Complements JFR's own {@code startTime} — preserved for correlation.
    */
   @Label("UCP Timestamp (ms)")
+  @Timestamp(Timestamp.MILLISECONDS_SINCE_EPOCH)
   protected long ucpTimestamp;
 
   /** Maximum configured pool size */
@@ -102,7 +103,7 @@ public abstract class UCPBaseEvent extends Event {
    * @param ctx event context containing pool metrics
    * @throws NullPointerException if ctx is null
    */
-  protected void initCommonFields(UCPEventContext ctx) {
+  void initCommonFields(UCPEventContext ctx) {
     Objects.requireNonNull(ctx, "UCPEventContext cannot be null");
 
     String name             = ctx.poolName();
