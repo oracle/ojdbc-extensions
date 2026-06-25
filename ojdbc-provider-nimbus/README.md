@@ -21,19 +21,36 @@ compatible with later JDK versions. The coordinates for the latest release are:
 ```
 
 ## Access Token Provider
-The Access Token Provider provides Oracle JDBC with an access token that 
+The Nimbus Access Token Provider provides Oracle JDBC with an access token that 
 authorizes logins to an Autonomous Database. This is a
 [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/26/jajdb/oracle/jdbc/spi/OracleResourceProvider.html)
 identified by the name `ojdbc-provider-nimbus-token`.
 
-This provider should be configured to authenticate as an OAuth 2.0 client which
-has been mapped to a `USER` or `DATA ROLE` in Oracle Database. Any Java process
-that uses version 19 or newer of Oracle JDBC (ojdbc8/ojdbc11/etc) can be
-configured to use this provider without requiring changes to the application 
-code, or to the code of any library it depends on. Oracle JDBC will 
-automatically use this provider when it (and its dependencies) are installed on 
-the class/module path, and connection properties are configured as shown in the
-example below.
+Oracle JDBC automatically uses this provider when it (and its dependencies) 
+are included on the class/module path of a Java application, and 
+connection properties are configured as shown in the example below. Be sure not 
+to include a traditional database username or password in your 
+configuration because it will
+[override the access token configuration](https://docs.oracle.com/en/database/oracle/oracle-database/26/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_PROVIDER_ACCESS_TOKEN).
+
+This provider should be configured to authenticate as an OAuth 2.0 client that 
+has been mapped to a `USER` or `DATA ROLE` in Oracle Database. Follow any of the
+links below for more information on the setup:
+- [Mapping a USER to an Identity in Azure Entra ID](https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/manage-users-iam.html)
+- [Mapping a DATA ROLE to an Identity in Azure Entra ID](https://docs.oracle.com/en/database/oracle/oracle-database/26/ddscg/configure-microsoft-entra-id-application-mediated-access.html)
+- [Mapping a DATA ROLE to an Identity in Oracle Cloud](https://docs.oracle.com/en/database/oracle/oracle-database/26/ddscg/configure-oci-iam-application-mediated-access.html)
+
+This provider won't work if you're [mapping a USER to an Identity in Oracle Cloud](https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/manage-users-iam.html).
+For that scenario, you should use the [OCI Token Provider](../ojdbc-provider-oci/README.md#access-token-provider) 
+from the ojdbc-provider-oci module instead.
+
+Any application using version 19 or newer of Oracle JDBC 
+(ojdbc8/ojdbc11/etc) can use this provider without changing code of the 
+application or updating any libraries it depends on. The only changes
+required are to include the provider on the class/module path, and to configure
+Oracle JDBC as shown in the example below.
+
+
 ```properties
 # Configures Oracle JDBC to identity the name of the Nimbus Token Provider.
 oracle.jdbc.provider.accessToken=ojdbc-provider-nimbus-token
@@ -57,8 +74,8 @@ oracle.jdbc.provider.accessToken.clientSecret=$3cr3t
 ```
 These properties may be stored in an
 [Oracle JDBC connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/26/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE),
-or other places where datasource/connection properties normally get configured. 
-Configuration with JVM system properties is not supported.
+or other places where datasource/connection properties get 
+configured. Configuration with JVM system properties is not supported.
 
 The full set of properties that configure this provider are listed in the table
 below.
