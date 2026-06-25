@@ -28,17 +28,15 @@ identified by the name `ojdbc-provider-nimbus-token`.
 
 Oracle JDBC automatically uses this provider when it (and its dependencies) 
 are included on the class/module path of a Java application, and 
-connection properties are configured as shown in the example below. Be sure not 
-to include a traditional database username or password in your 
-configuration because it will
-[override the access token configuration](https://docs.oracle.com/en/database/oracle/oracle-database/26/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_PROVIDER_ACCESS_TOKEN).
+connection properties are configured as shown in the example below. The 
+configuration must not include a traditional database username or password, 
+because it will [override the access token configuration](https://docs.oracle.com/en/database/oracle/oracle-database/26/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_PROVIDER_ACCESS_TOKEN).
 
 This provider should be configured to authenticate as an OAuth 2.0 client that 
 has been mapped to a `USER` or `DATA ROLE` in Oracle Database. Follow any of the
 links below for more information on the setup:
-- [Mapping a USER to an Identity in Azure Entra ID](https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/manage-users-iam.html)
-- [Mapping a DATA ROLE to an Identity in Azure Entra ID](https://docs.oracle.com/en/database/oracle/oracle-database/26/ddscg/configure-microsoft-entra-id-application-mediated-access.html)
-- [Mapping a DATA ROLE to an Identity in Oracle Cloud](https://docs.oracle.com/en/database/oracle/oracle-database/26/ddscg/configure-oci-iam-application-mediated-access.html)
+- [Mapping a USER to an Identity in Azure Entra ID](https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/manage-users-azure-ad.html)
+- [Mapping a DATA ROLE to an Identity in Azure Entra ID or Oracle Cloud](https://docs.oracle.com/en/database/oracle/oracle-database/26/ddscg/iam-managed-users-connecting-directly-5.html)
 
 This provider won't work if you're [mapping a USER to an Identity in Oracle Cloud](https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/manage-users-iam.html).
 For that scenario, you should use the [OCI Token Provider](../ojdbc-provider-oci/README.md#access-token-provider) 
