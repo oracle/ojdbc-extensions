@@ -31,7 +31,7 @@ This provider can be used for seamless integration of applications that use the 
 <dd>Parser for integration with Pkl that can be used by providers</dd>
 <dt><a href="ojdbc-provider-spring/README.md">Oracle JDBC Spring Providers</a></dt>
 <dd>Providers for integration with Spring</dd>
-<dt><a href="ojdbc-provider-spring/README.md">Oracle JDBC Nimbus Providers</a></dt>
+<dt><a href="ojdbc-provider-nimbus/README.md">Oracle JDBC Nimbus Providers</a></dt>
 <dd>Providers for integration with the Nimbus OAuth 2.0 SDK with OpenID Connect
 extensions</dd>
 </dl>

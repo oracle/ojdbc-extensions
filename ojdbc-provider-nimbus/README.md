@@ -55,14 +55,12 @@ oracle.jdbc.provider.accessToken.clientId=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
 # The secret of an OAuth 2.0 client used when requesting access tokens
 oracle.jdbc.provider.accessToken.clientSecret=$3cr3t
 ```
-Configuration may appear in any place where datasource/connection properties are
-configured, such as a Spring application.properties file, or within the user
-interface of a SQL development tool. Alternatively, an
-[Oracle JDBC connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/26/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
-offers a universal solution for all applications, libraries, frameworks, and
-tools.
+These properties may be stored in an
+[Oracle JDBC connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/26/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE),
+or other places where datasource/connection properties normally get configured. 
+Configuration with JVM system properties is not supported.
 
-The full set of parameters that configure this provider are listed in the table
+The full set of properties that configure this provider are listed in the table
 below.
 <table>
 <thead><tr>
@@ -218,22 +216,6 @@ for an OAuth 2.0 client.
 <i>No default value. A value must be configured for this parameter when using
 the authorization_code grant type.</i>
 </td></tr></tbody></table>
-
-These parameters may be configured as a connection properties recognized by the
-Oracle JDBC Driver. Parameter names are recognized when appended to the name of
-a connection property that identifies a provider.
-For example, when the connection property `oracle.jdbc.provider.accessToken`
-identifies a  provider, any of the parameter names listed above may be appended to it:
-In the example above, the parameter names `grantType`, `scope`, `clientId`
-and `clientSecret` are appended to the name of the connection property
-`oracle.jdbc.provider.accessToken`.
-This has the effect of configuring the Nimbus Access Token Provider, which
-is identified by that property.
-
-Connection properties that identify and configure a provider may appear in a
-[connection properties file](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/OracleConnection.html#CONNECTION_PROPERTY_CONFIG_FILE)
-or be configured programmatically. Configuration with JVM system properties is
-not supported.
 
 #### Caching Mechanism
 The Access Token Provider employs a caching mechanism to efficiently manage and reuse access tokens. By utilizing Oracle JDBC's cache for JWTs, access tokens are
