@@ -1,10 +1,11 @@
 # Oracle JDBC UCP Observability Providers
 
 This module contains providers that add observability capabilities to Oracle
-Universal Connection Pool (UCP). Two providers are available:
+Universal Connection Pool (UCP). Three listener providers are available:
 
 * JFR: exports UCP pool and connection lifecycle events to Java Flight Recorder.
 * OTEL: publishes UCP connection pool metrics through OpenTelemetry.
+* Observability: exports the same UCP event stream to both JFR and OTEL.
 
 These providers implement the `UCPEventListenerProvider` interface provided by
 UCP. They are notified when UCP emits pool, connection, and maintenance events,
@@ -20,10 +21,11 @@ The exported telemetry includes:
 
 | Provider | Listener name | Backend |
 |---|---|---|
+| `ObservabilityUCPEventListenerProvider` | `ucp-observability-listener` | Java Flight Recorder (JFR) and OpenTelemetry (metrics) |
 | `JFRUCPEventListenerProvider` | `jfr-ucp-listener` | Java Flight Recorder (JFR) |
 | `OtelUCPEventListenerProvider` | `otel-ucp-listener` | OpenTelemetry (metrics) |
 
-Both providers are discovered automatically via `java.util.ServiceLoader`;
+All providers are discovered automatically via `java.util.ServiceLoader`;
 activate one by setting the UCP listener provider name on the pool or through
 the JVM system property.
 
@@ -56,24 +58,25 @@ activation modes are supported, in priority order:
 
 ```java
 PoolDataSource pds = PoolDataSourceFactory.getPoolDataSource();
-pds.setUCPEventListenerProvider("jfr-ucp-listener");
-// pds.setUCPEventListenerProvider("otel-ucp-listener");
+pds.setUCPEventListenerProvider("ucp-observability-listener");
 ```
 
 **2. JVM system property** — applies globally to all pools in the JVM:
 
 ```bash
-java -DUCPEventListenerProvider=jfr-ucp-listener -jar myapp.jar
+java -DUCPEventListenerProvider=ucp-observability-listener -jar myapp.jar
 ```
 
 Or programmatically:
 
 ```java
-System.setProperty("UCPEventListenerProvider", "jfr-ucp-listener");
-// System.setProperty("UCPEventListenerProvider", "otel-ucp-listener");
+System.setProperty("UCPEventListenerProvider", "ucp-observability-listener");
 ```
 
 If no provider is configured, UCP uses its default no-op behavior.
+
+Use `ucp-observability-listener` to enable both JFR and OpenTelemetry. Use
+`jfr-ucp-listener` for JFR only, or `otel-ucp-listener` for OpenTelemetry only.
 
 ---
 
