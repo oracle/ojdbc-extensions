@@ -51,6 +51,7 @@ import oracle.jdbc.provider.parameter.ParameterSet;
  * This interface is intended to decouple provider code from any proprietary
  * classes that might be defined by the SDK of one particular service.
  * </p>
+ * @param <T> Class of the resource
  */
 public interface ResourceFactory<T> {
 
