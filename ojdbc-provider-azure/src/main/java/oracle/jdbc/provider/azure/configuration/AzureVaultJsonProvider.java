@@ -51,8 +51,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A provider for JSON payload which contains configuration from Azure Vault.
- * See {@link #getInputStream(String)} for the spec of the JSON payload.
+ * A provider for configuration payloads retrieved from Azure Vault. Payloads
+ * are parsed by {@link OracleConfigurationParsableProvider}; JSON is used by
+ * default, and other parser types such as Pkl may be selected with the
+ * {@code parser} option.
  */
 public class AzureVaultJsonProvider extends OracleConfigurationParsableProvider {
 
@@ -77,19 +79,22 @@ public class AzureVaultJsonProvider extends OracleConfigurationParsableProvider 
   /**
    * {@inheritDoc}
    * <p>
-   * Returns the JSON payload stored in Azure Vault Secret.
+   * Returns the configuration payload stored in Azure Vault Secret.
    * </p><p>The {@code secretIdentifier} is an identifier of Vault Secret which
-   * can be acquired on the Azure Web Console. The Json payload is stored in
-   * the Secret Value of Vault Secret.
+   * can be acquired on the Azure Web Console. The configuration payload is
+   * stored in the Secret Value of Vault Secret.
    * </p>
    * @param secretIdentifier the identifier of secret used by this
-   *                         provider to retrieve JSON payload from Azure
-   * @return JSON payload
+   *                         provider to retrieve a configuration payload from
+   *                         Azure
+   * @return configuration payload
    **/
   @Override
   public InputStream getInputStream(String secretIdentifier) {
     final String valueFieldName = "value";
     Map<String, String> optionsWithSecret = new HashMap<>(options);
+    // "parser" is consumed by OracleConfigurationParsableProvider, not Azure.
+    optionsWithSecret.remove("parser");
     optionsWithSecret.put(valueFieldName, secretIdentifier);
 
     ParameterSet parameters = PARAMETER_SET_PARSER
@@ -116,11 +121,6 @@ public class AzureVaultJsonProvider extends OracleConfigurationParsableProvider 
   @Override
   public String getType() {
     return "azurevault";
-  }
-
-  @Override
-  public String getParserType(String arg0) {
-    return "json";
   }
 
   /**
