@@ -15,6 +15,8 @@ Provider</a></dt>
 <dd>Provides connection properties managed by the Object Storage service</dd>
 <dt><a href="#oci-vault-config-provider">OCI Vault Config Provider</a></dt>
 <dd>Provides connection properties managed by the Vault service</dd>
+<dt><a href="#configuration-payload-parsers-json-pkl-and-other-parsers">Configuration Payload Parsers (JSON, Pkl, and Other Parsers)</a></dt>
+<dd>Parser selection for Object Storage and Vault configuration payloads</dd>
 <dt><a href="#common-parameters-for-centralized-config-providers">Common Parameters for Centralized Config Providers</a></dt>
 <dd>Common parameters supported by the config providers</dd>
 <dt><a href="#caching-configuration">Caching configuration</a></dt>
@@ -83,7 +85,7 @@ Provider can now support Database Tools Connections with Proxy Authentication,
 only if username is provided in Proxy Authentication Info, without the password and roles.
 
 ## OCI Object Storage Config Provider
-The Oracle Data Source uses a new prefix `jdbc:oracle:thin:@config-ociobject://` to be able to identify that the configuration parameters should be loaded using OCI Object Storage. Users only need to indicate the URL Path of the Object containing the JSON payload using the following syntax, where option-value pairs separated by `&` are optional authentication parameters that vary by provider:
+The Oracle Data Source uses a new prefix `jdbc:oracle:thin:@config-ociobject://` to be able to identify that the configuration parameters should be loaded using OCI Object Storage. Users only need to indicate the URL Path of the Object containing the configuration payload using the following syntax, where option-value pairs separated by `&` are optional authentication parameters that vary by provider:
 
 <pre>
 jdbc:oracle:thin:@config-ociobject://{url_path}[?option1=value1&option2=value2...]
@@ -101,7 +103,7 @@ The instructions of obtaining a URL Path can be found in [Get the URI or Pre-Aut
 
 For more details about the option-value pairs, see [Common Parameters for Centralized Config Providers](#common-parameters-for-centralized-config-providers).
 
-### JSON Payload format
+### Configuration Payload Format
 
 There are 4 fixed values that are looked at the root level.
 
@@ -214,18 +216,32 @@ This property should be included inside the "jdbc" object of the JSON payload.
 <i>*Note: When storing a wallet as a secret in OCI Vault, choose the Plain-Text secret type template instead of Base64 to prevent double decoding when the provider retrieves the value.</i> 
 
 ## OCI Vault Config Provider
-Apart from OCI Object Storage, users can also store JSON Payload in the content of OCI Vault Secret. Users need to indicate the OCID of the Secret with the following syntax:
+Apart from OCI Object Storage, users can also store a configuration payload in the content of OCI Vault Secret. Users need to indicate the OCID of the Secret with the following syntax:
 
 <pre>
 jdbc:oracle:thin:@config-ocivault://{secret-ocid}
 </pre>
 
-The JSON Payload retrieved by OCI Vault Config Provider follows the same format in [OCI Object Storage Config Provider](#json-payload-format).
+The payload retrieved by OCI Vault Config Provider follows the same format in [OCI Object Storage Config Provider](#configuration-payload-format).
+
+## Configuration Payload Parsers (JSON, Pkl, and Other Parsers)
+OCI Object Storage and OCI Vault Config Providers extend
+`OracleConfigurationParsableProvider`, which parses payloads as JSON by default
+and honors the `parser` option for other parser types. To use a Pkl payload, or
+another parser type, add the `parser` option to the JDBC URL and include the
+corresponding parser provider on the runtime classpath. For Pkl, include
+`ojdbc-provider-pkl`.
+
+<pre>
+jdbc:oracle:thin:@config-ociobject://{url_path}?parser=pkl
+jdbc:oracle:thin:@config-ocivault://{secret-ocid}?parser=pkl
+</pre>
 
 
 ## Common Parameters for Centralized Config Providers
-OCI Database Tools Connections Config Provider and OCI Object Storage Config Provider
-share the same sets of parameters for authentication configuration.
+OCI Database Tools Connections Config Provider, OCI Object Storage Config Provider,
+and OCI Vault Config Provider share the same set of parameters for
+authentication configuration.
 
 ### Configuring Authentication
 
