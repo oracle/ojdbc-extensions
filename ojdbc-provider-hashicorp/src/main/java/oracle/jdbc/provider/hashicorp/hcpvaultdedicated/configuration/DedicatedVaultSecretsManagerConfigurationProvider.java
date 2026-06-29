@@ -51,6 +51,12 @@ import java.util.Map;
 
 import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.*;
 
+/**
+ * A provider for configuration payloads retrieved from HCP Vault Dedicated.
+ * Payloads are parsed by {@link OracleConfigurationParsableProvider}; JSON is
+ * used by default, and other parser types such as Pkl may be selected with the
+ * {@code parser} option.
+ */
 public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleConfigurationParsableProvider {
 
   private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
@@ -60,6 +66,8 @@ public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleCon
     final String valueFieldName = "value";
 
     Map<String, String> optionsWithSecret = new HashMap<>(options);
+    // "parser" is consumed by OracleConfigurationParsableProvider, not HCP Vault.
+    optionsWithSecret.remove("parser");
     optionsWithSecret.put(valueFieldName, secretPath);
 
     ParameterSet finalParameters = buildResolvedParameterSet(optionsWithSecret);
@@ -75,11 +83,6 @@ public class DedicatedVaultSecretsManagerConfigurationProvider extends OracleCon
   @Override
   public String getType() {
     return "hcpvaultdedicated";
-  }
-
-  @Override
-  public String getParserType(String location) {
-    return "json";
   }
 
   @Override

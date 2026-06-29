@@ -49,9 +49,10 @@ import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.util.OracleConfigurationCache;
 
 /**
- * A provider for JSON payload which contains configuration from GCP Secret
- * Manager.
- * See {@link #getInputStream(String)} for the spec of the JSON payload.
+ * A provider for configuration payloads retrieved from GCP Secret Manager.
+ * Payloads are parsed by {@link OracleConfigurationParsableProvider}; JSON is
+ * used by default, and other parser types such as Pkl may be selected with the
+ * {@code parser} option.
  **/
 public class GcpSecretManagerConfigurationProvider
     extends OracleConfigurationParsableProvider {
@@ -66,12 +67,12 @@ public class GcpSecretManagerConfigurationProvider
   /**
    * {@inheritDoc}
    * <p>
-   * Returns the JSON payload stored in GCP Secret Manager secret.
+   * Returns the configuration payload stored in GCP Secret Manager secret.
    * </p>
    * 
    * @param location resource name of the secret version (to obtain the resource
    *                 name, click on "Actions" and "Copy resource name")
-   * @return JSON payload
+   * @return configuration payload
    */
   @Override
   public InputStream getInputStream(String location) throws SQLException {
@@ -89,10 +90,5 @@ public class GcpSecretManagerConfigurationProvider
   @Override
   public OracleConfigurationCache getCache() {
     return CACHE;
-  }
-
-  @Override
-  public String getParserType(String arg0) {
-    return "json";
   }
 }
