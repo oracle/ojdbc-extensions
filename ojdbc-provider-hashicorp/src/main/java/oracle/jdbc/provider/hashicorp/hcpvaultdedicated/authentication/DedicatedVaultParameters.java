@@ -41,9 +41,11 @@ package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
+import oracle.jdbc.provider.hashicorp.util.VaultEndpointPolicy;
 import oracle.jdbc.provider.util.ParameterUtils;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultAuthenticationMethod.AUTO_DETECT;
@@ -112,7 +114,7 @@ public class DedicatedVaultParameters {
   /**
    * The Vault token. If not specified, fallback to system property or environment var.
    */
-  public static final Parameter<String> VAULT_TOKEN = Parameter.create();
+  public static final Parameter<String> VAULT_TOKEN = Parameter.create(SENSITIVE);
 
   /**
    *  The field name for extracting a specific value from the JSON.
@@ -127,7 +129,7 @@ public class DedicatedVaultParameters {
   /**
    *  The password for Userpass authentication. Required for Userpass method.
    */
-  public static final Parameter<String> PASSWORD = Parameter.create();
+  public static final Parameter<String> PASSWORD = Parameter.create(SENSITIVE);
 
   /**
    *  The path for Userpass authentication. Optional.
@@ -155,7 +157,7 @@ public class DedicatedVaultParameters {
    * conjunction with the Role ID for AppRole authentication.
    * </p>
    */
-  public static final Parameter<String> SECRET_ID = Parameter.create();
+  public static final Parameter<String> SECRET_ID = Parameter.create(SENSITIVE);
 
   /**
    * The path for AppRole authentication. Optional.
@@ -176,7 +178,7 @@ public class DedicatedVaultParameters {
    * the Vault policy.
    * </p>
    */
-  public static final Parameter<String> GITHUB_TOKEN = Parameter.create();
+  public static final Parameter<String> GITHUB_TOKEN = Parameter.create(SENSITIVE);
 
   /**
    * The path for GitHub authentication. Optional.
@@ -202,47 +204,46 @@ public class DedicatedVaultParameters {
    * @return The resolved ParameterSet.
    */
   public static ParameterSet buildResolvedParameterSet(Map<String, String> inputOpts) {
-    Map<String, String> opts = new HashMap<>(inputOpts);
-
-    String authStr = opts.entrySet().stream()
-      .filter(entry -> entry.getKey().equalsIgnoreCase(PARAM_AUTHENTICATION))
-      .map(Map.Entry::getValue)
-      .findFirst()
-      .orElse(DedicatedVaultAuthenticationMethod.AUTO_DETECT.name());
+    Map<String, String> opts = normalizeOptionKeys(inputOpts);
+    String authStr = opts.getOrDefault(PARAM_AUTHENTICATION,
+            DedicatedVaultAuthenticationMethod.AUTO_DETECT.name());
 
     DedicatedVaultAuthenticationMethod authMethod =
             DedicatedVaultAuthenticationMethod.valueOf(authStr.toUpperCase());
 
-    opts.computeIfAbsent(PARAM_VAULT_ADDR, ParameterUtils::getFallback);
-    opts.computeIfAbsent(PARAM_VAULT_NAMESPACE, ParameterUtils::getFallback);
+    String resolvedVaultAddr = resolveOptionWithFallback(opts, PARAM_VAULT_ADDR);
+    resolveOptionWithFallback(opts, PARAM_VAULT_NAMESPACE);
+    if (resolvedVaultAddr != null) {
+      VaultEndpointPolicy.validateVaultUrl(resolvedVaultAddr);
+    }
 
     switch (authMethod) {
       case VAULT_TOKEN:
-        opts.computeIfAbsent(PARAM_VAULT_TOKEN, ParameterUtils::getFallback);
+        resolveAmbientCredentialWithGuard(opts, PARAM_VAULT_TOKEN, resolvedVaultAddr);
         break;
       case GITHUB:
-        opts.computeIfAbsent(PARAM_GITHUB_TOKEN, ParameterUtils::getFallback);
+        resolveAmbientCredentialWithGuard(opts, PARAM_GITHUB_TOKEN, resolvedVaultAddr);
         opts.computeIfAbsent(PARAM_GITHUB_AUTH_PATH, ParameterUtils::getFallback);
         break;
       case APPROLE:
         opts.computeIfAbsent(PARAM_VAULT_ROLE_ID, ParameterUtils::getFallback);
-        opts.computeIfAbsent(PARAM_VAULT_SECRET_ID, ParameterUtils::getFallback);
+        resolveAmbientCredentialWithGuard(opts, PARAM_VAULT_SECRET_ID, resolvedVaultAddr);
         opts.computeIfAbsent(PARAM_APPROLE_AUTH_PATH, ParameterUtils::getFallback);
         break;
       case USERPASS:
         opts.computeIfAbsent(PARAM_VAULT_USERNAME, ParameterUtils::getFallback);
-        opts.computeIfAbsent(PARAM_VAULT_PASSWORD, ParameterUtils::getFallback);
+        resolveAmbientCredentialWithGuard(opts, PARAM_VAULT_PASSWORD, resolvedVaultAddr);
         opts.computeIfAbsent(PARAM_USERPASS_AUTH_PATH, ParameterUtils::getFallback);
         break;
       case AUTO_DETECT:
-        opts.computeIfAbsent(PARAM_VAULT_TOKEN, ParameterUtils::getFallback);
+        resolveAmbientCredentialWithGuard(opts, PARAM_VAULT_TOKEN, resolvedVaultAddr);
         opts.computeIfAbsent(PARAM_VAULT_USERNAME, ParameterUtils::getFallback);
-        opts.computeIfAbsent(PARAM_VAULT_PASSWORD, ParameterUtils::getFallback);
+        resolveAmbientCredentialWithGuard(opts, PARAM_VAULT_PASSWORD, resolvedVaultAddr);
         opts.computeIfAbsent(PARAM_USERPASS_AUTH_PATH, ParameterUtils::getFallback);
         opts.computeIfAbsent(PARAM_VAULT_ROLE_ID, ParameterUtils::getFallback);
-        opts.computeIfAbsent(PARAM_VAULT_SECRET_ID, ParameterUtils::getFallback);
+        resolveAmbientCredentialWithGuard(opts, PARAM_VAULT_SECRET_ID, resolvedVaultAddr);
         opts.computeIfAbsent(PARAM_APPROLE_AUTH_PATH, ParameterUtils::getFallback);
-        opts.computeIfAbsent(PARAM_GITHUB_TOKEN, ParameterUtils::getFallback);
+        resolveAmbientCredentialWithGuard(opts, PARAM_GITHUB_TOKEN, resolvedVaultAddr);
         opts.computeIfAbsent(PARAM_GITHUB_AUTH_PATH, ParameterUtils::getFallback);
         break;
       default:
@@ -289,5 +290,67 @@ public class DedicatedVaultParameters {
         .addParameter("type", Parameter.create())
       .build();
 
+  /**
+   * Resolves a sensitive credential from ambient fallback only when endpoint trust checks pass.
+   *
+   * @param options Mutable options map.
+   * @param key Credential key to resolve.
+   * @param vaultAddr Vault endpoint used for trust validation.
+   */
+  private static void resolveAmbientCredentialWithGuard(
+          Map<String, String> options, String key, String vaultAddr) {
+
+    if (options.containsKey(key)) {
+      return;
+    }
+
+    String fallback = ParameterUtils.getFallback(key);
+    if (fallback == null) {
+      return;
+    }
+
+    if (vaultAddr != null) {
+      VaultEndpointPolicy.ensureCredentialAllowed(vaultAddr, key);
+    }
+    options.put(key, fallback);
+  }
+
+  /**
+   * Resolves the value of an option using direct key lookup and fallback lookup.
+   *
+   * @param options Mutable options map with canonical (uppercase) keys.
+   * @param key Canonical key name.
+   * @return Resolved value, or null if unavailable.
+   */
+  private static String resolveOptionWithFallback(Map<String, String> options, String key) {
+    String value = options.get(key);
+    if (value != null) {
+      return value;
+    }
+
+    value = ParameterUtils.getFallback(key);
+    if (value != null) {
+      options.put(key, value);
+    }
+    return value;
+  }
+
+  /**
+   * Normalizes option keys to uppercase for case-insensitive lookup via direct map access.
+   *
+   * @param inputOpts Input options map.
+   * @return New map containing canonical uppercase keys.
+   */
+  private static Map<String, String> normalizeOptionKeys(Map<String, String> inputOpts) {
+    Map<String, String> normalized = new HashMap<>();
+    for (Map.Entry<String, String> entry : inputOpts.entrySet()) {
+      String key = entry.getKey();
+      if (key == null) {
+        continue;
+      }
+      normalized.put(key.toUpperCase(Locale.ROOT), entry.getValue());
+    }
+    return normalized;
+  }
 
 }

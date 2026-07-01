@@ -38,6 +38,7 @@
 package oracle.provider.aws.configuration;
 
 import oracle.jdbc.provider.TestProperties;
+import oracle.jdbc.provider.util.CommonConstants;
 import oracle.jdbc.spi.OracleConfigurationProvider;
 import oracle.provider.aws.AwsTestProperty;
 import org.junit.jupiter.api.Test;
@@ -45,6 +46,10 @@ import org.junit.jupiter.api.Test;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AwsS3ConfigurationProviderTest {
@@ -62,21 +67,35 @@ public class AwsS3ConfigurationProviderTest {
    */
   @Test
   public void testDefaultAuthentication() throws SQLException {
-    final String prefix = "jdbc:oracle:thin:@config-awss3://";
-
-    String url =
-        TestProperties.getOrAbort(
-            AwsTestProperty.AWS_S3_URL);
-
-    assertTrue(
-        url.startsWith(prefix),
-        "AWS_S3_URL should start with " + prefix);
-
-    Properties properties = PROVIDER
-        .getConnectionProperties(url.substring(prefix.length()));
+    String url = getS3Location(AwsTestProperty.AWS_S3_URL);
+    Properties properties = PROVIDER.getConnectionProperties(url);
 
     assertTrue(properties.containsKey("URL"), "Contains property URL");
     assertTrue(properties.containsKey("user"), "Contains property user");
     assertTrue(properties.containsKey("password"), "Contains property password");
+  }
+
+  /**
+   * Verifies that an object larger than the maximum remote configuration
+   * length is rejected.
+   */
+  @Test
+  public void testRemoteConfigurationExceedingMaxLength() {
+    String url = getS3Location(AwsTestProperty.AWS_S3_URL_TOO_LARGE);
+
+    assertThrows(IllegalStateException.class,
+        () -> PROVIDER.getConnectionProperties(url));
+  }
+
+  private static String getS3Location(AwsTestProperty property) {
+    final String prefix = "jdbc:oracle:thin:@config-awss3://";
+
+    String url = TestProperties.getOrAbort(property);
+
+    assertTrue(
+        url.startsWith(prefix),
+        property.name() + " should start with " + prefix);
+
+    return url.substring(prefix.length());
   }
 }

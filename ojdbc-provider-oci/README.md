@@ -56,7 +56,7 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-oci</artifactId>
-  <version>1.0.6</version>
+  <version>1.1.0</version>
 </dependency>
 ```
 
@@ -76,7 +76,7 @@ For more details about the option-value pairs, see [Common Parameters for Centra
 For example:
 
 <pre>
-jdbc:oracle:thin:@config-ocidbtools:ocid1.databasetoolsconnection.oc1.phx.ama...
+jdbc:oracle:thin:@config-ocidbtools://ocid1.databasetoolsconnection.oc1.phx.ama...
 </pre>
 
 Provider can now support Database Tools Connections with Proxy Authentication,
@@ -242,22 +242,23 @@ The user can provide an optional parameter `AUTHENTICATION` (case-ignored), and 
 </tr></thead>
 <tbody>
 <tr>
-  <td rowspan="7"><b>OCI_DEFAULT</b> or &lt;Empty&gt;</td>
-  <td rowspan="7">API Key-Based Authentication</td>
-  <td rowspan="7">(~/.oci/config) or<br>
+  <td rowspan="8"><b>OCI_DEFAULT</b> or &lt;Empty&gt;</td>
+  <td rowspan="8">API Key-Based Authentication</td>
+  <td rowspan="8">(~/.oci/config) or<br>
 (~/.oraclebmc/config) or<br>
 environment variable OCI_CONFIG_FILE <br>
 (this is the same approach that oci-java-sdk has)
 Either above or all the optional values
 in Optional Parameters</td>
-  <td>OCI_PROFILE</td></tr>
-  <td>OCI_TENANCY</td></tr>
-  <td>OCI_USER</td></tr>
-  <td>OCI_FINGERPRINT</td></tr>
-  <td>OCI_KEY_FILE</td></tr>
-  <td>OCI_PASS_PHRASE</td></tr>
-  <tr><td>OCI_REGION (*)</td>
+  <td>OCI_CONFIG_FILE</td>
 </tr>
+<tr><td>OCI_PROFILE</td></tr>
+<tr><td>OCI_TENANCY</td></tr>
+<tr><td>OCI_USER</td></tr>
+<tr><td>OCI_FINGERPRINT</td></tr>
+<tr><td>OCI_KEY_FILE</td></tr>
+<tr><td>OCI_PASS_PHRASE</td></tr>
+<tr><td>OCI_REGION (*)</td></tr>
 <tr>
   <td><b>OCI_INSTANCE_PRINCIPAL</b></td>
   <td>Instance Principal Authentication</td>
@@ -305,6 +306,16 @@ The following parameters can be used alongside any supported authentication meth
   <th>Default Value</th>
 </tr></thead>
 <tbody>
+<tr>
+    <td><code>OCI_CONFIG_FILE</code></td>
+    <td>
+      Specifies the file system path to an OCI configuration file used for API key-based authentication.
+    </td>
+    <td>A file system path.</td>
+    <td>
+      <i>If not provided, the OCI SDK default configuration lookup is used.</i>
+    </td>
+  </tr>
 <tr>
   <td><code>OCI_REGION</code></td>
   <td>
@@ -691,7 +702,7 @@ An example of a [connection properties file](https://docs.oracle.com/en/database
 The Access Token Provider provides Oracle JDBC with an access token that authorizes logins to an Autonomous Database. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified by
 the name `ojdbc-provider-oci-token`.
 
-This provider must be configured to <a href="#configuring-authentication">authenticate</a> as
+This provider must be configured to <a href="#resource-provider-authentication">authenticate</a> as
 an IAM user that has been mapped to a database user. The IAM user must also be included in a policy that grants access to the Autonomous Database. Instructions
 can be found in the <a href="https://docs.oracle.com/en/cloud/paas/autonomous-database/adbsa/manage-users-iam.html#GUID-4E206209-4E3B-4387-9364-BDCFB4E16E2E">
 ADB product documentation.
@@ -880,9 +891,9 @@ Connection properties which identify and configure a provider may appear in a
 or be configured programmatically. Configuration with JVM system properties is
 not supported.
 
-### Configuring Authentication
+### Resource Provider Authentication
 
-Providers in this module must authenticate with OCI. By default, a provider will
+Resource providers in this module must authenticate with OCI. By default, a provider will
 automatically detect any available credentials.  A specific credential
 may be configured using the "authenticationMethod" parameter. The parameter may
 be set to any of the following values (case-insensitive):

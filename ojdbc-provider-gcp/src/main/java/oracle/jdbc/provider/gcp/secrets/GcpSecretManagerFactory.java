@@ -103,7 +103,7 @@ public class GcpSecretManagerFactory implements ResourceFactory<SecretPayload> {
       AccessSecretVersionResponse response = client.accessSecretVersion(secretVersionName);
       if (secret.hasExpireTime()) {
         OffsetDateTime expireTime = OffsetDateTime
-            .ofInstant(Instant.ofEpochMilli(secret.getExpireTime().getNanos() * 1000000), ZoneId.systemDefault());
+            .ofInstant(Instant.ofEpochSecond(secret.getExpireTime().getSeconds(), secret.getExpireTime().getNanos()), ZoneId.systemDefault());
         return Resource.createExpiringResource(response.getPayload(), expireTime, true);
       } else {
         return Resource.createPermanentResource(response.getPayload(), true);

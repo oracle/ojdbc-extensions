@@ -46,6 +46,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static oracle.jdbc.provider.oci.authentication.AuthenticationDetailsFactory.AUTHENTICATION_METHOD;
+import static oracle.jdbc.provider.oci.authentication.AuthenticationDetailsFactory.CONFIG_FILE_PATH;
 import static oracle.jdbc.provider.oci.authentication.AuthenticationMethod.API_KEY;
 import static oracle.jdbc.provider.oci.authentication.AuthenticationMethod.INSTANCE_PRINCIPAL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -99,6 +100,18 @@ public class OciConfigurationParametersTest {
       IllegalArgumentException.class,
       () -> OciConfigurationParameters.getParser()
         .parseNamedValues(mapOf("AUTHENTICATION", "oci_unknown")));
+  }
+
+  /**
+   * Verifies OCI_CONFIG_FILE is mapped to the OCI config file path parameter.
+   */
+  @Test
+  public void testConfigFilePath() {
+    String configFile = "/home/app/resources/oci-config";
+    ParameterSet parameterSet = OciConfigurationParameters.getParser()
+      .parseNamedValues(mapOf("OCI_CONFIG_FILE", configFile));
+
+    assertEquals(configFile, parameterSet.getOptional(CONFIG_FILE_PATH));
   }
 
   private static Map<String, String> mapOf(String key, String value) {

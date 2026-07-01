@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2023 Oracle and/or its affiliates.
+ ** Copyright (c) 2026 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -71,7 +71,7 @@ public class AzureVaultJsonProvider extends OracleConfigurationParsableProvider 
     AzureConfigurationParameters.configureBuilder(
       ParameterSetParser.builder()
         .addParameter("key", KEY, "")
-        .addParameter("value", AzureVaultURLParser::parseVaultSecretUri))
+        .addParameter("value", AzureVaultSecretUriParameterParser::parseVaultSecretUri))
         .build();
 
   /**

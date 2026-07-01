@@ -44,6 +44,14 @@ import oracle.jdbc.provider.resource.ResourceParameter;
 import java.util.HashMap;
 import java.util.Map;
 
+import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.PARAM_GITHUB_TOKEN;
+import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.PARAM_VAULT_NAMESPACE;
+import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.PARAM_VAULT_PASSWORD;
+import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.PARAM_VAULT_ROLE_ID;
+import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.PARAM_VAULT_TOKEN;
+import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.PARAM_VAULT_USERNAME;
+import static oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication.DedicatedVaultParameters.PARAM_VAULT_SECRET_ID;
+
 /**
  * Abstract class that encapsulates common behavior for resolving parameters
  * from system properties or environment variables.
@@ -62,7 +70,7 @@ public abstract class AbstractVaultResourceProvider extends AbstractResourceProv
    * @return A map with resolved parameters.
    */
   protected Map<Parameter, CharSequence> resolveMissingParameters(
-    Map<Parameter, CharSequence> parameterValues, ResourceParameter[] parameters) {
+          Map<Parameter, CharSequence> parameterValues, ResourceParameter[] parameters) {
 
     Map<Parameter, CharSequence> resolved = new HashMap<>(parameterValues);
     for (ResourceParameter param : parameters) {
@@ -71,14 +79,56 @@ public abstract class AbstractVaultResourceProvider extends AbstractResourceProv
     return resolved;
   }
 
+  /**
+   * Resolves a single missing parameter from system properties or environment variables.
+   *
+   * @param parameterValues Current parameter map to update.
+   * @param parameter Parameter definition to resolve.
+   */
   private void resolveParameter(Map<Parameter, CharSequence> parameterValues, ResourceParameter parameter) {
     if (!parameterValues.containsKey(parameter)) {
       String envKey = getEnvVariableForParameter(parameter.name());
       String value = System.getProperty(envKey, System.getenv(envKey));
       if (value != null) {
+        if (isAmbientCredentialKey(envKey)) {
+          String vaultAddr = resolveVaultAddr(parameterValues);
+          if (vaultAddr != null) {
+            VaultEndpointPolicy.ensureCredentialAllowed(vaultAddr, envKey);
+          }
+        }
         parameterValues.put(parameter, value);
       }
     }
+  }
+
+  /**
+   * Indicates whether a parameter key should be treated as sensitive ambient credential material.
+   *
+   * @param key Environment/system key.
+   * @return {@code true} if the key is guarded by endpoint trust checks; otherwise {@code false}.
+   */
+  private static boolean isAmbientCredentialKey(String key) {
+    return PARAM_VAULT_TOKEN.equals(key)
+            || PARAM_VAULT_PASSWORD.equals(key)
+            || PARAM_VAULT_SECRET_ID.equals(key)
+            || PARAM_GITHUB_TOKEN.equals(key)
+            || PARAM_VAULT_NAMESPACE.equals(key)
+            || PARAM_VAULT_USERNAME.equals(key)
+            || PARAM_VAULT_ROLE_ID.equals(key);
+  }
+
+  /**
+   * Resolves the Vault address from explicit parameters first, then ambient fallback.
+   *
+   * @param parameterValues Current parameter map.
+   * @return Resolved Vault address, or null if unavailable.
+   */
+  private String resolveVaultAddr(Map<Parameter, CharSequence> parameterValues) {
+    return parameterValues.entrySet().stream()
+            .filter(entry -> "VAULT_ADDR".equals(getEnvVariableForParameter(entry.getKey().name())))
+            .map(entry -> entry.getValue() == null ? null : entry.getValue().toString())
+            .findFirst()
+            .orElseGet(() -> System.getProperty("VAULT_ADDR", System.getenv("VAULT_ADDR")));
   }
 
   /**

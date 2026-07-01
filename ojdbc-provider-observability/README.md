@@ -38,12 +38,12 @@ When `OTEL_SEMCONV_STABILITY_OPT_IN=database` or `database/dup`:
 
 * **Required/Recommended Attributes**
     * `db.system.name` - Always set to `"oracle.db"` (identifies Oracle Database)
-    * `db.namespace` - The Oracle service name from the connection
+    * `oracle.db.service` - The Oracle service name from the connection
     * `db.operation.name` - Database operation being executed (e.g. `ExecuteQuery`)
     * `db.query.summary` - Low cardinality SQL command type (e.g., `SELECT`, `INSERT`)
     * `server.address` - Database server hostname (e.g., `db.example.com`)
     * `server.port` - Database server port (if non-default, i.e., not 1521)
-    * `oracle.db.instance.id` - Oracle database instance identifier
+    * `oracle.db.instance.name` - Oracle database instance name
     * `oracle.db.pdb` - Oracle Pluggable Database (PDB) name
     * `oracle.db.query.sql.id` - Oracle SQL identifier (e.g., `8vq9m5kx3n2wh`)
     * `oracle.db.session.id` - Oracle session identifier (e.g., `1234`)
@@ -131,7 +131,7 @@ The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-observability</artifactId>
-  <version>1.0.6</version>
+  <version>1.1.0</version>
 </dependency>
 ```
 

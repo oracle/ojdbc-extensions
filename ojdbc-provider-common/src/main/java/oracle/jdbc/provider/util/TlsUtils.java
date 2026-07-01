@@ -100,6 +100,7 @@ public final class TlsUtils {
             .generatePrivate(pkcs8);
           break;
         case ENCRYPTED_PRIVATE_KEY:
+          requirePassword(password);
           EncryptedPrivateKeyInfo encryptedPrivateKeyInfo =
             new EncryptedPrivateKeyInfo(pemData.data());
           PBEKeySpec pbeKeySpec = new PBEKeySpec(password);
@@ -129,6 +130,20 @@ public final class TlsUtils {
         IllegalStateException("Missing private key or certificates in PEM data");
     }
     return keyStore;
+  }
+
+  /**
+   * Verifies that a password is present before attempting to decrypt an
+   * encrypted PEM private key.
+   *
+   * @param password Password to validate.
+   * @throws IllegalArgumentException If the password is null or empty.
+   */
+  private static void requirePassword(char[] password) {
+    if (password == null || password.length == 0) {
+      throw new IllegalArgumentException(
+        "Encrypted PEM private key requires a password");
+    }
   }
 
   /**

@@ -40,6 +40,7 @@ package oracle.jdbc.provider.hashicorp.util;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
@@ -51,6 +52,8 @@ public class HttpUtil {
   // HTTP methods
   private static final String HTTP_METHOD_GET = "GET";
   private static final String HTTP_METHOD_POST = "POST";
+  private static final int CONNECT_TIMEOUT_MS = 10_000;
+  private static final int READ_TIMEOUT_MS = 30_000;
 
   // HTTP headers
   private static final String HEADER_ACCEPT = "Accept";
@@ -88,13 +91,12 @@ public class HttpUtil {
    * @param urlStr The URL to send the request to. Must not be null.
    * @param payload The payload to send in UTF-8 encoding. Must not be null.
    * @param contentType The content type for the request payload (e.g., "application/json").
-   * @param authToken The optional Bearer token for authorization. Can be null or empty.
    * @param namespace The optional Vault namespace. Can be null or empty.
    * @return The response as a UTF-8 encoded string. Never null.
    * @throws Exception if the request fails or the response cannot be read.
    */
   public static String sendPostRequest(String urlStr, String payload, String contentType,
-                                       String authToken, String namespace) throws Exception {
+                                       String namespace) throws Exception {
     if (urlStr == null) {
       throw new IllegalArgumentException("URL must not be null");
     }
@@ -102,7 +104,7 @@ public class HttpUtil {
       throw new IllegalArgumentException("Payload must not be null");
     }
 
-    HttpURLConnection conn = createConnection(urlStr, HTTP_METHOD_POST, authToken,
+    HttpURLConnection conn = createConnection(urlStr, HTTP_METHOD_POST, null,
             namespace);
     try {
       return sendPayloadAndGetResponse(conn, payload, contentType);
@@ -119,18 +121,23 @@ public class HttpUtil {
    * @param authToken The optional Bearer token for authorization. Can be null or empty.
    * @param namespace The optional Vault namespace. Can be null or empty.
    * @return A configured {@link HttpURLConnection}. Never null.
-   * @throws IOException if an I/O error occurs while creating the connection
-   * @throws IllegalArgumentException if urlStr or method is null
-   * such as network failures, invalid configurations or authentication issues
+   * @throws IOException if an I/O error occurs while creating the connection,
+   * including network failures.
+   * @throws IllegalArgumentException if {@code method} is null, or if the URL
+   * is rejected by endpoint policy validation.
    */
   public static HttpURLConnection createConnection(String urlStr, String method, String authToken, String namespace)
           throws IOException {
     if (method == null) {
       throw new IllegalArgumentException("HTTP method must not be null");
     }
+    VaultEndpointPolicy.validateVaultUrl(urlStr);
     URL url = new URL(urlStr);
     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
     conn.setRequestMethod(method);
+    conn.setInstanceFollowRedirects(false);
+    conn.setConnectTimeout(CONNECT_TIMEOUT_MS);
+    conn.setReadTimeout(READ_TIMEOUT_MS);
     conn.setRequestProperty(HEADER_ACCEPT, ACCEPT_JSON);
     if (authToken != null && !authToken.isEmpty()) {
       conn.setRequestProperty(HEADER_AUTHORIZATION, "Bearer " + authToken);
@@ -172,9 +179,15 @@ public class HttpUtil {
     }
     try (OutputStream os = conn.getOutputStream()) {
       os.write(payload.getBytes(StandardCharsets.UTF_8));
+    } catch (SocketTimeoutException e) {
+      throw timeoutFailure("sending request payload", e);
     }
     handleErrorResponse(conn);
-    return readResponse(conn.getInputStream());
+    try {
+      return readResponse(conn.getInputStream());
+    } catch (SocketTimeoutException e) {
+      throw timeoutFailure("reading response body", e);
+    }
   }
 
   /**
@@ -187,7 +200,11 @@ public class HttpUtil {
    */
   public static String sendGetRequestAndGetResponse(HttpURLConnection conn) throws Exception {
     handleErrorResponse(conn);
-    return readResponse(conn.getInputStream());
+    try {
+      return readResponse(conn.getInputStream());
+    } catch (SocketTimeoutException e) {
+      throw timeoutFailure("reading response body", e);
+    }
   }
 
   /**
@@ -200,18 +217,24 @@ public class HttpUtil {
     try {
       int responseCode = conn.getResponseCode();
       if (responseCode != HttpURLConnection.HTTP_OK) {
-        String errorResponse = "";
-        try {
-          errorResponse = readResponse(conn.getErrorStream());
-        } catch (Exception ignore) { }
-        String errorMessage = String.format("HTTP request failed with status code %d. " +
-                "Please verify any provided parameters. Error Response:" +
-                " %s ", responseCode, errorResponse);
+        String errorMessage = String.format(
+                "HTTP request failed with status code %d. " +
+                        "Please verify any provided parameters.",
+                responseCode);
         throw new IllegalStateException(errorMessage);
       }
+    } catch (SocketTimeoutException e) {
+      throw timeoutFailure("waiting for HTTP response", e);
     } catch (Exception e) {
       throw new IllegalStateException("Failed to process HTTP response", e);
     }
+  }
+
+  private static IllegalStateException timeoutFailure(String operation, SocketTimeoutException cause) {
+    String message = String.format(
+            "Timeout while %s (connect timeout=%d ms, read timeout=%d ms).",
+            operation, CONNECT_TIMEOUT_MS, READ_TIMEOUT_MS);
+    return new IllegalStateException(message, cause);
   }
 
 }

@@ -5,11 +5,13 @@ import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.provider.util.CommonConstants;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 
 import java.io.InputStream;
 import java.net.URI;
@@ -84,6 +86,20 @@ public class S3Factory extends AwsResourceFactory<InputStream> {
           .bucket(bucketName)
           .key(objectKey)
           .build();
+
+      Long objectSize = client.headObject(
+          HeadObjectRequest.builder()
+              .bucket(bucketName)
+              .key(objectKey)
+              .build())
+          .contentLength();
+      if (objectSize != null
+          && objectSize > CommonConstants.MAX_REMOTE_CONFIGURATION_LENGTH) {
+        throw new IllegalStateException(
+            "Configuration response exceeds maximum allowed size of "
+                + CommonConstants.MAX_REMOTE_CONFIGURATION_LENGTH
+                + " bytes");
+      }
 
       return Resource.createPermanentResource(
           client
