@@ -702,7 +702,7 @@ An example of a [connection properties file](https://docs.oracle.com/en/database
 The Access Token Provider provides Oracle JDBC with an access token that authorizes logins to an Autonomous Database. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified by
 the name `ojdbc-provider-oci-token`.
 
-This provider must be configured to <a href="#configuring-authentication">authenticate</a> as
+This provider must be configured to <a href="#resource-provider-authentication">authenticate</a> as
 an IAM user that has been mapped to a database user. The IAM user must also be included in a policy that grants access to the Autonomous Database. Instructions
 can be found in the <a href="https://docs.oracle.com/en/cloud/paas/autonomous-database/adbsa/manage-users-iam.html#GUID-4E206209-4E3B-4387-9364-BDCFB4E16E2E">
 ADB product documentation.
@@ -891,9 +891,9 @@ Connection properties which identify and configure a provider may appear in a
 or be configured programmatically. Configuration with JVM system properties is
 not supported.
 
-### Configuring Authentication
+### Resource Provider Authentication
 
-Providers in this module must authenticate with OCI. By default, a provider will
+Resource providers in this module must authenticate with OCI. By default, a provider will
 automatically detect any available credentials.  A specific credential
 may be configured using the "authenticationMethod" parameter. The parameter may
 be set to any of the following values (case-insensitive):
