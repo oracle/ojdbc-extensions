@@ -1,3 +1,0 @@
-oracle.jdbc.provider.ucp.observability.jfr.core.JFRUCPEventListenerProvider
-oracle.jdbc.provider.ucp.observability.otel.OtelUCPEventListenerProvider
-oracle.jdbc.provider.ucp.observability.ObservabilityUCPEventListenerProvider

@@ -24,7 +24,7 @@ technology.
 <dl>
 <dt><a href="ojdbc-provider-observability/README.md">Oracle JDBC Observability Provider</a></dt>
 <dd>Provider for integration with Open Telemetry and Java Flight Recorder.</dd>
-<dt><a href="ojdbc-provider-ucp-observability/README.md">Oracle JDBC UCP Observability Providers</a></dt>
+<dt><a href="ucp-provider-observability/README.md">Oracle UCP Observability Providers</a></dt>
 <dd>Providers for UCP monitoring with Open Telemetry and Java Flight Recorder.</dd>
 <dt><a href="ojdbc-provider-jackson-oson/README.md">Oracle JDBC Jackson OSON</a></dt>
 <dd>Provider for <a href="https://docs.oracle.com/en/database/oracle/oracle-database/23/adjsn/json-in-oracle-database.html#GUID-A8A58B49-13A5-4F42-8EA0-508951DAE0BB">OSON</a> through the JACKSON APIs. 
@@ -145,7 +145,7 @@ this project:
 
 [ojdbc-provider-opentelemetry](ojdbc-provider-opentelemetry/README.md#installation)
 
-[ojdbc-provider-ucp-observability](ojdbc-provider-ucp-observability/README.md#installation)
+[ucp-provider-observability](ucp-provider-observability/README.md#installation)
 
 [ojdbc-provider-jackson-oson](ojdbc-provider-jackson-oson/README.md#installation)
 
