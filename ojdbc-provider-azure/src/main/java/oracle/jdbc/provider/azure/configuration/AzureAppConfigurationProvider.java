@@ -254,6 +254,8 @@ public class AzureAppConfigurationProvider
       } else if (key.equals(CONFIG_TTL_GRACE_PERIOD_JSON_OBJECT_NAME)) {
         if (value != null && !value.isBlank())
           builder.ttlGracePeriod(Duration.parse(value));
+      } else {
+        jdbcProperties.put(key, value);
       }
     }
 
