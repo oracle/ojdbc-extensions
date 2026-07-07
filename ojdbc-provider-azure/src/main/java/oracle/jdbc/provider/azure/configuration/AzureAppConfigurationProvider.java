@@ -39,6 +39,7 @@
 package oracle.jdbc.provider.azure.configuration;
 
 import com.azure.core.credential.TokenCredential;
+import com.azure.core.exception.AzureException;
 import com.azure.core.util.logging.ClientLogger;
 import com.azure.data.appconfiguration.ConfigurationClient;
 import com.azure.data.appconfiguration.ConfigurationClientBuilder;
@@ -61,6 +62,7 @@ import oracle.sql.json.OracleJsonObject;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.Objects;
@@ -106,39 +108,43 @@ public class AzureAppConfigurationProvider
    *         Configuration
    */
   @Override
-  public Properties getConnectionProperties(String location) {
+  public Properties getConnectionProperties(String location) throws SQLException {
     // If the location was already consulted, re-use the properties
     OracleConfiguration cachedConfig = CACHE.getValue(location);
     if (Objects.nonNull(cachedConfig)) {
       return cachedConfig.connectionProperties();
     }
 
-    OracleConfiguration config = getRemoteProperties(location);
+    try {
+      OracleConfiguration config = getRemoteProperties(location);
 
-    CACHE.put(
-        location,
-        config,
-        () -> {
-          Properties futureUcpProps;
-          OracleConfiguration futureConfig;
-          try {
-            futureConfig = getRemoteProperties(location);
-            futureUcpProps = futureConfig.ucpProperties();
+      CACHE.put(
+          location,
+          config,
+          () -> {
+            Properties futureUcpProps;
+            OracleConfiguration futureConfig;
+            try {
+              futureConfig = getRemoteProperties(location);
+              futureUcpProps = futureConfig.ucpProperties();
 
-            if (OracleDriver.IS_UCP_JAR_LOADED) {
-              UCPConfigurationHelper.configureUCP(futureUcpProps);
-            } else {
-              logger.warning("UCP jar not found on the classpath; skipping UCP property configuration.");
+              if (OracleDriver.IS_UCP_JAR_LOADED) {
+                UCPConfigurationHelper.configureUCP(futureUcpProps);
+              } else {
+                logger.warning("UCP jar not found on the classpath; skipping UCP property configuration.");
+              }
+            } catch (Exception e) {
+              throw new OracleConfigurationProviderNetworkError(e);
             }
-          } catch (Exception e) {
-            throw new OracleConfigurationProviderNetworkError(e);
+
+            return futureConfig;
           }
+      );
 
-          return futureConfig;
-        }
-    );
-
-    return config.connectionProperties();
+      return config.connectionProperties();
+    } catch (UncheckedIOException | AzureException e) {
+      throw new SQLException("Unable to load Azure App Configuration at " + location, e);
+    }
   }
 
   /**
@@ -162,6 +168,7 @@ public class AzureAppConfigurationProvider
     return CACHE;
   }
 
+  private static final String UNLABELED_FILTER = "%00";
   private OracleConfiguration getRemoteProperties(String location) {
     OracleConfiguration.Builder builder = new OracleConfiguration.Builder();
     Properties jdbcProperties = new Properties();
@@ -184,23 +191,20 @@ public class AzureAppConfigurationProvider
       selector.setKeyFilter(prefix + "*");
     }
 
-    // Only allow a single label.
-    if (parameters.contains(AzureAppConfigurationURLParser.LABEL)) {
-      String label =
-        parameters.getOptional(AzureAppConfigurationURLParser.LABEL);
-
-      if ("all".equalsIgnoreCase(label) || "*".equals(label)) {
-        throw new IllegalArgumentException(
-          "Label 'all' or '*' is not allowed");
-      }
-
-      if (label.contains(",") || label.contains("*")) {
-        throw new IllegalArgumentException(
-          "Multiple labels and wildcards are not supported");
-      }
-
-      selector.setLabelFilter(label);
+    // Only one label is allowed. By default, the label is an "%00", which matches key-values with no label.
+    String label = parameters.getOptional(AzureAppConfigurationURLParser.LABEL);
+    if (label == null || label.isEmpty()) {
+      // Azure App Configuration: "%00" matches only unlabeled key-values.
+      label = UNLABELED_FILTER;
+    } else if ("all".equalsIgnoreCase(label) || "*".equals(label)) {
+      throw new IllegalArgumentException(
+          "Label 'all' or '*' is not supported.");
+    } else if (label.contains(",") || label.contains("*")) {
+      throw new IllegalArgumentException(
+          "Multiple labels and wildcard patterns are not supported.");
     }
+
+    selector.setLabelFilter(label);
 
     ConfigurationClient configurationClient = new ConfigurationClientBuilder()
       .credential(credential)
