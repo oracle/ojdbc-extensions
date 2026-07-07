@@ -14,15 +14,19 @@ import com.oracle.bmc.databasetools.model.DatabaseToolsConnectionOracleDatabaseP
 import com.oracle.bmc.databasetools.model.DatabaseToolsConnectionOracleDatabaseProxyClientUserName;
 import com.oracle.bmc.model.BmcException;
 import oracle.jdbc.OracleConnection;
+import oracle.jdbc.driver.OracleDriver;
+import oracle.jdbc.driver.configuration.UCPConfigurationHelper;
 import oracle.jdbc.provider.oci.databasetools.DatabaseToolsConnectionFactory;
 import oracle.jdbc.provider.oci.vault.Secret;
 import oracle.jdbc.provider.oci.vault.SecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.spi.OracleConfigurationCachableProvider;
 import oracle.jdbc.spi.OracleConfigurationProvider;
-import oracle.jdbc.util.OracleConfigurationCache;
-import oracle.jdbc.util.OracleConfigurationProviderNetworkError;
+import oracle.jdbc.util.configuration.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfigurationProviderNetworkError;
+import oracle.jdbc.util.configuration.OracleConfiguration;
 
+import java.io.UncheckedIOException;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,60 +41,33 @@ import java.util.Properties;
 public class OciDatabaseToolsConnectionProvider
     implements OracleConfigurationCachableProvider {
 
-  private static final String CONFIG_TIME_TO_LIVE =
-    "config_time_to_live";
-  /**
-   * Timeout value of the background thread that requests the configuration from
-   * remote location during soft-expiration period. The task will be interrupted
-   * after 60 seconds.
-   */
-  private static final long MS_REFRESH_TIMEOUT = 60_000L;
-  /**
-   * Retry interval of the background thread that requests the configuration
-   * from remote location during soft-expiration period. The thread will retry
-   * in a frequency of 60 seconds if the remote location is unreachable.
-   */
-  private static final long MS_RETRY_INTERVAL = 60_000L;
-
-  private static final OracleConfigurationCache CACHE = OracleConfigurationCache
+  private static final OracleConfigurationCache<String, OracleConfiguration> CACHE = OracleConfigurationCache
     .create(100);
 
   private ParameterSet commonParameters;
 
   @Override
-  public Properties getConnectionProperties(String location)
-      throws SQLException {
-
-    Properties cachedProp = CACHE.get(location);
+  public Properties getConnectionProperties(String location) {
+    Properties cachedProp = CACHE.getValue(location).connectionProperties();
     if (Objects.nonNull(cachedProp)) {
       return cachedProp;
     }
 
-    // Retrieve and add the properties to the cache
-    Properties properties = getRemoteProperties(location);
+    OracleConfiguration config = getRemoteProperties(location);
 
-    if (properties.containsKey(CONFIG_TIME_TO_LIVE)) {
-      long configTimeToLive = Long.parseLong(
-        properties.getProperty(CONFIG_TIME_TO_LIVE));
-
-      // properties stored in the cache should not contain information of TTL
-      properties.remove(CONFIG_TIME_TO_LIVE);
-      CACHE.put(
+    CACHE.put(
         location,
-        properties,
-        configTimeToLive,
-        () -> this.refreshProperties(location),
-        MS_REFRESH_TIMEOUT,
-        MS_RETRY_INTERVAL);
-    } else {
-      CACHE.put(location,
-        properties,
-        () -> this.refreshProperties(location),
-        MS_REFRESH_TIMEOUT,
-        MS_RETRY_INTERVAL);
-    }
+        config,
+        () -> {
+          try {
+            return getRemoteProperties(location);
+          } catch (Exception e) {
+            throw new OracleConfigurationProviderNetworkError(e);
+          }
+        }
+    );
 
-    return properties;
+    return config.connectionProperties();
   }
 
   @Override
@@ -103,11 +80,13 @@ public class OciDatabaseToolsConnectionProvider
    * @return cache of this provider which is used to store configuration
    */
   @Override
-  public OracleConfigurationCache getCache() {
+  public OracleConfigurationCache<String, OracleConfiguration> getCache() {
     return CACHE;
   }
 
-  private Properties getRemoteProperties(String location) {
+  private OracleConfiguration getRemoteProperties(String location) {
+    OracleConfiguration.Builder builder = new OracleConfiguration.Builder();
+
     // Split connection ocid from options
     Map<String, String> options = null;
     String[] params = location.split("\\?");
@@ -249,7 +228,9 @@ public class OciDatabaseToolsConnectionProvider
       properties.put(OracleConnection.CONNECTION_PROPERTY_PROXY_CLIENT_NAME, proxyClientUserName.getUserName());
     }
 
-    return properties;
+    return builder
+        .connectionProperties(properties)
+        .build();
   }
 
   /**
@@ -323,15 +304,6 @@ public class OciDatabaseToolsConnectionProvider
     return SecretFactory.getInstance()
       .request(walletParameters)
       .getContent();
-  }
-
-  private Properties refreshProperties(String location)
-    throws OracleConfigurationProviderNetworkError {
-    try {
-      return getRemoteProperties(location);
-    } catch (BmcException bmcException) {
-      throw new OracleConfigurationProviderNetworkError(bmcException);
-    }
   }
 }
 
