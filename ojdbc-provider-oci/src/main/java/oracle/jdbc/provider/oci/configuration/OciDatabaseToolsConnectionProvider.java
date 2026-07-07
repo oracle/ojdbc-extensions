@@ -48,9 +48,9 @@ public class OciDatabaseToolsConnectionProvider
 
   @Override
   public Properties getConnectionProperties(String location) {
-    Properties cachedProp = CACHE.getValue(location).connectionProperties();
-    if (Objects.nonNull(cachedProp)) {
-      return cachedProp;
+    OracleConfiguration cachedConfig = CACHE.getValue(location);
+    if (Objects.nonNull(cachedConfig)) {
+      return cachedConfig.connectionProperties();
     }
 
     OracleConfiguration config = getRemoteProperties(location);

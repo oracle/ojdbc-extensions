@@ -39,7 +39,6 @@
 package oracle.jdbc.provider.azure.configuration;
 
 import com.azure.core.credential.TokenCredential;
-import com.azure.core.exception.AzureException;
 import com.azure.core.util.logging.ClientLogger;
 import com.azure.data.appconfiguration.ConfigurationClient;
 import com.azure.data.appconfiguration.ConfigurationClientBuilder;
@@ -48,28 +47,24 @@ import com.azure.data.appconfiguration.models.SettingSelector;
 import com.azure.security.keyvault.secrets.SecretClient;
 import com.azure.security.keyvault.secrets.SecretClientBuilder;
 import oracle.jdbc.OracleConnection;
-import oracle.jdbc.diagnostics.CommonDiagnosable;
-import oracle.jdbc.diagnostics.SecurityLabel;
 import oracle.jdbc.driver.OracleDriver;
 import oracle.jdbc.driver.configuration.UCPConfigurationHelper;
+import oracle.jdbc.provider.azure.authentication.TokenCredentialFactory;
+import oracle.jdbc.provider.azure.keyvault.AzureKeyVaultUriValidator;
+import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.spi.OracleConfigurationCachableProvider;
 import oracle.jdbc.util.configuration.OracleConfiguration;
 import oracle.jdbc.util.configuration.OracleConfigurationCache;
 import oracle.jdbc.util.configuration.OracleConfigurationProviderNetworkError;
-import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.provider.azure.authentication.TokenCredentialFactory;
-import oracle.jdbc.provider.azure.keyvault.AzureKeyVaultUriValidator;
 import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonObject;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.logging.Level;
 
 import static oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider.CONFIG_TTL_GRACE_PERIOD_JSON_OBJECT_NAME;
 import static oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider.CONFIG_TTL_JSON_OBJECT_NAME;
@@ -111,11 +106,11 @@ public class AzureAppConfigurationProvider
    *         Configuration
    */
   @Override
-  public Properties getConnectionProperties(String location) throws SQLException {
+  public Properties getConnectionProperties(String location) {
     // If the location was already consulted, re-use the properties
-    Properties cachedProp = CACHE.getValue(location).connectionProperties();
-    if (Objects.nonNull(cachedProp)) {
-      return cachedProp;
+    OracleConfiguration cachedConfig = CACHE.getValue(location);
+    if (Objects.nonNull(cachedConfig)) {
+      return cachedConfig.connectionProperties();
     }
 
     OracleConfiguration config = getRemoteProperties(location);
@@ -303,14 +298,5 @@ public class AzureAppConfigurationProvider
         keyVaultSecretReference.getSecretName(),
         keyVaultSecretReference.getSecretVersion())
         .getValue();
-  }
-
-  private OracleConfiguration refreshProperties(String location)
-    throws OracleConfigurationProviderNetworkError {
-      try {
-        return getRemoteProperties(location);
-      } catch (AzureException e) {
-        throw new OracleConfigurationProviderNetworkError(e);
-      }
   }
 }
