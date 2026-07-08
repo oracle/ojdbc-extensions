@@ -184,6 +184,7 @@ vulnerability disclosure process
 
 ## Building from Source
 
+
 For general usage, it is not necessary to compile and build the whole project.
 Pre-built artifacts are available on Maven Central.
 
