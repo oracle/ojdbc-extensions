@@ -53,7 +53,7 @@ class AzureAppConfigurationProviderTest {
       try (Connection conn = tryConnection(url)) {
       } catch (IllegalArgumentException e) {
         Assertions.assertTrue(e.getMessage().contains(
-          "Label 'all' or '*' is not allowed"));
+          "Label 'all' or '*' is not supported."));
       }
     }
 
@@ -63,7 +63,7 @@ class AzureAppConfigurationProviderTest {
       try (Connection conn = tryConnection(url)) {
       } catch (IllegalArgumentException e) {
         Assertions.assertTrue(e.getMessage().contains(
-          "Label 'all' or '*' is not allowed"));
+          "Label 'all' or '*' is not supported."));
       }
     }
 
@@ -73,7 +73,7 @@ class AzureAppConfigurationProviderTest {
       try (Connection conn = tryConnection(url)) {
       } catch (IllegalArgumentException e) {
         Assertions.assertTrue(e.getMessage().contains(
-          "Multiple labels and wildcards are not supported"));
+          "Multiple labels and wildcard patterns are not supported."));
       }
     }
 
@@ -83,7 +83,7 @@ class AzureAppConfigurationProviderTest {
       try (Connection conn = tryConnection(url)) {
       } catch (IllegalArgumentException e) {
         Assertions.assertTrue(e.getMessage().contains(
-          "Multiple labels and wildcards are not supported"));
+          "Multiple labels and wildcard patterns are not supported."));
       }
     }
   }

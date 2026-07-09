@@ -42,7 +42,8 @@ import oracle.jdbc.provider.aws.secrets.SecretsManagerFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
-import oracle.jdbc.util.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfiguration;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -56,7 +57,7 @@ import java.util.Map;
  **/
 public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationParsableProvider {
 
-  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
+  private static final OracleConfigurationCache<String, OracleConfiguration> CACHE = OracleConfigurationCache.create(100);
 
   /**
    * Parser that recognizes the named parameters which appear in a URL,
@@ -106,16 +107,7 @@ public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationP
    * @return cache of this provider which is used to store configuration
    */
   @Override
-  public OracleConfigurationCache getCache() {
+  public OracleConfigurationCache<String, OracleConfiguration> getCache() {
     return CACHE;
-  }
-
-  /**
-   * {@inheritDoc}
-   * @return the parser type
-   */
-  @Override
-  public String getParserType(String location) {
-    return "json";
   }
 }

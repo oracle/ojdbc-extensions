@@ -41,7 +41,8 @@ package oracle.jdbc.provider.oci.configuration;
 import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.oci.objectstorage.ObjectFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.util.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfiguration;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -54,7 +55,7 @@ import java.util.Map;
 public class OciObjectStorageProvider
   extends OracleConfigurationParsableProvider {
 
-  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
+  private static final OracleConfigurationCache<String, OracleConfiguration> CACHE = OracleConfigurationCache.create(100);
 
   /**
    * {@inheritDoc}
@@ -103,17 +104,12 @@ public class OciObjectStorageProvider
     return "ociobject";
   }
 
-  @Override
-  public String getParserType(String arg0) {
-    return "json";
-  }
-
   /**
    * {@inheritDoc}
    * @return cache of this provider which is used to store configuration
    */
   @Override
-  public OracleConfigurationCache getCache() {
+  public OracleConfigurationCache<String, OracleConfiguration> getCache() {
     return CACHE;
   }
 }
