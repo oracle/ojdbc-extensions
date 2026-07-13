@@ -71,6 +71,12 @@
         <version>3.3.0</version>
         <configuration>
           <archive>
+            <manifest>
+              <mainClass>oracle.jdbc.provider.gcp.GcpProviderSetup</mainClass>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+              <addClasspath>true</addClasspath>
+              <classpathLayoutType>simple</classpathLayoutType>
+            </manifest>
             <manifestEntries>
               <Automatic-Module-Name>com.oracle.database.jdbc.provider.gcp</Automatic-Module-Name>
             </manifestEntries>
