@@ -46,7 +46,8 @@ import java.util.Map;
 import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.gcp.secrets.GcpSecretManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.util.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfiguration;
 
 /**
  * A provider for configuration payloads retrieved from GCP Secret Manager.
@@ -57,7 +58,7 @@ import oracle.jdbc.util.OracleConfigurationCache;
 public class GcpSecretManagerConfigurationProvider
     extends OracleConfigurationParsableProvider {
 
-  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
+  private static final OracleConfigurationCache<String, OracleConfiguration> CACHE = OracleConfigurationCache.create(100);
 
   @Override
   public String getType() {
@@ -88,7 +89,7 @@ public class GcpSecretManagerConfigurationProvider
    * @return cache of this provider which is used to store configuration
    */
   @Override
-  public OracleConfigurationCache getCache() {
+  public OracleConfigurationCache<String, OracleConfiguration> getCache() {
     return CACHE;
   }
 }

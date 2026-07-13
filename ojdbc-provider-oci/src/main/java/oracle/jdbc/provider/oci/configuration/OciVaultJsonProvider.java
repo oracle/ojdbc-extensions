@@ -3,7 +3,8 @@ package oracle.jdbc.provider.oci.configuration;
 import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.oci.vault.SecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.util.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfiguration;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -18,7 +19,7 @@ import java.util.Map;
  **/
 public class OciVaultJsonProvider extends OracleConfigurationParsableProvider {
 
-  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
+  private static final OracleConfigurationCache<String, OracleConfiguration> CACHE = OracleConfigurationCache.create(100);
 
   /**
    * {@inheritDoc}
@@ -71,7 +72,7 @@ public class OciVaultJsonProvider extends OracleConfigurationParsableProvider {
    * @return cache of this provider which is used to store configuration
    */
   @Override
-  public OracleConfigurationCache getCache() {
+  public OracleConfigurationCache<String, OracleConfiguration> getCache() {
     return CACHE;
   }
 }

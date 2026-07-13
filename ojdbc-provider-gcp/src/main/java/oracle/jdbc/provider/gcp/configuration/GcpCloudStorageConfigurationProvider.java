@@ -47,7 +47,8 @@ import java.util.Map;
 import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.gcp.objectstorage.GcpCloudStorageFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.util.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfiguration;
 
 /**
  * A provider for configuration payloads retrieved from GCP Cloud Storage.
@@ -58,7 +59,7 @@ import oracle.jdbc.util.OracleConfigurationCache;
 public class GcpCloudStorageConfigurationProvider
     extends OracleConfigurationParsableProvider {
 
-  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
+  private static final OracleConfigurationCache<String, OracleConfiguration> CACHE = OracleConfigurationCache.create(100);
   private static final String GS_URI_PREFIX = "gs://";
   private static final String STORAGE_URL_PREFIX = "https://storage.googleapis.com/";
 
@@ -293,7 +294,7 @@ public class GcpCloudStorageConfigurationProvider
    * @return cache of this provider which is used to store configuration
    */
   @Override
-  public OracleConfigurationCache getCache() {
+  public OracleConfigurationCache<String, OracleConfiguration> getCache() {
     return CACHE;
   }
 }
