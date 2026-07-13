@@ -43,7 +43,8 @@ import oracle.jdbc.provider.azure.keyvault.KeyVaultSecretFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
-import oracle.jdbc.util.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfiguration;
+import oracle.jdbc.util.configuration.OracleConfigurationCache;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -65,7 +66,7 @@ public class AzureVaultJsonProvider extends OracleConfigurationParsableProvider 
    */
   private static final Parameter<String> KEY = Parameter.create();
 
-  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
+  private static final OracleConfigurationCache<String, OracleConfiguration> CACHE = OracleConfigurationCache.create(100);
 
   static final ParameterSetParser PARAMETER_SET_PARSER =
     AzureConfigurationParameters.configureBuilder(
@@ -118,17 +119,12 @@ public class AzureVaultJsonProvider extends OracleConfigurationParsableProvider 
     return "azurevault";
   }
 
-  @Override
-  public String getParserType(String arg0) {
-    return "json";
-  }
-
   /**
    * {@inheritDoc}
    * @return cache of this provider which is used to store configuration
    */
   @Override
-  public OracleConfigurationCache getCache() {
+  public OracleConfigurationCache<String, OracleConfiguration> getCache() {
     return CACHE;
   }
 }
