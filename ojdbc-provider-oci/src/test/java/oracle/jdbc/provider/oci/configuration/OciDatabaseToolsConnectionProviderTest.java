@@ -190,7 +190,7 @@ public class OciDatabaseToolsConnectionProviderTest {
   @Test
   public void testCachePurged() throws SQLException {
     String OCI_DISPLAY_NAME = "display_name_for_connection";
-    String OCI_USERNAME = "admin";
+    String OCI_USERNAME = "test";
     String OCI_PASSWORD_OCID = TestProperties.getOrAbort(
       OciTestProperty.OCI_PASSWORD_OCID);
     String OCI_DATABASE_OCID = TestProperties.getOrAbort(
@@ -213,46 +213,48 @@ public class OciDatabaseToolsConnectionProviderTest {
     String ocid = createResponse
       .getDatabaseToolsConnection().getId();
 
-    // The url used to connect to Database
-    String url = "jdbc:oracle:thin:@config-ocidbtools://" + ocid;
+    try {
+      // The url used to connect to Database
+      String url = "jdbc:oracle:thin:@config-ocidbtools://" + ocid;
 
-    // Set value of 'user' wrong
-    UpdateDatabaseToolsConnectionDetails updateDatabaseToolsConnectionDetails =
-      UpdateDatabaseToolsConnectionOracleDatabaseDetails.builder()
-        .userName(OCI_USERNAME + "wrong")
-        .build();
+      // Set value of 'user' wrong
+      UpdateDatabaseToolsConnectionDetails updateDatabaseToolsConnectionDetails =
+          UpdateDatabaseToolsConnectionOracleDatabaseDetails.builder()
+              .userName(OCI_USERNAME + "wrong")
+              .build();
 
-    UpdateDatabaseToolsConnectionResponse updateResponse =
-      sendUpdateConnRequest(ocid, updateDatabaseToolsConnectionDetails);
-    Assertions.assertEquals(202, updateResponse.get__httpStatusCode__());
+      UpdateDatabaseToolsConnectionResponse updateResponse =
+          sendUpdateConnRequest(ocid, updateDatabaseToolsConnectionDetails);
+      Assertions.assertEquals(202, updateResponse.get__httpStatusCode__());
 
-    // Connection fails: hit 1017
-    SQLException exception = assertThrows(SQLException.class,
-      () -> tryConnection(url), "Should throw an SQLException");
-    Assertions.assertEquals(exception.getErrorCode(), 1017);
+      // Connection fails: hit 1017
+      SQLException exception = assertThrows(SQLException.class,
+          () -> tryConnection(url), "Should throw an SQLException");
+      Assertions.assertEquals(exception.getErrorCode(), 1017);
 
-    // Set value of 'user' correct
-    UpdateDatabaseToolsConnectionDetails updateDatabaseToolsConnectionDetails2 = UpdateDatabaseToolsConnectionOracleDatabaseDetails.builder()
-      .userName(OCI_USERNAME).build();
+      // Set value of 'user' correct
+      UpdateDatabaseToolsConnectionDetails updateDatabaseToolsConnectionDetails2 = UpdateDatabaseToolsConnectionOracleDatabaseDetails.builder()
+          .userName(OCI_USERNAME).build();
 
-    UpdateDatabaseToolsConnectionResponse updateResponse2 =
-      sendUpdateConnRequest(ocid, updateDatabaseToolsConnectionDetails2);
-    Assertions.assertEquals(202, updateResponse2.get__httpStatusCode__());
+      UpdateDatabaseToolsConnectionResponse updateResponse2 =
+          sendUpdateConnRequest(ocid, updateDatabaseToolsConnectionDetails2);
+      Assertions.assertEquals(202, updateResponse2.get__httpStatusCode__());
 
-    // Connection succeeds
-    Connection conn = tryConnection(url);
-    Assertions.assertNotNull(conn);
+      // Connection succeeds
+      Connection conn = tryConnection(url);
+      Assertions.assertNotNull(conn);
 
-    Statement st = conn.createStatement();
-    ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
-    Assertions.assertNotNull(rs.next());
-    Assertions.assertEquals("Hello, db", rs.getString(1));
-
-    // Finally delete Connection
-    DeleteDatabaseToolsConnectionResponse deleteResponse = sendDeleteConnRequest(
-      ocid);
-    Assertions.assertEquals(202,
-      deleteResponse.get__httpStatusCode__()); /* Request accepted. This db tools connection will be deleted */
+      Statement st = conn.createStatement();
+      ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
+      Assertions.assertNotNull(rs.next());
+      Assertions.assertEquals("Hello, db", rs.getString(1));
+    } finally {
+      // Finally delete Connection
+      DeleteDatabaseToolsConnectionResponse deleteResponse = sendDeleteConnRequest(
+        ocid);
+      Assertions.assertEquals(202,
+        deleteResponse.get__httpStatusCode__()); /* Request accepted. This db tools connection will be deleted */
+    }
   }
 
   /**

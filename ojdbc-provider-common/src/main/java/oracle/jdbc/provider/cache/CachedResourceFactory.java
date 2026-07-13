@@ -72,6 +72,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * system property. The least recently used resource is evicted when the cache
  * reaches its maximum size, and a new resource is requested.
  * </p>
+ * @param <T> Class of the resource
  */
 public final class CachedResourceFactory<T> implements ResourceFactory<T> {
 
