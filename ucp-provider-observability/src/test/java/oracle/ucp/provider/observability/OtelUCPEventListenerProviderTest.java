@@ -337,8 +337,8 @@ class OtelUCPEventListenerProviderTest {
     }
 
     @Test
-    @DisplayName("getAverageConnectionWaitTime() is read but recording is suppressed when 0")
-    void testWaitTimeReadButNotRecordedWhenZero() {
+    @DisplayName("getAverageConnectionWaitTime() is read when it is 0")
+    void testWaitTimeReadWhenZero() {
       when(mockContext.getAverageConnectionWaitTime()).thenReturn(0L);
       assertDoesNotThrow(() ->
         listener.onUCPEvent(EventType.CONNECTION_BORROWED, mockContext));

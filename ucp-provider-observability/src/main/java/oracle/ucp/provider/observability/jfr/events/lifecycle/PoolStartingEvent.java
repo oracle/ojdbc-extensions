@@ -49,7 +49,4 @@ import oracle.ucp.provider.observability.jfr.core.UCPBaseEvent;
 @Description("Emitted when pool startup begins")
 @Category({"UCP Events", "Pool Lifecycle Events"})
 public class PoolStartingEvent extends UCPBaseEvent {
-
-  public PoolStartingEvent() {
-  }
 }

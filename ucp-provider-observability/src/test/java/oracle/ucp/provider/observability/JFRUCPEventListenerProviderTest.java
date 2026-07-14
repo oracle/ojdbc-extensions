@@ -50,6 +50,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
+import java.io.ByteArrayOutputStream;
+import java.io.NotSerializableException;
+import java.io.ObjectOutputStream;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -97,6 +100,16 @@ class JFRUCPEventListenerProviderTest {
     void testGetListenerNotNull() {
       UCPEventListener listener = provider.getListener(Collections.emptyMap());
       assertNotNull(listener);
+    }
+
+    @Test
+    @DisplayName("getListener() returns the static JFR listener instance")
+    void testGetListenerReturnsStaticInstance() {
+      UCPEventListener listener1 = provider.getListener(Collections.emptyMap());
+      UCPEventListener listener2 = provider.getListener(null);
+
+      assertSame(JFRUCPEventListenerProvider.TRACE_EVENT_LISTENER, listener1);
+      assertSame(listener1, listener2);
     }
 
     @Test
@@ -184,6 +197,35 @@ class JFRUCPEventListenerProviderTest {
   @DisplayName("UCPEventListener — onUCPEvent robustness")
   class ListenerOnEventTests {
 
+    @Test
+    @DisplayName("onUCPEvent() does not throw when EventType is null")
+    void testOnUCPEventNullEventType() {
+      JFRUCPEventListenerProvider provider = new JFRUCPEventListenerProvider();
+      UCPEventListener listener = provider.getListener(Collections.emptyMap());
+
+      assertDoesNotThrow(() -> listener.onUCPEvent(null, mockContext));
+      verifyNoInteractions(mockContext);
+    }
+
+    @Test
+    @DisplayName("onUCPEvent() does not throw when context is null")
+    void testOnUCPEventNullContext() {
+      JFRUCPEventListenerProvider provider = new JFRUCPEventListenerProvider();
+      UCPEventListener listener = provider.getListener(Collections.emptyMap());
+
+      assertDoesNotThrow(() ->
+        listener.onUCPEvent(EventType.CONNECTION_BORROWED, null));
+    }
+
+    @Test
+    @DisplayName("onUCPEvent() does not throw when EventType and context are null")
+    void testOnUCPEventNullEventTypeAndContext() {
+      JFRUCPEventListenerProvider provider = new JFRUCPEventListenerProvider();
+      UCPEventListener listener = provider.getListener(Collections.emptyMap());
+
+      assertDoesNotThrow(() -> listener.onUCPEvent(null, null));
+    }
+
     @ParameterizedTest(name = "onUCPEvent() does not throw for EventType.{0}")
     @EnumSource(EventType.class)
     @DisplayName("onUCPEvent() does not throw for any known EventType")
@@ -205,6 +247,21 @@ class JFRUCPEventListenerProviderTest {
       listener.onUCPEvent(type, mockContext);
 
       verifyNoInteractions(mockContext);
+    }
+  }
+
+  @Nested
+  @DisplayName("UCPEventListener — serialization")
+  class ListenerSerializationTests {
+
+    @Test
+    @DisplayName("Listener throws NotSerializableException on serialization attempt")
+    void testListenerIsNotSerializable() {
+      JFRUCPEventListenerProvider provider = new JFRUCPEventListenerProvider();
+      UCPEventListener listener = provider.getListener(Collections.emptyMap());
+
+      assertThrows(NotSerializableException.class, () ->
+        new ObjectOutputStream(new ByteArrayOutputStream()).writeObject(listener));
     }
   }
 }

@@ -49,7 +49,4 @@ import oracle.ucp.provider.observability.jfr.core.UCPBaseEvent;
 @Description("Emitted when a connection is closed")
 @Category({"UCP Events", "Connection Lifecycle Events"})
 public class ConnectionClosedEvent extends UCPBaseEvent {
-
-  public ConnectionClosedEvent() {
-  }
 }

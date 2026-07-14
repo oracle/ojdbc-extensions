@@ -49,7 +49,4 @@ import oracle.ucp.provider.observability.jfr.core.UCPBaseEvent;
 @Description("Emitted when the connection pool is successfully stopped")
 @Category({"UCP Events", "Pool Lifecycle Events"})
 public class PoolStoppedEvent extends UCPBaseEvent {
-
-  public PoolStoppedEvent() {
-  }
 }

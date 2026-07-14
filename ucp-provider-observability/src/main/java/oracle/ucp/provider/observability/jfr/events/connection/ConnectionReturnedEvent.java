@@ -49,7 +49,4 @@ import oracle.ucp.provider.observability.jfr.core.UCPBaseEvent;
 @Description("Emitted when a connection is returned to the pool")
 @Category({"UCP Events", "Connection Lifecycle Events"})
 public class ConnectionReturnedEvent extends UCPBaseEvent {
-
-  public ConnectionReturnedEvent() {
-  }
 }

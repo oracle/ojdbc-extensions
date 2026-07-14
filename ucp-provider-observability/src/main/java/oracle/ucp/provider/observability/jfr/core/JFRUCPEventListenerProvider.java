@@ -42,6 +42,9 @@ import oracle.ucp.events.core.UCPEventContext;
 import oracle.ucp.events.core.UCPEventListener;
 import oracle.ucp.events.core.UCPEventListenerProvider;
 
+import java.io.IOException;
+import java.io.NotSerializableException;
+import java.io.ObjectOutputStream;
 import java.util.Map;
 
 /**
@@ -51,9 +54,6 @@ import java.util.Map;
 public final class JFRUCPEventListenerProvider
   implements UCPEventListenerProvider {
 
-  private final UCPEventListener listener;
-
-
   /**
    * Singleton listener that records UCP events as JFR events.
    * Thread-safe and optimized for minimal overhead.
@@ -62,8 +62,17 @@ public final class JFRUCPEventListenerProvider
     new UCPEventListener() {
       private static final long serialVersionUID = 1L;
 
+      private void writeObject(ObjectOutputStream ignored) throws IOException {
+        throw new NotSerializableException(
+          "JFR UCP event listener cannot be serialized.");
+      }
+
       @Override
       public void onUCPEvent(EventType eventType, UCPEventContext context) {
+        if (eventType == null || context == null) {
+          return;
+        }
+
         UCPEventFactory.recordEvent(eventType, context);
       }
     };
@@ -71,9 +80,7 @@ public final class JFRUCPEventListenerProvider
   /**
    * Creates a new provider instance.
    */
-  public JFRUCPEventListenerProvider() {
-    this.listener = TRACE_EVENT_LISTENER;
-  }
+  public JFRUCPEventListenerProvider() {}
 
   /**
    * Returns the provider's unique identifier.
@@ -93,6 +100,6 @@ public final class JFRUCPEventListenerProvider
    */
   @Override
   public UCPEventListener getListener(Map<String, String> config) {
-    return listener;
+    return TRACE_EVENT_LISTENER;
   }
 }

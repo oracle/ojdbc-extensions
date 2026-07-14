@@ -44,6 +44,9 @@ import oracle.ucp.events.core.UCPEventListenerProvider;
 import oracle.ucp.provider.observability.jfr.core.JFRUCPEventListenerProvider;
 import oracle.ucp.provider.observability.otel.OtelUCPEventListenerProvider;
 
+import java.io.IOException;
+import java.io.NotSerializableException;
+import java.io.ObjectOutputStream;
 import java.util.Map;
 import java.util.Objects;
 
@@ -60,6 +63,8 @@ public final class ObservabilityUCPEventListenerProvider
 
   private static final String PROVIDER_NAME = "ucp-observability-listener";
 
+  private final Object listenerLock = new Object();
+
   private final UCPEventListenerProvider jfrProvider;
   private final UCPEventListenerProvider otelProvider;
   private volatile UCPEventListener listener;
@@ -74,6 +79,7 @@ public final class ObservabilityUCPEventListenerProvider
       new OtelUCPEventListenerProvider());
   }
 
+  // Package-private for tests that inject delegate providers.
   ObservabilityUCPEventListenerProvider(
       UCPEventListenerProvider jfrProvider,
       UCPEventListenerProvider otelProvider) {
@@ -91,7 +97,7 @@ public final class ObservabilityUCPEventListenerProvider
   @Override
   public UCPEventListener getListener(Map<String, String> config) {
     if (listener == null) {
-      synchronized (this) {
+      synchronized (listenerLock) {
         if (listener == null) {
           listener = new CompositeUCPEventListener(
             jfrProvider.getListener(config),
@@ -109,6 +115,11 @@ public final class ObservabilityUCPEventListenerProvider
 
     private final UCPEventListener jfrListener;
     private final UCPEventListener otelListener;
+
+    private void writeObject(ObjectOutputStream ignored) throws IOException {
+      throw new NotSerializableException(
+        "Composite UCP event listener cannot be serialized.");
+    }
 
     private CompositeUCPEventListener(
         UCPEventListener jfrListener,

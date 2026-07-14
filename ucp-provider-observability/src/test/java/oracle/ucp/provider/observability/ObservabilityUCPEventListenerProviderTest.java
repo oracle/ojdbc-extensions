@@ -45,6 +45,9 @@ import oracle.ucp.events.core.UCPEventListenerProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.io.NotSerializableException;
+import java.io.ObjectOutputStream;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -90,6 +93,18 @@ class ObservabilityUCPEventListenerProviderTest {
 
     verify(jfr).onUCPEvent(EventType.POOL_REFRESHED, ctx);
     verify(otel).onUCPEvent(EventType.POOL_REFRESHED, ctx);
+  }
+
+  @Test
+  @DisplayName("Composite listener throws NotSerializableException on serialization attempt")
+  void testListenerIsNotSerializable() {
+    ObservabilityUCPEventListenerProvider provider =
+      new ObservabilityUCPEventListenerProvider();
+
+    UCPEventListener listener = provider.getListener(Collections.emptyMap());
+
+    assertThrows(NotSerializableException.class, () ->
+      new ObjectOutputStream(new ByteArrayOutputStream()).writeObject(listener));
   }
 
   private static UCPEventListenerProvider providerReturning(

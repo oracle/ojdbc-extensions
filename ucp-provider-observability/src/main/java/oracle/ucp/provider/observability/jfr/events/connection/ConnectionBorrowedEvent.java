@@ -49,7 +49,4 @@ import oracle.ucp.provider.observability.jfr.core.UCPBaseEvent;
 @Description("Emitted when a connection is borrowed from the pool")
 @Category({"UCP Events", "Connection Lifecycle Events"})
 public class ConnectionBorrowedEvent extends UCPBaseEvent {
-
-  public ConnectionBorrowedEvent() {
-  }
 }

@@ -49,7 +49,4 @@ import oracle.ucp.provider.observability.jfr.core.UCPBaseEvent;
 @Description("Emitted when a new connection is created")
 @Category({"UCP Events", "Connection Lifecycle Events"})
 public class ConnectionCreatedEvent extends UCPBaseEvent {
-
-  public ConnectionCreatedEvent() {
-  }
 }

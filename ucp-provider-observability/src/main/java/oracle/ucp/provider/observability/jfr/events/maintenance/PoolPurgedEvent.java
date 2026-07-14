@@ -49,7 +49,4 @@ import oracle.ucp.provider.observability.jfr.core.UCPBaseEvent;
 @Description("Emitted when a pool purge operation completes")
 @Category({"UCP Events", "Maintenance Operations Events"})
 public class PoolPurgedEvent extends UCPBaseEvent {
-
-  public PoolPurgedEvent() {
-  }
 }

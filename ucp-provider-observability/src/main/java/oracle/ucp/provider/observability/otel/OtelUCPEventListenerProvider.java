@@ -94,6 +94,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class OtelUCPEventListenerProvider
   implements UCPEventListenerProvider {
 
+  private final Object listenerLock = new Object();
+
   private volatile UCPEventListener listener;
 
   @Override
@@ -106,7 +108,7 @@ public final class OtelUCPEventListenerProvider
     // config is intentionally unused: OTel SDK configuration is managed
     // externally via the SDK setup, not through UCP's provider config map.
     if (listener == null) {
-      synchronized (this) {
+      synchronized (listenerLock) {
         if (listener == null) {
           listener = new OtelUCPEventListener();
         }
@@ -211,11 +213,6 @@ public final class OtelUCPEventListenerProvider
     }
 
     @Override
-    public boolean isDesiredEvent(EventType eventType) {
-      return true;
-    }
-
-    @Override
     public void onUCPEvent(EventType eventType, UCPEventContext ctx) {
       if (eventType == null || ctx == null) {
         return;
@@ -265,16 +262,14 @@ public final class OtelUCPEventListenerProvider
           connectionMax.set(ctx.maxPoolSize(), state.attrs);
           connectionMin.set(ctx.minPoolSize(), state.attrs);
           break;
+        case CONNECTION_BORROWED:
+          double avgWaitMs = ctx.getAverageConnectionWaitTime();
+          if (avgWaitMs >= 0) {
+            averageBorrowWaitTime.set(avgWaitMs / 1000.0, state.attrs);
+          }
+          break;
         default:
           break;
-      }
-
-      // oracle.ucp.connection.borrow_wait_time.avg — CONNECTION_BORROWED only, when > 0.
-      if (eventType == EventType.CONNECTION_BORROWED) {
-        double avgWaitMs = ctx.getAverageConnectionWaitTime();
-        if (avgWaitMs > 0) {
-          averageBorrowWaitTime.set(avgWaitMs / 1000.0, state.attrs);
-        }
       }
 
       connectionEstablished.set(ctx.createdConnections(), state.attrs);

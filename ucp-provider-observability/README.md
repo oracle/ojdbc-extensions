@@ -7,23 +7,23 @@ Universal Connection Pool (UCP). Three listener providers are available:
 * OTEL: publishes UCP connection pool metrics through OpenTelemetry.
 * Observability: exports the same UCP event stream to both JFR and OTEL.
 
+| Provider | Listener name | Backend |
+|---|---|---|
+| Observability | `ucp-observability-listener` | Java Flight Recorder (JFR) and OpenTelemetry metrics |
+| JFR | `jfr-ucp-listener` | Java Flight Recorder (JFR) |
+| OpenTelemetry | `otel-ucp-listener` | OpenTelemetry metrics |
+
 These providers implement the `UCPEventListenerProvider` interface provided by
 UCP. They are notified when UCP emits pool, connection, and maintenance events,
 and expose those events as either JFR events or OpenTelemetry metrics.
 
 The exported telemetry includes:
 
-* pool lifecycle events, such as pool creation, startup, shutdown, and destroy
-* connection lifecycle events, such as connection creation, borrow, return, and close
+* pool lifecycle events, such as creation, startup, shutdown, and destruction
+* connection lifecycle events, such as creation, borrowing, return, and closure
 * maintenance events, such as refresh, recycle, and purge
 * pool state metrics, such as borrowed, available, total, created, and closed connections
 * UCP-reported average borrow wait time
-
-| Provider | Listener name | Backend |
-|---|---|---|
-| `ObservabilityUCPEventListenerProvider` | `ucp-observability-listener` | Java Flight Recorder (JFR) and OpenTelemetry (metrics) |
-| `JFRUCPEventListenerProvider` | `jfr-ucp-listener` | Java Flight Recorder (JFR) |
-| `OtelUCPEventListenerProvider` | `otel-ucp-listener` | OpenTelemetry (metrics) |
 
 All providers are discovered automatically via `java.util.ServiceLoader`;
 activate one by setting the UCP listener provider name on the pool or through
@@ -83,9 +83,10 @@ Use `ucp-observability-listener` to enable both JFR and OpenTelemetry. Use
 ## JFR Provider
 
 The JFR provider converts UCP pool, connection, and maintenance events into
-custom Java Flight Recorder events. When a UCP JFR event type is not enabled by
-an active recording, the provider returns before reading and populating UCP
-context fields.
+custom Java Flight Recorder events. Activate it for a UCP pool by configuring
+the `jfr-ucp-listener` or `ucp-observability-listener` listener. After it is
+activated, the provider emits UCP events to Java Flight Recorder, where they can
+be captured, viewed, and filtered in JDK Mission Control.
 
 ### Recorded event types
 
