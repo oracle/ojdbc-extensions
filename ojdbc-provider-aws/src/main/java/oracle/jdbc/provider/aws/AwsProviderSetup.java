@@ -392,27 +392,48 @@ public final class AwsProviderSetup extends ProviderSetupCli {
   }
 
   private void buildAwsS3ConfigUrl() {
+    String location = readRequired(
+      "S3 location, with or without the s3:// prefix "
+        + "(e.g. mybucket/payload.json): ");
+    LinkedHashMap<String, String> parameters = centralizedConfigAuth();
+    addIfPresent(parameters, "key",
+      readOptional("Key of the datasource, if the JSON payload contains "
+        + "multiple datasource configurations [optional]: "));
+
     addConfigUrl(
-      "jdbc:oracle:thin:@config-awss3://"
-        + readRequired(
-            "S3 location, with or without the s3:// prefix "
-              + "(e.g. mybucket/payload.json): "),
+      "jdbc:oracle:thin:@config-awss3://" + location,
+      parameters,
       "AWS S3 Configuration Provider",
       "#aws-s3-configuration-provider");
   }
 
   private void buildAwsSecretsManagerConfigUrl() {
+    String secretName = readRequired("Secrets Manager secret name: ");
+    LinkedHashMap<String, String> parameters = centralizedConfigAuth();
+    addIfPresent(parameters, "key",
+      readOptional("Key of the datasource, if the JSON payload contains "
+        + "multiple datasource configurations [optional]: "));
+    addIfPresent(parameters, "field_name",
+      readOptional("Field name within the secret [optional, only needed "
+        + "when the secret holds multiple key-value pairs]: "));
+
     addConfigUrl(
-      "jdbc:oracle:thin:@config-awssecretsmanager://"
-        + readRequired("Secrets Manager secret name: "),
+      "jdbc:oracle:thin:@config-awssecretsmanager://" + secretName,
+      parameters,
       "AWS Secrets Manager Config Provider",
       "#aws-secrets-manager-config-provider");
   }
 
   private void buildAwsParameterStoreConfigUrl() {
+    String parameterName = readRequired("Parameter Store parameter name: ");
+    LinkedHashMap<String, String> parameters = centralizedConfigAuth();
+    addIfPresent(parameters, "key",
+      readOptional("Key of the datasource, if the JSON payload contains "
+        + "multiple datasource configurations [optional]: "));
+
     addConfigUrl(
-      "jdbc:oracle:thin:@config-awsparameterstore://"
-        + readRequired("Parameter Store parameter name: "),
+      "jdbc:oracle:thin:@config-awsparameterstore://" + parameterName,
+      parameters,
       "AWS Parameter Store Config Provider",
       "#aws-parameter-store-config-provider");
   }
@@ -425,17 +446,15 @@ public final class AwsProviderSetup extends ProviderSetupCli {
       readOptional("AppConfig environment id or name [optional]: "));
     addIfPresent(parameters, "appconfig_profile",
       readOptional("AppConfig profile id or name [optional]: "));
+    addIfPresent(parameters, "key",
+      readOptional("Key of the datasource, if the JSON payload contains "
+        + "multiple datasource configurations [optional]: "));
 
     addConfigUrl(
       "jdbc:oracle:thin:@config-awsappconfig://" + applicationIdentifier,
       parameters,
       "AWS AppConfig Freeform Config Provider",
       "#aws-appconfig-freeform-config-provider");
-  }
-
-  private void addConfigUrl(
-    String baseUrl, String comment, String docsAnchor) {
-    addConfigUrl(baseUrl, centralizedConfigAuth(), comment, docsAnchor);
   }
 
   private LinkedHashMap<String, String> centralizedConfigAuth() {

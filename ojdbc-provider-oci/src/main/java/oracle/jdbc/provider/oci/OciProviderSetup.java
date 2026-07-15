@@ -268,6 +268,9 @@ public final class OciProviderSetup extends ProviderSetupCli {
           readOptional("Config file path [default: ~/.oci/config]: "));
         addIfPresent(parameters, "profile",
           readOptional("Profile [default: DEFAULT]: "));
+        addIfPresent(parameters, "region",
+          readOptional("Region [optional, inferred from the config file "
+            + "when not set]: "));
         break;
       case 2:
         parameters.put("authenticationMethod", "instance-principal");
