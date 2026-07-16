@@ -60,6 +60,45 @@ JDK versions. The coordinates for the latest release are:
 </dependency>
 ```
 
+## Command-Line Setup Helper
+
+The OCI provider jar includes an interactive setup helper for generating
+provider configuration from the command line.
+
+The helper can generate either a centralized configuration JDBC URL or a set
+of resource-provider connection properties. It does not connect to OCI or
+validate credentials; it only prints the values you configure.
+
+### Running the helper
+
+The helper is launched from the provider jar:
+
+```bash
+java -jar ojdbc-provider-oci-1.1.0.jar
+```
+
+For direct `java -jar` execution, `ojdbc-provider-common-1.1.0.jar` must be
+present in the same directory as this jar.
+
+### What the helper does
+
+Once running, the helper presents a menu with two main choices: adding a
+centralized configuration URL, or adding a resource provider.
+
+If you choose a centralized configuration URL, it asks which OCI service to
+use (Vault, Object Storage, or Database Tools Connection), the value that
+service needs (such as a secret OCID or object URL), and how to authenticate,
+then assembles the resulting `jdbc:oracle:thin:@config-oci...` URL for you.
+
+If you choose a resource provider, it asks which one (Access Token, Vault
+Username/Password, TCPS/SEPS Wallet, or Connection String), the values that
+provider needs, and how to authenticate, then generates the matching
+`oracle.jdbc.provider.*` connection properties.
+
+You can repeat either choice as many times as you like to build up multiple
+providers or URLs, then export everything at once, either printed to the
+terminal or appended to a file.
+
 ## OCI Database Tools Connections Config Provider
 
 The OCI Database Tools Connections is a managed service that can be used to configure connections to a database.
