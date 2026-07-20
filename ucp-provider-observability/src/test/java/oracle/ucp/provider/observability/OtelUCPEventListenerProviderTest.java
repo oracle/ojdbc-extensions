@@ -44,6 +44,7 @@ import oracle.ucp.events.core.UCPEventListener.EventType;
 import oracle.ucp.provider.observability.otel.OtelUCPEventListenerProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -79,6 +80,11 @@ class OtelUCPEventListenerProviderTest {
     when(mockContext.closedConnections()).thenReturn(1);
     when(mockContext.createdConnections()).thenReturn(9);
     when(mockContext.getAverageConnectionWaitTime()).thenReturn(42L);
+  }
+
+  @AfterEach
+  void resetConfiguration() {
+    UCPObservabilityConfiguration.resetForTest();
   }
 
   private void resetAndRestubContext() {
@@ -183,6 +189,32 @@ class OtelUCPEventListenerProviderTest {
     @DisplayName("onUCPEvent() does not throw when both args are null")
     void testOnUCPEventBothNull() {
       assertDoesNotThrow(() -> listener.onUCPEvent(null, null));
+    }
+
+    @Test
+    @DisplayName("onUCPEvent() does not read context fields when OTel is disabled")
+    void testOnUCPEventSkipsContextReadsWhenOtelDisabled() {
+      UCPObservabilityConfiguration.getInstance().setEnabledListeners("JFR");
+
+      assertDoesNotThrow(() ->
+        listener.onUCPEvent(EventType.CONNECTION_BORROWED, mockContext));
+
+      verifyNoInteractions(mockContext);
+    }
+
+    @Test
+    @DisplayName("POOL_DESTROYED removes pool state even when OTel is disabled")
+    void testPoolDestroyedRemovesStateWhenOtelDisabled() {
+      UCPObservabilityConfiguration.getInstance().setEnabledListeners("JFR");
+
+      assertDoesNotThrow(() ->
+        listener.onUCPEvent(EventType.POOL_DESTROYED, mockContext));
+
+      verify(mockContext).poolName();
+      verify(mockContext, never()).borrowedConnectionsCount();
+      verify(mockContext, never()).availableConnectionsCount();
+      verify(mockContext, never()).maxPoolSize();
+      verify(mockContext, never()).createdConnections();
     }
 
     @Test
@@ -299,14 +331,14 @@ class OtelUCPEventListenerProviderTest {
     }
 
     @Test
-    @DisplayName("maxPoolSize() and minPoolSize() are read on POOL_DESTROYED")
-    void testConfigFieldsReadOnPoolDestroyed() {
+    @DisplayName("POOL_DESTROYED removes pool state without reading config fields")
+    void testConfigFieldsNotReadOnPoolDestroyed() {
       listener.onUCPEvent(EventType.POOL_CREATED, mockContext);
       resetAndRestubContext();
 
       listener.onUCPEvent(EventType.POOL_DESTROYED, mockContext);
-      verify(mockContext).maxPoolSize();
-      verify(mockContext).minPoolSize();
+      verify(mockContext, never()).maxPoolSize();
+      verify(mockContext, never()).minPoolSize();
     }
 
     @Test

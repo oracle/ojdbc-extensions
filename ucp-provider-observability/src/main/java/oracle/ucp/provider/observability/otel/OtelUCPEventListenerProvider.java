@@ -45,6 +45,7 @@ import io.opentelemetry.api.metrics.*;
 import oracle.ucp.events.core.UCPEventContext;
 import oracle.ucp.events.core.UCPEventListener;
 import oracle.ucp.events.core.UCPEventListenerProvider;
+import oracle.ucp.provider.observability.UCPObservabilityConfiguration;
 
 import java.io.IOException;
 import java.io.NotSerializableException;
@@ -61,22 +62,28 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <h2>Spec-aligned metrics</h2>
  * <ul>
- *   <li>{@code db.client.connection.count} (LongGauge, state={@code used}|{@code idle}) —
- *       uses LongGauge because UCP provides absolute snapshots rather than
+ *   <li>{@code db.client.connection.count} (observable LongGauge,
+ *       state={@code used}|{@code idle}) —
+ *       uses an observable gauge because UCP provides absolute snapshots rather than
  *       incremental deltas.</li>
- *   <li>{@code db.client.connection.max} (LongGauge) — recorded on pool lifecycle events
- *       only, since maxPoolSize is a configuration constant.</li>
- *   <li>{@code db.client.connection.min} (LongGauge) — sourced from
- *       {@link UCPEventContext#minPoolSize()}. Recorded on pool lifecycle events only.</li>
+ *   <li>{@code db.client.connection.max} (observable LongGauge) — updated on
+ *       pool lifecycle events only, since maxPoolSize is a configuration constant.</li>
+ *   <li>{@code db.client.connection.min} (observable LongGauge) — sourced from
+ *       {@link UCPEventContext#minPoolSize()}. Updated on pool lifecycle events only.</li>
  * </ul>
  *
  * <h2>UCP-specific metrics</h2>
  * <ul>
- *   <li>{@code oracle.ucp.connection.established} (LongGauge) — cumulative connections opened.</li>
- *   <li>{@code oracle.ucp.connection.closed} (LongGauge) — cumulative connections closed.</li>
- *   <li>{@code oracle.ucp.connection.borrow_wait_time.avg} (DoubleGauge, seconds) —
+ *   <li>{@code oracle.ucp.connection.established} (observable LongGauge) —
+ *       cumulative connections opened.</li>
+ *   <li>{@code oracle.ucp.connection.closed} (observable LongGauge) —
+ *       cumulative connections closed.</li>
+ *   <li>{@code oracle.ucp.connection.borrow_wait_time.avg} (observable DoubleGauge, seconds) —
  *       cumulative pool-wide average time spent waiting to borrow a connection,
  *       as reported by UCP.</li>
+ *   <li>{@code oracle.ucp.observability.enabled} (observable LongGauge, listener={@code OTEL}) —
+ *       runtime status for OpenTelemetry emission. A value of {@code 1} means
+ *       OTel emission is enabled; {@code 0} means it is disabled.</li>
  * </ul>
  *
  * <h2>Limitations</h2>
@@ -88,15 +95,19 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li>Serialization: OTel instrument fields are not serializable; attempting to serialize
  *       this listener throws {@link NotSerializableException}.</li>
  *   <li>Pool state memory: a {@code PoolState} entry per pool name is retained until
- *       {@code POOL_DESTROYED} fires; abandoned pools linger for the JVM lifetime.</li>
+ *       {@code POOL_DESTROYED} fires.</li>
+ *   <li>When OTel emission is disabled at runtime, collection callbacks stop
+ *       recording connection pool metrics. Last-value exporters can then mark
+ *       those pool series stale or absent; use {@code oracle.ucp.observability.enabled}
+ *       to identify that OTel emission is disabled.</li>
  * </ul>
  */
 public final class OtelUCPEventListenerProvider
   implements UCPEventListenerProvider {
 
-  private final Object listenerLock = new Object();
+  private static final Object LISTENER_LOCK = new Object();
 
-  private volatile UCPEventListener listener;
+  private static volatile UCPEventListener listener;
 
   @Override
   public String getName() {
@@ -108,7 +119,7 @@ public final class OtelUCPEventListenerProvider
     // config is intentionally unused: OTel SDK configuration is managed
     // externally via the SDK setup, not through UCP's provider config map.
     if (listener == null) {
-      synchronized (listenerLock) {
+      synchronized (LISTENER_LOCK) {
         if (listener == null) {
           listener = new OtelUCPEventListener();
         }
@@ -129,6 +140,12 @@ public final class OtelUCPEventListenerProvider
     private static final AttributeKey<String> STATE =
       AttributeKey.stringKey("db.client.connection.state");
 
+    private static final AttributeKey<String> LISTENER =
+      AttributeKey.stringKey("listener");
+
+    private static final Attributes OTEL_LISTENER =
+      Attributes.of(LISTENER, UCPObservabilityConfiguration.OTEL);
+
     // Meter and instruments — instance fields, intentionally NOT static.
     // GlobalOpenTelemetry.getMeter() is called at listener construction time
     // (inside getListener()), which happens after the application registers
@@ -137,61 +154,19 @@ public final class OtelUCPEventListenerProvider
     private final Meter meter =
       GlobalOpenTelemetry.getMeter("oracle.ucp");
 
-    // db.client.connection.count (LongGauge, state=used|idle)
-    private final LongGauge connectionCount =
-      meter.gaugeBuilder("db.client.connection.count")
-        .setDescription("The number of connections that are currently in the state described by the state attribute.")
-        .setUnit("{connection}").ofLongs().build();
-
-    // db.client.connection.max (LongGauge)
-    // Recorded on pool lifecycle events only — maxPoolSize rarely changes.
-    private final LongGauge connectionMax =
-      meter.gaugeBuilder("db.client.connection.max")
-        .setDescription("The maximum number of open connections allowed.")
-        .setUnit("{connection}").ofLongs().build();
-
-    // db.client.connection.min (LongGauge)
-    // Sourced from minPoolSize().
-    // Recorded on pool lifecycle events only.
-    private final LongGauge connectionMin =
-      meter.gaugeBuilder("db.client.connection.min")
-        .setDescription(
-            "The configured minimum number of open connections allowed. " +
-            "Sourced from UCP's minPoolSize.")
-        .setUnit("{connection}").ofLongs().build();
-
-    // oracle.ucp.connection.borrow_wait_time.avg (DoubleGauge, seconds)
-    // UCP exposes a cumulative pool-wide average, not per-borrow wait time.
-    // UCP value is in ms — divided by 1000.0 before recording.
-    private final DoubleGauge averageBorrowWaitTime =
-      meter.gaugeBuilder("oracle.ucp.connection.borrow_wait_time.avg")
-        .setDescription(
-            "Cumulative pool-wide average time spent waiting to borrow a connection, " +
-            "as reported by UCP.")
-        .setUnit("s").build();
-
-    // oracle.ucp.connection.established (LongGauge)
-    // LongGauge rather than LongCounter: UCP exposes an absolute lifetime total,
-    // and LongGauge.set() records the value even when it is 0 (delta=0 on a
-    // counter produces no data point, making the metric invisible).
-    private final LongGauge connectionEstablished =
-      meter.gaugeBuilder("oracle.ucp.connection.established")
-        .setDescription("Cumulative number of physical connections opened since pool start.")
-        .setUnit("{connection}").ofLongs().build();
-
-    // oracle.ucp.connection.closed (LongGauge) — same reasoning as above.
-    private final LongGauge connectionClosed =
-      meter.gaugeBuilder("oracle.ucp.connection.closed")
-        .setDescription("Cumulative number of physical connections closed since pool start.")
-        .setUnit("{connection}").ofLongs().build();
-
-    // Per-pool state — pre-built Attributes objects reused on every event to
-    // avoid per-call allocation under high load. Entries are removed on
-    // POOL_DESTROYED; abandoned pools linger for the JVM lifetime.
+    // Per-pool state, pre-built Attributes objects reused on every event to
+    // avoid per-call allocation under high load.
     private static final class PoolState {
       final Attributes attrs;
       final Attributes attrsUsed;
       final Attributes attrsIdle;
+      volatile int borrowedConnections;
+      volatile int availableConnections;
+      volatile int closedConnections;
+      volatile int createdConnections;
+      volatile int maxPoolSize;
+      volatile int minPoolSize;
+      volatile long averageBorrowWaitTimeMs;
 
       PoolState(String poolName,
         AttributeKey<String> poolNameKey,
@@ -204,6 +179,106 @@ public final class OtelUCPEventListenerProvider
 
     private final ConcurrentHashMap<String, PoolState> poolStates =
       new ConcurrentHashMap<>();
+
+    // db.client.connection.count (observable LongGauge, state=used|idle)
+    private final ObservableLongGauge connectionCount =
+      meter.gaugeBuilder("db.client.connection.count")
+        .setDescription("The number of connections that are currently in the state described by the state attribute.")
+        .setUnit("{connection}").ofLongs()
+        .buildWithCallback(measurement -> {
+          if (!isOtelEnabled()) {
+            return;
+          }
+          poolStates.forEach((poolName, state) -> {
+            measurement.record(state.borrowedConnections, state.attrsUsed);
+            measurement.record(state.availableConnections, state.attrsIdle);
+          });
+        });
+
+    // db.client.connection.max (observable LongGauge)
+    // Updated on pool lifecycle events only — maxPoolSize rarely changes.
+    private final ObservableLongGauge connectionMax =
+      meter.gaugeBuilder("db.client.connection.max")
+        .setDescription("The maximum number of open connections allowed.")
+        .setUnit("{connection}").ofLongs()
+        .buildWithCallback(measurement -> {
+          if (!isOtelEnabled()) {
+            return;
+          }
+          poolStates.forEach((poolName, state) ->
+            measurement.record(state.maxPoolSize, state.attrs));
+        });
+
+    // db.client.connection.min (observable LongGauge)
+    // Sourced from minPoolSize().
+    // Updated on pool lifecycle events only.
+    private final ObservableLongGauge connectionMin =
+      meter.gaugeBuilder("db.client.connection.min")
+        .setDescription(
+            "The configured minimum number of open connections allowed. " +
+            "Sourced from UCP's minPoolSize.")
+        .setUnit("{connection}").ofLongs()
+        .buildWithCallback(measurement -> {
+          if (!isOtelEnabled()) {
+            return;
+          }
+          poolStates.forEach((poolName, state) ->
+            measurement.record(state.minPoolSize, state.attrs));
+        });
+
+    // oracle.ucp.connection.borrow_wait_time.avg (observable DoubleGauge, seconds)
+    // UCP exposes a cumulative pool-wide average, not per-borrow wait time.
+    // UCP value is in ms — divided by 1000.0 at collection time.
+    private final ObservableDoubleGauge averageBorrowWaitTime =
+      meter.gaugeBuilder("oracle.ucp.connection.borrow_wait_time.avg")
+        .setDescription(
+            "Cumulative pool-wide average time spent waiting to borrow a connection, " +
+            "as reported by UCP.")
+        .setUnit("s")
+        .buildWithCallback(measurement -> {
+          if (!isOtelEnabled()) {
+            return;
+          }
+          poolStates.forEach((poolName, state) ->
+            measurement.record(state.averageBorrowWaitTimeMs / 1000.0, state.attrs));
+        });
+
+    // oracle.ucp.connection.established (observable LongGauge)
+    // Observable gauge rather than counter: UCP exposes an absolute lifetime total.
+    private final ObservableLongGauge connectionEstablished =
+      meter.gaugeBuilder("oracle.ucp.connection.established")
+        .setDescription("Cumulative number of physical connections opened since pool start.")
+        .setUnit("{connection}").ofLongs()
+        .buildWithCallback(measurement -> {
+          if (!isOtelEnabled()) {
+            return;
+          }
+          poolStates.forEach((poolName, state) ->
+            measurement.record(state.createdConnections, state.attrs));
+        });
+
+    // oracle.ucp.connection.closed (observable LongGauge) — same reasoning as above.
+    private final ObservableLongGauge connectionClosed =
+      meter.gaugeBuilder("oracle.ucp.connection.closed")
+        .setDescription("Cumulative number of physical connections closed since pool start.")
+        .setUnit("{connection}").ofLongs()
+        .buildWithCallback(measurement -> {
+          if (!isOtelEnabled()) {
+            return;
+          }
+          poolStates.forEach((poolName, state) ->
+            measurement.record(state.closedConnections, state.attrs));
+        });
+
+    // oracle.ucp.observability.enabled (observable LongGauge, listener=OTEL)
+    // Reports whether OTel emission is enabled. This lets dashboards
+    // distinguish live OTel values from absent/stale values after disablement.
+    private final ObservableLongGauge observabilityEnabled =
+      meter.gaugeBuilder("oracle.ucp.observability.enabled")
+        .setDescription("Whether UCP provider emission is enabled for the listener backend.")
+        .setUnit("1").ofLongs()
+        .buildWithCallback(measurement ->
+          measurement.record(isOtelEnabled() ? 1 : 0, OTEL_LISTENER));
 
     // Serialization guard — OTel instrument fields are not serializable.
     private void writeObject(ObjectOutputStream ignored) throws IOException {
@@ -218,37 +293,40 @@ public final class OtelUCPEventListenerProvider
         return;
       }
 
+      if (eventType == EventType.POOL_DESTROYED) {
+        String poolName = ctx.poolName();
+        if (poolName != null) {
+          poolStates.remove(poolName);
+        }
+        return;
+      }
+
+      if (!isOtelEnabled()) {
+        return;
+      }
+
       String poolName = ctx.poolName();
       // ConcurrentHashMap does not permit null keys.
       if (poolName == null) {
         return;
       }
 
-      // POOL_DESTROYED: remove state atomically before recording the final
-      // snapshot to avoid allocating a new PoolState only to discard it.
-      if (eventType == EventType.POOL_DESTROYED) {
-        PoolState state = poolStates.remove(poolName);
-        if (state != null) {
-          recordSnapshot(eventType, ctx, state);
-        }
-        return;
-      }
-
       PoolState state = poolStates.computeIfAbsent(
         poolName, k -> new PoolState(k, POOL_NAME, STATE));
 
-      recordSnapshot(eventType, ctx, state);
+      updateSnapshot(eventType, ctx, state);
     }
 
     /**
-     * Records all metric observations for a single event.
+     * Updates the latest pool state snapshot for collection callbacks.
      * Extracted from {@link #onUCPEvent} to keep routing and recording logic separate.
      */
-    private void recordSnapshot(EventType eventType, UCPEventContext ctx, PoolState state) {
+    private void updateSnapshot(EventType eventType, UCPEventContext ctx, PoolState state) {
 
-      // db.client.connection.count — direct snapshot on every event.
-      connectionCount.set(ctx.borrowedConnectionsCount(), state.attrsUsed);
-      connectionCount.set(ctx.availableConnectionsCount(), state.attrsIdle);
+      state.borrowedConnections = ctx.borrowedConnectionsCount();
+      state.availableConnections = ctx.availableConnectionsCount();
+      state.createdConnections = ctx.createdConnections();
+      state.closedConnections = ctx.closedConnections();
 
       // db.client.connection.max / min — pool lifecycle events only.
       // Maintenance events (POOL_REFRESHED, POOL_RECYCLED, POOL_PURGED) are
@@ -258,22 +336,23 @@ public final class OtelUCPEventListenerProvider
         case POOL_STARTING:
         case POOL_STARTED:
         case POOL_STOPPED:
-        case POOL_DESTROYED:
-          connectionMax.set(ctx.maxPoolSize(), state.attrs);
-          connectionMin.set(ctx.minPoolSize(), state.attrs);
+          state.maxPoolSize = ctx.maxPoolSize();
+          state.minPoolSize = ctx.minPoolSize();
           break;
         case CONNECTION_BORROWED:
           double avgWaitMs = ctx.getAverageConnectionWaitTime();
           if (avgWaitMs >= 0) {
-            averageBorrowWaitTime.set(avgWaitMs / 1000.0, state.attrs);
+            state.averageBorrowWaitTimeMs = (long) avgWaitMs;
           }
           break;
         default:
           break;
       }
+    }
 
-      connectionEstablished.set(ctx.createdConnections(), state.attrs);
-      connectionClosed.set(ctx.closedConnections(), state.attrs);
+    private static boolean isOtelEnabled() {
+      return UCPObservabilityConfiguration.getInstance()
+        .isListenerEnabled(UCPObservabilityConfiguration.OTEL);
     }
   }
 }

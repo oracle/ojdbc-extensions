@@ -41,6 +41,7 @@ package oracle.ucp.provider.observability.jfr.core;
 import oracle.ucp.events.core.UCPEventContext;
 import oracle.ucp.events.core.UCPEventListener;
 import oracle.ucp.events.core.UCPEventListenerProvider;
+import oracle.ucp.provider.observability.UCPObservabilityConfiguration;
 
 import java.io.IOException;
 import java.io.NotSerializableException;
@@ -69,7 +70,9 @@ public final class JFRUCPEventListenerProvider
 
       @Override
       public void onUCPEvent(EventType eventType, UCPEventContext context) {
-        if (eventType == null || context == null) {
+        if (eventType == null || context == null
+            || !UCPObservabilityConfiguration.getInstance()
+              .isListenerEnabled(UCPObservabilityConfiguration.JFR)) {
           return;
         }
 

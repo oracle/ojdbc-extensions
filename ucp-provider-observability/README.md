@@ -80,6 +80,46 @@ Use `ucp-observability-listener` to enable both JFR and OpenTelemetry. Use
 
 ---
 
+## Runtime Control
+
+The provider registers a JVM-wide configuration MBean that can be updated while
+the application is running:
+
+```text
+com.oracle.ucp.provider.observability:type=UCPObservabilityConfiguration
+```
+
+The MBean can be changed with JDK Mission Control, JConsole, or another JMX
+client. Changing these values does not remove the listener from UCP; it controls
+whether the installed listener emits telemetry when UCP events are received.
+
+| Attribute | Description | Default |
+|---|---|---|
+| `Enabled` | Enables or disables all UCP provider emission. | `true` |
+| `EnabledListeners` | Comma-separated enabled backends. Accepted values are `JFR` and `OTEL`. | `JFR,OTEL` |
+
+Examples:
+
+| Runtime setting | Effect |
+|---|---|
+| `Enabled=false` | Stop all UCP provider emission. |
+| `Enabled=true`, `EnabledListeners=JFR` | Emit only JFR events. |
+| `Enabled=true`, `EnabledListeners=OTEL` | Emit only OpenTelemetry metrics. |
+| `Enabled=true`, `EnabledListeners=JFR,OTEL` | Emit both JFR events and OpenTelemetry metrics. |
+
+For single-backend providers, the runtime setting can disable that backend but
+does not add another backend to the installed listener. For example,
+`jfr-ucp-listener` can be disabled at runtime, but it will not emit
+OpenTelemetry metrics unless the pool is configured with
+`otel-ucp-listener` or `ucp-observability-listener`.
+
+When OpenTelemetry emission is disabled at runtime, collection callbacks stop
+recording connection pool metric points. Exporters may briefly retain previous
+values until they mark the series stale or absent. Use
+`oracle.ucp.observability.enabled` to identify the current OTel emission state.
+
+---
+
 ## JFR Provider
 
 The JFR provider converts UCP pool, connection, and maintenance events into
@@ -162,31 +202,35 @@ jcmd <pid> JFR.stop name=ucp
 
 The OpenTelemetry provider publishes UCP connection pool metrics through the
 [OpenTelemetry API](https://opentelemetry.io/docs/languages/java/). It is
-event-driven and does not create background polling threads. This module depends
-only on `opentelemetry-api`; the OpenTelemetry SDK and exporter are configured
-by the application.
+event-driven for UCP state updates and uses observable gauges for metric
+collection. UCP events update the latest pool snapshot, and the OpenTelemetry
+SDK reads that snapshot when metrics are collected. This module depends only on
+`opentelemetry-api`; the OpenTelemetry SDK and exporter are configured by the
+application.
 
 ### Exported metrics
 
-The provider emits metrics when UCP events are received. Some metrics use the
-OpenTelemetry database client connection namespace, while UCP-specific metrics
-use the `oracle.ucp` namespace.
+The provider updates pool snapshots when UCP events are received. Observable
+gauges record those snapshots during OpenTelemetry collection. Some metrics use
+the OpenTelemetry database client connection namespace, while UCP-specific
+metrics use the `oracle.ucp` namespace.
 
 #### Database client connection metrics (`db.client.connection` prefix)
 
 | Metric name | Instrument | Unit | Description |
 |---|---|---|---|
-| `db.client.connection.count` | LongGauge | `{connection}` | Connections per state (`used` / `idle`). Recorded on every event. |
-| `db.client.connection.max` | LongGauge | `{connection}` | Configured maximum pool size. |
-| `db.client.connection.min` | LongGauge | `{connection}` | Configured minimum pool size. |
+| `db.client.connection.count` | Observable LongGauge | `{connection}` | Connections per state (`used` / `idle`). |
+| `db.client.connection.max` | Observable LongGauge | `{connection}` | Configured maximum pool size. |
+| `db.client.connection.min` | Observable LongGauge | `{connection}` | Configured minimum pool size. |
 
 #### UCP-specific
 
 | Metric name | Instrument | Unit | Description |
 |---|---|---|---|
-| `oracle.ucp.connection.established` | LongGauge | `{connection}` | Cumulative physical connections opened. |
-| `oracle.ucp.connection.closed` | LongGauge | `{connection}` | Cumulative physical connections closed. |
-| `oracle.ucp.connection.borrow_wait_time.avg` | DoubleGauge | `s` | Cumulative pool-wide average time spent waiting to borrow a connection, as reported by UCP. |
+| `oracle.ucp.connection.established` | Observable LongGauge | `{connection}` | Cumulative physical connections opened. |
+| `oracle.ucp.connection.closed` | Observable LongGauge | `{connection}` | Cumulative physical connections closed. |
+| `oracle.ucp.connection.borrow_wait_time.avg` | Observable DoubleGauge | `s` | Cumulative pool-wide average time spent waiting to borrow a connection, as reported by UCP. |
+| `oracle.ucp.observability.enabled` | Observable LongGauge | `1` | Runtime emission state for the listener backend (`1` enabled, `0` disabled). |
 
 #### Metric attributes
 
@@ -198,6 +242,7 @@ values by pool and connection state.
 |---|---|---|
 | `db.client.connection.pool.name` | All metrics | UCP connection pool name |
 | `db.client.connection.state` | `db.client.connection.count` only | Connection state: `used` or `idle` |
+| `listener` | `oracle.ucp.observability.enabled` only | Listener backend controlled by the runtime MBean |
 
 ## Supported UCP event types
 

@@ -51,8 +51,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Composite UCP observability provider that publishes events to both JFR and
- * OpenTelemetry.
+ * Composite UCP provider that publishes events to both JFR and OpenTelemetry.
  *
  * <p>Use {@code ucp-observability-listener} when both backends should receive
  * the same UCP event stream. Use {@code jfr-ucp-listener} or

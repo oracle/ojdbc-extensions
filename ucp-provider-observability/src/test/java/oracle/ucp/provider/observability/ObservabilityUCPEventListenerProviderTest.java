@@ -43,6 +43,7 @@ import oracle.ucp.events.core.UCPEventListener;
 import oracle.ucp.events.core.UCPEventListener.EventType;
 import oracle.ucp.events.core.UCPEventListenerProvider;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -56,6 +57,11 @@ import static org.mockito.Mockito.*;
 @DisplayName("Composite UCP Observability Event Listener Provider Tests")
 class ObservabilityUCPEventListenerProviderTest {
 
+  @AfterEach
+  void resetConfiguration() {
+    UCPObservabilityConfiguration.resetForTest();
+  }
+
   @Test
   @DisplayName("getName() returns the composite provider identifier")
   void testGetName() {
@@ -63,6 +69,26 @@ class ObservabilityUCPEventListenerProviderTest {
       new ObservabilityUCPEventListenerProvider();
 
     assertEquals("ucp-observability-listener", provider.getName());
+  }
+
+  @Test
+  @DisplayName("Configuration MBean attributes control enabled listener backends")
+  void testConfigurationControlsEnabledListeners() {
+    UCPObservabilityConfiguration configuration =
+      UCPObservabilityConfiguration.getInstance();
+
+    assertTrue(configuration.getEnabled());
+    assertEquals("JFR,OTEL", configuration.getEnabledListeners());
+
+    configuration.setEnabledListeners("otel,unknown");
+
+    assertFalse(configuration.isListenerEnabled(UCPObservabilityConfiguration.JFR));
+    assertTrue(configuration.isListenerEnabled(UCPObservabilityConfiguration.OTEL));
+    assertEquals("OTEL", configuration.getEnabledListeners());
+
+    configuration.setEnabled(false);
+
+    assertFalse(configuration.isListenerEnabled(UCPObservabilityConfiguration.OTEL));
   }
 
   @Test
@@ -84,6 +110,60 @@ class ObservabilityUCPEventListenerProviderTest {
     UCPEventListener jfr = mock(UCPEventListener.class);
     UCPEventListener otel = mock(UCPEventListener.class);
     UCPEventContext ctx = mock(UCPEventContext.class);
+
+    ObservabilityUCPEventListenerProvider provider =
+      new ObservabilityUCPEventListenerProvider(
+        providerReturning(jfr), providerReturning(otel));
+
+    provider.getListener(null).onUCPEvent(EventType.POOL_REFRESHED, ctx);
+
+    verify(jfr).onUCPEvent(EventType.POOL_REFRESHED, ctx);
+    verify(otel).onUCPEvent(EventType.POOL_REFRESHED, ctx);
+  }
+
+  @Test
+  @DisplayName("onUCPEvent() delegates to both listeners when OTel is disabled")
+  void testOnUCPEventDelegatesToBothListenersWhenOtelDisabled() {
+    UCPEventListener jfr = mock(UCPEventListener.class);
+    UCPEventListener otel = mock(UCPEventListener.class);
+    UCPEventContext ctx = mock(UCPEventContext.class);
+    UCPObservabilityConfiguration.getInstance().setEnabledListeners("JFR");
+
+    ObservabilityUCPEventListenerProvider provider =
+      new ObservabilityUCPEventListenerProvider(
+        providerReturning(jfr), providerReturning(otel));
+
+    provider.getListener(null).onUCPEvent(EventType.POOL_REFRESHED, ctx);
+
+    verify(jfr).onUCPEvent(EventType.POOL_REFRESHED, ctx);
+    verify(otel).onUCPEvent(EventType.POOL_REFRESHED, ctx);
+  }
+
+  @Test
+  @DisplayName("onUCPEvent() delegates to both listeners when JFR is disabled")
+  void testOnUCPEventDelegatesToBothListenersWhenJfrDisabled() {
+    UCPEventListener jfr = mock(UCPEventListener.class);
+    UCPEventListener otel = mock(UCPEventListener.class);
+    UCPEventContext ctx = mock(UCPEventContext.class);
+    UCPObservabilityConfiguration.getInstance().setEnabledListeners("OTEL");
+
+    ObservabilityUCPEventListenerProvider provider =
+      new ObservabilityUCPEventListenerProvider(
+        providerReturning(jfr), providerReturning(otel));
+
+    provider.getListener(null).onUCPEvent(EventType.POOL_REFRESHED, ctx);
+
+    verify(jfr).onUCPEvent(EventType.POOL_REFRESHED, ctx);
+    verify(otel).onUCPEvent(EventType.POOL_REFRESHED, ctx);
+  }
+
+  @Test
+  @DisplayName("onUCPEvent() delegates to both listeners when UCP observability is disabled")
+  void testOnUCPEventDelegatesToBothListenersWhenDisabled() {
+    UCPEventListener jfr = mock(UCPEventListener.class);
+    UCPEventListener otel = mock(UCPEventListener.class);
+    UCPEventContext ctx = mock(UCPEventContext.class);
+    UCPObservabilityConfiguration.getInstance().setEnabled(false);
 
     ObservabilityUCPEventListenerProvider provider =
       new ObservabilityUCPEventListenerProvider(

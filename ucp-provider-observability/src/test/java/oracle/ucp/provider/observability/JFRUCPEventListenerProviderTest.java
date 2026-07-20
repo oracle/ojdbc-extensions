@@ -45,6 +45,7 @@ import oracle.ucp.provider.observability.jfr.core.JFRUCPEventListenerProvider;
 import oracle.ucp.provider.observability.jfr.core.UCPEventFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -76,6 +77,11 @@ class JFRUCPEventListenerProviderTest {
     when(mockContext.closedConnections()).thenReturn(1);
     when(mockContext.createdConnections()).thenReturn(9);
     when(mockContext.getAverageConnectionWaitTime()).thenReturn(10L);
+  }
+
+  @AfterEach
+  void resetConfiguration() {
+    UCPObservabilityConfiguration.resetForTest();
   }
 
   @Nested
@@ -224,6 +230,18 @@ class JFRUCPEventListenerProviderTest {
       UCPEventListener listener = provider.getListener(Collections.emptyMap());
 
       assertDoesNotThrow(() -> listener.onUCPEvent(null, null));
+    }
+
+    @Test
+    @DisplayName("onUCPEvent() skips context reads when JFR is disabled")
+    void testOnUCPEventSkipsContextReadsWhenJfrDisabled() {
+      JFRUCPEventListenerProvider provider = new JFRUCPEventListenerProvider();
+      UCPEventListener listener = provider.getListener(Collections.emptyMap());
+      UCPObservabilityConfiguration.getInstance().setEnabledListeners("OTEL");
+
+      listener.onUCPEvent(EventType.CONNECTION_BORROWED, mockContext);
+
+      verifyNoInteractions(mockContext);
     }
 
     @ParameterizedTest(name = "onUCPEvent() does not throw for EventType.{0}")
