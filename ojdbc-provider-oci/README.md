@@ -287,6 +287,10 @@ in Optional Parameters</td>
     so a subsequent authentication attempt will not fail with a <code>BindException</code>.<br>
     The value must be a positive integer. Decimal values are not allowed.<br>
     <b>Default:</b> <code>5</code> minutes
+    <br><br>
+    <code>OCI_USERNAME</code> <br>
+    <i>(Optional)</i> See <a href="#additional-optional-parameters">Additional Optional Parameters</a>.
+    Only affects <code>OCI_INTERACTIVE</code>; it has no effect for other authentication methods.
   </td>
 </tr>
 </tbody>
@@ -331,6 +335,29 @@ The following parameters can be used alongside any supported authentication meth
   <td>
     <i>If not provided, the login URL will default to <code>https://login.oci.oraclecloud.com</code>,
     which may not work for your target region.</i>
+  </td>
+</tr>
+<tr>
+  <td><code>OCI_USERNAME</code></td>
+  <td>
+    Distinguishes otherwise-identical <code>OCI_INTERACTIVE</code> login requests so that
+    one is not reused in place of another. This is <b>not a credential</b> and is never sent
+    to OCI &mdash; it is a caller-chosen label used only to determine whether two requests may
+    share a cached interactive login.<br>
+    <i>For example, if a main configuration and an embedded
+    <a href="#password-json-object">password</a> or
+    <a href="#wallet_location-json-object">wallet_location</a> object are each configured
+    with <code>OCI_INTERACTIVE</code> but are intended to authenticate as different accounts,
+    set a different <code>OCI_USERNAME</code> on each to force separate logins. If omitted on
+    both, they are treated as the same login and may share one browser-based sign-in.</i><br>
+    Has no effect for any authentication method other than <code>OCI_INTERACTIVE</code>.
+  </td>
+  <td>
+    Any string.
+  </td>
+  <td>
+    <i>If not provided, requests that otherwise match on authentication method and region
+    may share a single cached interactive login.</i>
   </td>
 </tr>
 </tbody>
@@ -834,6 +861,20 @@ common set of parameters.
       <td>A region identifier, such as "ap-sydney-1" or "us-langley-1"</td>
       <td><i>No default value. If not configured, then a region from a config file will be used when requesting resources,
         and interactive authentication will connect to <code>https://login.oci.oraclecloud.com</code></i></td>
+    </tr>
+    <tr>
+      <td>username</td>
+      <td>
+        Distinguishes otherwise-identical requests so that a cached resource or interactive
+        login is not reused across them. This is <b>not a credential</b> and is never sent to
+        OCI &mdash; it is a caller-chosen label.<br>
+        <i>For example, a multi-tenant application fetching the same secret OCID on behalf of
+        different end users can set a different <code>username</code> per request, so that one
+        user's cached secret or interactive login is never served in place of another's.</i>
+      </td>
+      <td>Any string.</td>
+      <td><i>No default value. If not configured, requests that otherwise match on every other
+        parameter may share a cached resource or interactive login.</i></td>
     </tr>
     <tr>
       <td>instancePrincipalTimeout</td>

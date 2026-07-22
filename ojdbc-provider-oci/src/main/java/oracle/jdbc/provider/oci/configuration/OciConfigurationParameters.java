@@ -103,6 +103,10 @@ public final class OciConfigurationParameters {
       .addParameter("OCI_INTERACTIVE_TIMEOUT", INTERACTIVE_TIMEOUT,
          DEFAULT_INTERACTIVE_TIMEOUT_MINUTES,
          s -> parsePositiveInt("OCI_INTERACTIVE_TIMEOUT", s))
+      // Not a credential: distinguishes otherwise-identical INTERACTIVE
+      // logins so that one is not reused in place of the other. See the
+      // javadoc of AuthenticationDetailsFactory.USERNAME.
+      .addParameter("OCI_USERNAME", USERNAME)
       .build();
 
   /**
