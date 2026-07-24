@@ -1,7 +1,47 @@
+/*
+ ** Copyright (c) 2026 Oracle and/or its affiliates.
+ **
+ ** The Universal Permissive License (UPL), Version 1.0
+ **
+ ** Subject to the condition set forth below, permission is hereby granted to any
+ ** person obtaining a copy of this software, associated documentation and/or data
+ ** (collectively the "Software"), free of charge and under any and all copyright
+ ** rights in the Software, and any and all patent rights owned or freely
+ ** licensable by each licensor hereunder covering either (i) the unmodified
+ ** Software as contributed to or provided by such licensor, or (ii) the Larger
+ ** Works (as defined below), to deal in both
+ **
+ ** (a) the Software, and
+ ** (b) any piece of software and/or hardware listed in the lrgrwrks.txt file if
+ ** one is included with the Software (each a "Larger Work" to which the Software
+ ** is contributed by such licensors),
+ **
+ ** without restriction, including without limitation the rights to copy, create
+ ** derivative works of, display, perform, and distribute the Software and make,
+ ** use, sell, offer for sale, import, export, have made, and have sold the
+ ** Software and the Larger Work(s), and to sublicense the foregoing rights on
+ ** either these or other terms.
+ **
+ ** This license is subject to the following condition:
+ ** The above copyright notice and either this complete permission notice or at
+ ** a minimum a reference to the UPL must be included in all copies or
+ ** substantial portions of the Software.
+ **
+ ** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ ** IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ ** FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ ** AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ ** LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ ** SOFTWARE.
+ */
+
 package oracle.jdbc.provider.oci.configuration;
 
 import com.oracle.bmc.databasetools.model.DatabaseToolsConnection;
 import com.oracle.bmc.databasetools.model.DatabaseToolsConnectionOracleDatabase;
+import com.oracle.bmc.databasetools.model.DatabaseToolsConnectionOracleDatabaseProxyClient;
+import com.oracle.bmc.databasetools.model.DatabaseToolsConnectionOracleDatabaseProxyClientUserName;
 import com.oracle.bmc.databasetools.model.DatabaseToolsKeyStore;
 import com.oracle.bmc.databasetools.model.DatabaseToolsKeyStoreContent;
 import com.oracle.bmc.databasetools.model.DatabaseToolsKeyStoreContentSecretId;
@@ -10,9 +50,6 @@ import com.oracle.bmc.databasetools.model.DatabaseToolsKeyStorePasswordSecretId;
 import com.oracle.bmc.databasetools.model.DatabaseToolsUserPassword;
 import com.oracle.bmc.databasetools.model.DatabaseToolsUserPasswordSecretId;
 import com.oracle.bmc.databasetools.model.LifecycleState;
-import com.oracle.bmc.databasetools.model.DatabaseToolsConnectionOracleDatabaseProxyClient;
-import com.oracle.bmc.databasetools.model.DatabaseToolsConnectionOracleDatabaseProxyClientUserName;
-import com.oracle.bmc.model.BmcException;
 import oracle.jdbc.OracleConnection;
 import oracle.jdbc.provider.oci.databasetools.DatabaseToolsConnectionFactory;
 import oracle.jdbc.provider.oci.vault.Secret;
@@ -20,10 +57,10 @@ import oracle.jdbc.provider.oci.vault.SecretFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.spi.OracleConfigurationCachableProvider;
 import oracle.jdbc.spi.OracleConfigurationProvider;
-import oracle.jdbc.util.OracleConfigurationCache;
-import oracle.jdbc.util.OracleConfigurationProviderNetworkError;
+import oracle.jdbc.util.configuration.OracleConfiguration;
+import oracle.jdbc.util.configuration.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfigurationProviderNetworkError;
 
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -37,60 +74,33 @@ import java.util.Properties;
 public class OciDatabaseToolsConnectionProvider
     implements OracleConfigurationCachableProvider {
 
-  private static final String CONFIG_TIME_TO_LIVE =
-    "config_time_to_live";
-  /**
-   * Timeout value of the background thread that requests the configuration from
-   * remote location during soft-expiration period. The task will be interrupted
-   * after 60 seconds.
-   */
-  private static final long MS_REFRESH_TIMEOUT = 60_000L;
-  /**
-   * Retry interval of the background thread that requests the configuration
-   * from remote location during soft-expiration period. The thread will retry
-   * in a frequency of 60 seconds if the remote location is unreachable.
-   */
-  private static final long MS_RETRY_INTERVAL = 60_000L;
-
-  private static final OracleConfigurationCache CACHE = OracleConfigurationCache
+  private static final OracleConfigurationCache<String, OracleConfiguration> CACHE = OracleConfigurationCache
     .create(100);
 
   private ParameterSet commonParameters;
 
   @Override
-  public Properties getConnectionProperties(String location)
-      throws SQLException {
-
-    Properties cachedProp = CACHE.get(location);
-    if (Objects.nonNull(cachedProp)) {
-      return cachedProp;
+  public Properties getConnectionProperties(String location) {
+    OracleConfiguration cachedConfig = CACHE.getValue(location);
+    if (Objects.nonNull(cachedConfig)) {
+      return cachedConfig.connectionProperties();
     }
 
-    // Retrieve and add the properties to the cache
-    Properties properties = getRemoteProperties(location);
+    OracleConfiguration config = getRemoteProperties(location);
 
-    if (properties.containsKey(CONFIG_TIME_TO_LIVE)) {
-      long configTimeToLive = Long.parseLong(
-        properties.getProperty(CONFIG_TIME_TO_LIVE));
-
-      // properties stored in the cache should not contain information of TTL
-      properties.remove(CONFIG_TIME_TO_LIVE);
-      CACHE.put(
+    CACHE.put(
         location,
-        properties,
-        configTimeToLive,
-        () -> this.refreshProperties(location),
-        MS_REFRESH_TIMEOUT,
-        MS_RETRY_INTERVAL);
-    } else {
-      CACHE.put(location,
-        properties,
-        () -> this.refreshProperties(location),
-        MS_REFRESH_TIMEOUT,
-        MS_RETRY_INTERVAL);
-    }
+        config,
+        () -> {
+          try {
+            return getRemoteProperties(location);
+          } catch (Exception e) {
+            throw new OracleConfigurationProviderNetworkError(e);
+          }
+        }
+    );
 
-    return properties;
+    return config.connectionProperties();
   }
 
   @Override
@@ -103,11 +113,13 @@ public class OciDatabaseToolsConnectionProvider
    * @return cache of this provider which is used to store configuration
    */
   @Override
-  public OracleConfigurationCache getCache() {
+  public OracleConfigurationCache<String, OracleConfiguration> getCache() {
     return CACHE;
   }
 
-  private Properties getRemoteProperties(String location) {
+  private OracleConfiguration getRemoteProperties(String location) {
+    OracleConfiguration.Builder builder = new OracleConfiguration.Builder();
+
     // Split connection ocid from options
     Map<String, String> options = null;
     String[] params = location.split("\\?");
@@ -173,6 +185,9 @@ public class OciDatabaseToolsConnectionProvider
 
         DatabaseToolsKeyStorePassword keyStorePassword =
           keyStore.getKeyStorePassword();
+        String keyStorePasswordValue = keyStorePassword == null
+          ? null
+          : String.valueOf(getSecret(keyStorePassword).toCharArray());
 
         switch (keyStore.getKeyStoreType()) {
         case JavaKeyStore:
@@ -206,6 +221,14 @@ public class OciDatabaseToolsConnectionProvider
             OracleConnection.CONNECTION_PROPERTY_WALLET_LOCATION,
             "data:;base64," + base64KeyStoreContent);
           break;
+        case Pem:
+          walletProps.put(
+            OracleConnection.CONNECTION_PROPERTY_WALLET_LOCATION,
+            "data:;base64," + base64KeyStoreContent);
+          if (keyStorePasswordValue != null) {
+            walletProps.put("oracle.net.wallet_password", keyStorePasswordValue);
+          }
+          break;
         case UnknownEnumValue:
         default:
           throw new IllegalStateException(
@@ -238,7 +261,9 @@ public class OciDatabaseToolsConnectionProvider
       properties.put(OracleConnection.CONNECTION_PROPERTY_PROXY_CLIENT_NAME, proxyClientUserName.getUserName());
     }
 
-    return properties;
+    return builder
+        .connectionProperties(properties)
+        .build();
   }
 
   /**
@@ -312,15 +337,6 @@ public class OciDatabaseToolsConnectionProvider
     return SecretFactory.getInstance()
       .request(walletParameters)
       .getContent();
-  }
-
-  private Properties refreshProperties(String location)
-    throws OracleConfigurationProviderNetworkError {
-    try {
-      return getRemoteProperties(location);
-    } catch (BmcException bmcException) {
-      throw new OracleConfigurationProviderNetworkError(bmcException);
-    }
   }
 }
 

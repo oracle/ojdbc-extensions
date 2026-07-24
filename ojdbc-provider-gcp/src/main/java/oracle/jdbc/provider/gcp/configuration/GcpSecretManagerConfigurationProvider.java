@@ -46,17 +46,19 @@ import java.util.Map;
 import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.gcp.secrets.GcpSecretManagerFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.util.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfiguration;
 
 /**
- * A provider for JSON payload which contains configuration from GCP Secret
- * Manager.
- * See {@link #getInputStream(String)} for the spec of the JSON payload.
+ * A provider for configuration payloads retrieved from GCP Secret Manager.
+ * Payloads are parsed by {@link OracleConfigurationParsableProvider}; JSON is
+ * used by default, and other parser types such as Pkl may be selected with the
+ * {@code parser} option.
  **/
 public class GcpSecretManagerConfigurationProvider
     extends OracleConfigurationParsableProvider {
 
-  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
+  private static final OracleConfigurationCache<String, OracleConfiguration> CACHE = OracleConfigurationCache.create(100);
 
   @Override
   public String getType() {
@@ -66,12 +68,12 @@ public class GcpSecretManagerConfigurationProvider
   /**
    * {@inheritDoc}
    * <p>
-   * Returns the JSON payload stored in GCP Secret Manager secret.
+   * Returns the configuration payload stored in GCP Secret Manager secret.
    * </p>
    * 
    * @param location resource name of the secret version (to obtain the resource
    *                 name, click on "Actions" and "Copy resource name")
-   * @return JSON payload
+   * @return configuration payload
    */
   @Override
   public InputStream getInputStream(String location) throws SQLException {
@@ -87,12 +89,7 @@ public class GcpSecretManagerConfigurationProvider
    * @return cache of this provider which is used to store configuration
    */
   @Override
-  public OracleConfigurationCache getCache() {
+  public OracleConfigurationCache<String, OracleConfiguration> getCache() {
     return CACHE;
-  }
-
-  @Override
-  public String getParserType(String arg0) {
-    return "json";
   }
 }

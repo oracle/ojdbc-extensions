@@ -41,25 +41,28 @@ package oracle.jdbc.provider.oci.configuration;
 import oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider;
 import oracle.jdbc.provider.oci.objectstorage.ObjectFactory;
 import oracle.jdbc.provider.parameter.ParameterSet;
-import oracle.jdbc.util.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfiguration;
 
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A provider for JSON payload which contains configuration from OCI Object
- * Storage. See {@link #getInputStream(String)} for the spec of the JSON payload.
+ * A provider for configuration payloads stored in OCI Object Storage. Payloads
+ * are parsed by {@link OracleConfigurationParsableProvider}; JSON is used by
+ * default, and other parser types such as Pkl may be selected with the
+ * {@code parser} option.
  */
 public class OciObjectStorageProvider
   extends OracleConfigurationParsableProvider {
 
-  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
+  private static final OracleConfigurationCache<String, OracleConfiguration> CACHE = OracleConfigurationCache.create(100);
 
   /**
    * {@inheritDoc}
    * <p>
-   * Returns the JSON payload stored in OCI Object Storage.
+   * Returns the configuration payload stored in OCI Object Storage.
    * </p><p>
    * The {@code objectUrl} is a URL which can be acquired on the OCI Web Console,
    * as describe in <a href="https://docs.oracle.com/en/cloud/paas/autonomous-database/dedicated/adbdj/#articletitle">
@@ -68,9 +71,9 @@ public class OciObjectStorageProvider
    *   https://objectstorage.region.oraclecloud.com/n/object-storage-namespace/b/bucket/o/filename
    * }</pre>
    * <p>The https:// prefix is optional.</p>
-   * @param objectUrl the URL used by this provider to retrieve JSON payload
+   * @param objectUrl the URL used by this provider to retrieve the payload
    *                 from OCI
-   * @return JSON payload
+   * @return configuration payload
    */
   @Override
   public InputStream getInputStream(String objectUrl) {
@@ -80,6 +83,8 @@ public class OciObjectStorageProvider
     }
     // Add objectUrl to the "options" Map, so it can be parsed.
     Map<String, String> optionsWithUrl = new HashMap<>(options);
+    // "parser" is consumed by OracleConfigurationParsableProvider, not OCI.
+    optionsWithUrl.remove("parser");
     optionsWithUrl.put("object_url", objectUrl);
 
     ParameterSet parameters =
@@ -103,17 +108,12 @@ public class OciObjectStorageProvider
     return "ociobject";
   }
 
-  @Override
-  public String getParserType(String arg0) {
-    return "json";
-  }
-
   /**
    * {@inheritDoc}
    * @return cache of this provider which is used to store configuration
    */
   @Override
-  public OracleConfigurationCache getCache() {
+  public OracleConfigurationCache<String, OracleConfiguration> getCache() {
     return CACHE;
   }
 }

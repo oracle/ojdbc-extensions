@@ -39,17 +39,21 @@ package oracle.jdbc.provider.observability;
 
 import java.lang.management.ManagementFactory;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.management.InstanceAlreadyExistsException;
+import javax.management.InstanceNotFoundException;
 import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
+import javax.management.RuntimeOperationsException;
 
 import oracle.jdbc.TraceEventListener;
 import oracle.jdbc.provider.observability.ObservabilityConfiguration.ObservabilityConfigurationType;
@@ -101,6 +105,8 @@ public class ObservabilityTraceEventListener implements TraceEventListener {
    */
   private static final String MBEAN_OBJECT_NAME = "com.oracle.jdbc.provider.observability:type=ObservabilityConfiguration,uniqueIdentifier=%s";
   private static final String MBEAN_OBJECT_NAME_OTEL = "com.oracle.jdbc.extension.opentelemetry:type=OpenTelemetryTraceEventListener,uniqueIdentifier=%s";
+  private static final int MAX_CONFIGURATION_COUNT = 100;
+  private static final LinkedList<String> LRU_CONFIGURATION = new LinkedList<String>();
 
   /**
    * Default unique identifier, if parameter not set.
@@ -127,7 +133,12 @@ public class ObservabilityTraceEventListener implements TraceEventListener {
    * Static map linking the name of the listener to its instance.
    */
   private static final Map<String, ObservabilityTraceEventListener> INSTANCES 
-      = new ConcurrentHashMap<>();
+      = new HashMap<>();
+  /**
+   * Lock that assures that the INSTANCES and LRU_CONFIGURATIONS are only 
+   * accessed by one thread.
+   */
+  private static final ReentrantLock INSTANCES_LOCK = new ReentrantLock();
 
   private ObjectName mBeanObjectName;
 
@@ -256,7 +267,12 @@ public class ObservabilityTraceEventListener implements TraceEventListener {
    * found.
    */
   public static ObservabilityTraceEventListener getTraceEventListener(String uniqueIdentifier) {
-    return INSTANCES.get(uniqueIdentifier);
+    INSTANCES_LOCK.lock();
+    try {
+      return INSTANCES.get(uniqueIdentifier);
+    } finally {
+      INSTANCES_LOCK.unlock();
+    }
   }
 
   /**
@@ -269,7 +285,51 @@ public class ObservabilityTraceEventListener implements TraceEventListener {
    */
   static ObservabilityTraceEventListener getOrCreateInstance(String uniqueIdentifier, 
       ObservabilityConfigurationType configurationType) {
-    return INSTANCES.computeIfAbsent(uniqueIdentifier, n -> new ObservabilityTraceEventListener(n, configurationType));
+    INSTANCES_LOCK.lock();
+    try {
+      ObservabilityTraceEventListener instance = INSTANCES.computeIfAbsent(uniqueIdentifier, n -> {
+        return new ObservabilityTraceEventListener(n, configurationType);
+      });
+      registerConfigurationUsage(uniqueIdentifier, configurationType);
+      return instance;
+    } finally {
+      INSTANCES_LOCK.unlock();
+    }
+  }
+
+  private static void registerConfigurationUsage(String uniqueIdentifier, 
+      ObservabilityConfigurationType configurationType) {
+    INSTANCES_LOCK.lock();
+    try {
+      LRU_CONFIGURATION.remove(uniqueIdentifier);
+      LRU_CONFIGURATION.addFirst(uniqueIdentifier);
+      if (LRU_CONFIGURATION.size() > MAX_CONFIGURATION_COUNT) {
+        String leastRecentlyUsed = LRU_CONFIGURATION.removeLast();
+        // unregister MBean try both configuraiton types
+        final String mBeanNameOtel = String.format(MBEAN_OBJECT_NAME_OTEL, uniqueIdentifier);
+        final String mBeanNameDefault = String.format(MBEAN_OBJECT_NAME, uniqueIdentifier);
+        try {
+          ObjectName mBeanObjectName = new ObjectName(mBeanNameDefault);
+          if (server.isRegistered(mBeanObjectName)) {
+            server.unregisterMBean(mBeanObjectName);
+            logger.log(Level.FINEST, "MBean and tracers unregistered");
+          }
+          mBeanObjectName = new ObjectName(mBeanNameOtel);
+          if (server.isRegistered(mBeanObjectName)) {
+            server.unregisterMBean(mBeanObjectName);
+            logger.log(Level.FINEST, "MBean and tracers unregistered");
+          }
+
+        } catch (RuntimeOperationsException | MBeanRegistrationException | 
+            MalformedObjectNameException | InstanceNotFoundException e) {
+          logger.log(Level.WARNING, "Could not unregister MBean", e);
+        }
+        // remove configuration
+        INSTANCES.remove(leastRecentlyUsed);
+      }
+    } finally {
+      INSTANCES_LOCK.unlock();
+    }
   }
 
 }

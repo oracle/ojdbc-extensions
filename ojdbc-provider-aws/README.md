@@ -16,6 +16,8 @@ Provider</a></dt>
 <dd>Provides connection properties managed by the Systems Manager Parameter Store</dd>
 <dt><a href="#aws-appconfig-freeform-config-provider">AWS AppConfig Freeform Configuration Provider</a></dt>
 <dd>Provides connection properties managed by the AWS AppConfig Freeform Configuration service</dd>
+<dt><a href="#configuration-payload-parsers-json-pkl-and-other-parsers">Configuration Payload Parsers (JSON, Pkl, and Other Parsers)</a></dt>
+<dd>Parser selection for AWS centralized configuration payloads</dd>
 <dt><a href="#common-parameters-for-centralized-config-providers">Common Parameters for Centralized Config Providers</a></dt>
 <dd>Common parameters supported by the config providers</dd>
 <dt><a href="#caching-configuration">Caching configuration</a></dt>
@@ -59,13 +61,13 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-aws</artifactId>
-  <version>1.0.6</version>
+  <version>1.1.0</version>
 </dependency>
 ```
 
 ## AWS S3 Configuration Provider
 The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-awss3:` to be able to identify that the configuration parameters should be loaded using AWS S3.
-Users only need to indicate the S3 URI of the object that contains the JSON payload.
+Users only need to indicate the S3 URI of the object that contains the configuration payload.
 
 A URL with either of the following formats is valid:
 <pre>
@@ -78,7 +80,7 @@ jdbc:oracle:thin:@config-aws{S3-URI}
 
 The {S3-URI} can be obtained from the Amazon S3 console and follows this naming convention: s3://bucket-name/file-name.
 
-### JSON Payload format
+### Configuration Payload Format
 
 There are 4 fixed values that are looked at the root level.
 
@@ -195,23 +197,23 @@ This property should be included inside the jdbc object of the JSON payload:
 <i>*Note: When storing a wallet in AWS Secrets Manager, store the raw Base64-encoded wallet bytes directly. The provider will automatically detect and handle the encoding correctly.</i>
 
 ## AWS Secrets Manager Config Provider
-Apart from AWS S3, users can also store JSON Payload in the content of AWS Secrets Manager secret. Users need to indicate the secret name:
+Apart from AWS S3, users can also store a configuration payload in the content of AWS Secrets Manager secret. Users need to indicate the secret name:
 
 <pre>
 jdbc:oracle:thin:@config-awssecretsmanager://{secret-name}
 </pre>
 
-The JSON Payload retrieved by AWS Secrets Manager Provider follows the same format in [AWS S3 Configuration Provider](#json-payload-format).
+The payload retrieved by AWS Secrets Manager Provider follows the same format in [AWS S3 Configuration Provider](#configuration-payload-format).
 
 ## AWS Parameter Store Config Provider
-Apart from AWS S3 and Secrets Manager, users can also store JSON payload in AWS Systems Manager Parameter Store. 
+Apart from AWS S3 and Secrets Manager, users can also store a configuration payload in AWS Systems Manager Parameter Store.
 To use it, specify the name of the parameter:
 
 <pre>
 jdbc:oracle:thin:@config-awsparameterstore://{parameter-name}
 </pre>
 
-The JSON payload stored in the parameter should follow the same format as described in [AWS S3 Configuration Provider](#json-payload-format).
+The payload stored in the parameter should follow the same format as described in [AWS S3 Configuration Provider](#configuration-payload-format).
 
 ## AWS AppConfig Freeform Config Provider
 The Oracle DataSource uses the prefix `jdbc:oracle:thin:@config-awsappconfig` to identify that the freeform
@@ -237,14 +239,30 @@ jdbc:oracle:thin:@config-awsappconfig://app-name?appconfig_environment=your-envi
 Alternatively, you can set the environment and profile via system properties (`aws.appconfig.environment, aws.appconfig.profile`) or
 environment variables (`AWS_APP_CONFIG_ENVIRONMENT, AWS_APP_CONFIG_PROFILE`).
 
+## Configuration Payload Parsers (JSON, Pkl, and Other Parsers)
+AWS S3, AWS Secrets Manager, AWS Parameter Store, and AWS AppConfig Freeform
+Config Providers extend `OracleConfigurationParsableProvider`, which parses
+payloads as JSON by default and honors the `parser` option for other parser
+types. To use a Pkl payload, or another parser type, add the `parser` option to
+the JDBC URL and include the corresponding parser provider on the runtime
+classpath. For Pkl, include `ojdbc-provider-pkl`.
+
+<pre>
+jdbc:oracle:thin:@config-awss3://{S3-URI}?parser=pkl
+jdbc:oracle:thin:@config-awssecretsmanager://{secret-name}?parser=pkl
+jdbc:oracle:thin:@config-awsparameterstore://{parameter-name}?parser=pkl
+jdbc:oracle:thin:@config-awsappconfig://{application-identifier}?appconfig_environment={environment-id-or-name}&appconfig_profile={profile-id-or-name}&parser=pkl
+</pre>
+
 ## Common Parameters for Centralized Config Providers
-AWS S3 Configuration Provider and AWS Secrets Manager Configuration Provider
-share the same sets of parameters for authentication configuration.
+AWS S3 Configuration Provider, AWS Secrets Manager Configuration Provider, AWS
+Parameter Store Configuration Provider, and AWS AppConfig Freeform Configuration
+Provider share the same set of parameters for authentication configuration.
 
 ### Configuring Authentication
 
 The Centralized Config Providers in this module use the
-[Default credentials provider chain](https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/credentials-chain.html) to provide authorization and authentication to S3 and Secrets Manager services.
+[Default credentials provider chain](https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/credentials-chain.html) to provide authorization and authentication to AWS services.
 The user can provide an optional parameter `AUTHENTICATION` (case-ignored) which is mapped with the following Credential Class.
 
 <table>

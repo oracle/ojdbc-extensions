@@ -43,7 +43,8 @@ import oracle.jdbc.provider.aws.parameterstore.ParameterStoreFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
-import oracle.jdbc.util.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfiguration;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -54,14 +55,16 @@ import static oracle.jdbc.provider.aws.configuration.AwsConfigurationParameters.
 import static oracle.jdbc.provider.aws.configuration.AwsConfigurationParameters.REGION;
 
 /**
- * A provider for JSON payload which contains configuration from AWS Systems
- * Manager Parameter Store.
- * See {@link #getInputStream(String)} for the spec of the JSON payload.
+ * A provider for configuration payloads retrieved from AWS Systems Manager
+ * Parameter Store. Payloads are parsed by
+ * {@link OracleConfigurationParsableProvider}; JSON is used by default, and
+ * other parser types such as Pkl may be selected with the {@code parser}
+ * option.
  **/
 public class AwsParameterStoreConfigurationProvider
   extends OracleConfigurationParsableProvider {
 
-  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
+  private static final OracleConfigurationCache<String, OracleConfiguration> CACHE = OracleConfigurationCache.create(100);
 
   static final ParameterSetParser PARAMETER_SET_PARSER =
     AwsConfigurationParameters.configureBuilder(
@@ -86,6 +89,8 @@ public class AwsParameterStoreConfigurationProvider
     // The JSON “value” field holds the Parameter Store name
     final String VALUE = "value";
     Map<String, String> opts = new HashMap<>(options);
+    // "parser" is consumed by OracleConfigurationParsableProvider, not AWS.
+    opts.remove("parser");
     opts.put(VALUE, parameterName);
 
     ParameterSet params = PARAMETER_SET_PARSER.parseNamedValues(opts);
@@ -106,16 +111,7 @@ public class AwsParameterStoreConfigurationProvider
    * @return cache of this provider which is used to store configuration
    */
   @Override
-  public OracleConfigurationCache getCache() {
+  public OracleConfigurationCache<String, OracleConfiguration> getCache() {
     return CACHE;
-  }
-
-  /**
-   * {@inheritDoc}
-   * @return the parser type
-   */
-  @Override
-  public String getParserType(String location) {
-    return "json";
   }
 }

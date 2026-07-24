@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2023 Oracle and/or its affiliates.
+ ** Copyright (c) 2026 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -40,7 +40,7 @@ package oracle.jdbc.provider.azure.configuration;
 
 import com.azure.core.credential.TokenCredential;
 import com.azure.core.exception.AzureException;
-import com.azure.core.util.UrlBuilder;
+import com.azure.core.util.logging.ClientLogger;
 import com.azure.data.appconfiguration.ConfigurationClient;
 import com.azure.data.appconfiguration.ConfigurationClientBuilder;
 import com.azure.data.appconfiguration.models.ConfigurationSetting;
@@ -48,11 +48,15 @@ import com.azure.data.appconfiguration.models.SettingSelector;
 import com.azure.security.keyvault.secrets.SecretClient;
 import com.azure.security.keyvault.secrets.SecretClientBuilder;
 import oracle.jdbc.OracleConnection;
-import oracle.jdbc.spi.OracleConfigurationCachableProvider;
-import oracle.jdbc.util.OracleConfigurationCache;
-import oracle.jdbc.util.OracleConfigurationProviderNetworkError;
-import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.driver.OracleDriver;
+import oracle.jdbc.driver.configuration.UCPConfigurationHelper;
 import oracle.jdbc.provider.azure.authentication.TokenCredentialFactory;
+import oracle.jdbc.provider.azure.keyvault.AzureKeyVaultUriValidator;
+import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.spi.OracleConfigurationCachableProvider;
+import oracle.jdbc.util.configuration.OracleConfiguration;
+import oracle.jdbc.util.configuration.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfigurationProviderNetworkError;
 import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonObject;
 
@@ -60,8 +64,12 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.Properties;
+
+import static oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider.CONFIG_TTL_GRACE_PERIOD_JSON_OBJECT_NAME;
+import static oracle.jdbc.driver.configuration.OracleConfigurationParsableProvider.CONFIG_TTL_JSON_OBJECT_NAME;
 
 /**
  * <p>
@@ -77,23 +85,11 @@ public class AzureAppConfigurationProvider
   private static final String WALLET_LOCATION_PROPERTIES_NAME =
     "wallet_location";
   private static final String JDBC_PROPERTIES_PREFIX = "jdbc/";
-  private static final String CONFIG_TTL_JSON_OBJECT_NAME =
-    "config_time_to_live";
+  private static final String UCP_PROPERTIES_PREFIX = "jdbc/ucp/";
+  private static final OracleConfigurationCache<String, OracleConfiguration> CACHE = OracleConfigurationCache.create(100);
 
-  /**
-   * Timeout value of the background thread that requests the configuration from
-   * remote location during soft-expiration period. The task will be interrupted
-   * after 60 seconds.
-    */
-  private static final long MS_REFRESH_TIMEOUT = 60_000L;
-  /**
-   * Retry interval of the background thread that requests the configuration
-   * from remote location during soft-expiration period. The thread will retry
-   * in a frequency of 60 seconds if the remote location is unreachable.
-    */
-  private static final long MS_RETRY_INTERVAL = 60_000L;
-  private static final OracleConfigurationCache CACHE = OracleConfigurationCache
-    .create(100);
+  private ClientLogger logger = new ClientLogger(this.getClass());
+
 
   /**
    * {@inheritDoc}
@@ -114,39 +110,40 @@ public class AzureAppConfigurationProvider
   @Override
   public Properties getConnectionProperties(String location) throws SQLException {
     // If the location was already consulted, re-use the properties
-    Properties cachedProp = CACHE.get(location);
-    if (Objects.nonNull(cachedProp)) {
-      return cachedProp;
+    OracleConfiguration cachedConfig = CACHE.getValue(location);
+    if (Objects.nonNull(cachedConfig)) {
+      return cachedConfig.connectionProperties();
     }
 
     try {
-      Properties properties = getRemoteProperties(location);
-      if (properties.containsKey(CONFIG_TTL_JSON_OBJECT_NAME)) {
-        // Remove the TTL information from the properties, if presents
-        long configTimeToLive = Long.parseLong(
-                properties.getProperty(CONFIG_TTL_JSON_OBJECT_NAME));
+      OracleConfiguration config = getRemoteProperties(location);
 
-        properties.remove(CONFIG_TTL_JSON_OBJECT_NAME);
+      CACHE.put(
+          location,
+          config,
+          () -> {
+            Properties futureUcpProps;
+            OracleConfiguration futureConfig;
+            try {
+              futureConfig = getRemoteProperties(location);
+              futureUcpProps = futureConfig.ucpProperties();
 
-        CACHE.put(
-                location,
-                properties,
-                configTimeToLive,
-                () -> this.refreshProperties(location),
-                MS_REFRESH_TIMEOUT,
-                MS_RETRY_INTERVAL);
-      } else {
-        CACHE.put(location,
-                properties,
-                () -> this.refreshProperties(location),
-                MS_REFRESH_TIMEOUT,
-                MS_RETRY_INTERVAL);
-      }
+              if (OracleDriver.IS_UCP_JAR_LOADED) {
+                UCPConfigurationHelper.configureUCP(futureUcpProps);
+              } else {
+                logger.warning("UCP jar not found on the classpath; skipping UCP property configuration.");
+              }
+            } catch (Exception e) {
+              throw new OracleConfigurationProviderNetworkError(e);
+            }
 
-      return properties;
-    } catch (UncheckedIOException | AzureException e) {
-      throw new SQLException("Unable to load Azure App Configuration at " + location, e
+            return futureConfig;
+          }
       );
+
+      return config.connectionProperties();
+    } catch (UncheckedIOException | AzureException e) {
+      throw new SQLException("Unable to load Azure App Configuration at " + location, e);
     }
   }
 
@@ -167,11 +164,16 @@ public class AzureAppConfigurationProvider
    * @return cache of this provider which is used to store configuration
    */
   @Override
-  public OracleConfigurationCache getCache() {
+  public OracleConfigurationCache<String, OracleConfiguration> getCache() {
     return CACHE;
   }
 
-  private Properties getRemoteProperties(String location) {
+  private static final String UNLABELED_FILTER = "%00";
+  private OracleConfiguration getRemoteProperties(String location) {
+    OracleConfiguration.Builder builder = new OracleConfiguration.Builder();
+    Properties jdbcProperties = new Properties();
+    Properties ucpProperties = new Properties();
+
     AzureAppConfigurationURLParser appConfig =
       new AzureAppConfigurationURLParser(location);
     ParameterSet parameters = appConfig.getParameters();
@@ -189,42 +191,29 @@ public class AzureAppConfigurationProvider
       selector.setKeyFilter(prefix + "*");
     }
 
-    // Only allow a single label.
-    if (parameters.contains(AzureAppConfigurationURLParser.LABEL)) {
-      String label =
-        parameters.getOptional(AzureAppConfigurationURLParser.LABEL);
-
-      if ("all".equalsIgnoreCase(label) || "*".equals(label)) {
-        throw new IllegalArgumentException(
-          "Label 'all' or '*' is not allowed");
-      }
-
-      if (label.contains(",") || label.contains("*")) {
-        throw new IllegalArgumentException(
-          "Multiple labels and wildcards are not supported");
-      }
-
-      selector.setLabelFilter(label);
+    // Only one label is allowed. By default, the label is an "%00", which matches key-values with no label.
+    String label = parameters.getOptional(AzureAppConfigurationURLParser.LABEL);
+    if (label == null || label.isEmpty()) {
+      // Azure App Configuration: "%00" matches only unlabeled key-values.
+      label = UNLABELED_FILTER;
+    } else if ("all".equalsIgnoreCase(label) || "*".equals(label)) {
+      throw new IllegalArgumentException(
+          "Label 'all' or '*' is not supported.");
+    } else if (label.contains(",") || label.contains("*")) {
+      throw new IllegalArgumentException(
+          "Multiple labels and wildcard patterns are not supported.");
     }
+
+    selector.setLabelFilter(label);
 
     ConfigurationClient configurationClient = new ConfigurationClientBuilder()
       .credential(credential)
       .endpoint("https://" + appConfig.getName() + ".azconfig.io")
       .buildClient();
 
-    Properties properties = new Properties();
+
     for (ConfigurationSetting config : configurationClient
       .listConfigurationSettings(selector)) {
-
-      String key = config.getKey();
-      // Remove prefix from key
-      if (prefix != null && key.startsWith(prefix))
-        key = key.substring(prefix.length());
-
-      // Remove 'jdbc/' to use reflection from OracleConnection keys
-      if (key.startsWith(JDBC_PROPERTIES_PREFIX)) {
-        key = key.substring(JDBC_PROPERTIES_PREFIX.length());
-      }
 
       // The value is either a String or a key reference
       String value =
@@ -232,42 +221,68 @@ public class AzureAppConfigurationProvider
               ? config.getValue()
               : getSecretValue(credential, config.getValue());
 
-      // User common connect_descriptor as the URL
-      if (key.startsWith(CONNECT_DESCRIPTOR_PROPERTIES_NAME)) {
+      String key = config.getKey();
+      // Remove prefix from key
+      if (prefix != null && key.startsWith(prefix))
+        key = key.substring(prefix.length());
+
+      if (key.equals(CONNECT_DESCRIPTOR_PROPERTIES_NAME)) {
+        // User common connect_descriptor as the URL
         key = "URL";
         value = "jdbc:oracle:thin:@" + value;
-      }
 
-      // wallet_location
-      if (key.startsWith(WALLET_LOCATION_PROPERTIES_NAME)) {
+        jdbcProperties.put(key, value);
+      } else if (key.equals(WALLET_LOCATION_PROPERTIES_NAME)) {
+        // wallet_location
         key = OracleConnection.CONNECTION_PROPERTY_WALLET_LOCATION;
         value = "data:;base64," + value;
-      }
 
-      properties.put(key, value);
+        jdbcProperties.put(key, value);
+      } else if (key.startsWith(JDBC_PROPERTIES_PREFIX)) {
+        // Remove 'jdbc/' to use reflection from OracleConnection keys
+        key = key.substring(JDBC_PROPERTIES_PREFIX.length());
+
+        jdbcProperties.put(key, value);
+      } else if (key.startsWith(UCP_PROPERTIES_PREFIX)) {
+        // Remove 'jdbc/ucp/' to use reflection from OracleConnection keys
+        key = key.substring(UCP_PROPERTIES_PREFIX.length());
+
+        ucpProperties.put(key, value);
+      } else if (key.equals(CONFIG_TTL_JSON_OBJECT_NAME)) {
+        if (value != null && !value.isBlank())
+          builder.ttl(Duration.parse(value));
+      } else if (key.equals(CONFIG_TTL_GRACE_PERIOD_JSON_OBJECT_NAME)) {
+        if (value != null && !value.isBlank())
+          builder.ttlGracePeriod(Duration.parse(value));
+      } else {
+        jdbcProperties.put(key, value);
+      }
     }
 
     // Check mandatory attributes
-    if (!properties.containsKey("URL")) {
+    if (!jdbcProperties.containsKey("URL")) {
       throw new IllegalArgumentException("Missing mandatory attributes: " +
         CONNECT_DESCRIPTOR_PROPERTIES_NAME);
     }
 
-    return properties;
+    return builder
+        .connectionProperties(jdbcProperties)
+        .ucpProperties(ucpProperties)
+        .build();
   }
 
   /**
    * Returns the value of a Secret from Azure Key Vault.
    * @param credential the credential to use for authenticating the Azure
    *                   request
-   * @param secretReference reference to the Secret which has a format of {@code
+   * @param secretReferenceJson reference to the Secret which has a format of {@code
    *        {"uri":"https://mykeyvault.vault.azure.net/secrets/mySecret"}}
    * @return the value of the Secret
    */
   private String getSecretValue(TokenCredential credential,
-                                String secretReference) {
+                                String secretReferenceJson) {
     InputStream secretRefStream = new ByteArrayInputStream(
-      secretReference.getBytes());
+      secretReferenceJson.getBytes());
     OracleJsonObject json = JSON_FACTORY
         .createJsonTextValue(secretRefStream)
         .asJsonObject();
@@ -276,29 +291,18 @@ public class AzureAppConfigurationProvider
         .asJsonString()
         .getString();
 
-    UrlBuilder urlBuilder = UrlBuilder.parse(vaultUrlAndName);
-
-    String vaultUrl = "https://" + urlBuilder
-        .getHost();
-    String name = urlBuilder
-        .getPath()
-        .replace("/secrets", "");
+    AzureKeyVaultUriValidator.SecretReference keyVaultSecretReference =
+      AzureKeyVaultUriValidator.parseSecretUri(vaultUrlAndName);
 
     SecretClient secretClient = new SecretClientBuilder()
-        .vaultUrl(vaultUrl)
+        .vaultUrl(keyVaultSecretReference.getVaultUrl())
         .credential(credential)
         .buildClient();
-    return secretClient.getSecret(name).getValue();
-  }
-
-  private Properties refreshProperties(String location)
-    throws OracleConfigurationProviderNetworkError {
-      try {
-        return getRemoteProperties(location);
-      } catch (AzureException e) {
-        throw new OracleConfigurationProviderNetworkError(e);
-      }
+    return keyVaultSecretReference.getSecretVersion() == null
+      ? secretClient.getSecret(keyVaultSecretReference.getSecretName()).getValue()
+      : secretClient.getSecret(
+        keyVaultSecretReference.getSecretName(),
+        keyVaultSecretReference.getSecretVersion())
+        .getValue();
   }
 }
-
-

@@ -1,3 +1,41 @@
+/*
+ ** Copyright (c) 2026 Oracle and/or its affiliates.
+ **
+ ** The Universal Permissive License (UPL), Version 1.0
+ **
+ ** Subject to the condition set forth below, permission is hereby granted to any
+ ** person obtaining a copy of this software, associated documentation and/or data
+ ** (collectively the "Software"), free of charge and under any and all copyright
+ ** rights in the Software, and any and all patent rights owned or freely
+ ** licensable by each licensor hereunder covering either (i) the unmodified
+ ** Software as contributed to or provided by such licensor, or (ii) the Larger
+ ** Works (as defined below), to deal in both
+ **
+ ** (a) the Software, and
+ ** (b) any piece of software and/or hardware listed in the lrgrwrks.txt file if
+ ** one is included with the Software (each a "Larger Work" to which the Software
+ ** is contributed by such licensors),
+ **
+ ** without restriction, including without limitation the rights to copy, create
+ ** derivative works of, display, perform, and distribute the Software and make,
+ ** use, sell, offer for sale, import, export, have made, and have sold the
+ ** Software and the Larger Work(s), and to sublicense the foregoing rights on
+ ** either these or other terms.
+ **
+ ** This license is subject to the following condition:
+ ** The above copyright notice and either this complete permission notice or at
+ ** a minimum a reference to the UPL must be included in all copies or
+ ** substantial portions of the Software.
+ **
+ ** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ ** IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ ** FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ ** AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ ** LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ ** SOFTWARE.
+ */
+
 package oracle.jdbc.provider.oci.configuration;
 
 import com.oracle.bmc.ConfigFileReader;
@@ -190,7 +228,7 @@ public class OciDatabaseToolsConnectionProviderTest {
   @Test
   public void testCachePurged() throws SQLException {
     String OCI_DISPLAY_NAME = "display_name_for_connection";
-    String OCI_USERNAME = "admin";
+    String OCI_USERNAME = "test";
     String OCI_PASSWORD_OCID = TestProperties.getOrAbort(
       OciTestProperty.OCI_PASSWORD_OCID);
     String OCI_DATABASE_OCID = TestProperties.getOrAbort(
@@ -213,46 +251,48 @@ public class OciDatabaseToolsConnectionProviderTest {
     String ocid = createResponse
       .getDatabaseToolsConnection().getId();
 
-    // The url used to connect to Database
-    String url = "jdbc:oracle:thin:@config-ocidbtools://" + ocid;
+    try {
+      // The url used to connect to Database
+      String url = "jdbc:oracle:thin:@config-ocidbtools://" + ocid;
 
-    // Set value of 'user' wrong
-    UpdateDatabaseToolsConnectionDetails updateDatabaseToolsConnectionDetails =
-      UpdateDatabaseToolsConnectionOracleDatabaseDetails.builder()
-        .userName(OCI_USERNAME + "wrong")
-        .build();
+      // Set value of 'user' wrong
+      UpdateDatabaseToolsConnectionDetails updateDatabaseToolsConnectionDetails =
+          UpdateDatabaseToolsConnectionOracleDatabaseDetails.builder()
+              .userName(OCI_USERNAME + "wrong")
+              .build();
 
-    UpdateDatabaseToolsConnectionResponse updateResponse =
-      sendUpdateConnRequest(ocid, updateDatabaseToolsConnectionDetails);
-    Assertions.assertEquals(202, updateResponse.get__httpStatusCode__());
+      UpdateDatabaseToolsConnectionResponse updateResponse =
+          sendUpdateConnRequest(ocid, updateDatabaseToolsConnectionDetails);
+      Assertions.assertEquals(202, updateResponse.get__httpStatusCode__());
 
-    // Connection fails: hit 1017
-    SQLException exception = assertThrows(SQLException.class,
-      () -> tryConnection(url), "Should throw an SQLException");
-    Assertions.assertEquals(exception.getErrorCode(), 1017);
+      // Connection fails: hit 1017
+      SQLException exception = assertThrows(SQLException.class,
+          () -> tryConnection(url), "Should throw an SQLException");
+      Assertions.assertEquals(exception.getErrorCode(), 1017);
 
-    // Set value of 'user' correct
-    UpdateDatabaseToolsConnectionDetails updateDatabaseToolsConnectionDetails2 = UpdateDatabaseToolsConnectionOracleDatabaseDetails.builder()
-      .userName(OCI_USERNAME).build();
+      // Set value of 'user' correct
+      UpdateDatabaseToolsConnectionDetails updateDatabaseToolsConnectionDetails2 = UpdateDatabaseToolsConnectionOracleDatabaseDetails.builder()
+          .userName(OCI_USERNAME).build();
 
-    UpdateDatabaseToolsConnectionResponse updateResponse2 =
-      sendUpdateConnRequest(ocid, updateDatabaseToolsConnectionDetails2);
-    Assertions.assertEquals(202, updateResponse2.get__httpStatusCode__());
+      UpdateDatabaseToolsConnectionResponse updateResponse2 =
+          sendUpdateConnRequest(ocid, updateDatabaseToolsConnectionDetails2);
+      Assertions.assertEquals(202, updateResponse2.get__httpStatusCode__());
 
-    // Connection succeeds
-    Connection conn = tryConnection(url);
-    Assertions.assertNotNull(conn);
+      // Connection succeeds
+      Connection conn = tryConnection(url);
+      Assertions.assertNotNull(conn);
 
-    Statement st = conn.createStatement();
-    ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
-    Assertions.assertNotNull(rs.next());
-    Assertions.assertEquals("Hello, db", rs.getString(1));
-
-    // Finally delete Connection
-    DeleteDatabaseToolsConnectionResponse deleteResponse = sendDeleteConnRequest(
-      ocid);
-    Assertions.assertEquals(202,
-      deleteResponse.get__httpStatusCode__()); /* Request accepted. This db tools connection will be deleted */
+      Statement st = conn.createStatement();
+      ResultSet rs = st.executeQuery("SELECT 'Hello, db' FROM sys.dual");
+      Assertions.assertNotNull(rs.next());
+      Assertions.assertEquals("Hello, db", rs.getString(1));
+    } finally {
+      // Finally delete Connection
+      DeleteDatabaseToolsConnectionResponse deleteResponse = sendDeleteConnRequest(
+        ocid);
+      Assertions.assertEquals(202,
+        deleteResponse.get__httpStatusCode__()); /* Request accepted. This db tools connection will be deleted */
+    }
   }
 
   /**

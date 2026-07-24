@@ -42,7 +42,8 @@ import oracle.jdbc.provider.aws.secrets.SecretsManagerFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetParser;
-import oracle.jdbc.util.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfigurationCache;
+import oracle.jdbc.util.configuration.OracleConfiguration;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -50,13 +51,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A provider for JSON payload which contains configuration from AWS Secrets
- * Manager.
- * See {@link #getInputStream(String)} for the spec of the JSON payload.
+ * A provider for configuration payloads retrieved from AWS Secrets Manager.
+ * Payloads are parsed by {@link OracleConfigurationParsableProvider}; JSON is
+ * used by default, and other parser types such as Pkl may be selected with the
+ * {@code parser} option.
  **/
 public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationParsableProvider {
 
-  private static final OracleConfigurationCache CACHE = OracleConfigurationCache.create(100);
+  private static final OracleConfigurationCache<String, OracleConfiguration> CACHE = OracleConfigurationCache.create(100);
 
   /**
    * Parser that recognizes the named parameters which appear in a URL,
@@ -85,6 +87,8 @@ public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationP
   public InputStream getInputStream(String secretName) {
     final String valueFieldName = "value";
     Map<String, String> optionsWithSecret = new HashMap<>(options);
+    // "parser" is consumed by OracleConfigurationParsableProvider, not AWS.
+    optionsWithSecret.remove("parser");
     optionsWithSecret.put(valueFieldName, secretName);
 
     ParameterSet parameters = PARAMETER_SET_PARSER.parseNamedValues(optionsWithSecret);
@@ -106,16 +110,7 @@ public class AwsSecretsManagerConfigurationProvider extends OracleConfigurationP
    * @return cache of this provider which is used to store configuration
    */
   @Override
-  public OracleConfigurationCache getCache() {
+  public OracleConfigurationCache<String, OracleConfiguration> getCache() {
     return CACHE;
-  }
-
-  /**
-   * {@inheritDoc}
-   * @return the parser type
-   */
-  @Override
-  public String getParserType(String location) {
-    return "json";
   }
 }

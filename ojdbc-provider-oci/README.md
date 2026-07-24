@@ -15,6 +15,8 @@ Provider</a></dt>
 <dd>Provides connection properties managed by the Object Storage service</dd>
 <dt><a href="#oci-vault-config-provider">OCI Vault Config Provider</a></dt>
 <dd>Provides connection properties managed by the Vault service</dd>
+<dt><a href="#configuration-payload-parsers-json-pkl-and-other-parsers">Configuration Payload Parsers (JSON, Pkl, and Other Parsers)</a></dt>
+<dd>Parser selection for Object Storage and Vault configuration payloads</dd>
 <dt><a href="#common-parameters-for-centralized-config-providers">Common Parameters for Centralized Config Providers</a></dt>
 <dd>Common parameters supported by the config providers</dd>
 <dt><a href="#caching-configuration">Caching configuration</a></dt>
@@ -56,7 +58,7 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-oci</artifactId>
-  <version>1.0.6</version>
+  <version>1.1.0</version>
 </dependency>
 ```
 
@@ -76,14 +78,14 @@ For more details about the option-value pairs, see [Common Parameters for Centra
 For example:
 
 <pre>
-jdbc:oracle:thin:@config-ocidbtools:ocid1.databasetoolsconnection.oc1.phx.ama...
+jdbc:oracle:thin:@config-ocidbtools://ocid1.databasetoolsconnection.oc1.phx.ama...
 </pre>
 
 Provider can now support Database Tools Connections with Proxy Authentication,
 only if username is provided in Proxy Authentication Info, without the password and roles.
 
 ## OCI Object Storage Config Provider
-The Oracle Data Source uses a new prefix `jdbc:oracle:thin:@config-ociobject://` to be able to identify that the configuration parameters should be loaded using OCI Object Storage. Users only need to indicate the URL Path of the Object containing the JSON payload using the following syntax, where option-value pairs separated by `&` are optional authentication parameters that vary by provider:
+The Oracle Data Source uses a new prefix `jdbc:oracle:thin:@config-ociobject://` to be able to identify that the configuration parameters should be loaded using OCI Object Storage. Users only need to indicate the URL Path of the Object containing the configuration payload using the following syntax, where option-value pairs separated by `&` are optional authentication parameters that vary by provider:
 
 <pre>
 jdbc:oracle:thin:@config-ociobject://{url_path}[?option1=value1&option2=value2...]
@@ -101,7 +103,7 @@ The instructions of obtaining a URL Path can be found in [Get the URI or Pre-Aut
 
 For more details about the option-value pairs, see [Common Parameters for Centralized Config Providers](#common-parameters-for-centralized-config-providers).
 
-### JSON Payload format
+### Configuration Payload Format
 
 There are 4 fixed values that are looked at the root level.
 
@@ -214,18 +216,32 @@ This property should be included inside the "jdbc" object of the JSON payload.
 <i>*Note: When storing a wallet as a secret in OCI Vault, choose the Plain-Text secret type template instead of Base64 to prevent double decoding when the provider retrieves the value.</i> 
 
 ## OCI Vault Config Provider
-Apart from OCI Object Storage, users can also store JSON Payload in the content of OCI Vault Secret. Users need to indicate the OCID of the Secret with the following syntax:
+Apart from OCI Object Storage, users can also store a configuration payload in the content of OCI Vault Secret. Users need to indicate the OCID of the Secret with the following syntax:
 
 <pre>
 jdbc:oracle:thin:@config-ocivault://{secret-ocid}
 </pre>
 
-The JSON Payload retrieved by OCI Vault Config Provider follows the same format in [OCI Object Storage Config Provider](#json-payload-format).
+The payload retrieved by OCI Vault Config Provider follows the same format in [OCI Object Storage Config Provider](#configuration-payload-format).
+
+## Configuration Payload Parsers (JSON, Pkl, and Other Parsers)
+OCI Object Storage and OCI Vault Config Providers extend
+`OracleConfigurationParsableProvider`, which parses payloads as JSON by default
+and honors the `parser` option for other parser types. To use a Pkl payload, or
+another parser type, add the `parser` option to the JDBC URL and include the
+corresponding parser provider on the runtime classpath. For Pkl, include
+`ojdbc-provider-pkl`.
+
+<pre>
+jdbc:oracle:thin:@config-ociobject://{url_path}?parser=pkl
+jdbc:oracle:thin:@config-ocivault://{secret-ocid}?parser=pkl
+</pre>
 
 
 ## Common Parameters for Centralized Config Providers
-OCI Database Tools Connections Config Provider and OCI Object Storage Config Provider
-share the same sets of parameters for authentication configuration.
+OCI Database Tools Connections Config Provider, OCI Object Storage Config Provider,
+and OCI Vault Config Provider share the same set of parameters for
+authentication configuration.
 
 ### Configuring Authentication
 
@@ -242,22 +258,23 @@ The user can provide an optional parameter `AUTHENTICATION` (case-ignored), and 
 </tr></thead>
 <tbody>
 <tr>
-  <td rowspan="7"><b>OCI_DEFAULT</b> or &lt;Empty&gt;</td>
-  <td rowspan="7">API Key-Based Authentication</td>
-  <td rowspan="7">(~/.oci/config) or<br>
+  <td rowspan="8"><b>OCI_DEFAULT</b> or &lt;Empty&gt;</td>
+  <td rowspan="8">API Key-Based Authentication</td>
+  <td rowspan="8">(~/.oci/config) or<br>
 (~/.oraclebmc/config) or<br>
 environment variable OCI_CONFIG_FILE <br>
 (this is the same approach that oci-java-sdk has)
 Either above or all the optional values
 in Optional Parameters</td>
-  <td>OCI_PROFILE</td></tr>
-  <td>OCI_TENANCY</td></tr>
-  <td>OCI_USER</td></tr>
-  <td>OCI_FINGERPRINT</td></tr>
-  <td>OCI_KEY_FILE</td></tr>
-  <td>OCI_PASS_PHRASE</td></tr>
-  <tr><td>OCI_REGION (*)</td>
+  <td>OCI_CONFIG_FILE</td>
 </tr>
+<tr><td>OCI_PROFILE</td></tr>
+<tr><td>OCI_TENANCY</td></tr>
+<tr><td>OCI_USER</td></tr>
+<tr><td>OCI_FINGERPRINT</td></tr>
+<tr><td>OCI_KEY_FILE</td></tr>
+<tr><td>OCI_PASS_PHRASE</td></tr>
+<tr><td>OCI_REGION (*)</td></tr>
 <tr>
   <td><b>OCI_INSTANCE_PRINCIPAL</b></td>
   <td>Instance Principal Authentication</td>
@@ -286,6 +303,10 @@ in Optional Parameters</td>
     so a subsequent authentication attempt will not fail with a <code>BindException</code>.<br>
     The value must be a positive integer. Decimal values are not allowed.<br>
     <b>Default:</b> <code>5</code> minutes
+    <br><br>
+    <code>OCI_USERNAME</code> <br>
+    <i>(Optional)</i> See <a href="#additional-optional-parameters">Additional Optional Parameters</a>.
+    Only affects <code>OCI_INTERACTIVE</code>; it has no effect for other authentication methods.
   </td>
 </tr>
 </tbody>
@@ -306,6 +327,16 @@ The following parameters can be used alongside any supported authentication meth
 </tr></thead>
 <tbody>
 <tr>
+    <td><code>OCI_CONFIG_FILE</code></td>
+    <td>
+      Specifies the file system path to an OCI configuration file used for API key-based authentication.
+    </td>
+    <td>A file system path.</td>
+    <td>
+      <i>If not provided, the OCI SDK default configuration lookup is used.</i>
+    </td>
+  </tr>
+<tr>
   <td><code>OCI_REGION</code></td>
   <td>
     Specifies the OCI Region Identifier to be used for requests and interactive authentication.
@@ -320,6 +351,29 @@ The following parameters can be used alongside any supported authentication meth
   <td>
     <i>If not provided, the login URL will default to <code>https://login.oci.oraclecloud.com</code>,
     which may not work for your target region.</i>
+  </td>
+</tr>
+<tr>
+  <td><code>OCI_USERNAME</code></td>
+  <td>
+    Distinguishes otherwise-identical <code>OCI_INTERACTIVE</code> login requests so that
+    one is not reused in place of another. This is <b>not a credential</b> and is never sent
+    to OCI &mdash; it is a caller-chosen label used only to determine whether two requests may
+    share a cached interactive login.<br>
+    <i>For example, if a main configuration and an embedded
+    <a href="#password-json-object">password</a> or
+    <a href="#wallet_location-json-object">wallet_location</a> object are each configured
+    with <code>OCI_INTERACTIVE</code> but are intended to authenticate as different accounts,
+    set a different <code>OCI_USERNAME</code> on each to force separate logins. If omitted on
+    both, they are treated as the same login and may share one browser-based sign-in.</i><br>
+    Has no effect for any authentication method other than <code>OCI_INTERACTIVE</code>.
+  </td>
+  <td>
+    Any string.
+  </td>
+  <td>
+    <i>If not provided, requests that otherwise match on authentication method and region
+    may share a single cached interactive login.</i>
   </td>
 </tr>
 </tbody>
@@ -691,7 +745,7 @@ An example of a [connection properties file](https://docs.oracle.com/en/database
 The Access Token Provider provides Oracle JDBC with an access token that authorizes logins to an Autonomous Database. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified by
 the name `ojdbc-provider-oci-token`.
 
-This provider must be configured to <a href="#configuring-authentication">authenticate</a> as
+This provider must be configured to <a href="#resource-provider-authentication">authenticate</a> as
 an IAM user that has been mapped to a database user. The IAM user must also be included in a policy that grants access to the Autonomous Database. Instructions
 can be found in the <a href="https://docs.oracle.com/en/cloud/paas/autonomous-database/adbsa/manage-users-iam.html#GUID-4E206209-4E3B-4387-9364-BDCFB4E16E2E">
 ADB product documentation.
@@ -825,6 +879,20 @@ common set of parameters.
         and interactive authentication will connect to <code>https://login.oci.oraclecloud.com</code></i></td>
     </tr>
     <tr>
+      <td>username</td>
+      <td>
+        Distinguishes otherwise-identical requests so that a cached resource or interactive
+        login is not reused across them. This is <b>not a credential</b> and is never sent to
+        OCI &mdash; it is a caller-chosen label.<br>
+        <i>For example, a multi-tenant application fetching the same secret OCID on behalf of
+        different end users can set a different <code>username</code> per request, so that one
+        user's cached secret or interactive login is never served in place of another's.</i>
+      </td>
+      <td>Any string.</td>
+      <td><i>No default value. If not configured, requests that otherwise match on every other
+        parameter may share a cached resource or interactive login.</i></td>
+    </tr>
+    <tr>
       <td>instancePrincipalTimeout</td>
       <td>
         Specifies the maximum time, in seconds, to wait for instance principal authentication to complete.<br>
@@ -880,9 +948,9 @@ Connection properties which identify and configure a provider may appear in a
 or be configured programmatically. Configuration with JVM system properties is
 not supported.
 
-### Configuring Authentication
+### Resource Provider Authentication
 
-Providers in this module must authenticate with OCI. By default, a provider will
+Resource providers in this module must authenticate with OCI. By default, a provider will
 automatically detect any available credentials.  A specific credential
 may be configured using the "authenticationMethod" parameter. The parameter may
 be set to any of the following values (case-insensitive):

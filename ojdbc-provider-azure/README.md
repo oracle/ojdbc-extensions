@@ -9,6 +9,8 @@ This module contains providers for integration between Oracle JDBC and Azure.
 <dd>Provides connection properties managed by the App Configuration service</dd>
 <dt><a href="#azure-vault-config-provider">Azure Vault Config Provider</a></dt>
 <dd>Provides connection properties managed by the Key Vault service</dd>
+<dt><a href="#configuration-payload-parsers-json-pkl-and-other-parsers">Configuration Payload Parsers (JSON, Pkl, and Other Parsers)</a></dt>
+<dd>Parser selection for Azure Vault configuration payloads</dd>
 <dt><a href="#common-parameters-for-centralized-config-providers">Common Parameters for Centralized Config Providers</a></dt>
 <dd>Common parameters supported by the config providers</dd>
 <dt><a href="#caching-configuration">Caching configuration</a></dt>
@@ -44,7 +46,7 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-azure</artifactId>
-  <version>1.0.6</version>
+  <version>1.1.0</version>
 </dependency>
 ```
 
@@ -160,7 +162,7 @@ This property should be included inside the jdbc object of the JSON payload:
 
 
 ## Azure Vault Config Provider
-Similar to [OCI Vault Config Provider](../ojdbc-provider-oci/README.md#oci-vault-config-provider), JSON Payload can also be stored in the content of Azure Key Vault Secret.
+Similar to [OCI Vault Config Provider](../ojdbc-provider-oci/README.md#oci-vault-config-provider), a configuration payload can also be stored in the content of Azure Key Vault Secret.
 The Oracle Data Source uses a new prefix `jdbc:oracle:thin:@config-azurevault://`. Users only need to indicate the Vault Secret’s secret identifier using the following syntax, where option-value pairs separated by `&` are optional authentication parameters that vary by provider:
 
 <pre>
@@ -169,7 +171,18 @@ jdbc:oracle:thin:@config-azurevault://{secret-identifier}[?option1=value1&option
 
 For more details about the option-value pairs, see [Common Parameters for Centralized Config Providers](#common-parameters-for-centralized-config-providers).
 
-To view an example format of JSON Payload, please refer to [JSON Payload format](../ojdbc-provider-oci/README.md#json-payload-format).
+To view an example format of the configuration payload, please refer to [Configuration Payload Format](../ojdbc-provider-oci/README.md#configuration-payload-format).
+
+## Configuration Payload Parsers (JSON, Pkl, and Other Parsers)
+Azure Vault Config Provider extends `OracleConfigurationParsableProvider`, which
+parses payloads as JSON by default and honors the `parser` option for other
+parser types. To use a Pkl payload, or another parser type, add the `parser`
+option to the JDBC URL and include the corresponding parser provider on the
+runtime classpath. For Pkl, include `ojdbc-provider-pkl`.
+
+<pre>
+jdbc:oracle:thin:@config-azurevault://{secret-identifier}?parser=pkl
+</pre>
 
 ## Common Parameters for Centralized Config Providers
 Provider that are classified as Centralized Config Providers in this module share the same sets of parameters for authentication configuration.
@@ -219,11 +232,13 @@ The user can provide an optional parameter `AUTHENTICATION` (case-ignored) which
   <td><b>AZURE_CLIENT_ID</b> (only required for user assigned)</td>
 </tr>
 <tr>
-  <td rowspan="2"><b>AZURE_INTERACTIVE</b></td>
-  <td rowspan="2">InteractiveBrowserCredential</td>
-  <td><b>AZURE_CLIENT_ID</b></td>
-  <td><b>AZURE_REDIRECT_URL</b></td>
+  <td rowspan="3"><b>AZURE_INTERACTIVE</b></td>
+  <td rowspan="3">InteractiveBrowserCredential</td>
+  <td rowspan="3">&nbsp;</td>
+  <td><b>AZURE_TENANT_ID</b></td>
 </tr>
+  <tr><td><b>AZURE_CLIENT_ID</b></td></tr>
+  <tr><td><b>AZURE_REDIRECT_URL</b></td></tr>
 </tbody>
 </table>
 
@@ -732,7 +747,7 @@ common set of parameters.
       <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/reply-url">
       Redirect URL
       </a>
-      for <code>authentication-method=interactive</code>
+      for <code>authenticationMethod=interactive</code>
       </td>
       <td>
       A URL of the form <code>http://localhost[:port-number]</code> is accepted.
@@ -813,7 +828,8 @@ A browser link is output to the standard output stream.
 <dt>interactive</dt>
 <dd>
 Authenticate interactively by logging in to a cloud account with your
-default web browser. The browser window is opened automatically.
+default web browser. The browser window is opened automatically. The optional
+<code>tenantId</code> parameter may be configured to target a specific tenant.
 </dd>
 <dt>auto-detect</dt>
 <dd>

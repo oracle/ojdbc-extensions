@@ -37,16 +37,20 @@
  */
 package oracle.provider.gcp.configuration;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import oracle.jdbc.provider.TestProperties;
+import oracle.jdbc.provider.util.CommonConstants;
+import oracle.jdbc.spi.OracleConfigurationProvider;
+import oracle.provider.gcp.GcpTestProperty;
+import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
 import java.util.Properties;
 
-import oracle.provider.gcp.GcpTestProperty;
-import org.junit.jupiter.api.Test;
-
-import oracle.jdbc.provider.TestProperties;
-import oracle.jdbc.spi.OracleConfigurationProvider;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class GcpCloudStorageProviderTest {
 
@@ -62,6 +66,39 @@ public class GcpCloudStorageProviderTest {
     String location = TestProperties.getOrAbort(GcpTestProperty.GCP_OBJECT_STORAGE_URL);
     Properties properties = PROVIDER
         .getConnectionProperties(location);
+    assertTrue(properties.containsKey("URL"), "Contains property URL");
+    assertTrue(properties.containsKey("user"), "Contains property user");
+    assertTrue(properties.containsKey("password"), "Contains property password");
+  }
+
+  /**
+   * Verifies that an object larger than the maximum remote configuration
+   * length is rejected.
+   */
+  @Test
+  public void testRemoteConfigurationExceedingMaxLength() {
+    String location = TestProperties.getOrAbort(
+      GcpTestProperty.GCP_OBJECT_STORAGE_URL_TOO_LARGE);
+
+    assertThrows(IllegalStateException.class,
+      () -> PROVIDER.getConnectionProperties(location));
+  }
+
+  @Test
+  public void testDefaultAuthenticationWithGsUri() throws SQLException {
+    String location = TestProperties.getOrAbort(GcpTestProperty.GCP_OBJECT_STORAGE_GS_URI);
+    Properties properties = PROVIDER
+            .getConnectionProperties(location);
+    assertTrue(properties.containsKey("URL"), "Contains property URL");
+    assertTrue(properties.containsKey("user"), "Contains property user");
+    assertTrue(properties.containsKey("password"), "Contains property password");
+  }
+
+  @Test
+  public void testDefaultAuthenticationWithStorageUrl() throws SQLException {
+    String location = TestProperties.getOrAbort(GcpTestProperty.GCP_OBJECT_STORAGE_HTTPS_URL);
+    Properties properties = PROVIDER
+            .getConnectionProperties(location);
     assertTrue(properties.containsKey("URL"), "Contains property URL");
     assertTrue(properties.containsKey("user"), "Contains property user");
     assertTrue(properties.containsKey("password"), "Contains property password");

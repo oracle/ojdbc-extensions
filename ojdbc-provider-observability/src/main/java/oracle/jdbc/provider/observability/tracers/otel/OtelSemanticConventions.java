@@ -65,11 +65,6 @@ final class OtelSemanticConventions {
   static final String DB_SYSTEM_VALUE_ORACLE = "oracle.db";
 
   /**
-   * Attribute key for the database namespace.
-   */
-  static final String DB_NAMESPACE_ATTRIBUTE = "db.namespace";
-
-  /**
    * Attribute key for the database operation name.
    */
   static final String DB_OPERATION_NAME_ATTRIBUTE = "db.operation.name";
@@ -144,9 +139,14 @@ final class OtelSemanticConventions {
   static final String ORACLE_SERVER_PID_ATTRIBUTE = "oracle.db.server.pid";
 
   /**
-   * Attribute key for Oracle database instance identifier.
+   * Attribute key for Oracle database instance name.
    */
-  static final String ORACLE_INSTANCE_ID_ATTRIBUTE = "oracle.db.instance.id";
+  static final String ORACLE_INSTANCE_NAME_ATTRIBUTE = "oracle.db.instance.name";
+
+  /**
+   * Attribute key for Oracle database service name.
+   */
+  static final String ORACLE_SERVICE_ATTRIBUTE = "oracle.db.service";
 
   /**
    * Attribute key for Oracle PDB name.

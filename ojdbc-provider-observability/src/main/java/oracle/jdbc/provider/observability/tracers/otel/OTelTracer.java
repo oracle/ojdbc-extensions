@@ -330,11 +330,11 @@ public class OTelTracer implements ObservabilityTracer {
       spanBuilder.setAttribute(DB_SYSTEM_ATTRIBUTE, DB_SYSTEM_VALUE_ORACLE);
 
       if (traceContext.getServiceName() != null && !traceContext.getServiceName().isEmpty()) {
-        spanBuilder.setAttribute(DB_NAMESPACE_ATTRIBUTE, traceContext.getServiceName());
+        spanBuilder.setAttribute(ORACLE_SERVICE_ATTRIBUTE, traceContext.getServiceName());
       }
 
       if (traceContext.getInstanceName() != null && !traceContext.getInstanceName().isEmpty()) {
-        spanBuilder.setAttribute(ORACLE_INSTANCE_ID_ATTRIBUTE, traceContext.getInstanceName());
+        spanBuilder.setAttribute(ORACLE_INSTANCE_NAME_ATTRIBUTE, traceContext.getInstanceName());
       }
 
       if (traceContext.getDatabaseName() != null && !traceContext.getDatabaseName().isEmpty()) {

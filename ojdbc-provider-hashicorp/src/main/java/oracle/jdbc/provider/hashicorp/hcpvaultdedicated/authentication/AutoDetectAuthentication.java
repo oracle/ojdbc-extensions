@@ -40,6 +40,7 @@ package oracle.jdbc.provider.hashicorp.hcpvaultdedicated.authentication;
 
 import oracle.jdbc.provider.parameter.ParameterSet;
 
+import java.util.HashMap;
 import java.util.Collections;
 import java.util.Map;
 
@@ -99,12 +100,15 @@ public class AutoDetectAuthentication extends AbstractDedicatedVaultAuthenticati
 
   @Override
   public Map<String, Object> generateCacheKey(ParameterSet parameterSet) {
+    // AUTO_DETECT needs one final cache key.
+    // Each auth method returns only part of it, so we merge all parts into a new map.
+    Map<String, Object> compositeKey = new HashMap<>();
     for (AbstractDedicatedVaultAuthentication authentication : AUTHENTICATION_METHODS) {
-      Map<String, Object> cacheKey = authentication.generateCacheKey(parameterSet);
-      if (!cacheKey.isEmpty()) {
-        return cacheKey;
-      }
+      compositeKey.putAll(authentication.generateCacheKey(parameterSet));
     }
-    return Collections.emptyMap();
+    if (compositeKey.isEmpty()) {
+      return Collections.emptyMap();
+    }
+    return compositeKey;
   }
 }
