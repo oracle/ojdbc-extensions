@@ -52,8 +52,10 @@ import static oracle.jdbc.provider.aws.configuration.AwsConfigurationParameters.
 import static oracle.jdbc.provider.aws.s3.S3Factory.S3_URL;
 
 /**
- * A provider for JSON payload which contains configuration from AWS S3.
- * See {@link #getInputStream(String)} for the spec of the JSON payload.
+ * A provider for configuration payloads retrieved from AWS S3. Payloads are
+ * parsed by {@link OracleConfigurationParsableProvider}; JSON is used by
+ * default, and other parser types such as Pkl may be selected with the
+ * {@code parser} option.
  **/
 public class AwsS3ConfigurationProvider extends OracleConfigurationParsableProvider {
 
@@ -85,6 +87,8 @@ public class AwsS3ConfigurationProvider extends OracleConfigurationParsableProvi
 
         // Add objectUrl to the "options" Map, so it can be parsed.
         Map<String, String> optionsWithUrl = new HashMap<>(options);
+        // "parser" is consumed by OracleConfigurationParsableProvider, not AWS.
+        optionsWithUrl.remove("parser");
         optionsWithUrl.put("s3_url", s3Url);
 
         ParameterSet parameters =

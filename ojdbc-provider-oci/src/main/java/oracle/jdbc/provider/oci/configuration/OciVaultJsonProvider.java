@@ -51,8 +51,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A provider for JSON payload which contains configuration from OCI Vault.
- * See {@link #getInputStream(String)} for the spec of the JSON payload.
+ * A provider for configuration payloads stored in OCI Vault. Payloads are parsed
+ * by {@link OracleConfigurationParsableProvider}; JSON is used by default, and
+ * other parser types such as Pkl may be selected with the {@code parser} option.
  **/
 public class OciVaultJsonProvider extends OracleConfigurationParsableProvider {
 
@@ -61,19 +62,21 @@ public class OciVaultJsonProvider extends OracleConfigurationParsableProvider {
   /**
    * {@inheritDoc}
    * <p>
-   * Returns the JSON payload stored in OCI Vault Secret.
+   * Returns the configuration payload stored in OCI Vault Secret.
    * </p><p>The {@code secretOcid} is an OCID of Vault Secret which can be
-   * acquired on the OCI Web Console. The Json payload is stored in the Secret
+   * acquired on the OCI Web Console. The payload is stored in the Secret
    * Contents of Vault Secret.
    * </p>
    * @param secretOcid the OCID of secret used by this provider to retrieve
-   *                   JSON payload from OCI
-   * @return JSON payload
+   *                   the payload from OCI
+   * @return configuration payload
    **/
   @Override
   public InputStream getInputStream(String secretOcid) {
     final String valueFieldName = "value";
     Map<String, String> optionsWithOcid = new HashMap<>(options);
+    // "parser" is consumed by OracleConfigurationParsableProvider, not OCI.
+    optionsWithOcid.remove("parser");
     optionsWithOcid.put(valueFieldName, secretOcid);
 
     ParameterSet parameters =

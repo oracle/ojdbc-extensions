@@ -9,6 +9,8 @@ This module contains providers for integration between Oracle JDBC and Azure.
 <dd>Provides connection properties managed by the App Configuration service</dd>
 <dt><a href="#azure-vault-config-provider">Azure Vault Config Provider</a></dt>
 <dd>Provides connection properties managed by the Key Vault service</dd>
+<dt><a href="#configuration-payload-parsers-json-pkl-and-other-parsers">Configuration Payload Parsers (JSON, Pkl, and Other Parsers)</a></dt>
+<dd>Parser selection for Azure Vault configuration payloads</dd>
 <dt><a href="#common-parameters-for-centralized-config-providers">Common Parameters for Centralized Config Providers</a></dt>
 <dd>Common parameters supported by the config providers</dd>
 <dt><a href="#caching-configuration">Caching configuration</a></dt>
@@ -160,7 +162,7 @@ This property should be included inside the jdbc object of the JSON payload:
 
 
 ## Azure Vault Config Provider
-Similar to [OCI Vault Config Provider](../ojdbc-provider-oci/README.md#oci-vault-config-provider), JSON Payload can also be stored in the content of Azure Key Vault Secret.
+Similar to [OCI Vault Config Provider](../ojdbc-provider-oci/README.md#oci-vault-config-provider), a configuration payload can also be stored in the content of Azure Key Vault Secret.
 The Oracle Data Source uses a new prefix `jdbc:oracle:thin:@config-azurevault://`. Users only need to indicate the Vault Secret’s secret identifier using the following syntax, where option-value pairs separated by `&` are optional authentication parameters that vary by provider:
 
 <pre>
@@ -169,7 +171,18 @@ jdbc:oracle:thin:@config-azurevault://{secret-identifier}[?option1=value1&option
 
 For more details about the option-value pairs, see [Common Parameters for Centralized Config Providers](#common-parameters-for-centralized-config-providers).
 
-To view an example format of JSON Payload, please refer to [JSON Payload format](../ojdbc-provider-oci/README.md#json-payload-format).
+To view an example format of the configuration payload, please refer to [Configuration Payload Format](../ojdbc-provider-oci/README.md#configuration-payload-format).
+
+## Configuration Payload Parsers (JSON, Pkl, and Other Parsers)
+Azure Vault Config Provider extends `OracleConfigurationParsableProvider`, which
+parses payloads as JSON by default and honors the `parser` option for other
+parser types. To use a Pkl payload, or another parser type, add the `parser`
+option to the JDBC URL and include the corresponding parser provider on the
+runtime classpath. For Pkl, include `ojdbc-provider-pkl`.
+
+<pre>
+jdbc:oracle:thin:@config-azurevault://{secret-identifier}?parser=pkl
+</pre>
 
 ## Common Parameters for Centralized Config Providers
 Provider that are classified as Centralized Config Providers in this module share the same sets of parameters for authentication configuration.

@@ -7,6 +7,8 @@ and HashiCorp Vault (HCP).
 <dl>
 <dt><a href="#hcp-vault-dedicated-config-provider">HashiCorp Vault Dedicated Config Provider</a></dt>
 <dd>Provides connection properties managed by the Dedicated Vault service</dd>
+<dt><a href="#configuration-payload-parsers-json-pkl-and-other-parsers">Configuration Payload Parsers (JSON, Pkl, and Other Parsers)</a></dt>
+<dd>Parser selection for HCP Vault Dedicated configuration payloads</dd>
 <dt><a href="#caching-configuration">Caching configuration</a></dt>
 <dd>Caching mechanism adopted by Centralized Config Providers</dd>
 </dl>
@@ -312,7 +314,7 @@ The query parameters (`option1=value1`, `option2=value2`, etc.) are optional key
 jdbc:oracle:thin:@config-hcpvaultdedicated:///v1/namespace/secret/data/secret_name?KEY=sales_app1&authentication=approle
 ```
 
-### JSON Payload format
+### Configuration Payload Format
 
 There are 4 fixed values that are looked at the root level:
 
@@ -364,6 +366,19 @@ The sample code below executes as expected with the previous configuration.
     if (rs.next())
       System.out.println("select sysdate from dual: " + rs.getString(1));
 ```
+
+### Configuration Payload Parsers (JSON, Pkl, and Other Parsers)
+
+HCP Vault Dedicated Config Provider extends
+`OracleConfigurationParsableProvider`, which parses payloads as JSON by default
+and honors the `parser` option for other parser types. To use a Pkl payload, or
+another parser type, add the `parser` option to the JDBC URL and include the
+corresponding parser provider on the runtime classpath. For Pkl, include
+`ojdbc-provider-pkl`.
+
+<pre>
+jdbc:oracle:thin:@config-hcpvaultdedicated://{secret-path}?parser=pkl
+</pre>
 
 ### Password JSON Object
 

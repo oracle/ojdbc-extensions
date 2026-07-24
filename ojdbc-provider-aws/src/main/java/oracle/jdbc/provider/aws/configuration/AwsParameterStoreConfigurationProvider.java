@@ -55,9 +55,11 @@ import static oracle.jdbc.provider.aws.configuration.AwsConfigurationParameters.
 import static oracle.jdbc.provider.aws.configuration.AwsConfigurationParameters.REGION;
 
 /**
- * A provider for JSON payload which contains configuration from AWS Systems
- * Manager Parameter Store.
- * See {@link #getInputStream(String)} for the spec of the JSON payload.
+ * A provider for configuration payloads retrieved from AWS Systems Manager
+ * Parameter Store. Payloads are parsed by
+ * {@link OracleConfigurationParsableProvider}; JSON is used by default, and
+ * other parser types such as Pkl may be selected with the {@code parser}
+ * option.
  **/
 public class AwsParameterStoreConfigurationProvider
   extends OracleConfigurationParsableProvider {
@@ -87,6 +89,8 @@ public class AwsParameterStoreConfigurationProvider
     // The JSON “value” field holds the Parameter Store name
     final String VALUE = "value";
     Map<String, String> opts = new HashMap<>(options);
+    // "parser" is consumed by OracleConfigurationParsableProvider, not AWS.
+    opts.remove("parser");
     opts.put(VALUE, parameterName);
 
     ParameterSet params = PARAMETER_SET_PARSER.parseNamedValues(opts);
