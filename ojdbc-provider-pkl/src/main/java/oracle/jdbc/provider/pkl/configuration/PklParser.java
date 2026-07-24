@@ -142,10 +142,12 @@ public class PklParser implements OracleConfigurationParser {
     }
 
     // Retrieve Jdbc connection properties
-    try {
-      properties.putAll(toJdbcProperties(ojdbcConfig.jdbc));
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
+    if (ojdbcConfig.jdbc != null) {
+      try {
+        properties.putAll(toJdbcProperties(ojdbcConfig.jdbc));
+      } catch (IllegalAccessException e) {
+        throw new RuntimeException(e);
+      }
     }
 
     return properties;
