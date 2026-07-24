@@ -53,9 +53,13 @@ import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.provider.parameter.ParameterSetBuilder;
 import oracle.jdbc.provider.oci.objectstorage.ObjectFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -169,6 +173,36 @@ public final class AuthenticationDetailsFactory
    */
   public static final Parameter<Region> REGION = Parameter.create();
 
+  /**
+   * <p>
+   * The parameters that identify a previously resolved
+   * {@link AuthenticationMethod#INTERACTIVE} authentication eligible for
+   * reuse, listed in the order that {@link #interactiveIdentity(ParameterSet)}
+   * documents them. Two {@code ParameterSet} instances that agree on the
+   * values of every parameter in this list are considered to represent the
+   * same interactive login, regardless of any other, resource-specific
+   * parameters (a secret's OCID, a Database Tools Connection's OCID, etc)
+   * that either {@code ParameterSet} might also carry.
+   * </p><p>
+   * This list includes {@link #REGION}, which
+   * {@link InteractiveAuthentication#getSessionToken(ParameterSet)} reads to
+   * decide where to send the browser for login, plus {@link #USERNAME},
+   * which exists specifically to let a caller distinguish two interactive
+   * logins that would otherwise look identical. Every other parameter
+   * declared by this class is excluded, so that it cannot affect whether a
+   * cached login is reused. Notably, this excludes
+   * {@link #INTERACTIVE_TIMEOUT}: although
+   * {@code getSessionToken(ParameterSet)} also reads that parameter, it only
+   * configures how long a <em>fresh</em> login waits for the browser, and has
+   * no bearing on the identity of a login that has already completed and
+   * been cached. Including it here would only fragment the cache, splitting
+   * two requests for the same identity into separate logins whenever they
+   * happened to configure a different timeout.
+   * </p>
+   */
+   static final List<Parameter<?>> INTERACTIVE_IDENTITY_PARAMETERS =
+          List.of(AUTHENTICATION_METHOD, REGION, USERNAME);
+
   private static final AuthenticationDetailsFactory INSTANCE =
       new AuthenticationDetailsFactory();
 
@@ -189,26 +223,87 @@ public final class AuthenticationDetailsFactory
    * defined in this class. The {@code parameterSet} is required to contain
    * an {@link #AUTHENTICATION_METHOD}. Additional parameters may be required
    * depending on which authentication method is configured.
+   * </p><p>
+   * When {@link #AUTHENTICATION_METHOD} is
+   * {@link AuthenticationMethod#INTERACTIVE}, the returned resource may wrap
+   * a previously cached login, reused from another request that presented
+   * the same {@link #INTERACTIVE_IDENTITY_PARAMETERS}. See
+   * {@link InteractiveAuthenticationCache}.
    * </p>
    */
   @Override
   public Resource<AbstractAuthenticationDetailsProvider> request(
       ParameterSet parameterSet) {
 
-    AbstractAuthenticationDetailsProvider authenticationDetails =
-        getAuthenticationDetails(parameterSet);
+    AuthenticationMethod authenticationMethod =
+      parameterSet.getRequired(AUTHENTICATION_METHOD);
+
+    if (authenticationMethod == AuthenticationMethod.INTERACTIVE) {
+      ParameterSet identity = interactiveIdentity(parameterSet);
+
+      AbstractAuthenticationDetailsProvider authenticationDetails =
+        InteractiveAuthenticationCache.get(
+          identity,
+          () -> (InteractiveAuthenticationDetails)
+            getAuthenticationDetails(authenticationMethod, parameterSet));
+
+      return Resource.createPermanentResource(authenticationDetails, true);
+    }
 
     // TODO: Check for authentication details that expire, perhaps because a
-    //  config file is updated, or because an interactive session token has
-    //  expired. Return an expiring resource when appropriate.
-    return Resource.createPermanentResource(authenticationDetails, true);
+    //  config file is updated. Return an expiring resource when appropriate.
+    return Resource.createPermanentResource(
+      getAuthenticationDetails(authenticationMethod, parameterSet), true);
+  }
+
+  /**
+   * <p>
+   * Returns a {@code ParameterSet} containing only the values of
+   * {@link #INTERACTIVE_IDENTITY_PARAMETERS} from the given
+   * {@code parameterSet}. This projection is used only as the cache key
+   * passed to {@link InteractiveAuthenticationCache#get(ParameterSet, java.util.function.Supplier)}:
+   * two requests are considered the same login if and only if they agree on
+   * this projection. Resource-specific parameters (a secret's OCID, a
+   * Database Tools Connection's OCID, etc) play no role in authentication,
+   * and would otherwise cause every distinct resource request to miss the
+   * cache, even when made with the same identity.
+   * </p><p>
+   * This projection is not used as the input to a fresh login on a cache
+   * miss: {@code request(ParameterSet)} passes the original, unprojected
+   * {@code parameterSet} for that purpose instead, since
+   * {@link InteractiveAuthentication#getSessionToken(ParameterSet)} may read
+   * parameters that this projection excludes.
+   * </p>
+   *
+   * @param parameterSet Parameters of a resource request. Not null.
+   * @return The {@link #INTERACTIVE_IDENTITY_PARAMETERS} projection of
+   * {@code parameterSet}. Not null.
+   */
+  private static ParameterSet interactiveIdentity(ParameterSet parameterSet) {
+    ParameterSetBuilder builder = ParameterSet.builder();
+
+    for (Parameter<?> parameter : INTERACTIVE_IDENTITY_PARAMETERS)
+      copyValue(builder, parameterSet, parameter);
+
+    return builder.build();
+  }
+
+  /**
+   * Copies the value of a single {@code parameter} from {@code source} into
+   * {@code builder}, if {@code source} contains a value for it. This helper
+   * exists to capture the {@code <T>} type of a {@code Parameter<T>} taken
+   * from a {@code Parameter<?>} list, which
+   * {@link ParameterSetBuilder#add(String, Parameter, Object)} requires.
+   */
+  private static <T> void copyValue(
+    ParameterSetBuilder builder, ParameterSet source, Parameter<T> parameter) {
+
+    if (source.contains(parameter))
+      builder.add(source.getName(parameter), parameter, source.getOptional(parameter));
   }
 
   private static AbstractAuthenticationDetailsProvider getAuthenticationDetails(
-    ParameterSet parameterSet) {
-
-    AuthenticationMethod authenticationMethod =
-      parameterSet.getRequired(AUTHENTICATION_METHOD);
+    AuthenticationMethod authenticationMethod, ParameterSet parameterSet) {
 
     switch (authenticationMethod) {
       case CONFIG_FILE:
