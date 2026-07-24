@@ -125,8 +125,11 @@ public class JsonWebTokenParser {
     Objects.requireNonNull(jwt, "jwt is null");
     requireValidSize(jwt.length());
 
+    // JWTs use base64url encoding (RFC 7515 section 2), whose alphabet is
+    // defined by RFC 4648 section 5 and uses '-' and '_' instead of '+' and
+    // '/'. See https://www.rfc-editor.org/rfc/rfc4648#section-5
     InputStream base64Stream =
-      Base64.getDecoder().wrap(new PayloadInputStream(jwt));
+      Base64.getUrlDecoder().wrap(new PayloadInputStream(jwt));
 
     try (Reader payloadReader = new InputStreamReader(base64Stream, UTF_8)) {
       return JSON_FACTORY.createJsonTextValue(payloadReader)
