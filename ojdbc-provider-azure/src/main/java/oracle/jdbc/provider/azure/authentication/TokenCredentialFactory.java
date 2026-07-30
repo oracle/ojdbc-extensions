@@ -45,7 +45,11 @@ import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.provider.parameter.ParameterSetBuilder;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 
 import static com.azure.core.util.Configuration.*;
@@ -113,6 +117,26 @@ public final class TokenCredentialFactory
    */
   public static final Parameter<String> REDIRECT_URL = Parameter.create();
 
+  /**
+   * <p>
+   * The parameters that identify a previously resolved
+   * {@link AzureAuthenticationMethod#INTERACTIVE} or
+   * {@link AzureAuthenticationMethod#DEVICE_CODE} login eligible for reuse.
+   * Two {@code ParameterSet} instances that agree on the values of every
+   * parameter in this list are considered to represent the same login,
+   * regardless of any other, resource-specific parameters that either
+   * {@code ParameterSet} might also carry.
+   * </p><p>
+   * This list includes every parameter that {@link #interactiveCredentials}
+   * and {@link #deviceCodeCredentials} read: {@link #CLIENT_ID},
+   * {@link #TENANT_ID}, and {@link #REDIRECT_URL} (the latter is only read
+   * for {@code INTERACTIVE}, but including it here is harmless for
+   * {@code DEVICE_CODE}, where it is simply absent from every identity).
+   * </p>
+   */
+  static final List<Parameter<?>> INTERACTIVE_IDENTITY_PARAMETERS =
+          List.of(AUTHENTICATION_METHOD, CLIENT_ID, TENANT_ID, REDIRECT_URL);
+
   private static final TokenCredentialFactory INSTANCE
       = new TokenCredentialFactory();
 
@@ -126,12 +150,74 @@ public final class TokenCredentialFactory
     return INSTANCE;
   }
 
+  /**
+   * {@inheritDoc}
+   * <p>
+   * When the configured {@link #AUTHENTICATION_METHOD} is
+   * {@link AzureAuthenticationMethod#INTERACTIVE} or
+   * {@link AzureAuthenticationMethod#DEVICE_CODE}, the returned resource may
+   * wrap a previously cached {@code TokenCredential}, reused from another
+   * request that presented the same {@link #INTERACTIVE_IDENTITY_PARAMETERS}.
+   * See {@link InteractiveTokenCredentialCache}.
+   * </p>
+   */
   @Override
   public Resource<TokenCredential> request(ParameterSet parameterSet) {
-    TokenCredential tokenCredential = getCredential(parameterSet);
-    // TODO: Access tokens expire. Does a TokenCredential internally cache one?
-    //   If so, then return an expiring resource.
+
+    AzureAuthenticationMethod authenticationMethod =
+      parameterSet.contains(AUTHENTICATION_METHOD)
+        ? parameterSet.getRequired(AUTHENTICATION_METHOD)
+        : AzureAuthenticationMethod.DEFAULT;
+
+    TokenCredential tokenCredential =
+      authenticationMethod == AzureAuthenticationMethod.INTERACTIVE
+        || authenticationMethod == AzureAuthenticationMethod.DEVICE_CODE
+      ? InteractiveTokenCredentialCache.get(
+          interactiveIdentity(parameterSet),
+          () -> getCredential(authenticationMethod, parameterSet))
+      : getCredential(authenticationMethod, parameterSet);
+
     return Resource.createPermanentResource(tokenCredential, true);
+  }
+
+  /**
+   * <p>
+   * Returns a {@code ParameterSet} containing only the values of
+   * {@link #INTERACTIVE_IDENTITY_PARAMETERS} from the given
+   * {@code parameterSet}. This projection is used only as the cache key
+   * passed to {@link InteractiveTokenCredentialCache#get(ParameterSet, java.util.function.Supplier)}:
+   * two requests are considered the same login if and only if they agree on
+   * this projection. Resource-specific parameters play no role in
+   * authentication, and would otherwise cause every distinct resource
+   * request to miss the cache, even when made with the same identity.
+   * </p><p>
+   * This projection is not used as the input to building a fresh credential
+   * on a cache miss: {@code request(ParameterSet)} passes the original,
+   * unprojected {@code parameterSet} for that purpose instead, since
+   * {@link #getCredential(AzureAuthenticationMethod, ParameterSet)} may read
+   * parameters that this projection excludes.
+   *
+   * @param parameterSet Parameters of a resource request. Not null.
+   * @return The {@link #INTERACTIVE_IDENTITY_PARAMETERS} projection of
+   * {@code parameterSet}. Not null.
+   */
+  private static ParameterSet interactiveIdentity(ParameterSet parameterSet) {
+    ParameterSetBuilder builder = ParameterSet.builder();
+
+    for (Parameter<?> parameter : INTERACTIVE_IDENTITY_PARAMETERS)
+      copyValue(builder, parameterSet, parameter);
+
+    return builder.build();
+  }
+
+  /**
+   * Copies the value of a single {@code parameter} from {@code source} into {@code builder}, if present.
+   */
+  private static <T> void copyValue(
+      ParameterSetBuilder builder, ParameterSet source, Parameter<T> parameter) {
+
+    if (source.contains(parameter))
+      builder.add(source.getName(parameter), parameter, source.getOptional(parameter));
   }
 
   /**
@@ -139,14 +225,12 @@ public final class TokenCredentialFactory
    * used are configured by the parameters of the given {@code parameters}.
    * Supported parameters are defined by the class variables in
    * {@link TokenCredentialFactory}.
+   * @param authenticationMethod Method of authentication to use. Not null.
    * @param parameterSet parameters that configure credentials. Not null.
    * @return Credentials configured by parameters
    */
-  private static TokenCredential getCredential(ParameterSet parameterSet) {
-
-    AzureAuthenticationMethod authenticationMethod =
-      parameterSet.contains(AUTHENTICATION_METHOD)
-        ? parameterSet.getRequired(AUTHENTICATION_METHOD) : AzureAuthenticationMethod.DEFAULT;
+  private static TokenCredential getCredential(
+      AzureAuthenticationMethod authenticationMethod, ParameterSet parameterSet) {
 
     switch (authenticationMethod) {
       case DEFAULT:
