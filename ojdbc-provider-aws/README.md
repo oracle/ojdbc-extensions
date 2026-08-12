@@ -813,17 +813,19 @@ For example, when the connection property `oracle.jdbc.provider.password` identi
 any of the parameter names listed above may be appended to it:
 ```properties
 oracle.jdbc.provider.password=ojdbc-provider-aws-secrets-manager-password
+oracle.jdbc.provider.password.secretName=my-secret
 oracle.jdbc.provider.password.authenticationMethod=aws-default
 oracle.jdbc.provider.password.awsRegion=us-west-2
 oracle.jdbc.provider.password.fieldName=password
 ```
-In the example above, the parameter names `authenticationMethod`, `awsRegion`, and `fieldName`
+In the example above, the parameter names `secretName`, `authenticationMethod`, `awsRegion`, and `fieldName`
 are appended to the property `oracle.jdbc.provider.password`, effectively configuring the Secrets Manager Password Provider.
 
 These same parameter names can be appended to the name of any other property that identifies a provider.
 For instance, a provider identified by the connection property `oracle.jdbc.provider.username` can be configured with the same parameters:
 ```properties
 oracle.jdbc.provider.username=ojdbc-provider-aws-secrets-manager-username
+oracle.jdbc.provider.username.secretName=my-secret
 oracle.jdbc.provider.username.authenticationMethod=aws-default
 oracle.jdbc.provider.username.awsRegion=eu-central-1
 oracle.jdbc.provider.username.fieldName=username
