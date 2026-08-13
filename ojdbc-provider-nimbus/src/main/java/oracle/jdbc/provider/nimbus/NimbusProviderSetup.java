@@ -80,12 +80,19 @@ public final class NimbusProviderSetup extends ProviderSetupCli {
   }
 
   @Override
+  protected boolean hasCentralizedConfig() {
+    return false;
+  }
+
+  /**
+   * Unreachable: {@link #hasCentralizedConfig()} returns false, so the main
+   * menu never offers the option that would call this. This module has no
+   * centralized configuration provider -- only the Access Token resource
+   * provider.
+   */
+  @Override
   protected void setupCentralizedConfigUrl() {
-    System.out.println();
-    System.out.println(
-      "This module does not offer a centralized configuration provider. "
-        + "Only the Access Token resource provider is available; choose "
-        + "\"Add resource provider\" from the main menu instead.");
+    throw new AssertionError();
   }
 
   @Override
@@ -109,7 +116,7 @@ public final class NimbusProviderSetup extends ProviderSetupCli {
     properties.put(prefix, "ojdbc-provider-nimbus-token");
     properties.put(prefix + ".tokenEndpoint",
       readRequired("Token endpoint "
-        + "(e.g. https://example.com/oauth2/v1/token): "));
+        + "(e.g. https://example.com/oauth2/v1/token) [required]: "));
 
     switch (promptMenu("Choose a grant type:",
       "Client credentials",
@@ -117,16 +124,16 @@ public final class NimbusProviderSetup extends ProviderSetupCli {
       "Authorization code")) {
       case 1:
         properties.put(prefix + ".grantType", "client_credentials");
-        properties.put(prefix + ".clientId", readRequired("Client ID: "));
+        properties.put(prefix + ".clientId", readRequired("Client ID [required]: "));
         properties.put(prefix + ".clientSecret",
-          readRequired("Client secret: "));
+          readRequired("Client secret [required]: "));
         break;
       case 2:
         properties.put(prefix + ".grantType", "password");
         properties.put(prefix + ".username",
-          readRequired("Resource owner username: "));
+          readRequired("Resource owner username [required]: "));
         properties.put(prefix + ".password",
-          readRequired("Resource owner password: "));
+          readRequired("Resource owner password [required]: "));
         addIfPresent(properties, prefix + ".clientId",
           readOptional("Client ID [optional, required by some "
             + "authorization servers]: "));
@@ -136,15 +143,15 @@ public final class NimbusProviderSetup extends ProviderSetupCli {
         break;
       case 3:
         properties.put(prefix + ".grantType", "authorization_code");
-        properties.put(prefix + ".clientId", readRequired("Client ID: "));
+        properties.put(prefix + ".clientId", readRequired("Client ID [required]: "));
         addIfPresent(properties, prefix + ".clientSecret",
           readOptional("Client secret [optional, only if the client is "
             + "confidential]: "));
         properties.put(prefix + ".authorizationEndpoint",
           readRequired("Authorization endpoint "
-            + "(e.g. https://example.com/oauth2/v1/authorize): "));
+            + "(e.g. https://example.com/oauth2/v1/authorize) [required]: "));
         properties.put(prefix + ".redirectUri",
-          readRequired("Redirect URI (e.g. http://localhost:1977): "));
+          readRequired("Redirect URI (e.g. http://localhost:1977) [required]: "));
         break;
       default:
         throw new AssertionError();

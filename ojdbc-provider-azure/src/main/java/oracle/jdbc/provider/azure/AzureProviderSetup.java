@@ -46,14 +46,6 @@ import java.util.Scanner;
 
 /**
  * Interactive setup helper for users running this provider jar directly.
- * <p>
- * Resource providers and centralized configuration providers accept
- * different sets of authentication methods in this module: resource
- * providers support 6 methods (including Device Code), while centralized
- * configuration providers support only 4 (Default, Service Principal,
- * Managed Identity, Interactive). The two menus in this class reflect that
- * difference rather than sharing one list.
- * </p>
  */
 public final class AzureProviderSetup extends ProviderSetupCli {
 
@@ -125,7 +117,8 @@ public final class AzureProviderSetup extends ProviderSetupCli {
     properties.put(prefix + ".scope", readRequired(
       "Scope: the Application ID URI of the database registered with "
         + "Active Directory, optionally followed by a scope name "
-        + "(e.g. https://example.com/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/.default): "));
+        + "(e.g. https://example.com/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/.default) "
+        + "[required]: "));
     addResourceAuthentication(properties, prefix);
 
     addResourceProperties(properties,
@@ -138,8 +131,8 @@ public final class AzureProviderSetup extends ProviderSetupCli {
     LinkedHashMap<String, String> properties = new LinkedHashMap<>();
     properties.put(prefix, "ojdbc-provider-azure-key-vault-username");
     properties.put(prefix + ".vaultUrl",
-      readRequired("Key Vault URL (e.g. https://myvault.vault.azure.net): "));
-    properties.put(prefix + ".secretName", readRequired("Secret name: "));
+      readRequired("Key Vault URL (e.g. https://myvault.vault.azure.net) [required]: "));
+    properties.put(prefix + ".secretName", readRequired("Secret name [required]: "));
     addResourceAuthentication(properties, prefix);
 
     addResourceProperties(properties,
@@ -152,8 +145,8 @@ public final class AzureProviderSetup extends ProviderSetupCli {
     LinkedHashMap<String, String> properties = new LinkedHashMap<>();
     properties.put(prefix, "ojdbc-provider-azure-key-vault-password");
     properties.put(prefix + ".vaultUrl",
-      readRequired("Key Vault URL (e.g. https://myvault.vault.azure.net): "));
-    properties.put(prefix + ".secretName", readRequired("Secret name: "));
+      readRequired("Key Vault URL (e.g. https://myvault.vault.azure.net) [required]: "));
+    properties.put(prefix + ".secretName", readRequired("Secret name [required]: "));
     addResourceAuthentication(properties, prefix);
 
     addResourceProperties(properties,
@@ -166,10 +159,10 @@ public final class AzureProviderSetup extends ProviderSetupCli {
     LinkedHashMap<String, String> properties = new LinkedHashMap<>();
     properties.put(prefix, "ojdbc-provider-azure-key-vault-tnsnames");
     properties.put(prefix + ".vaultUrl",
-      readRequired("Key Vault URL (e.g. https://myvault.vault.azure.net): "));
+      readRequired("Key Vault URL (e.g. https://myvault.vault.azure.net) [required]: "));
     properties.put(prefix + ".secretName",
-      readRequired("Secret name for tnsnames.ora: "));
-    properties.put(prefix + ".tnsAlias", readRequired("TNS alias: "));
+      readRequired("Secret name for tnsnames.ora [required]: "));
+    properties.put(prefix + ".tnsAlias", readRequired("TNS alias [required]: "));
     addResourceAuthentication(properties, prefix);
 
     addResourceProperties(properties,
@@ -182,11 +175,11 @@ public final class AzureProviderSetup extends ProviderSetupCli {
     LinkedHashMap<String, String> properties = new LinkedHashMap<>();
     properties.put(prefix, "ojdbc-provider-azure-key-vault-tls");
     properties.put(prefix + ".vaultUrl",
-      readRequired("Key Vault URL (e.g. https://myvault.vault.azure.net): "));
+      readRequired("Key Vault URL (e.g. https://myvault.vault.azure.net) [required]: "));
     properties.put(prefix + ".secretName",
-      readRequired("Secret name for the TCPS wallet/file: "));
+      readRequired("Secret name for the TCPS wallet/file [required]: "));
     properties.put(prefix + ".type",
-      readRequired("File type (SSO, PKCS12, or PEM): "));
+      readRequired("File type (SSO, PKCS12, or PEM) [required]: "));
     addIfPresent(properties, prefix + ".walletPassword",
       readOptional("Wallet password [optional, required only for PKCS12 "
         + "or password-protected PEM files]: "));
@@ -203,8 +196,8 @@ public final class AzureProviderSetup extends ProviderSetupCli {
       "Username only",
       "Password only");
     String vaultUrl =
-      readRequired("Key Vault URL (e.g. https://myvault.vault.azure.net): ");
-    String secretName = readRequired("Secret name for the SEPS wallet: ");
+      readRequired("Key Vault URL (e.g. https://myvault.vault.azure.net) [required]: ");
+    String secretName = readRequired("Secret name for the SEPS wallet [required]: ");
     String walletPassword = readOptional(
       "Wallet password [optional, required only for PKCS12 wallets]: ");
     String connectionStringIndex =
@@ -369,7 +362,7 @@ public final class AzureProviderSetup extends ProviderSetupCli {
   }
 
   private void buildAzureAppConfigurationUrl() {
-    String name = readRequired("App Configuration store name: ");
+    String name = readRequired("App Configuration store name [required]: ");
     LinkedHashMap<String, String> parameters = centralizedConfigAuth();
     addIfPresent(parameters, "key",
       readOptional("Key prefix [optional, e.g. /sales_app1/]: "));
@@ -385,7 +378,8 @@ public final class AzureProviderSetup extends ProviderSetupCli {
   private void buildAzureVaultConfigUrl() {
     String secretIdentifier = readRequired(
       "Vault secret identifier "
-        + "(e.g. https://myvault.vault.azure.net/secrets/mySecretName): ");
+        + "(e.g. https://myvault.vault.azure.net/secrets/mySecretName) "
+        + "[required]: ");
     LinkedHashMap<String, String> parameters = centralizedConfigAuth();
     addIfPresent(parameters, "key",
       readOptional("Key of the datasource, if the JSON payload contains "

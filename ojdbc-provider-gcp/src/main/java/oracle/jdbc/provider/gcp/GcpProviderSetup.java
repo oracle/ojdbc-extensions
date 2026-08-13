@@ -46,12 +46,6 @@ import java.util.Scanner;
 
 /**
  * Interactive setup helper for users running this provider jar directly.
- * <p>
- * Unlike other clouds supported by this project, GCP providers do not accept
- * an authentication method parameter: authentication always relies on
- * Application Default Credentials (ADC), resolved by the Google Cloud SDK.
- * This wizard therefore never prompts for an authentication method.
- * </p>
  */
 public final class GcpProviderSetup extends ProviderSetupCli {
 
@@ -139,7 +133,7 @@ public final class GcpProviderSetup extends ProviderSetupCli {
     LinkedHashMap<String, String> properties = new LinkedHashMap<>();
     properties.put(prefix, "ojdbc-provider-gcp-secretmanager-tnsnames");
     properties.put(prefix + ".secretVersionName", readSecretVersionName());
-    properties.put(prefix + ".tnsAlias", readRequired("TNS alias: "));
+    properties.put(prefix + ".tnsAlias", readRequired("TNS alias [required]: "));
 
     addResourceProperties(properties,
       "Connection String Provider from GCP Secret Manager",
@@ -152,7 +146,7 @@ public final class GcpProviderSetup extends ProviderSetupCli {
     properties.put(prefix, "ojdbc-provider-gcp-secretmanager-tls");
     properties.put(prefix + ".secretVersionName", readSecretVersionName());
     properties.put(prefix + ".type",
-      readRequired("File type (SSO, PKCS12, or PEM): "));
+      readRequired("File type (SSO, PKCS12, or PEM) [required]: "));
     addIfPresent(properties, prefix + ".walletPassword",
       readOptional("Wallet password [optional, required only for PKCS12 "
         + "or password-protected PEM files]: "));
@@ -202,7 +196,8 @@ public final class GcpProviderSetup extends ProviderSetupCli {
   private String readSecretVersionName() {
     return readRequired(
       "Secret Manager secret version resource name "
-        + "(e.g. projects/{project}/secrets/{secret}/versions/{version}): ");
+        + "(e.g. projects/{project}/secrets/{secret}/versions/{version}) "
+        + "[required]: ");
   }
 
   @Override
@@ -235,12 +230,13 @@ public final class GcpProviderSetup extends ProviderSetupCli {
         break;
       case 2:
         addGcpCloudStorageConfigUrl(
-          readRequired("gs:// URI (e.g. gs://mybucket/config.json): "));
+          readRequired("gs:// URI (e.g. gs://mybucket/config.json) [required]: "));
         break;
       case 3:
         addGcpCloudStorageConfigUrl(
           readRequired("Public storage.googleapis.com URL "
-            + "(e.g. https://storage.googleapis.com/mybucket/config.json): "));
+            + "(e.g. https://storage.googleapis.com/mybucket/config.json) "
+            + "[required]: "));
         break;
       case 4:
         break;
@@ -250,8 +246,8 @@ public final class GcpProviderSetup extends ProviderSetupCli {
   }
 
   private void buildGcpCloudStorageNamedValuesUrl() {
-    String bucket = readRequired("Bucket name: ");
-    String object = readRequired("Object name: ");
+    String bucket = readRequired("Bucket name [required]: ");
+    String object = readRequired("Object name [required]: ");
     String project = readOptional("Project id [optional]: ");
 
     StringBuilder location = new StringBuilder();

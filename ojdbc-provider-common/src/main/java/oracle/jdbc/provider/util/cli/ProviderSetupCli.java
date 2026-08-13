@@ -39,9 +39,6 @@
 package oracle.jdbc.provider.util.cli;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -55,11 +52,11 @@ import java.util.Scanner;
 
 /**
  * Base class for interactive setup helpers run directly from a provider jar
- * (ie: {@code java -jar ojdbc-provider-<cloud>-<version>.jar}). Subclasses
- * supply the cloud-specific menu content (which centralized configuration
+ * (ie: {@code java -jar ojdbc-provider-<name>-<version>.jar}). Subclasses
+ * supply the provider-specific menu content (which centralized configuration
  * schemes exist, which resource providers exist, and how authentication is
- * configured for that cloud); this class owns the menu loop, prompting,
- * and export/print/clear plumbing shared by every cloud.
+ * configured); this class owns the menu loop, prompting, and
+ * export/print/clear plumbing shared by every provider module.
  */
 public abstract class ProviderSetupCli {
 
@@ -87,53 +84,54 @@ public abstract class ProviderSetupCli {
   protected abstract void setupResourceProvider();
 
   /**
+   * Whether this provider offers any centralized configuration URL scheme
+   * at all. Defaults to true. Override to return false for a provider like
+   * Nimbus that only offers resource providers, so the main menu never
+   * offers an "Add centralized configuration URL" option that would lead
+   * nowhere for that provider.
+   *
+   * @return True if {@link #setupCentralizedConfigUrl()} does something.
+   */
+  protected boolean hasCentralizedConfig() {
+    return true;
+  }
+
+  /**
    * Runs the interactive setup helper. Subclasses expose this from their own
    * {@code main(String[])} method.
    */
   protected final void run() {
     System.out.println();
     System.out.println(displayName() + " " + version());
-    System.out.println("Found in: " + location());
     System.out.println(
-      "This helper prints setup values. It does not connect to the cloud "
+      "This helper prints setup values. It does not connect to the "
         + "provider or validate credentials.");
 
     while (true) {
-      int choice = hasGeneratedConfiguration()
-        ? promptMenu("Choose an option:",
-            "Add centralized configuration URL",
-            "Add resource provider",
-            "Export generated configuration",
-            "Clear generated configuration",
-            "Exit")
-        : promptMenu("Choose an option:",
-            "Add centralized configuration URL",
-            "Add resource provider",
-            "Exit");
+      List<String> labels = new ArrayList<>();
+      List<Runnable> actions = new ArrayList<>();
 
-      switch (choice) {
-        case 1:
-          setupCentralizedConfigUrl();
-          break;
-        case 2:
-          setupResourceProvider();
-          break;
-        case 3:
-          if (hasGeneratedConfiguration()) {
-            exportGeneratedConfiguration();
-          }
-          else {
-            return;
-          }
-          break;
-        case 4:
-          clearGeneratedConfiguration();
-          break;
-        case 5:
-          return;
-        default:
-          throw new AssertionError();
+      if (hasCentralizedConfig()) {
+        labels.add("Add centralized configuration URL");
+        actions.add(this::setupCentralizedConfigUrl);
       }
+      labels.add("Add resource provider");
+      actions.add(this::setupResourceProvider);
+      if (hasGeneratedConfiguration()) {
+        labels.add("Export generated configuration");
+        actions.add(this::exportGeneratedConfiguration);
+        labels.add("Clear generated configuration");
+        actions.add(this::clearGeneratedConfiguration);
+      }
+      labels.add("Exit");
+      actions.add(null);
+
+      int choice = promptMenu("Choose an option:", labels.toArray(new String[0]));
+      Runnable action = actions.get(choice - 1);
+      if (action == null) {
+        return;
+      }
+      action.run();
     }
   }
 
@@ -206,6 +204,13 @@ public abstract class ProviderSetupCli {
     }
   }
 
+  /**
+   * Prompts for a value that cannot be blank. Keeps re-prompting until the
+   * user enters something other than whitespace.
+   *
+   * @param prompt Text printed before reading input.
+   * @return The trimmed, non-empty input. Never null or empty.
+   */
   protected final String readRequired(String prompt) {
     while (true) {
       System.out.print(prompt);
@@ -217,12 +222,24 @@ public abstract class ProviderSetupCli {
     }
   }
 
+  /**
+   * Prompts for a value that may be left blank.
+   *
+   * @param prompt Text printed before reading input.
+   * @return The trimmed input, or null if the user entered nothing.
+   */
   protected final String readOptional(String prompt) {
     System.out.print(prompt);
     String input = scanner.nextLine().trim();
     return input.isEmpty() ? null : input;
   }
 
+  /**
+   * Adds {@code key=value} to {@code values}, but only if {@code value}
+   * isn't null. This is how skipped/optional prompts (see
+   * {@link #readOptional}) stay out of the generated output instead of
+   * showing up as blank properties.
+   */
   protected static void addIfPresent(
     Map<String, String> values, String key, String value) {
     if (value != null) {
@@ -230,6 +247,13 @@ public abstract class ProviderSetupCli {
     }
   }
 
+  /**
+   * Copies every entry of {@code suffixValues} into {@code properties},
+   * with {@code prefix + "."} attached to each key. Used to attach a set of
+   * authentication parameters (eg: {@code authenticationMethod},
+   * {@code awsRegion}) under whichever connection property is currently
+   * being configured (eg: {@code oracle.jdbc.provider.password}).
+   */
   protected static void addWithPrefix(
     Map<String, String> properties, String prefix,
     Map<String, String> suffixValues) {
@@ -240,6 +264,15 @@ public abstract class ProviderSetupCli {
     }
   }
 
+  /**
+   * Merges a freshly-built batch of properties into
+   * {@link #generatedProperties}. If the batch reconfigures a connection
+   * property that already has a provider stored under it (eg: the user
+   * already set up a Password provider and is now setting up another one),
+   * the old entries for that property are removed first via
+   * {@link #removeGeneratedProperties}, so old and new provider settings
+   * never end up mixed together under the same key.
+   */
   private void replaceGeneratedProperties(
     Map<String, String> properties, String comment) {
     LinkedHashMap<String, Boolean> providerPrefixes = new LinkedHashMap<>();
@@ -258,6 +291,13 @@ public abstract class ProviderSetupCli {
     generatedProperties.putAll(properties);
   }
 
+  /**
+   * Deletes every stored property whose key is {@code providerPrefix} or
+   * starts with {@code providerPrefix + "."} (eg: removing
+   * {@code oracle.jdbc.provider.password} also removes
+   * {@code oracle.jdbc.provider.password.secretName}, etc). Prints a notice
+   * if anything was actually removed.
+   */
   private void removeGeneratedProperties(String providerPrefix) {
     boolean replaced = false;
     List<String> existingKeys = new ArrayList<>(generatedProperties.keySet());
@@ -278,6 +318,11 @@ public abstract class ProviderSetupCli {
     }
   }
 
+  /**
+   * Handles the "Export generated configuration" menu option: shows the
+   * print/append-to-file/back submenu, or tells the user there's nothing to
+   * export yet.
+   */
   private void exportGeneratedConfiguration() {
     if (!hasGeneratedConfiguration()) {
       System.out.println();
@@ -305,6 +350,11 @@ public abstract class ProviderSetupCli {
     }
   }
 
+  /**
+   * Prints everything generated so far straight to the terminal: the
+   * centralized configuration URLs (if any), then the resource-provider
+   * properties (if any).
+   */
   private void printGeneratedConfiguration() {
     System.out.println();
     System.out.println("Generated configuration:");
@@ -325,6 +375,13 @@ public abstract class ProviderSetupCli {
     }
   }
 
+  /**
+   * Prompts for a file path and appends everything generated so far to it.
+   * Always appends (never overwrites), and creates the file if it doesn't
+   * exist yet, so running the helper multiple times keeps adding to the
+   * same file. Prints a friendly message instead of crashing if the write
+   * fails (bad path, permissions, etc).
+   */
   private void appendGeneratedConfigurationToFile() {
     String filePath = readRequired("File path: ");
     Path path = Paths.get(filePath);
@@ -346,6 +403,14 @@ public abstract class ProviderSetupCli {
     }
   }
 
+  /**
+   * Builds the exact text lines to write when exporting to a file. URLs are
+   * written as comments only (a raw JDBC URL isn't a valid properties-file
+   * line), while properties are written as real {@code key=value} lines.
+   *
+   * @param appendSeparator Whether to start with a blank line, ie: whether
+   *   the target file already has content in it.
+   */
   private List<String> fileExportLines(boolean appendSeparator) {
     List<String> lines = new ArrayList<>();
 
@@ -381,6 +446,11 @@ public abstract class ProviderSetupCli {
     return lines;
   }
 
+  /**
+   * Handles the "Clear generated configuration" menu option: empties
+   * everything generated so far, so the user can start over without
+   * restarting the jar.
+   */
   private void clearGeneratedConfiguration() {
     if (!hasGeneratedConfiguration()) {
       System.out.println();
@@ -396,10 +466,16 @@ public abstract class ProviderSetupCli {
     System.out.println("Generated configuration cleared.");
   }
 
+  /**
+   * @return True if anything has been generated so far. Controls whether
+   *   the main menu shows Export/Clear, and guards those two actions from
+   *   running with nothing to act on.
+   */
   private boolean hasGeneratedConfiguration() {
     return !generatedUrls.isEmpty() || !generatedProperties.isEmpty();
   }
 
+  /** Prints each property as {@code # comment} (if any) then {@code key=value}. */
   private static void printProperties(
     Map<String, String> properties, Map<String, String> comments) {
 
@@ -412,6 +488,11 @@ public abstract class ProviderSetupCli {
     }
   }
 
+  /**
+   * Turns a parameter map into a URL query string, eg:
+   * {@code ?AUTHENTICATION=AWS_DEFAULT&AWS_REGION=us-west-2}. Returns an
+   * empty string (not a bare {@code "?"}) if {@code parameters} is empty.
+   */
   private static String queryString(Map<String, String> parameters) {
     if (parameters.isEmpty()) {
       return "";
@@ -422,31 +503,59 @@ public abstract class ProviderSetupCli {
       if (query.length() > 1) {
         query.append('&');
       }
-      query.append(urlEncode(parameter.getKey()))
+      query.append(encodeQueryComponent(parameter.getKey()))
         .append('=')
-        .append(urlEncode(parameter.getValue()));
+        .append(encodeQueryComponent(parameter.getValue()));
     }
     return query.toString();
   }
 
-  private static String urlEncode(String value) {
-    try {
-      return URLEncoder.encode(value, "UTF-8");
+  /**
+   * Percent-encodes only the characters that would otherwise corrupt the
+   * query string this value is embedded in: a space (encoded as {@code
+   * %20}, never as {@code +} -- the decoder used at connection time,
+   * {@code oracle.jdbc.provider.parameter.UriParameters}, deliberately
+   * treats a literal {@code +} as a literal {@code +}, not a space), a
+   * literal {@code %} (the escape character itself), and {@code &}/{@code
+   * =}/{@code #} (which that decoder relies on to find the boundaries
+   * between parameters). Every other character -- including {@code /},
+   * which does not need escaping inside a URI query -- is left exactly as
+   * typed, so the printed URL stays as readable as possible instead of
+   * being over-encoded like a generic {@code java.net.URLEncoder} would do.
+   */
+  private static String encodeQueryComponent(String value) {
+    StringBuilder encoded = new StringBuilder(value.length());
+
+    for (byte valueByte : value.getBytes(StandardCharsets.UTF_8)) {
+      int unsignedByte = valueByte & 0xFF;
+      if (unsignedByte == ' ' || unsignedByte == '%' || unsignedByte == '&'
+        || unsignedByte == '=' || unsignedByte == '#'
+        || unsignedByte < 0x20 || unsignedByte > 0x7E) {
+        encoded.append('%')
+          .append(Character.forDigit((unsignedByte >>> 4) & 0xF, 16))
+          .append(Character.forDigit(unsignedByte & 0xF, 16));
+      }
+      else {
+        encoded.append((char) unsignedByte);
+      }
     }
-    catch (UnsupportedEncodingException impossible) {
-      throw new AssertionError(impossible);
-    }
+
+    return encoded.toString();
   }
 
+  /**
+   * @return The jar's version from its manifest (eg: "1.1.0")
+   */
   private String version() {
     String version = getClass().getPackage().getImplementationVersion();
     return version != null ? version : "unknown";
   }
 
-  private URL location() {
-    return getClass().getResource(getClass().getSimpleName() + ".class");
-  }
-
+  /**
+   * One centralized configuration URL plus the comment describing it. A
+   * plain map won't do here: unlike properties, a URL has no natural
+   * "key" of its own to attach a comment to.
+   */
   private static final class GeneratedUrl {
     private final String comment;
     private final String url;

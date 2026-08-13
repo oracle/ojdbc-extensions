@@ -165,7 +165,7 @@ public final class AwsProviderSetup extends ProviderSetupCli {
     LinkedHashMap<String, String> properties = new LinkedHashMap<>();
     properties.put(prefix, providerName);
     properties.put(prefix + ".secretName",
-      readRequired("Secrets Manager secret name for the " + label + ": "));
+      readRequired("Secrets Manager secret name for the " + label + " [required]: "));
     addIfPresent(properties, prefix + ".fieldName",
       readOptional("Field name within the secret [optional, only needed "
         + "when the secret holds multiple key-value pairs]: "));
@@ -181,7 +181,7 @@ public final class AwsProviderSetup extends ProviderSetupCli {
     LinkedHashMap<String, String> properties = new LinkedHashMap<>();
     properties.put(prefix, providerName);
     properties.put(prefix + ".parameterName",
-      readRequired("Parameter Store parameter name for the " + label + ": "));
+      readRequired("Parameter Store parameter name for the " + label + " [required]: "));
     addResourceAuthentication(properties, prefix);
 
     addResourceProperties(properties, comment, anchor);
@@ -208,8 +208,8 @@ public final class AwsProviderSetup extends ProviderSetupCli {
     LinkedHashMap<String, String> properties = new LinkedHashMap<>();
     properties.put(prefix, "ojdbc-provider-aws-secrets-manager-tnsnames");
     properties.put(prefix + ".secretName",
-      readRequired("Secrets Manager secret name for tnsnames.ora: "));
-    properties.put(prefix + ".tnsAlias", readRequired("TNS alias: "));
+      readRequired("Secrets Manager secret name for tnsnames.ora [required]: "));
+    properties.put(prefix + ".tnsAlias", readRequired("TNS alias [required]: "));
     addIfPresent(properties, prefix + ".fieldName",
       readOptional("Field name within the secret [optional, only needed "
         + "when the secret holds multiple key-value pairs]: "));
@@ -225,8 +225,8 @@ public final class AwsProviderSetup extends ProviderSetupCli {
     LinkedHashMap<String, String> properties = new LinkedHashMap<>();
     properties.put(prefix, "ojdbc-provider-aws-parameter-store-tnsnames");
     properties.put(prefix + ".parameterName",
-      readRequired("Parameter Store parameter name for tnsnames.ora: "));
-    properties.put(prefix + ".tnsAlias", readRequired("TNS alias: "));
+      readRequired("Parameter Store parameter name for tnsnames.ora [required]: "));
+    properties.put(prefix + ".tnsAlias", readRequired("TNS alias [required]: "));
     addResourceAuthentication(properties, prefix);
 
     addResourceProperties(properties,
@@ -239,9 +239,9 @@ public final class AwsProviderSetup extends ProviderSetupCli {
     LinkedHashMap<String, String> properties = new LinkedHashMap<>();
     properties.put(prefix, "ojdbc-provider-aws-secrets-manager-tls");
     properties.put(prefix + ".secretName",
-      readRequired("Secrets Manager secret name for the TCPS wallet/file: "));
+      readRequired("Secrets Manager secret name for the TCPS wallet/file [required]: "));
     properties.put(prefix + ".type",
-      readRequired("File type (SSO, PKCS12, or PEM): "));
+      readRequired("File type (SSO, PKCS12, or PEM) [required]: "));
     addIfPresent(properties, prefix + ".walletPassword",
       readOptional("Wallet password [optional, required only for PKCS12 "
         + "or password-protected PEM files]: "));
@@ -275,7 +275,7 @@ public final class AwsProviderSetup extends ProviderSetupCli {
     int useCase = promptMenu("Choose what to configure from the SEPS wallet:",
       "Username and password", "Username only", "Password only");
     String secretName =
-      readRequired("Secrets Manager secret name for the SEPS wallet: ");
+      readRequired("Secrets Manager secret name for the SEPS wallet [required]: ");
     String walletPassword = readOptional(
       "Wallet password [optional, required only for PKCS12 wallets]: ");
     String connectionStringIndex =
@@ -307,7 +307,7 @@ public final class AwsProviderSetup extends ProviderSetupCli {
     int useCase = promptMenu("Choose what to configure from the SEPS wallet:",
       "Username and password", "Username only", "Password only");
     String parameterName =
-      readRequired("Parameter Store parameter name for the SEPS wallet: ");
+      readRequired("Parameter Store parameter name for the SEPS wallet [required]: ");
     String walletPassword = readOptional(
       "Wallet password [optional, required only for PKCS12 wallets]: ");
     String connectionStringIndex =
@@ -394,7 +394,7 @@ public final class AwsProviderSetup extends ProviderSetupCli {
   private void buildAwsS3ConfigUrl() {
     String location = readRequired(
       "S3 location, with or without the s3:// prefix "
-        + "(e.g. mybucket/payload.json): ");
+        + "(e.g. mybucket/payload.json) [required]: ");
     LinkedHashMap<String, String> parameters = centralizedConfigAuth();
     addIfPresent(parameters, "key",
       readOptional("Key of the datasource, if the JSON payload contains "
@@ -408,7 +408,7 @@ public final class AwsProviderSetup extends ProviderSetupCli {
   }
 
   private void buildAwsSecretsManagerConfigUrl() {
-    String secretName = readRequired("Secrets Manager secret name: ");
+    String secretName = readRequired("Secrets Manager secret name [required]: ");
     LinkedHashMap<String, String> parameters = centralizedConfigAuth();
     addIfPresent(parameters, "key",
       readOptional("Key of the datasource, if the JSON payload contains "
@@ -425,7 +425,7 @@ public final class AwsProviderSetup extends ProviderSetupCli {
   }
 
   private void buildAwsParameterStoreConfigUrl() {
-    String parameterName = readRequired("Parameter Store parameter name: ");
+    String parameterName = readRequired("Parameter Store parameter name [required]: ");
     LinkedHashMap<String, String> parameters = centralizedConfigAuth();
     addIfPresent(parameters, "key",
       readOptional("Key of the datasource, if the JSON payload contains "
@@ -440,7 +440,7 @@ public final class AwsProviderSetup extends ProviderSetupCli {
 
   private void buildAwsAppConfigConfigUrl() {
     String applicationIdentifier =
-      readRequired("AppConfig application identifier: ");
+      readRequired("AppConfig application identifier [required]: ");
     LinkedHashMap<String, String> parameters = centralizedConfigAuth();
     addIfPresent(parameters, "appconfig_environment",
       readOptional("AppConfig environment id or name [optional]: "));

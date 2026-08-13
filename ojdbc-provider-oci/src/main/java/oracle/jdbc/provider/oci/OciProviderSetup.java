@@ -141,7 +141,7 @@ public final class OciProviderSetup extends ProviderSetupCli {
     LinkedHashMap<String, String> properties = new LinkedHashMap<>();
     properties.put(prefix, "ojdbc-provider-oci-database-connection-string");
     properties.put(prefix + ".ocid",
-      readRequired("Autonomous Database OCID: "));
+      readRequired("Autonomous Database OCID [required]: "));
     addIfPresent(properties, prefix + ".consumerGroup",
       readOptional("Consumer group [default: MEDIUM]: "));
     addResourceAuthentication(properties, prefix);
@@ -156,7 +156,7 @@ public final class OciProviderSetup extends ProviderSetupCli {
     LinkedHashMap<String, String> properties = new LinkedHashMap<>();
     properties.put(prefix, "ojdbc-provider-oci-database-tls");
     properties.put(prefix + ".ocid",
-      readRequired("Autonomous Database OCID: "));
+      readRequired("Autonomous Database OCID [required]: "));
     addResourceAuthentication(properties, prefix);
 
     addResourceProperties(properties,
@@ -169,7 +169,7 @@ public final class OciProviderSetup extends ProviderSetupCli {
     LinkedHashMap<String, String> properties = new LinkedHashMap<>();
     properties.put(prefix, "ojdbc-provider-oci-vault-username");
     properties.put(prefix + ".ocid",
-      readRequired("Vault secret OCID for username: "));
+      readRequired("Vault secret OCID for username [required]: "));
     addResourceAuthentication(properties, prefix);
 
     addResourceProperties(properties,
@@ -182,7 +182,7 @@ public final class OciProviderSetup extends ProviderSetupCli {
     LinkedHashMap<String, String> properties = new LinkedHashMap<>();
     properties.put(prefix, "ojdbc-provider-oci-vault-password");
     properties.put(prefix + ".ocid",
-      readRequired("Vault secret OCID for password: "));
+      readRequired("Vault secret OCID for password [required]: "));
     addResourceAuthentication(properties, prefix);
 
     addResourceProperties(properties,
@@ -195,8 +195,8 @@ public final class OciProviderSetup extends ProviderSetupCli {
     LinkedHashMap<String, String> properties = new LinkedHashMap<>();
     properties.put(prefix, "ojdbc-provider-oci-vault-tnsnames");
     properties.put(prefix + ".ocid",
-      readRequired("Vault secret OCID for tnsnames.ora: "));
-    properties.put(prefix + ".tnsAlias", readRequired("TNS alias: "));
+      readRequired("Vault secret OCID for tnsnames.ora [required]: "));
+    properties.put(prefix + ".tnsAlias", readRequired("TNS alias [required]: "));
     addResourceAuthentication(properties, prefix);
 
     addResourceProperties(properties,
@@ -209,9 +209,9 @@ public final class OciProviderSetup extends ProviderSetupCli {
     LinkedHashMap<String, String> properties = new LinkedHashMap<>();
     properties.put(prefix, "ojdbc-provider-oci-vault-tls");
     properties.put(prefix + ".ocid",
-      readRequired("Vault secret OCID for TLS wallet/file: "));
+      readRequired("Vault secret OCID for TLS wallet/file [required]: "));
     properties.put(prefix + ".type",
-      readRequired("File type (SSO, PKCS12, or PEM): "));
+      readRequired("File type (SSO, PKCS12, or PEM) [required]: "));
     addIfPresent(properties, prefix + ".walletPassword",
       readOptional(
         "Wallet password expression [optional, no default, for example ${TLS_FILE_PASSWORD}]: "));
@@ -227,7 +227,7 @@ public final class OciProviderSetup extends ProviderSetupCli {
       "Username and password",
       "Username only",
       "Password only");
-    String ocid = readRequired("Vault secret OCID for SEPS wallet: ");
+    String ocid = readRequired("Vault secret OCID for SEPS wallet [required]: ");
     String walletPassword = readOptional(
       "Wallet password expression [optional, no default, for example ${SEPS_WALLET_PASSWORD}]: ");
     String connectionStringIndex =
@@ -303,11 +303,11 @@ public final class OciProviderSetup extends ProviderSetupCli {
       "All databases in tenancy",
       "Enter full scope manually")) {
       case 1:
-        String compartment = readRequired("Compartment OCID: ");
-        String database = readRequired("Database OCID: ");
+        String compartment = readRequired("Compartment OCID [required]: ");
+        String database = readRequired("Database OCID [required]: ");
         return TOKEN_SCOPE_PREFIX + compartment + "::" + database;
       case 2:
-        return TOKEN_SCOPE_PREFIX + readRequired("Compartment OCID: ");
+        return TOKEN_SCOPE_PREFIX + readRequired("Compartment OCID [required]: ");
       case 3:
         return TOKEN_SCOPE_PREFIX + "*";
       case 4:
@@ -319,7 +319,7 @@ public final class OciProviderSetup extends ProviderSetupCli {
 
   private String readScopeValue() {
     while (true) {
-      String scope = readRequired("Scope: ");
+      String scope = readRequired("Scope [required]: ");
       if (scope.startsWith(TOKEN_SCOPE_PREFIX)
         && scope.length() > TOKEN_SCOPE_PREFIX.length()) {
         return scope;
@@ -354,7 +354,7 @@ public final class OciProviderSetup extends ProviderSetupCli {
   private void buildOciVaultConfigUrl() {
     addConfigUrl(
       "jdbc:oracle:thin:@config-ocivault://"
-        + readRequired("Vault secret OCID: "),
+        + readRequired("Vault secret OCID [required]: "),
       "OCI Vault centralized configuration provider",
       "#oci-vault-config-provider");
   }
@@ -362,7 +362,7 @@ public final class OciProviderSetup extends ProviderSetupCli {
   private void buildOciObjectStorageConfigUrl() {
     addConfigUrl(
       "jdbc:oracle:thin:@config-ociobject://"
-        + readRequired("Object Storage URL path, without https://: "),
+        + readRequired("Object Storage URL path, without https:// [required]: "),
       "OCI Object Storage centralized configuration provider",
       "#oci-object-storage-config-provider");
   }
@@ -370,7 +370,7 @@ public final class OciProviderSetup extends ProviderSetupCli {
   private void buildOciDatabaseToolsConfigUrl() {
     addConfigUrl(
       "jdbc:oracle:thin:@config-ocidbtools://"
-        + readRequired("Database Tools connection OCID: "),
+        + readRequired("Database Tools connection OCID [required]: "),
       "OCI Database Tools Connection centralized configuration provider",
       "#oci-database-tools-connections-config-provider");
   }

@@ -47,10 +47,6 @@ import java.util.Scanner;
 
 /**
  * Interactive setup helper for users running this provider jar directly.
- * <p>
- * Covers HCP Vault Dedicated, the only backing store currently implemented
- * by this module.
- * </p>
  */
 public final class HashicorpProviderSetup extends ProviderSetupCli {
 
@@ -143,7 +139,7 @@ public final class HashicorpProviderSetup extends ProviderSetupCli {
     properties.put(prefix, "ojdbc-provider-hcpvault-dedicated-tnsnames");
     properties.put(prefix + ".secretPath", readSecretPath());
     addIfPresent(properties, prefix + ".fieldName", readFieldName());
-    properties.put(prefix + ".tnsAlias", readRequired("TNS alias: "));
+    properties.put(prefix + ".tnsAlias", readRequired("TNS alias [required]: "));
     addResourceAuthentication(properties, prefix);
 
     addResourceProperties(properties,
@@ -158,7 +154,7 @@ public final class HashicorpProviderSetup extends ProviderSetupCli {
     properties.put(prefix + ".secretPath", readSecretPath());
     addIfPresent(properties, prefix + ".fieldName", readFieldName());
     properties.put(prefix + ".type",
-      readRequired("File type (SSO, PKCS12, or PEM): "));
+      readRequired("File type (SSO, PKCS12, or PEM) [required]: "));
     addIfPresent(properties, prefix + ".walletPassword",
       readOptional("Wallet password [optional, required only for PKCS12 "
         + "or password-protected PEM files, for example ${TLS_FILE_PASSWORD}]: "));
@@ -217,7 +213,7 @@ public final class HashicorpProviderSetup extends ProviderSetupCli {
 
   private String readSecretPath() {
     return readRequired(
-      "Vault secret path (e.g. secret/data/mydb): ");
+      "Vault secret path (e.g. secret/data/mydb) [required]: ");
   }
 
   private String readFieldName() {
@@ -309,7 +305,7 @@ public final class HashicorpProviderSetup extends ProviderSetupCli {
 
   private void buildHcpVaultDedicatedConfigUrl() {
     String secretPath = readRequired(
-      "Secret path (e.g. /v1/namespace/secret/data/secret_name): ");
+      "Secret path (e.g. /v1/namespace/secret/data/secret_name) [required]: ");
     LinkedHashMap<String, String> parameters = centralizedConfigAuth();
     addIfPresent(parameters, "KEY",
       readOptional("Key to extract, if the secret holds multiple named "
@@ -343,12 +339,6 @@ public final class HashicorpProviderSetup extends ProviderSetupCli {
       "GitHub",
       "Auto-detect (default)")) {
       case 1:
-        // This module parses the "authentication" URL parameter with
-        // DedicatedVaultAuthenticationMethod.valueOf(value.toUpperCase()),
-        // so the value must match the enum constant's spelling exactly
-        // (underscore, not hyphen) once uppercased: "vault_token", not
-        // "vault-token" (the latter is only accepted by the separate,
-        // hyphen-aware parser used for resource providers).
         parameters.put("authentication", "vault_token");
         addIfPresent(parameters, "VAULT_TOKEN",
           readOptional("Vault token [optional, no default, "
