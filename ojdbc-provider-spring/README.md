@@ -16,6 +16,49 @@ compatible with later JDK versions. The coordinates for the latest release are:
 </dependency>
 ```
 
+## Command-Line Setup Helper
+
+The Spring provider jar includes an interactive setup helper for generating
+provider configuration from the command line.
+
+The helper generates resource-provider connection properties for the End
+User Security Context provider. It does not connect to Spring, an
+authorization server, or a database; it only prints the values you
+configure.
+
+### Running the helper
+
+The helper is launched from the provider jar with the `--setup` flag:
+
+```bash
+java -jar ojdbc-provider-spring-1.1.0.jar --setup
+```
+
+Running the jar without `--setup` prints a short info banner (name,
+version, a one-line description, and a link to this README) and exits
+immediately, without reading from standard input.
+
+For direct `java -jar` execution, `ojdbc-provider-common-1.1.0.jar` must be
+present in the same directory as this jar.
+
+### What the helper does
+
+Once running, the helper's menu offers to add a resource provider. Choosing
+it asks for the OAuth 2.0 client registration ID, then a set of optional
+values (data roles, end user context attributes, and the authority
+prefixes used to derive either of those from Spring Security authorities
+at runtime), then generates the matching `oracle.jdbc.provider.*`
+connection properties.
+
+The values this helper generates are the same `oracle.jdbc.provider.*`
+properties documented below -- typically most useful as a quick reference
+for the exact property names and syntax, since the values themselves (eg:
+the registration ID) usually come from configuration you already have in
+your Spring application.
+
+You can repeat this as many times as you like, then export everything at
+once, either printed to the terminal or appended to a file.
+
 ## End User Security Context Provider
 The End User Security Context Provider provides a security context that enables
 [Deep Data Security features in Oracle Database](https://docs.oracle.com/en/database/oracle/oracle-database/26/ddscg/understand-oracle-deep-data-security.html).

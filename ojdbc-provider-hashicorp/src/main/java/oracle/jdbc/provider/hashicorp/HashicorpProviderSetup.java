@@ -58,17 +58,24 @@ public final class HashicorpProviderSetup extends ProviderSetupCli {
   }
 
   /**
-   * Starts the interactive setup helper.
+   * Starts the interactive setup helper. Prints a short info banner unless
+   * {@code --setup} is passed, in which case it runs the wizard.
    *
-   * @param args ignored
+   * @param args Pass {@code --setup} to run the wizard.
    */
   public static void main(String[] args) {
-    new HashicorpProviderSetup(new Scanner(System.in)).run();
+    new HashicorpProviderSetup(new Scanner(System.in)).start(args);
   }
 
   @Override
   protected String displayName() {
     return "Oracle JDBC Providers for HashiCorp Vault";
+  }
+
+  @Override
+  protected String description() {
+    return "Providers for integration between Oracle JDBC and HashiCorp "
+      + "Vault (HCP).";
   }
 
   @Override

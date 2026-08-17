@@ -21,6 +21,20 @@ JDK versions. The coordinates for the latest release are:
 </dependency>
 ```
 
+## Running This Jar Directly
+
+This module has no interactive setup helper, but the jar can still be run
+directly to print basic information about it:
+
+```bash
+java -jar ojdbc-provider-pkl-1.1.0.jar
+```
+
+This prints the module name, version, a one-line description, and a link
+to this README, then exits immediately without reading from standard
+input. Passing `--setup` explains that this module has no wizard, instead
+of running one.
+
 ## Usage 
 
 To use the Oracle JDBC Pkl Parser:

@@ -51,14 +51,16 @@ import java.util.Map;
 import java.util.Scanner;
 
 /**
- * Base class for interactive setup helpers run directly from a provider jar
- * (ie: {@code java -jar ojdbc-provider-<name>-<version>.jar}). Subclasses
- * supply the provider-specific menu content (which centralized configuration
- * schemes exist, which resource providers exist, and how authentication is
- * configured); this class owns the menu loop, prompting, and
- * export/print/clear plumbing shared by every provider module.
+ * Base class for interactive setup wizards run directly from a provider jar
+ * (ie: {@code java -jar ojdbc-provider-<name>-<version>.jar --setup}).
+ * Subclasses supply the provider-specific menu content (which centralized
+ * configuration schemes exist, which resource providers exist, and how
+ * authentication is configured); this class owns the menu loop, prompting,
+ * and export/print/clear plumbing shared by every provider module that has
+ * a wizard. See {@link ProviderJarInfo}, this class's own base, for the
+ * plain-info entry point shared by every provider module, wizard or not.
  */
-public abstract class ProviderSetupCli {
+public abstract class ProviderSetupCli extends ProviderJarInfo {
 
   private final Scanner scanner;
   private final List<GeneratedUrl> generatedUrls = new ArrayList<>();
@@ -70,12 +72,6 @@ public abstract class ProviderSetupCli {
   protected ProviderSetupCli(Scanner scanner) {
     this.scanner = scanner;
   }
-
-  /** Display name printed in the banner, eg: "Oracle JDBC Providers for OCI". */
-  protected abstract String displayName();
-
-  /** Base README URL that doc anchors are appended to. */
-  protected abstract String readmeUrl();
 
   /** Presents the menu of centralized configuration URL schemes. */
   protected abstract void setupCentralizedConfigUrl();
@@ -97,10 +93,30 @@ public abstract class ProviderSetupCli {
   }
 
   /**
-   * Runs the interactive setup helper. Subclasses expose this from their own
-   * {@code main(String[])} method.
+   * Prints the module name, version, README link, and a pointer to the
+   * {@value #SETUP_FLAG} flag that unlocks {@link #run()}.
    */
-  protected final void run() {
+  @Override
+  protected void printInfo() {
+    super.printInfo();
+    System.out.println();
+    System.out.println(
+      "Run with " + SETUP_FLAG + " to configure a provider "
+        + "interactively (eg: java -jar <this-jar> " + SETUP_FLAG + ").");
+  }
+
+  /**
+   * Runs the interactive setup wizard. Called by {@link #start(String[])}
+   * when {@value #SETUP_FLAG} is present; unlike the default
+   * {@link ProviderJarInfo#onSetupRequested()}, this does not also call
+   * {@link #printInfo()}, since the wizard prints its own banner below.
+   */
+  @Override
+  protected final void onSetupRequested() {
+    run();
+  }
+
+  private void run() {
     System.out.println();
     System.out.println(displayName() + " " + version());
     System.out.println(
@@ -439,11 +455,54 @@ public abstract class ProviderSetupCli {
         if (comment != null) {
           lines.add("# " + comment);
         }
-        lines.add(property.getKey() + "=" + property.getValue());
+        lines.add(escapeForPropertiesFile(property.getKey())
+          + "=" + escapeForPropertiesFile(property.getValue()));
       }
     }
 
     return lines;
+  }
+
+  /**
+   * Escapes {@code value} per the {@code java.util.Properties} file format,
+   * so a real properties file this ends up in decodes back to exactly what
+   * was typed. Backslash is the escape character in that format (eg: the
+   * two characters "\" and "n" together mean a newline, not a literal
+   * backslash followed by the letter n), so a value containing a literal
+   * backslash -- a Windows file path, a password -- would otherwise come
+   * back silently wrong once loaded: {@code java.util.Properties.load()}
+   * (used by Oracle JDBC's own connection properties file) drops any
+   * backslash that isn't part of a recognized escape sequence. Only used
+   * for the file-export path; terminal output is left as typed, since
+   * nothing re-parses it as a properties file.
+   */
+  private static String escapeForPropertiesFile(String value) {
+    StringBuilder escaped = new StringBuilder(value.length());
+
+    for (int i = 0; i < value.length(); i++) {
+      char character = value.charAt(i);
+      switch (character) {
+        case '\\':
+          escaped.append("\\\\");
+          break;
+        case '\n':
+          escaped.append("\\n");
+          break;
+        case '\t':
+          escaped.append("\\t");
+          break;
+        case '\r':
+          escaped.append("\\r");
+          break;
+        case '\f':
+          escaped.append("\\f");
+          break;
+        default:
+          escaped.append(character);
+      }
+    }
+
+    return escaped.toString();
   }
 
   /**
@@ -541,14 +600,6 @@ public abstract class ProviderSetupCli {
     }
 
     return encoded.toString();
-  }
-
-  /**
-   * @return The jar's version from its manifest (eg: "1.1.0")
-   */
-  private String version() {
-    String version = getClass().getPackage().getImplementationVersion();
-    return version != null ? version : "unknown";
   }
 
   /**

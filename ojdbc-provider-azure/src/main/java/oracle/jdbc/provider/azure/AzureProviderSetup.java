@@ -57,17 +57,23 @@ public final class AzureProviderSetup extends ProviderSetupCli {
   }
 
   /**
-   * Starts the interactive setup helper.
+   * Starts the interactive setup helper. Prints a short info banner unless
+   * {@code --setup} is passed, in which case it runs the wizard.
    *
-   * @param args ignored
+   * @param args Pass {@code --setup} to run the wizard.
    */
   public static void main(String[] args) {
-    new AzureProviderSetup(new Scanner(System.in)).run();
+    new AzureProviderSetup(new Scanner(System.in)).start(args);
   }
 
   @Override
   protected String displayName() {
     return "Oracle JDBC Providers for Azure";
+  }
+
+  @Override
+  protected String description() {
+    return "Providers for integration between Oracle JDBC and Azure.";
   }
 
   @Override

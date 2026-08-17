@@ -1,0 +1,99 @@
+/*
+ ** Copyright (c) 2026 Oracle and/or its affiliates.
+ **
+ ** The Universal Permissive License (UPL), Version 1.0
+ **
+ ** Subject to the condition set forth below, permission is hereby granted to any
+ ** person obtaining a copy of this software, associated documentation and/or data
+ ** (collectively the "Software"), free of charge and under any and all copyright
+ ** rights in the Software, and any and all patent rights owned or freely
+ ** licensable by each licensor hereunder covering either (i) the unmodified
+ ** Software as contributed to or provided by such licensor, or (ii) the Larger
+ ** Works (as defined below), to deal in both
+ **
+ ** (a) the Software, and
+ ** (b) any piece of software and/or hardware listed in the lrgrwrks.txt file if
+ ** one is included with the Software (each a "Larger Work" to which the Software
+ ** is contributed by such licensors),
+ **
+ ** without restriction, including without limitation the rights to copy, create
+ ** derivative works of, display, perform, and distribute the Software and make,
+ ** use, sell, offer for sale, import, export, have made, and have sold the
+ ** Software and the Larger Work(s), and to sublicense the foregoing rights on
+ ** either these or other terms.
+ **
+ ** This license is subject to the following condition:
+ ** The above copyright notice and either this complete permission notice or
+ ** at a minimum a reference to the UPL must be included in all copies or
+ ** substantial portions of the Software.
+ **
+ ** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ ** IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ ** FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ ** AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ ** LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ ** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ ** SOFTWARE.
+ */
+
+package oracle.jdbc.provider.observability;
+
+/**
+ * Entry point for users running this provider jar directly (ie:
+ * {@code java -jar ojdbc-provider-observability-<version>.jar}). This
+ * module has no interactive setup wizard -- its providers are registered
+ * automatically via {@link java.util.ServiceLoader} and configured through
+ * JVM system properties or an MBean, not through connection properties a
+ * wizard could help build (see the README).
+ * <p>
+ * This class is deliberately self-contained rather than extending
+ * {@code oracle.jdbc.provider.util.cli.ProviderJarInfo} from
+ * ojdbc-provider-common: this module has no production dependency on that
+ * module today, and a banner alone isn't reason enough to add one.
+ * </p>
+ */
+public final class ObservabilityProviderInfo {
+
+  private static final String DISPLAY_NAME =
+    "Oracle JDBC Observability Provider";
+
+  private static final String DESCRIPTION =
+    "A provider that adds tracing capabilities to the Oracle JDBC driver.";
+
+  private static final String README_URL =
+    "https://github.com/oracle/ojdbc-extensions/blob/main/ojdbc-provider-observability/README.md";
+
+  private static final String SETUP_FLAG = "--setup";
+
+  private ObservabilityProviderInfo() {}
+
+  /**
+   * Prints the info banner.
+   *
+   * @param args Ignored, except that {@code --setup} prints an explanation
+   *   that this module has no interactive setup wizard.
+   */
+  public static void main(String[] args) {
+    System.out.println();
+    System.out.println(DISPLAY_NAME + " " + version());
+    System.out.println(DESCRIPTION);
+    System.out.println();
+    System.out.println("More information: " + README_URL);
+
+    for (String arg : args) {
+      if (SETUP_FLAG.equals(arg)) {
+        System.out.println();
+        System.out.println(
+          "This module has no interactive setup helper. See the README "
+            + "above for configuration examples.");
+        break;
+      }
+    }
+  }
+
+  private static String version() {
+    String version =
+      ObservabilityProviderInfo.class.getPackage().getImplementationVersion();
+    return version != null ? version : "unknown";
+  }
+}
