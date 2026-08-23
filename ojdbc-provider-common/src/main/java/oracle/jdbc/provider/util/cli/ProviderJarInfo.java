@@ -39,46 +39,39 @@
 package oracle.jdbc.provider.util.cli;
 
 /**
- * Base class for the {@code main(String[])} entry point of every provider
- * jar in this project (ie: {@code java -jar ojdbc-provider-<name>-
- * <version>.jar}). A bare invocation just prints the module name, version,
- * and a link to its README, then returns without reading from {@code
- * System.in} -- this keeps every provider jar safe to run in a script or CI
- * job, since nothing blocks waiting for input that may never come.
- * <p>
- * {@link ProviderSetupCli} extends this class to additionally offer an
- * interactive setup wizard, unlocked by passing {@value #SETUP_FLAG}.
- * Providers with no interactive wizard (eg: Observability, Pkl, Jackson
- * OSON) extend this class directly instead; passing {@value #SETUP_FLAG}
- * to one of those just explains that no wizard is available, rather than
- * silently ignoring the flag.
- * </p>
+ * Gives every provider jar a friendly {@code java -jar <jar-file>} entry
+ * point. Run with no arguments, it just introduces the provider name,
+ * version, a short description, and a link to the README and exits
+ * right away, so nothing ever sits there waiting on input that may
+ * never come. Pass {@value #SETUP_FLAG} to ask for more; a subclass can
+ * override {@link #onSetupRequested()} to launch an interactive setup
+ * wizard there instead of just repeating the introduction.
  */
 public abstract class ProviderJarInfo {
 
   /**
-   * Command-line flag that requests the interactive setup wizard, where
-   * one exists.
+   * Command-line flag recognized by {@link #start(String[])}.
    */
   protected static final String SETUP_FLAG = "--setup";
 
-  /** Display name printed in the banner, eg: "Oracle JDBC Providers for OCI". */
+  /**
+   * The name of the provider, printed in the banner when the jar is run.
+   */
   protected abstract String displayName();
 
   /**
-   * One-line description printed in the banner, eg: "Providers for
-   * integration between Oracle JDBC and Oracle Cloud Infrastructure
-   * (OCI)." Should read like the opening sentence of the module's README,
-   * in plain text (no Markdown).
+   * A short description of the provider, printed in the banner.
    */
   protected abstract String description();
 
-  /** README URL printed in the banner. */
+  /**
+   * README URL printed in the banner.
+   */
   protected abstract String readmeUrl();
 
   /**
-   * Entry point subclasses call from their own {@code main(String[])}
-   * method. Prints the info banner if {@value #SETUP_FLAG} is absent from
+   * Entry point called from a subclass's own {@code main(String[])}
+   * method. Prints a banner if {@value #SETUP_FLAG} is absent from
    * {@code args}; otherwise calls {@link #onSetupRequested()}.
    *
    * @param args Arguments passed to {@code main(String[])}.
@@ -94,11 +87,9 @@ public abstract class ProviderJarInfo {
 
   /**
    * Called by {@link #start(String[])} when {@value #SETUP_FLAG} is
-   * present. The default implementation prints the info banner followed by
-   * a note that this module has no interactive setup helper.
-   * {@link ProviderSetupCli} overrides this to run its wizard instead (and
-   * does not call {@link #printInfo()} itself, since the wizard prints its
-   * own banner).
+   * present. The default implementation just prints the banner. A
+   * subclass can override this to do something else instead, in which
+   * case it takes responsibility for printing its own banner, if any.
    */
   protected void onSetupRequested() {
     printInfo();
@@ -109,10 +100,9 @@ public abstract class ProviderJarInfo {
   }
 
   /**
-   * Prints the module name, version, description, and README link, without
-   * reading any input. Subclasses that have more to say here (eg: how to
-   * unlock a wizard) should override this and call {@code super.printInfo()}
-   * first.
+   * Prints a short banner (name, version, description, and URL), without
+   * reading any input. A subclass with more to print here should override
+   * this and call {@code super.printInfo()} first.
    */
   protected void printInfo() {
     System.out.println();
@@ -133,7 +123,7 @@ public abstract class ProviderJarInfo {
 
   /**
    * @return The jar's version from its manifest (eg: "1.1.0"), or
-   *   "unknown" when not running from a built jar (eg: from an IDE).
+   * "unknown" when not running from a built jar (eg: from an IDE).
    */
   protected final String version() {
     String version = getClass().getPackage().getImplementationVersion();

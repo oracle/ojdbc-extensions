@@ -73,10 +73,14 @@ public abstract class ProviderSetupCli extends ProviderJarInfo {
     this.scanner = scanner;
   }
 
-  /** Presents the menu of centralized configuration URL schemes. */
+  /**
+   * Presents the menu of centralized configuration URL schemes.
+   */
   protected abstract void setupCentralizedConfigUrl();
 
-  /** Presents the menu of resource providers. */
+  /**
+   * Presents the menu of resource providers.
+   */
   protected abstract void setupResourceProvider();
 
   /**
@@ -393,10 +397,8 @@ public abstract class ProviderSetupCli extends ProviderJarInfo {
 
   /**
    * Prompts for a file path and appends everything generated so far to it.
-   * Always appends (never overwrites), and creates the file if it doesn't
-   * exist yet, so running the helper multiple times keeps adding to the
-   * same file. Prints a friendly message instead of crashing if the write
-   * fails (bad path, permissions, etc).
+   * Always appends, and creates the file if it doesn't exist yet, so running
+   * the helper multiple times keeps adding to the same file.
    */
   private void appendGeneratedConfigurationToFile() {
     String filePath = readRequired("File path: ");
@@ -425,7 +427,7 @@ public abstract class ProviderSetupCli extends ProviderJarInfo {
    * line), while properties are written as real {@code key=value} lines.
    *
    * @param appendSeparator Whether to start with a blank line, ie: whether
-   *   the target file already has content in it.
+   * the target file already has content in it.
    */
   private List<String> fileExportLines(boolean appendSeparator) {
     List<String> lines = new ArrayList<>();
@@ -469,7 +471,7 @@ public abstract class ProviderSetupCli extends ProviderJarInfo {
    * was typed. Backslash is the escape character in that format (eg: the
    * two characters "\" and "n" together mean a newline, not a literal
    * backslash followed by the letter n), so a value containing a literal
-   * backslash -- a Windows file path, a password -- would otherwise come
+   * backslash, a Windows file path, a password, would otherwise come
    * back silently wrong once loaded: {@code java.util.Properties.load()}
    * (used by Oracle JDBC's own connection properties file) drops any
    * backslash that isn't part of a recognized escape sequence. Only used
@@ -527,8 +529,8 @@ public abstract class ProviderSetupCli extends ProviderJarInfo {
 
   /**
    * @return True if anything has been generated so far. Controls whether
-   *   the main menu shows Export/Clear, and guards those two actions from
-   *   running with nothing to act on.
+   * the main menu shows Export/Clear, and guards those two actions from
+   * running with nothing to act on.
    */
   private boolean hasGeneratedConfiguration() {
     return !generatedUrls.isEmpty() || !generatedProperties.isEmpty();
@@ -572,13 +574,13 @@ public abstract class ProviderSetupCli extends ProviderJarInfo {
   /**
    * Percent-encodes only the characters that would otherwise corrupt the
    * query string this value is embedded in: a space (encoded as {@code
-   * %20}, never as {@code +} -- the decoder used at connection time,
+   * %20}, never as {@code +}, the decoder used at connection time,
    * {@code oracle.jdbc.provider.parameter.UriParameters}, deliberately
    * treats a literal {@code +} as a literal {@code +}, not a space), a
    * literal {@code %} (the escape character itself), and {@code &}/{@code
    * =}/{@code #} (which that decoder relies on to find the boundaries
-   * between parameters). Every other character -- including {@code /},
-   * which does not need escaping inside a URI query -- is left exactly as
+   * between parameters). Every other character including {@code /},
+   * which does not need escaping inside a URI query is left exactly as
    * typed, so the printed URL stays as readable as possible instead of
    * being over-encoded like a generic {@code java.net.URLEncoder} would do.
    */
