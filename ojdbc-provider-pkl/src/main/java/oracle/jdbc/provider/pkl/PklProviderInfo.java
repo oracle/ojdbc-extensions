@@ -36,34 +36,35 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.observability;
+package oracle.jdbc.provider.pkl;
 
 /**
  * Entry point for running this provider jar directly (ie: {@code java
- * -jar ojdbc-provider-observability-<version>.jar}). This module has no
+ * -jar ojdbc-provider-pkl-<version>.jar}). This module has no
  * interactive setup wizard, so passing {@code --setup} just explains
  * that instead of launching one.
  */
-public final class ObservabilityProviderInfo {
+public final class PklProviderInfo {
 
   private static final String DISPLAY_NAME =
-    "Oracle JDBC Observability Provider";
+    "Oracle JDBC Configuration Provider Parser for Pkl";
 
   private static final String DESCRIPTION =
-    "A provider that adds tracing capabilities to the Oracle JDBC driver.";
+    "A parser that integrates Oracle JDBC with Pkl, a modern "
+      + "configuration language.";
 
   private static final String README_URL =
-    "https://github.com/oracle/ojdbc-extensions/blob/main/ojdbc-provider-observability/README.md";
+    "https://github.com/oracle/ojdbc-extensions/blob/main/ojdbc-provider-pkl/README.md";
 
   private static final String SETUP_FLAG = "--setup";
 
-  private ObservabilityProviderInfo() {}
+  private PklProviderInfo() {}
 
   /**
    * Prints the info banner.
    *
    * @param args Ignored, except that {@code --setup} prints an explanation
-   *   that this module has no interactive setup wizard.
+   * that this module has no interactive setup wizard.
    */
   public static void main(String[] args) {
     System.out.println();
@@ -84,8 +85,7 @@ public final class ObservabilityProviderInfo {
   }
 
   private static String version() {
-    String version =
-      ObservabilityProviderInfo.class.getPackage().getImplementationVersion();
+    String version = PklProviderInfo.class.getPackage().getImplementationVersion();
     return version != null ? version : "unknown";
   }
 }

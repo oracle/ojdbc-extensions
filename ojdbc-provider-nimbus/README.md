@@ -38,22 +38,11 @@ java -jar ojdbc-provider-nimbus-1.1.0.jar --setup
 ```
 
 Running the jar without `--setup` prints a short info banner (name,
-version, a one-line description, and a link to this README) and exits
+version, a one-line description, and a link to docs) and exits
 immediately, without reading from standard input.
 
 For direct `java -jar` execution, `ojdbc-provider-common-1.1.0.jar` must be
 present in the same directory as this jar.
-
-### What the helper does
-
-Once running, the helper's menu offers to add a resource provider. Choosing
-it asks for the token endpoint, a grant type (Client Credentials, Password,
-or Authorization Code), and the values that grant type needs, such as a
-client ID and secret, then generates the matching `oracle.jdbc.provider.*`
-connection properties.
-
-You can repeat this as many times as you like, then export everything at
-once, either printed to the terminal or appended to a file.
 
 ## Access Token Provider
 The Nimbus Access Token Provider provides Oracle JDBC with an access token that 

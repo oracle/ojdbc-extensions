@@ -74,8 +74,7 @@ public final class OciProviderSetup extends ProviderSetupCli {
 
   @Override
   protected String description() {
-    return "Providers for integration between Oracle JDBC and Oracle "
-      + "Cloud Infrastructure (OCI).";
+    return "Providers for integration between Oracle JDBC and Oracle Cloud Infrastructure (OCI).";
   }
 
   @Override

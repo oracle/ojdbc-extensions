@@ -74,8 +74,7 @@ public final class HashicorpProviderSetup extends ProviderSetupCli {
 
   @Override
   protected String description() {
-    return "Providers for integration between Oracle JDBC and HashiCorp "
-      + "Vault (HCP).";
+    return "Providers for integration between Oracle JDBC and HashiCorp Vault (HCP).";
   }
 
   @Override

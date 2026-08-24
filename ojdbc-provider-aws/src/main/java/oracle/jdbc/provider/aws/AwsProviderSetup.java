@@ -73,8 +73,7 @@ public final class AwsProviderSetup extends ProviderSetupCli {
 
   @Override
   protected String description() {
-    return "Providers for integration between Oracle JDBC and Amazon Web "
-      + "Services (AWS).";
+    return "Providers for integration between Oracle JDBC and Amazon Web Services (AWS).";
   }
 
   @Override

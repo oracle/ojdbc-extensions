@@ -22,7 +22,7 @@ The Spring provider jar includes an interactive setup helper for generating
 provider configuration from the command line.
 
 The helper generates resource-provider connection properties for the End
-User Security Context provider. It does not connect to Spring, an
+User Security Context provider. It does not connect to an
 authorization server, or a database; it only prints the values you
 configure.
 
@@ -35,7 +35,7 @@ java -jar ojdbc-provider-spring-1.1.0.jar --setup
 ```
 
 Running the jar without `--setup` prints a short info banner (name,
-version, a one-line description, and a link to this README) and exits
+version, a one-line description, and a link to the docs) and exits
 immediately, without reading from standard input.
 
 For direct `java -jar` execution, `ojdbc-provider-common-1.1.0.jar` must be
@@ -51,11 +51,7 @@ at runtime), then generates the matching `oracle.jdbc.provider.*`
 connection properties.
 
 The values this helper generates are the same `oracle.jdbc.provider.*`
-properties documented below -- typically most useful as a quick reference
-for the exact property names and syntax, since the values themselves (eg:
-the registration ID) usually come from configuration you already have in
-your Spring application.
-
+properties documented below.
 You can repeat this as many times as you like, then export everything at
 once, either printed to the terminal or appended to a file.
 

@@ -41,14 +41,10 @@ package oracle.jdbc.provider.oson;
 import oracle.jdbc.provider.util.cli.ProviderJarInfo;
 
 /**
- * Entry point for users running this provider jar directly (ie:
- * {@code java -jar ojdbc-provider-jackson-oson-<version>.jar}). This
- * module has no interactive setup wizard -- it's a Jackson
- * {@code ObjectMapper} module plus an OSON {@code JsonProvider} SPI, both
- * wired via {@link java.util.ServiceLoader} or directly in application
- * code, with no {@code oracle.jdbc.provider.*} connection properties to
- * prompt for (see the README). Passing {@code --setup} still works; it
- * just explains that, instead of running a wizard.
+ * Entry point for running this provider jar directly (ie: {@code java
+ * -jar ojdbc-provider-jackson-oson-<version>.jar}). This module has no
+ * interactive setup wizard, so passing {@code --setup} just explains
+ * that instead of launching one.
  */
 public final class JacksonOsonProviderInfo extends ProviderJarInfo {
 
@@ -61,7 +57,7 @@ public final class JacksonOsonProviderInfo extends ProviderJarInfo {
    * Prints the info banner.
    *
    * @param args Ignored, except that {@code --setup} prints an explanation
-   *   that this module has no interactive setup wizard.
+   * that this module has no interactive setup wizard.
    */
   public static void main(String[] args) {
     new JacksonOsonProviderInfo().start(args);

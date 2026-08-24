@@ -68,20 +68,17 @@ It can be done in maven as:
 
 ## Running This Jar Directly
 
-This module has no interactive setup helper, but the jar can still be run
-directly to print basic information about it:
+Running the jar directly gives you a friendly introduction:
 
 ```bash
 java -jar ojdbc-provider-jackson-oson-1.1.0.jar
 ```
 
+It prints the module's name and version, a short description, and a
+link to the docs. 
+
 For direct `java -jar` execution, `ojdbc-provider-common-1.1.0.jar` must
 be present in the same directory as this jar.
-
-This prints the module name, version, a one-line description, and a link
-to this README, then exits immediately without reading from standard
-input. Passing `--setup` explains that this module has no wizard, instead
-of running one.
 
 ## Building the provider module
 1. Clone the repository:

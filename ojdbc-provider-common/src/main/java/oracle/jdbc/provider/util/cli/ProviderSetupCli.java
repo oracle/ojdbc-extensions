@@ -86,8 +86,8 @@ public abstract class ProviderSetupCli extends ProviderJarInfo {
   /**
    * Whether this provider offers any centralized configuration URL scheme
    * at all. Defaults to true. Override to return false for a provider like
-   * Nimbus that only offers resource providers, so the main menu never
-   * offers an "Add centralized configuration URL" option that would lead
+   * Nimbus or Spring that only offers resource providers, so the main menu
+   * never offers an "Add centralized configuration URL" option that would lead
    * nowhere for that provider.
    *
    * @return True if {@link #setupCentralizedConfigUrl()} does something.
@@ -333,8 +333,7 @@ public abstract class ProviderSetupCli extends ProviderJarInfo {
 
     if (replaced) {
       System.out.println();
-      System.out.println("Replaced existing configuration for "
-        + providerPrefix + ".");
+      System.out.println("Replaced existing configuration for " + providerPrefix + ".");
     }
   }
 
@@ -397,8 +396,7 @@ public abstract class ProviderSetupCli extends ProviderJarInfo {
 
   /**
    * Prompts for a file path and appends everything generated so far to it.
-   * Always appends, and creates the file if it doesn't exist yet, so running
-   * the helper multiple times keeps adding to the same file.
+   * Always appends, and creates the file if it doesn't exist yet.
    */
   private void appendGeneratedConfigurationToFile() {
     String filePath = readRequired("File path: ");
@@ -466,45 +464,17 @@ public abstract class ProviderSetupCli extends ProviderJarInfo {
   }
 
   /**
-   * Escapes {@code value} per the {@code java.util.Properties} file format,
-   * so a real properties file this ends up in decodes back to exactly what
-   * was typed. Backslash is the escape character in that format (eg: the
-   * two characters "\" and "n" together mean a newline, not a literal
-   * backslash followed by the letter n), so a value containing a literal
-   * backslash, a Windows file path, a password, would otherwise come
-   * back silently wrong once loaded: {@code java.util.Properties.load()}
-   * (used by Oracle JDBC's own connection properties file) drops any
-   * backslash that isn't part of a recognized escape sequence. Only used
-   * for the file-export path; terminal output is left as typed, since
-   * nothing re-parses it as a properties file.
+   * Escapes {@code value} so it round-trips correctly through {@code
+   * java.util.Properties.load()}, which treats backslash as an escape
+   * character and silently drops any it doesn't recognize.
    */
   private static String escapeForPropertiesFile(String value) {
-    StringBuilder escaped = new StringBuilder(value.length());
-
-    for (int i = 0; i < value.length(); i++) {
-      char character = value.charAt(i);
-      switch (character) {
-        case '\\':
-          escaped.append("\\\\");
-          break;
-        case '\n':
-          escaped.append("\\n");
-          break;
-        case '\t':
-          escaped.append("\\t");
-          break;
-        case '\r':
-          escaped.append("\\r");
-          break;
-        case '\f':
-          escaped.append("\\f");
-          break;
-        default:
-          escaped.append(character);
-      }
-    }
-
-    return escaped.toString();
+    return value
+      .replace("\\", "\\\\")
+      .replace("\n", "\\n")
+      .replace("\t", "\\t")
+      .replace("\r", "\\r")
+      .replace("\f", "\\f");
   }
 
   /**
@@ -536,7 +506,9 @@ public abstract class ProviderSetupCli extends ProviderJarInfo {
     return !generatedUrls.isEmpty() || !generatedProperties.isEmpty();
   }
 
-  /** Prints each property as {@code # comment} (if any) then {@code key=value}. */
+  /**
+   * Prints each property as {@code # comment} (if any) then {@code key=value}.
+   */
   private static void printProperties(
     Map<String, String> properties, Map<String, String> comments) {
 
@@ -572,17 +544,13 @@ public abstract class ProviderSetupCli extends ProviderJarInfo {
   }
 
   /**
-   * Percent-encodes only the characters that would otherwise corrupt the
-   * query string this value is embedded in: a space (encoded as {@code
-   * %20}, never as {@code +}, the decoder used at connection time,
-   * {@code oracle.jdbc.provider.parameter.UriParameters}, deliberately
-   * treats a literal {@code +} as a literal {@code +}, not a space), a
-   * literal {@code %} (the escape character itself), and {@code &}/{@code
-   * =}/{@code #} (which that decoder relies on to find the boundaries
-   * between parameters). Every other character including {@code /},
-   * which does not need escaping inside a URI query is left exactly as
-   * typed, so the printed URL stays as readable as possible instead of
-   * being over-encoded like a generic {@code java.net.URLEncoder} would do.
+   * Percent-encodes {@code value} for safe use in a URL query string,
+   * escaping only the characters that would otherwise break it: space,
+   * {@code %}, {@code &}, {@code =}, and {@code #}. A space is always
+   * encoded as {@code %20}, never {@code +}, since the decoder used at
+   * connection time treats a literal {@code +} as a literal {@code +}.
+   * Everything else is left as typed, so the printed URL stays readable
+   * instead of being over-encoded like {@code java.net.URLEncoder}.
    */
   private static String encodeQueryComponent(String value) {
     StringBuilder encoded = new StringBuilder(value.length());
@@ -605,9 +573,7 @@ public abstract class ProviderSetupCli extends ProviderJarInfo {
   }
 
   /**
-   * One centralized configuration URL plus the comment describing it. A
-   * plain map won't do here: unlike properties, a URL has no natural
-   * "key" of its own to attach a comment to.
+   * One centralized configuration URL plus the comment describing it.
    */
   private static final class GeneratedUrl {
     private final String comment;

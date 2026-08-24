@@ -137,17 +137,14 @@ The coordinates for the latest release are:
 
 ## Running This Jar Directly
 
-This module has no interactive setup helper, but the jar can still be run
-directly to print basic information about it:
+Running the jar directly gives you a friendly introduction:
 
 ```bash
 java -jar ojdbc-provider-observability-1.1.0.jar
 ```
 
-This prints the module name, version, a one-line description, and a link
-to this README, then exits immediately without reading from standard
-input. Passing `--setup` explains that this module has no wizard, instead
-of running one.
+It prints the module's name and version, a short description, and a
+link to the docs.
 
 ## Usage 
 

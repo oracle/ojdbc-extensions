@@ -73,7 +73,7 @@ public final class AzureProviderSetup extends ProviderSetupCli {
 
   @Override
   protected String description() {
-    return "Providers for integration between Oracle JDBC and Azure.";
+    return "Providers for integration between Oracle JDBC and Azure Services.";
   }
 
   @Override

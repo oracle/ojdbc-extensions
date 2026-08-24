@@ -45,17 +45,9 @@ import java.util.Scanner;
 
 /**
  * Interactive setup helper for users running this provider jar directly.
- * <p>
  * This module offers no centralized configuration provider: it registers
  * only a single resource provider, an {@code EndUserSecurityContext}
- * provider that integrates with Spring Security. Its {@code dataRoles} and
- * {@code authorityRolePrefix} parameters (and likewise its
- * {@code endUserContextAttributes} and {@code authorityAttributesPrefix}
- * parameters) are not alternatives to choose between -- the provider merges
- * whichever of each pair are configured -- so this wizard, unlike the SEPS
- * wallet wizards in other providers, prompts for all of them independently
- * rather than forcing a single choice.
- * </p>
+ * provider that integrates with Spring Security.
  */
 public final class SpringProviderSetup extends ProviderSetupCli {
 
@@ -99,7 +91,7 @@ public final class SpringProviderSetup extends ProviderSetupCli {
   /**
    * Unreachable: {@link #hasCentralizedConfig()} returns false, so the main
    * menu never offers the option that would call this. This module has no
-   * centralized configuration provider -- only the End User Security
+   * centralized configuration provider, only the End User Security
    * Context resource provider.
    */
   @Override

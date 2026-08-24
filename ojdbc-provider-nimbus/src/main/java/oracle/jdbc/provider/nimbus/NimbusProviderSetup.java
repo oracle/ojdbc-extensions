@@ -45,11 +45,9 @@ import java.util.Scanner;
 
 /**
  * Interactive setup helper for users running this provider jar directly.
- * <p>
- * Unlike the cloud provider modules, this module offers no centralized
- * configuration provider at all: it registers only a single resource
- * provider, an OAuth 2.0 access token provider using the Nimbus SDK.
- * </p>
+ * This module offers no centralized configuration provider: it registers
+ * only a single resource provider, an OAuth 2.0 access token provider
+ * using the Nimbus SDK.
  */
 public final class NimbusProviderSetup extends ProviderSetupCli {
 
@@ -94,7 +92,7 @@ public final class NimbusProviderSetup extends ProviderSetupCli {
   /**
    * Unreachable: {@link #hasCentralizedConfig()} returns false, so the main
    * menu never offers the option that would call this. This module has no
-   * centralized configuration provider -- only the Access Token resource
+   * centralized configuration provider, only the Access Token resource
    * provider.
    */
   @Override
