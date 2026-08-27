@@ -394,12 +394,29 @@ public final class OciProviderSetup extends ProviderSetupCli {
       "Interactive", "Use defaults")) {
       case 1:
         parameters.put("AUTHENTICATION", "OCI_DEFAULT");
-        addIfPresent(parameters, "OCI_CONFIG_FILE",
-          readOptional("OCI config file [default: OCI SDK default lookup]: "));
-        addIfPresent(parameters, "OCI_PROFILE",
-          readOptional("OCI profile [default: DEFAULT]: "));
+        switch (promptMenu("Choose how to provide OCI credentials:",
+          "Config file", "Individual credentials")) {
+          case 1:
+            addIfPresent(parameters, "OCI_CONFIG_FILE",
+              readOptional("OCI config file path [default: ~/.oci/config]: "));
+            addIfPresent(parameters, "OCI_PROFILE",
+              readOptional("OCI profile [default: DEFAULT]: "));
+            break;
+          case 2:
+            parameters.put("OCI_TENANCY", readRequired("Tenancy OCID [required]: "));
+            parameters.put("OCI_USER", readRequired("User OCID [required]: "));
+            parameters.put("OCI_FINGERPRINT",
+              readRequired("API key fingerprint [required]: "));
+            parameters.put("OCI_KEY_FILE",
+              readRequired("Private key file path [required]: "));
+            addIfPresent(parameters, "OCI_PASS_PHRASE",
+              readOptional("Private key passphrase [optional]: "));
+            break;
+          default:
+            throw new AssertionError();
+        }
         addIfPresent(parameters, "OCI_REGION",
-          readOptional("OCI region [optional, inferred when possible]: "));
+          readOptional("OCI region [optional]: "));
         break;
       case 2:
         parameters.put("AUTHENTICATION", "OCI_INSTANCE_PRINCIPAL");
