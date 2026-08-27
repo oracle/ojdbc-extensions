@@ -358,17 +358,30 @@ public final class OciProviderSetup extends ProviderSetupCli {
   }
 
   private void buildOciVaultConfigUrl() {
+    String secretOcid = readRequired("Vault secret OCID [required]: ");
+    LinkedHashMap<String, String> parameters = centralizedConfigAuth();
+    addIfPresent(parameters, "key",
+      readOptional("Key to extract, if the secret holds multiple named "
+        + "configurations [optional]: "));
+
     addConfigUrl(
-      "jdbc:oracle:thin:@config-ocivault://"
-        + readRequired("Vault secret OCID [required]: "),
+      "jdbc:oracle:thin:@config-ocivault://" + secretOcid,
+      parameters,
       "OCI Vault centralized configuration provider",
       "#oci-vault-config-provider");
   }
 
   private void buildOciObjectStorageConfigUrl() {
+    String objectUrl = readRequired(
+      "Object Storage URL path, without https:// [required]: ");
+    LinkedHashMap<String, String> parameters = centralizedConfigAuth();
+    addIfPresent(parameters, "key",
+      readOptional("Key to extract, if the object holds multiple named "
+        + "configurations [optional]: "));
+
     addConfigUrl(
-      "jdbc:oracle:thin:@config-ociobject://"
-        + readRequired("Object Storage URL path, without https:// [required]: "),
+      "jdbc:oracle:thin:@config-ociobject://" + objectUrl,
+      parameters,
       "OCI Object Storage centralized configuration provider",
       "#oci-object-storage-config-provider");
   }
@@ -377,13 +390,9 @@ public final class OciProviderSetup extends ProviderSetupCli {
     addConfigUrl(
       "jdbc:oracle:thin:@config-ocidbtools://"
         + readRequired("Database Tools connection OCID [required]: "),
+      centralizedConfigAuth(),
       "OCI Database Tools Connection centralized configuration provider",
       "#oci-database-tools-connections-config-provider");
-  }
-
-  private void addConfigUrl(
-    String baseUrl, String comment, String docsAnchor) {
-    addConfigUrl(baseUrl, centralizedConfigAuth(), comment, docsAnchor);
   }
 
   private LinkedHashMap<String, String> centralizedConfigAuth() {
