@@ -172,10 +172,6 @@ public final class HashicorpProviderSetup extends ProviderSetupCli {
   }
 
   private void setupSepsProvider() {
-    int useCase = promptMenu("Choose what to configure from the SEPS wallet:",
-      "Username and password",
-      "Username only",
-      "Password only");
     String secretPath = readSecretPath();
     String fieldName = readFieldName();
     String walletPassword = readOptional(
@@ -187,16 +183,12 @@ public final class HashicorpProviderSetup extends ProviderSetupCli {
       readResourceAuthenticationParameters();
 
     LinkedHashMap<String, String> properties = new LinkedHashMap<>();
-    if (useCase == 1 || useCase == 2) {
-      addSepsProviderProperties(properties, "oracle.jdbc.provider.username",
-        secretPath, fieldName, walletPassword, connectionStringIndex,
-        authentication);
-    }
-    if (useCase == 1 || useCase == 3) {
-      addSepsProviderProperties(properties, "oracle.jdbc.provider.password",
-        secretPath, fieldName, walletPassword, connectionStringIndex,
-        authentication);
-    }
+    addSepsProviderProperties(properties, "oracle.jdbc.provider.username",
+      secretPath, fieldName, walletPassword, connectionStringIndex,
+      authentication);
+    addSepsProviderProperties(properties, "oracle.jdbc.provider.password",
+      secretPath, fieldName, walletPassword, connectionStringIndex,
+      authentication);
 
     addResourceProperties(properties,
       "SEPS Wallet Provider from HCP Vault Dedicated",
@@ -253,35 +245,25 @@ public final class HashicorpProviderSetup extends ProviderSetupCli {
       "Auto-detect (default)")) {
       case 1:
         parameters.put("authenticationMethod", "vault-token");
-        addIfPresent(parameters, "vaultToken",
-          readOptional("Vault token [optional, no default, "
-            + "for example ${VAULT_TOKEN}]: "));
+        parameters.put("vaultToken", readRequired("Vault token [required]: "));
         break;
       case 2:
         parameters.put("authenticationMethod", "userpass");
-        addIfPresent(parameters, "vaultUsername",
-          readOptional("Vault username [optional, no default]: "));
-        addIfPresent(parameters, "vaultPassword",
-          readOptional("Vault password [optional, no default, "
-            + "for example ${VAULT_PASSWORD}]: "));
+        parameters.put("vaultUsername", readRequired("Vault username [required]: "));
+        parameters.put("vaultPassword", readRequired("Vault password [required]: "));
         addIfPresent(parameters, "userPassAuthPath",
           readOptional("Userpass auth path [optional, default: userpass]: "));
         break;
       case 3:
         parameters.put("authenticationMethod", "approle");
-        addIfPresent(parameters, "roleId",
-          readOptional("Role ID [optional, no default]: "));
-        addIfPresent(parameters, "secretId",
-          readOptional("Secret ID [optional, no default, "
-            + "for example ${SECRET_ID}]: "));
+        parameters.put("roleId", readRequired("Role ID [required]: "));
+        parameters.put("secretId", readRequired("Secret ID [required]: "));
         addIfPresent(parameters, "appRoleAuthPath",
           readOptional("AppRole auth path [optional, default: approle]: "));
         break;
       case 4:
         parameters.put("authenticationMethod", "github");
-        addIfPresent(parameters, "githubToken",
-          readOptional("GitHub token [optional, no default, "
-            + "for example ${GITHUB_TOKEN}]: "));
+        parameters.put("githubToken", readRequired("GitHub token [required]: "));
         addIfPresent(parameters, "githubAuthPath",
           readOptional("GitHub auth path [optional, default: github]: "));
         break;
@@ -347,34 +329,36 @@ public final class HashicorpProviderSetup extends ProviderSetupCli {
       case 1:
         parameters.put("authentication", "vault_token");
         addIfPresent(parameters, "VAULT_TOKEN",
-          readOptional("Vault token [optional, no default, "
-            + "for example ${VAULT_TOKEN}]: "));
+          readOptional("Vault token [optional, falls back to VAULT_TOKEN "
+            + "system property or env var]: "));
         break;
       case 2:
         parameters.put("authentication", "userpass");
         addIfPresent(parameters, "VAULT_USERNAME",
-          readOptional("Vault username [optional, no default]: "));
+          readOptional("Vault username [optional, falls back to "
+            + "VAULT_USERNAME system property or env var]: "));
         addIfPresent(parameters, "VAULT_PASSWORD",
-          readOptional("Vault password [optional, no default, "
-            + "for example ${VAULT_PASSWORD}]: "));
+          readOptional("Vault password [optional, falls back to "
+            + "VAULT_PASSWORD system property or env var]: "));
         addIfPresent(parameters, "USERPASS_AUTH_PATH",
           readOptional("Userpass auth path [optional, default: userpass]: "));
         break;
       case 3:
         parameters.put("authentication", "approle");
         addIfPresent(parameters, "ROLE_ID",
-          readOptional("Role ID [optional, no default]: "));
+          readOptional("Role ID [optional, falls back to ROLE_ID system "
+            + "property or env var]: "));
         addIfPresent(parameters, "SECRET_ID",
-          readOptional("Secret ID [optional, no default, "
-            + "for example ${SECRET_ID}]: "));
+          readOptional("Secret ID [optional, falls back to SECRET_ID "
+            + "system property or env var]: "));
         addIfPresent(parameters, "APPROLE_AUTH_PATH",
           readOptional("AppRole auth path [optional, default: approle]: "));
         break;
       case 4:
         parameters.put("authentication", "github");
         addIfPresent(parameters, "GITHUB_TOKEN",
-          readOptional("GitHub token [optional, no default, "
-            + "for example ${GITHUB_TOKEN}]: "));
+          readOptional("GitHub token [optional, falls back to GITHUB_TOKEN "
+            + "system property or env var]: "));
         addIfPresent(parameters, "GITHUB_AUTH_PATH",
           readOptional("GitHub auth path [optional, default: github]: "));
         break;

@@ -220,7 +220,7 @@ public final class OciProviderSetup extends ProviderSetupCli {
       readRequired("File type (SSO, PKCS12, or PEM) [required]: "));
     addIfPresent(properties, prefix + ".walletPassword",
       readOptional(
-        "Wallet password expression [optional, no default, for example ${TLS_FILE_PASSWORD}]: "));
+        "Wallet password [optional, required only for PKCS12 wallets]: "));
     addResourceAuthentication(properties, prefix);
 
     addResourceProperties(properties,
@@ -229,27 +229,19 @@ public final class OciProviderSetup extends ProviderSetupCli {
   }
 
   private void setupVaultSepsProvider() {
-    int useCase = promptMenu("Choose what to configure from the SEPS wallet:",
-      "Username and password",
-      "Username only",
-      "Password only");
     String ocid = readRequired("Vault secret OCID for SEPS wallet [required]: ");
     String walletPassword = readOptional(
-      "Wallet password expression [optional, no default, for example ${SEPS_WALLET_PASSWORD}]: ");
+      "Wallet password [optional, required only for PKCS12 wallets]: ");
     String connectionStringIndex =
       readOptional("Connection string index [optional, no default]: ");
     LinkedHashMap<String, String> authentication =
       readResourceAuthenticationParameters();
 
     LinkedHashMap<String, String> properties = new LinkedHashMap<>();
-    if (useCase == 1 || useCase == 2) {
-      addSepsProviderProperties(properties, "oracle.jdbc.provider.username",
-        ocid, walletPassword, connectionStringIndex, authentication);
-    }
-    if (useCase == 1 || useCase == 3) {
-      addSepsProviderProperties(properties, "oracle.jdbc.provider.password",
-        ocid, walletPassword, connectionStringIndex, authentication);
-    }
+    addSepsProviderProperties(properties, "oracle.jdbc.provider.username",
+      ocid, walletPassword, connectionStringIndex, authentication);
+    addSepsProviderProperties(properties, "oracle.jdbc.provider.password",
+      ocid, walletPassword, connectionStringIndex, authentication);
 
     addResourceProperties(properties,
       "SEPS Wallet Provider from OCI Vault",

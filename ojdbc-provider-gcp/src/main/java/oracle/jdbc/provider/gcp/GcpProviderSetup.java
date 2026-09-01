@@ -164,10 +164,6 @@ public final class GcpProviderSetup extends ProviderSetupCli {
   }
 
   private void setupSepsProvider() {
-    int useCase = promptMenu("Choose what to configure from the SEPS wallet:",
-      "Username and password",
-      "Username only",
-      "Password only");
     String secretVersionName = readSecretVersionName();
     String walletPassword = readOptional(
       "Wallet password [optional, required only for PKCS12 wallets]: ");
@@ -175,14 +171,10 @@ public final class GcpProviderSetup extends ProviderSetupCli {
       readOptional("Connection string index [optional, no default]: ");
 
     LinkedHashMap<String, String> properties = new LinkedHashMap<>();
-    if (useCase == 1 || useCase == 2) {
-      addSepsProviderProperties(properties, "oracle.jdbc.provider.username",
-        secretVersionName, walletPassword, connectionStringIndex);
-    }
-    if (useCase == 1 || useCase == 3) {
-      addSepsProviderProperties(properties, "oracle.jdbc.provider.password",
-        secretVersionName, walletPassword, connectionStringIndex);
-    }
+    addSepsProviderProperties(properties, "oracle.jdbc.provider.username",
+      secretVersionName, walletPassword, connectionStringIndex);
+    addSepsProviderProperties(properties, "oracle.jdbc.provider.password",
+      secretVersionName, walletPassword, connectionStringIndex);
 
     addResourceProperties(properties,
       "SEPS Wallet Provider from GCP Secret Manager",

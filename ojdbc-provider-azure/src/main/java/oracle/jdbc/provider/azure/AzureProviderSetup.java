@@ -197,10 +197,6 @@ public final class AzureProviderSetup extends ProviderSetupCli {
   }
 
   private void setupSepsProvider() {
-    int useCase = promptMenu("Choose what to configure from the SEPS wallet:",
-      "Username and password",
-      "Username only",
-      "Password only");
     String vaultUrl =
       readRequired("Key Vault URL (e.g. https://myvault.vault.azure.net) [required]: ");
     String secretName = readRequired("Secret name for the SEPS wallet [required]: ");
@@ -212,16 +208,12 @@ public final class AzureProviderSetup extends ProviderSetupCli {
       readResourceAuthenticationParameters();
 
     LinkedHashMap<String, String> properties = new LinkedHashMap<>();
-    if (useCase == 1 || useCase == 2) {
-      addSepsProviderProperties(properties, "oracle.jdbc.provider.username",
-        vaultUrl, secretName, walletPassword, connectionStringIndex,
-        authentication);
-    }
-    if (useCase == 1 || useCase == 3) {
-      addSepsProviderProperties(properties, "oracle.jdbc.provider.password",
-        vaultUrl, secretName, walletPassword, connectionStringIndex,
-        authentication);
-    }
+    addSepsProviderProperties(properties, "oracle.jdbc.provider.username",
+      vaultUrl, secretName, walletPassword, connectionStringIndex,
+      authentication);
+    addSepsProviderProperties(properties, "oracle.jdbc.provider.password",
+      vaultUrl, secretName, walletPassword, connectionStringIndex,
+      authentication);
 
     addResourceProperties(properties,
       "SEPS Wallet Provider from Azure Key Vault",

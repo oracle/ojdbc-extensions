@@ -278,8 +278,6 @@ public final class AwsProviderSetup extends ProviderSetupCli {
   }
 
   private void setupSecretsManagerSepsProvider() {
-    int useCase = promptMenu("Choose what to configure from the SEPS wallet:",
-      "Username and password", "Username only", "Password only");
     String secretName =
       readRequired("Secrets Manager secret name for the SEPS wallet [required]: ");
     String walletPassword = readOptional(
@@ -293,16 +291,12 @@ public final class AwsProviderSetup extends ProviderSetupCli {
       resourceAuthenticationParameters();
 
     LinkedHashMap<String, String> properties = new LinkedHashMap<>();
-    if (useCase == 1 || useCase == 2) {
-      addSepsProviderProperties(properties, "oracle.jdbc.provider.username",
-        "ojdbc-provider-aws-secrets-manager-seps", "secretName", secretName,
-        walletPassword, connectionStringIndex, fieldName, authentication);
-    }
-    if (useCase == 1 || useCase == 3) {
-      addSepsProviderProperties(properties, "oracle.jdbc.provider.password",
-        "ojdbc-provider-aws-secrets-manager-seps", "secretName", secretName,
-        walletPassword, connectionStringIndex, fieldName, authentication);
-    }
+    addSepsProviderProperties(properties, "oracle.jdbc.provider.username",
+      "ojdbc-provider-aws-secrets-manager-seps", "secretName", secretName,
+      walletPassword, connectionStringIndex, fieldName, authentication);
+    addSepsProviderProperties(properties, "oracle.jdbc.provider.password",
+      "ojdbc-provider-aws-secrets-manager-seps", "secretName", secretName,
+      walletPassword, connectionStringIndex, fieldName, authentication);
 
     addResourceProperties(properties,
       "SEPS Wallet Provider from AWS Secrets Manager",
@@ -310,8 +304,6 @@ public final class AwsProviderSetup extends ProviderSetupCli {
   }
 
   private void setupParameterStoreSepsProvider() {
-    int useCase = promptMenu("Choose what to configure from the SEPS wallet:",
-      "Username and password", "Username only", "Password only");
     String parameterName =
       readRequired("Parameter Store parameter name for the SEPS wallet [required]: ");
     String walletPassword = readOptional(
@@ -322,18 +314,14 @@ public final class AwsProviderSetup extends ProviderSetupCli {
       resourceAuthenticationParameters();
 
     LinkedHashMap<String, String> properties = new LinkedHashMap<>();
-    if (useCase == 1 || useCase == 2) {
-      addSepsProviderProperties(properties, "oracle.jdbc.provider.username",
-        "ojdbc-provider-aws-parameter-store-seps", "parameterName",
-        parameterName, walletPassword, connectionStringIndex, null,
-        authentication);
-    }
-    if (useCase == 1 || useCase == 3) {
-      addSepsProviderProperties(properties, "oracle.jdbc.provider.password",
-        "ojdbc-provider-aws-parameter-store-seps", "parameterName",
-        parameterName, walletPassword, connectionStringIndex, null,
-        authentication);
-    }
+    addSepsProviderProperties(properties, "oracle.jdbc.provider.username",
+      "ojdbc-provider-aws-parameter-store-seps", "parameterName",
+      parameterName, walletPassword, connectionStringIndex, null,
+      authentication);
+    addSepsProviderProperties(properties, "oracle.jdbc.provider.password",
+      "ojdbc-provider-aws-parameter-store-seps", "parameterName",
+      parameterName, walletPassword, connectionStringIndex, null,
+      authentication);
 
     addResourceProperties(properties,
       "SEPS Wallet Provider from AWS Parameter Store",
