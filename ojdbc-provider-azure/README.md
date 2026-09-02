@@ -50,6 +50,48 @@ JDK versions. The coordinates for the latest release are:
 </dependency>
 ```
 
+## Command-Line Setup Helper
+
+The Azure provider jar includes an interactive setup helper for generating
+provider configuration from the command line.
+
+The helper can generate either a centralized configuration JDBC URL or a set
+of resource-provider connection properties. It does not connect to Azure or
+validate credentials; it only prints the values you configure.
+
+### Running the helper
+
+The helper is launched from the provider jar with the `--setup` flag:
+
+```bash
+java -jar ojdbc-provider-azure-1.1.0.jar --setup
+```
+
+Running the jar without `--setup` prints a short info banner (name,
+version, a one-line description, and a link to this README) and exits
+immediately, without reading from standard input.
+
+For direct `java -jar` execution, `ojdbc-provider-common-1.1.0.jar` must be
+present in the same directory as this jar.
+
+### What the helper does
+
+Once running, the helper presents a menu with two main choices: adding a
+centralized configuration URL, or adding a resource provider.
+
+If you choose a centralized configuration URL, it asks whether to use Azure
+App Configuration or Azure Vault, the value that service needs, and how to
+authenticate (Default, Service Principal, Managed Identity, or Interactive),
+then assembles the resulting `jdbc:oracle:thin:@config-azure...` URL for you.
+
+If you choose a resource provider, it asks which one (Access Token, Username,
+Password, Connection String, TCPS Wallet, or SEPS Wallet), the values that
+provider needs, and how to authenticate.
+
+You can repeat either choice as many times as you like to build up multiple
+providers or URLs, then export everything at once, either printed to the
+terminal or appended to a file.
+
 ## Azure App Configuration Provider
 
 The Config Provider for Azure is a Centralized Config Provider that provides Oracle JDBC with

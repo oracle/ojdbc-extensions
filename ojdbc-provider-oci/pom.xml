@@ -92,6 +92,12 @@
         <version>3.3.0</version>
         <configuration>
           <archive>
+            <manifest>
+              <mainClass>oracle.jdbc.provider.oci.OciProviderSetup</mainClass>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+              <addClasspath>true</addClasspath>
+              <classpathLayoutType>simple</classpathLayoutType>
+            </manifest>
             <manifestEntries>
               <Automatic-Module-Name>com.oracle.database.jdbc.provider.oci</Automatic-Module-Name>
             </manifestEntries>

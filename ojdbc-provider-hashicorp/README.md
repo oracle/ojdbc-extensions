@@ -48,6 +48,49 @@ The coordinates for the latest release are:
 </dependency>
 ```
 
+## Command-Line Setup Helper
+
+The HashiCorp provider jar includes an interactive setup helper for
+generating provider configuration from the command line.
+
+The helper can generate either a centralized configuration JDBC URL or a set
+of resource-provider connection properties. It does not connect to Vault or
+validate credentials; it only prints the values you configure.
+
+### Running the helper
+
+The helper is launched from the provider jar with the `--setup` flag:
+
+```bash
+java -jar ojdbc-provider-hashicorp-1.1.0.jar --setup
+```
+
+Running the jar without `--setup` prints a short info banner (name,
+version, a one-line description, and a link to this README) and exits
+immediately, without reading from standard input.
+
+For direct `java -jar` execution, `ojdbc-provider-common-1.1.0.jar` must be
+present in the same directory as this jar.
+
+### What the helper does
+
+Once running, the helper presents a menu with two main choices: adding a
+centralized configuration URL, or adding a resource provider.
+
+If you choose a centralized configuration URL, it asks for the secret path in
+HCP Vault Dedicated and how to authenticate (Vault token, Userpass, AppRole,
+GitHub, or auto-detect), then assembles the resulting
+`jdbc:oracle:thin:@config-hcpvaultdedicated...` URL for you.
+
+If you choose a resource provider, it asks which one (Username, Password,
+Connection String, TCPS Wallet, or SEPS Wallet), the values that provider
+needs, and how to authenticate, then generates the matching
+`oracle.jdbc.provider.*` connection properties.
+
+You can repeat either choice as many times as you like to build up multiple
+providers or URLs, then export everything at once, either printed to the
+terminal or appended to a file.
+
 ## Authentication
 
 Providers use the HashiCorp Vault API to retrieve secrets and configurations.

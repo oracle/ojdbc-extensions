@@ -53,6 +53,10 @@
         <version>3.3.0</version>
         <configuration>
           <archive>
+            <manifest>
+              <mainClass>oracle.jdbc.provider.pkl.PklProviderInfo</mainClass>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
             <manifestEntries>
               <Automatic-Module-Name>com.oracle.database.jdbc.provider.pkl</Automatic-Module-Name>
             </manifestEntries>
