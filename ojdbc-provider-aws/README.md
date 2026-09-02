@@ -308,7 +308,7 @@ If `AWS_REGION` is specified in the URL, the provider uses it as the value of Re
 ## AWS Secrets Manager Username Provider
 The Secrets Manager Username Provider provides Oracle JDBC with a database username
 that is managed by the Secrets Manager service. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html)
-identified by the name `ojdbc-provider-aws-secretsmanager-username`.
+identified by the name `ojdbc-provider-aws-secrets-manager-username`.
 
 In addition to the set of [common parameters](#common-parameters-for-resource-providers),
 this provider also supports the parameters listed below.
@@ -388,7 +388,7 @@ that configures this provider can be found in
 ## AWS Secrets Manager Password Provider
 The Secrets Manager Password Provider provides Oracle JDBC with a database password
 that is managed by the AWS Secrets Manager service. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html)
-identified by the name `ojdbc-provider-aws-secretsmanager-password`.
+identified by the name `ojdbc-provider-aws-secrets-manager-password`.
 
 In addition to the set of [common parameters](#common-parameters-for-resource-providers),
 this provider also supports the parameters listed below.
@@ -469,7 +469,7 @@ that configures this provider can be found in
 
 The TCPS Wallet Provider provides Oracle JDBC with keys and certificates managed by the AWS Secrets Manager service
 to establish secure TLS connections with an Autonomous Database. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified by the name
-`ojdbc-provider-aws-secretsmanager-tls`.
+`ojdbc-provider-aws-secrets-manager-tls`.
 
 For example, when connecting to Autonomous Database Serverless with mutual TLS (mTLS), you need to configure the JDBC-thin
 driver with its client certificate. If this certificate is stored in a wallet file (e.g., `cwallet.sso`, `ewallet.p12`, `ewallet.pem`),
@@ -547,7 +547,7 @@ An example of a [connection properties file](https://docs.oracle.com/en/database
 
 The SEPS Wallet Provider provides Oracle JDBC with a username and password managed by the AWS Secrets Manager service,
 where the base64 encoding of a Secure External Password Store (SEPS) wallet file is stored as a secret. This is a
-[Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified by the name `ojdbc-provider-aws-secretsmanager-seps`.
+[Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified by the name `ojdbc-provider-aws-secrets-manager-seps`.
 
 - The SEPS wallet securely stores encrypted database credentials, including the username, password, and connection strings.
   These credentials can be stored as default values, such as **oracle.security.client.default_username** and **oracle.security.client.default_password**,
@@ -674,7 +674,7 @@ An example of a [connection properties file](https://docs.oracle.com/en/database
 
 The Connection String Provider provides Oracle JDBC with a connection string managed by the AWS Secrets Manager service.
 This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html)
-identified by the name `ojdbc-provider-aws-secretsmanager-tnsnames`.
+identified by the name `ojdbc-provider-aws-secrets-manager-tnsnames`.
 
 This provider retrieves and decodes a `tnsnames.ora` file stored as a secret in AWS Secrets Manager.
 
@@ -812,18 +812,20 @@ Parameter names are recognized when appended to the name of a connection propert
 For example, when the connection property `oracle.jdbc.provider.password` identifies a provider,
 any of the parameter names listed above may be appended to it:
 ```properties
-oracle.jdbc.provider.password=ojdbc-provider-aws-secretsmanager-password
+oracle.jdbc.provider.password=ojdbc-provider-aws-secrets-manager-password
+oracle.jdbc.provider.password.secretName=my-secret
 oracle.jdbc.provider.password.authenticationMethod=aws-default
 oracle.jdbc.provider.password.awsRegion=us-west-2
 oracle.jdbc.provider.password.fieldName=password
 ```
-In the example above, the parameter names `authenticationMethod`, `awsRegion`, and `fieldName`
+In the example above, the parameter names `secretName`, `authenticationMethod`, `awsRegion`, and `fieldName`
 are appended to the property `oracle.jdbc.provider.password`, effectively configuring the Secrets Manager Password Provider.
 
 These same parameter names can be appended to the name of any other property that identifies a provider.
 For instance, a provider identified by the connection property `oracle.jdbc.provider.username` can be configured with the same parameters:
 ```properties
-oracle.jdbc.provider.username=ojdbc-provider-aws-secretsmanager-username
+oracle.jdbc.provider.username=ojdbc-provider-aws-secrets-manager-username
+oracle.jdbc.provider.username.secretName=my-secret
 oracle.jdbc.provider.username.authenticationMethod=aws-default
 oracle.jdbc.provider.username.awsRegion=eu-central-1
 oracle.jdbc.provider.username.fieldName=username
