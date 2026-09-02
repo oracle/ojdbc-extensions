@@ -242,6 +242,23 @@ The user can provide an optional parameter `AUTHENTICATION` (case-ignored) which
 </tbody>
 </table>
 
+### Interactive Authentication Caching
+
+When `AUTHENTICATION=AZURE_INTERACTIVE` or `AUTHENTICATION=AZURE_DEVICE_CODE`
+(or `authenticationMethod=interactive` / `authenticationMethod=device-code` for
+[Resource Providers](#configuring-authentication-for-resource-providers)) is
+configured, a browser-based or device-code login is only prompted once for a given
+identity: any subsequent request that presents the same `AZURE_TENANT_ID`,
+`AZURE_CLIENT_ID`, and `AZURE_REDIRECT_URL` reuses the credential from that login,
+rather than prompting for another login. For example, a main configuration and an
+embedded [password](#password-json-object) or
+[wallet_location](#wallet_location-json-object) object configured with the same
+identity share a single login between them.
+
+Reuse relies on the Azure Identity library's own in-memory token caching, which
+automatically refreshes an access token before it expires without a new login. See
+[Token caching in the Azure Identity client library](https://github.com/Azure/azure-sdk-for-java/blob/azure-identity_1.18.0/sdk/identity/azure-identity/TOKEN_CACHING.md).
+
 ### DefaultAzureCredential
 
 The Azure SDK `DefaultAzureCredential` class tries the following flow in order to try to Authenticate an application:
@@ -823,13 +840,17 @@ with a username and password.
 <dt>device-code</dt>
 <dd>
 Authenticate interactively by logging in to an Azure account in a web browser.
-A browser link is output to the standard output stream.
+A browser link is output to the standard output stream. See
+<a href="#interactive-authentication-caching">Interactive Authentication Caching</a>
+for details on how a login may be reused across multiple resource requests.
 </dd>
 <dt>interactive</dt>
 <dd>
 Authenticate interactively by logging in to a cloud account with your
 default web browser. The browser window is opened automatically. The optional
 <code>tenantId</code> parameter may be configured to target a specific tenant.
+See <a href="#interactive-authentication-caching">Interactive Authentication Caching</a>
+for details on how a login may be reused across multiple resource requests.
 </dd>
 <dt>auto-detect</dt>
 <dd>
