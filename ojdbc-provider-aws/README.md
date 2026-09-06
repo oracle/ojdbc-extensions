@@ -65,6 +65,50 @@ JDK versions. The coordinates for the latest release are:
 </dependency>
 ```
 
+## Command-Line Setup Helper
+
+The AWS provider jar includes an interactive setup helper for generating
+provider configuration from the command line.
+
+The helper can generate either a centralized configuration JDBC URL or a set
+of resource-provider connection properties. It does not connect to AWS or
+validate credentials; it only prints the values you configure.
+
+### Running the helper
+
+The helper is launched from the provider jar with the `--setup` flag:
+
+```bash
+java -jar ojdbc-provider-aws-1.1.0.jar --setup
+```
+
+Running the jar without `--setup` prints a short info banner (name,
+version, a one-line description, and a link to this README) and exits
+immediately, without reading from standard input.
+
+For direct `java -jar` execution, `ojdbc-provider-common-1.1.0.jar` must be
+present in the same directory as this jar.
+
+### What the helper does
+
+Once running, the helper presents a menu with two main choices: adding a
+centralized configuration URL, or adding a resource provider.
+
+If you choose a centralized configuration URL, it asks which AWS service to
+use (S3, Secrets Manager, Parameter Store, or AppConfig), the value that
+service needs (such as a bucket location or secret name), and an optional AWS
+region, then assembles the resulting `jdbc:oracle:thin:@config-aws...` URL
+for you.
+
+If you choose a resource provider, it asks which one (Username, Password,
+Connection String, TCPS Wallet, or SEPS Wallet), which AWS service backs it
+(Secrets Manager or Parameter Store), and the values that provider needs,
+then generates the matching `oracle.jdbc.provider.*` connection properties.
+
+You can repeat either choice as many times as you like to build up multiple
+providers or URLs, then export everything at once, either printed to the
+terminal or appended to a file.
+
 ## AWS S3 Configuration Provider
 The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-awss3:` to be able to identify that the configuration parameters should be loaded using AWS S3.
 Users only need to indicate the S3 URI of the object that contains the configuration payload.
