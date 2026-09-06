@@ -51,8 +51,10 @@ import oracle.jdbc.util.configuration.OracleConfigurationCache;
 import oracle.jdbc.util.configuration.OracleConfiguration;
 
 /**
- * A provider for JSON payload which contains configuration from GCP Cloud
- * Storage. See {@link #getInputStream(String)} for the spec of the JSON payload.
+ * A provider for configuration payloads retrieved from GCP Cloud Storage.
+ * Payloads are parsed by {@link OracleConfigurationParsableProvider}; JSON is
+ * used by default, and other parser types such as Pkl may be selected with the
+ * {@code parser} option.
  */
 public class GcpCloudStorageConfigurationProvider
     extends OracleConfigurationParsableProvider {
@@ -73,16 +75,16 @@ public class GcpCloudStorageConfigurationProvider
   /**
    * {@inheritDoc}
    * <p>
-   * Returns the JSON payload stored in GCP Cloud Storage.
+   * Returns the configuration payload stored in GCP Cloud Storage.
    * </p>
    * 
    * @param location semi-colon separated list of key value pairs
    *                 containing the following keys:
    *                 <ul>
    *                 <li>project: the project id (optional)</li>
-   *                 <li>bucket: the bucket containing the json configuration
+   *                 <li>bucket: the bucket containing the configuration
    *                 file</li>
-   *                 <li>object: the name of the json configuration file</li>
+   *                 <li>object: the name of the configuration file</li>
    *                 </ul>
    *                 Unknown keys will be ignored.
    *                 Ex: project=myProject;bucket=myBucket;object=myfile.json
@@ -98,7 +100,7 @@ public class GcpCloudStorageConfigurationProvider
    *                 When using URI-based formats, the provider uses the
    *                 default Google Cloud Storage client configuration resolved
    *                 by the Google Cloud Java SDK.
-   * @return JSON payload
+   * @return configuration payload
    */
   @Override
   public InputStream getInputStream(String location) throws SQLException {

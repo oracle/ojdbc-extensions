@@ -40,7 +40,6 @@ package oracle.jdbc.provider.pkl.configuration;
 
 import oracle.jdbc.OracleConnection;
 import oracle.jdbc.spi.OracleConfigurationProvider;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -59,8 +58,6 @@ public class PklParserTest {
   private static final String TEST_USER = "scott";
   private static final String TEST_PASSWORD = "tiger";
 
-  private static File file;
-
   static {
     OracleConfigurationProvider.allowedProviders.add("file");
   }
@@ -68,10 +65,14 @@ public class PklParserTest {
   private static final OracleConfigurationProvider PROVIDER =
       OracleConfigurationProvider.find("file");
 
-  @BeforeAll
-  public static void setup() throws Exception {
+  /**
+   * Writes a temporary Pkl file that amends the test schema resource with
+   * connect_descriptor/user/password, followed by the given extra content
+   * (e.g. a jdbc block), and returns its absolute path.
+   */
+  private static String createPklConfig(String extraContent) throws Exception {
     // Create a file
-    file = File.createTempFile("myJdbcConfig", ".pkl");
+    File file = File.createTempFile("myJdbcConfig", ".pkl");
     file.createNewFile();
 
     URL resourceUrl = Thread.currentThread().getContextClassLoader().getResource(RESOURCE_NAME);
@@ -81,24 +82,27 @@ public class PklParserTest {
 
     FileWriter writer = new FileWriter(file);
     String content = "amends \"file://" + resourceUrl.getPath() + "\"\n\n"
-        + "connect_descriptor = \"" + TEST_CONNECT_DESCRIPTOR + "\"\n"
-        + "user = \"" + TEST_USER + "\"\n\n"
-        + "// Password in OCI Vault\n"
-        + "password {\n"
-        + "  type = \"base64\"\n"
-        + "  value = \"" + Base64.getEncoder().encodeToString(TEST_PASSWORD.getBytes(StandardCharsets.UTF_8)) + "\"\n"
-        + "}\n\n"
-        + "jdbc {\n"
-        + "  autoCommit = false\n"
-        + "  `oracle.jdbc.loginTimeout` = 3.s\n"
-        + "}\n";
+            + "connect_descriptor = \"" + TEST_CONNECT_DESCRIPTOR + "\"\n"
+            + "user = \"" + TEST_USER + "\"\n\n"
+            + "// Password in OCI Vault\n"
+            + "password {\n"
+            + "  type = \"base64\"\n"
+            + "  value = \"" + Base64.getEncoder().encodeToString(TEST_PASSWORD.getBytes(StandardCharsets.UTF_8)) + "\"\n"
+            + "}\n"
+            + (extraContent == null ? "" : "\n" + extraContent);
     writer.write(content);
     writer.close();
+
+    return file.getAbsolutePath();
   }
 
   @Test
   void testPkl() throws Exception {
-    final String location =  file.getAbsolutePath();
+    final String location = createPklConfig(
+            "jdbc {\n"
+                    + "  autoCommit = false\n"
+                    + "  `oracle.jdbc.loginTimeout` = 3.s\n"
+                    + "}\n");
 
     Properties properties = PROVIDER
         .getConnectionProperties(location + "?parser=pkl");
@@ -109,5 +113,21 @@ public class PklParserTest {
     assertEquals(TEST_PASSWORD, properties.getProperty(OracleConnection.CONNECTION_PROPERTY_PASSWORD));
     assertEquals("false", properties.getProperty(OracleConnection.CONNECTION_PROPERTY_AUTOCOMMIT));
     assertEquals("3", properties.getProperty(OracleConnection.CONNECTION_PROPERTY_LOGIN_TIMEOUT));
+  }
+
+  /**
+   * Verifies that parsing succeeds when the optional {@code jdbc} block is
+   * omitted from the Pkl configuration.
+   */
+  @Test
+  void testPklWithoutJdbcBlock() throws Exception {
+    final String location = createPklConfig(null);
+
+    Properties properties = PROVIDER
+            .getConnectionProperties(location + "?parser=pkl");
+
+    assertTrue(properties.containsKey("URL"), "Should contain property URL");
+    assertEquals(TEST_USER, properties.getProperty(OracleConnection.CONNECTION_PROPERTY_USER_NAME));
+    assertEquals(TEST_PASSWORD, properties.getProperty(OracleConnection.CONNECTION_PROPERTY_PASSWORD));
   }
 }

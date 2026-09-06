@@ -9,9 +9,11 @@ Google Cloud Platform (GCP).
 <dt><a href="#gcp-cloud-storage-config-provider">GCP Cloud Storage Config 
 Provider</a></dt>
 <dd>Provides connection properties managed by the Cloud Storage service</dd>
-<dt><a href="#gcp-secret_manager-config-provider">GCP Secret Manager Config 
+<dt><a href="#gcp-secret-manager-config-provider">GCP Secret Manager Config 
 Provider</a></dt>
 <dd>Provides connection properties managed by the Secret Manager service</dd>
+<dt><a href="#configuration-payload-parsers-json-pkl-and-other-parsers">Configuration Payload Parsers (JSON, Pkl, and Other Parsers)</a></dt>
+<dd>Parser selection for GCP configuration payloads</dd>
 <dt><a href="#caching-configuration">Caching configuration</a></dt>
 <dd>Caching mechanism adopted by Centralized Config Providers</dd>
 </dl>
@@ -48,6 +50,50 @@ JDK versions. The coordinates for the latest release are:
 </dependency>
 ```
 
+## Command-Line Setup Helper
+
+The GCP provider jar includes an interactive setup helper for generating
+provider configuration from the command line.
+
+The helper can generate either a centralized configuration JDBC URL or a set
+of resource-provider connection properties. It does not connect to GCP or
+validate credentials; it only prints the values you configure.
+
+### Running the helper
+
+The helper is launched from the provider jar with the `--setup` flag:
+
+```bash
+java -jar ojdbc-provider-gcp-1.1.0.jar --setup
+```
+
+Running the jar without `--setup` prints a short info banner (name,
+version, a one-line description, and a link to this README) and exits
+immediately, without reading from standard input.
+
+For direct `java -jar` execution, `ojdbc-provider-common-1.1.0.jar` must be
+present in the same directory as this jar.
+
+### What the helper does
+
+Once running, the helper presents a menu with two main choices: adding a
+centralized configuration URL, or adding a resource provider.
+
+If you choose a centralized configuration URL, it asks whether to use Cloud
+Storage or Secret Manager, then the location or secret name that service
+needs, and assembles the resulting `jdbc:oracle:thin:@config-gcp...` URL for
+you. GCP providers always authenticate using Application Default Credentials,
+so there is no authentication method to choose.
+
+If you choose a resource provider, it asks which one (Username, Password,
+Connection String, TCPS Wallet, or SEPS Wallet) and the values that provider
+needs, then generates the matching `oracle.jdbc.provider.*` connection
+properties.
+
+You can repeat either choice as many times as you like to build up multiple
+providers or URLs, then export everything at once, either printed to the
+terminal or appended to a file.
+
 ## Authentication
 
 Providers use Google Cloud APIs which support 
@@ -77,7 +123,7 @@ gcloud auth application-default login
 A sign-in screen appears. After you sign in, your credentials are stored in the local credential file used by ADC.
 
 ## GCP Cloud Storage Config Provider
-The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-gcpstorage:` to be able to identify that the configuration parameters should be loaded using GCP Object Storage. Users only need to indicate the project, bucket and object containing the JSON payload, with the following syntax:
+The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-gcpstorage:` to be able to identify that the configuration parameters should be loaded using GCP Object Storage. Users only need to indicate the project, bucket and object containing the configuration payload, with the following syntax:
 
 <pre>
 jdbc:oracle:thin:@config-gcpstorage://project={project};bucket={bucket};object={object}
@@ -100,7 +146,7 @@ Google Cloud Java SDK. See the Google Cloud Storage documentation for
 [gs:// URIs](https://docs.cloud.google.com/storage/docs/downloading-objects)
 and [storage.googleapis.com object URLs](https://docs.cloud.google.com/storage/docs/access-public-data).
 
-### JSON Payload format
+### Configuration Payload Format
 
 There are 3 fixed values that are looked at the root level.
 
@@ -210,13 +256,27 @@ This property should be included inside the jdbc object of the JSON payload:
 <i>*Note: When storing a wallet in GCP Secret Manager, you can either store the raw bytes of the cwallet.sso file directly or provide the Base64-encoded string. The provider will detect the format and handle the encoding appropriately.</i>
 
 ## GCP Secret Manager Config Provider
-Apart from GCP Cloud Storage, users can also store JSON Payload in the content of GCP Secret Manager secret. Users need to indicate the resource name:
+Apart from GCP Cloud Storage, users can also store a configuration payload in the content of GCP Secret Manager secret. Users need to indicate the resource name:
 
 <pre>
 jdbc:oracle:thin:@config-gcpsecretmanager:{resource-name}
 </pre>
 
-The JSON Payload retrieved by GCP Vault Config Provider follows the same format in [GCP Object Storage Config Provider](#json-payload-format).
+The payload retrieved by GCP Secret Manager Config Provider follows the same format in [GCP Object Storage Config Provider](#configuration-payload-format).
+
+## Configuration Payload Parsers (JSON, Pkl, and Other Parsers)
+GCP Cloud Storage and GCP Secret Manager Config Providers extend
+`OracleConfigurationParsableProvider`, which parses payloads as JSON by default
+and honors the `parser` option for other parser types. To use a Pkl payload, or
+another parser type, add the `parser` option to the JDBC URL and include the
+corresponding parser provider on the runtime classpath. For Pkl, include
+`ojdbc-provider-pkl`.
+
+<pre>
+jdbc:oracle:thin:@config-gcpstorage://project={project};bucket={bucket};object={object}?parser=pkl
+jdbc:oracle:thin:@config-gcpstorage://gs://{bucket}/{object}?parser=pkl
+jdbc:oracle:thin:@config-gcpsecretmanager:{resource-name}?parser=pkl
+</pre>
 
 ## Caching configuration
 

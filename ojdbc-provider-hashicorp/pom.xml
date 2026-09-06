@@ -48,6 +48,12 @@
               <version>3.3.0</version>
               <configuration>
                   <archive>
+                      <manifest>
+                          <mainClass>oracle.jdbc.provider.hashicorp.HashicorpProviderSetup</mainClass>
+                          <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                          <addClasspath>true</addClasspath>
+                          <classpathLayoutType>simple</classpathLayoutType>
+                      </manifest>
                       <manifestEntries>
                           <Automatic-Module-Name>com.oracle.database.jdbc.provider.hashicorp</Automatic-Module-Name>
                       </manifestEntries>

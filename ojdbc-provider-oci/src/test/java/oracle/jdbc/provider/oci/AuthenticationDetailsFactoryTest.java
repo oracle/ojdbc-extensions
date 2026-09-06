@@ -43,12 +43,14 @@ import oracle.jdbc.provider.TestProperties;
 import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.oci.authentication.AuthenticationDetailsFactory;
 import oracle.jdbc.provider.oci.authentication.AuthenticationMethod;
+import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
 import oracle.jdbc.provider.parameter.ParameterSetBuilder;
 import org.junit.jupiter.api.Test;
 
 import static oracle.jdbc.provider.TestProperties.getOrAbort;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Verifies {@link AuthenticationDetailsFactory} */
@@ -121,6 +123,83 @@ public class AuthenticationDetailsFactoryTest {
     TestProperties.abortIfNotEqual(OciTestProperty.OCI_INTERACTIVE, "true");
     verifyAuthenticationDetails(
             buildParameterSet(AuthenticationMethod.INTERACTIVE).build());
+  }
+
+  /**
+   * <p>
+   * Verifies that two requests configured with the same
+   * {@link AuthenticationMethod#INTERACTIVE} identity reuse a single, cached
+   * login, rather than each triggering their own browser-based login. This
+   * is the scenario of a Database Tools Connection and its embedded password
+   * and wallet secrets, each requesting authentication independently, but
+   * expecting to share one login between them.
+   * </p><p>
+   * This test only performs one browser-based login: if authentication were
+   * not cached, the second {@code request()} call below would prompt for a
+   * second login, and the two resulting objects would not be the same
+   * instance.
+   * </p>
+   */
+  @Test
+  public void testInteractiveAuthenticationIsCached() {
+    TestProperties.abortIfNotEqual(OciTestProperty.OCI_INTERACTIVE, "true");
+
+    ParameterSet parameterSet =
+      buildParameterSet(AuthenticationMethod.INTERACTIVE).build();
+
+    AbstractAuthenticationDetailsProvider firstLogin =
+      AuthenticationDetailsFactory.getInstance()
+        .request(parameterSet)
+        .getContent();
+
+    AbstractAuthenticationDetailsProvider secondLogin =
+      AuthenticationDetailsFactory.getInstance()
+        .request(parameterSet)
+        .getContent();
+
+    assertSame(firstLogin, secondLogin);
+  }
+
+  /**
+   * <p>
+   * Verifies that a cached {@link AuthenticationMethod#INTERACTIVE} login is
+   * reused even when a second request carries additional, resource-specific
+   * parameters that the first request did not have, such as the OCID of a
+   * secret or a Database Tools Connection. Such parameters play no role in
+   * authentication, and must not cause a cached login to be missed.
+   * </p><p>
+   * As with {@link #testInteractiveAuthenticationIsCached()}, this test only
+   * performs one browser-based login.
+   * </p>
+   */
+  @Test
+  public void testInteractiveAuthenticationCacheIgnoresResourceParameters() {
+    TestProperties.abortIfNotEqual(OciTestProperty.OCI_INTERACTIVE, "true");
+
+    Parameter<String> resourceSpecificParameter = Parameter.create();
+
+    ParameterSet parameterSet =
+      buildParameterSet(AuthenticationMethod.INTERACTIVE).build();
+
+    ParameterSet parameterSetWithResourceParameter =
+      parameterSet.copyBuilder()
+        .add(
+          "Test resource-specific parameter",
+          resourceSpecificParameter,
+          "ocid1.vaultsecret.oc1..example")
+        .build();
+
+    AbstractAuthenticationDetailsProvider firstLogin =
+      AuthenticationDetailsFactory.getInstance()
+        .request(parameterSet)
+        .getContent();
+
+    AbstractAuthenticationDetailsProvider secondLogin =
+      AuthenticationDetailsFactory.getInstance()
+        .request(parameterSetWithResourceParameter)
+        .getContent();
+
+    assertSame(firstLogin, secondLogin);
   }
 
   /**

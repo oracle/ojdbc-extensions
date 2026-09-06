@@ -50,6 +50,7 @@ import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.time.OffsetDateTime;
 import java.util.Map;
 
 /**
@@ -102,6 +103,14 @@ public class InteractiveAuthenticationDetails
   private final PemData privateKey;
 
   /**
+   * Time at which the {@code sessionToken} passed to the constructor expires,
+   * per its "exp" claim. This class does not refresh or renew the session
+   * token that it wraps, so a caller that caches an instance of this class
+   * should treat it as invalid once this time has passed.
+   */
+  private final OffsetDateTime expirationTime;
+
+  /**
    * Constructs of provider of interactive authentication details. This
    * constructor extracts details from the claims of a {@code sessionToken},
    * which is assumed to a JSON Web Token (JWT) encoding.
@@ -127,6 +136,16 @@ public class InteractiveAuthenticationDetails
     this.tenantId = tokenClaims.get("tenant");
     this.userId = tokenClaims.get("sub");
     this.keyId = "ST$" + sessionToken;
+    this.expirationTime = JsonWebTokenParser.parseExp(sessionToken);
+  }
+
+  /**
+   * Returns the time at which the session token wrapped by this object
+   * expires.
+   * @return The expiration time of the session token. Not null.
+   */
+  OffsetDateTime getExpirationTime() {
+    return expirationTime;
   }
 
   @Override

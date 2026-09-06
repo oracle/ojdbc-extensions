@@ -146,8 +146,6 @@ this project:
 
 [ojdbc-provider-gcp](ojdbc-provider-gcp/README.md#installation)
 
-[ojdbc-provider-opentelemetry](ojdbc-provider-opentelemetry/README.md#installation)
-
 [ucp-provider-observability](ucp-provider-observability/README.md#installation)
 
 [ojdbc-provider-jackson-oson](ojdbc-provider-jackson-oson/README.md#installation)

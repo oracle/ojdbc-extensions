@@ -135,6 +135,17 @@ The coordinates for the latest release are:
 </dependency>
 ```
 
+## Running This Jar Directly
+
+Running the jar directly gives you a friendly introduction:
+
+```bash
+java -jar ojdbc-provider-observability-1.1.0.jar
+```
+
+It prints the module's name and version, a short description, and a
+link to the docs.
+
 ## Usage 
 
 To use the Oracle JDBC observability provider just add the artifact to the

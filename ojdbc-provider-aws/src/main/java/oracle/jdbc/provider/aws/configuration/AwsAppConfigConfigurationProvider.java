@@ -54,9 +54,10 @@ import static oracle.jdbc.provider.aws.configuration.AwsConfigurationParameters.
 import static oracle.jdbc.provider.aws.configuration.AwsConfigurationParameters.REGION;
 
 /**
- * A provider for JSON payload which contains configuration data from AWS
- * AppConfig
- * See {@link #getInputStream(String)} for the spec of the JSON payload.
+ * A provider for configuration payloads retrieved from AWS AppConfig. Payloads
+ * are parsed by {@link OracleConfigurationParsableProvider}; JSON is used by
+ * default, and other parser types such as Pkl may be selected with the
+ * {@code parser} option.
  **/
 public class AwsAppConfigConfigurationProvider extends OracleConfigurationParsableProvider {
 
@@ -85,6 +86,8 @@ public class AwsAppConfigConfigurationProvider extends OracleConfigurationParsab
   public InputStream getInputStream(String parameterName) {
     final String VALUE = "value";
     Map<String, String> opts = new HashMap<>(options);
+    // "parser" is consumed by OracleConfigurationParsableProvider, not AWS.
+    opts.remove("parser");
     opts.put(VALUE, parameterName);
 
     ParameterSet parameters = PARAMETER_SET_PARSER.parseNamedValues(opts);

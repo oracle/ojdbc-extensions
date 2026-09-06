@@ -16,6 +16,8 @@ Provider</a></dt>
 <dd>Provides connection properties managed by the Systems Manager Parameter Store</dd>
 <dt><a href="#aws-appconfig-freeform-config-provider">AWS AppConfig Freeform Configuration Provider</a></dt>
 <dd>Provides connection properties managed by the AWS AppConfig Freeform Configuration service</dd>
+<dt><a href="#configuration-payload-parsers-json-pkl-and-other-parsers">Configuration Payload Parsers (JSON, Pkl, and Other Parsers)</a></dt>
+<dd>Parser selection for AWS centralized configuration payloads</dd>
 <dt><a href="#common-parameters-for-centralized-config-providers">Common Parameters for Centralized Config Providers</a></dt>
 <dd>Common parameters supported by the config providers</dd>
 <dt><a href="#caching-configuration">Caching configuration</a></dt>
@@ -63,9 +65,53 @@ JDK versions. The coordinates for the latest release are:
 </dependency>
 ```
 
+## Command-Line Setup Helper
+
+The AWS provider jar includes an interactive setup helper for generating
+provider configuration from the command line.
+
+The helper can generate either a centralized configuration JDBC URL or a set
+of resource-provider connection properties. It does not connect to AWS or
+validate credentials; it only prints the values you configure.
+
+### Running the helper
+
+The helper is launched from the provider jar with the `--setup` flag:
+
+```bash
+java -jar ojdbc-provider-aws-1.1.0.jar --setup
+```
+
+Running the jar without `--setup` prints a short info banner (name,
+version, a one-line description, and a link to this README) and exits
+immediately, without reading from standard input.
+
+For direct `java -jar` execution, `ojdbc-provider-common-1.1.0.jar` must be
+present in the same directory as this jar.
+
+### What the helper does
+
+Once running, the helper presents a menu with two main choices: adding a
+centralized configuration URL, or adding a resource provider.
+
+If you choose a centralized configuration URL, it asks which AWS service to
+use (S3, Secrets Manager, Parameter Store, or AppConfig), the value that
+service needs (such as a bucket location or secret name), and an optional AWS
+region, then assembles the resulting `jdbc:oracle:thin:@config-aws...` URL
+for you.
+
+If you choose a resource provider, it asks which one (Username, Password,
+Connection String, TCPS Wallet, or SEPS Wallet), which AWS service backs it
+(Secrets Manager or Parameter Store), and the values that provider needs,
+then generates the matching `oracle.jdbc.provider.*` connection properties.
+
+You can repeat either choice as many times as you like to build up multiple
+providers or URLs, then export everything at once, either printed to the
+terminal or appended to a file.
+
 ## AWS S3 Configuration Provider
 The Oracle DataSource uses a new prefix `jdbc:oracle:thin:@config-awss3:` to be able to identify that the configuration parameters should be loaded using AWS S3.
-Users only need to indicate the S3 URI of the object that contains the JSON payload.
+Users only need to indicate the S3 URI of the object that contains the configuration payload.
 
 A URL with either of the following formats is valid:
 <pre>
@@ -78,7 +124,7 @@ jdbc:oracle:thin:@config-aws{S3-URI}
 
 The {S3-URI} can be obtained from the Amazon S3 console and follows this naming convention: s3://bucket-name/file-name.
 
-### JSON Payload format
+### Configuration Payload Format
 
 There are 4 fixed values that are looked at the root level.
 
@@ -195,23 +241,23 @@ This property should be included inside the jdbc object of the JSON payload:
 <i>*Note: When storing a wallet in AWS Secrets Manager, store the raw Base64-encoded wallet bytes directly. The provider will automatically detect and handle the encoding correctly.</i>
 
 ## AWS Secrets Manager Config Provider
-Apart from AWS S3, users can also store JSON Payload in the content of AWS Secrets Manager secret. Users need to indicate the secret name:
+Apart from AWS S3, users can also store a configuration payload in the content of AWS Secrets Manager secret. Users need to indicate the secret name:
 
 <pre>
 jdbc:oracle:thin:@config-awssecretsmanager://{secret-name}
 </pre>
 
-The JSON Payload retrieved by AWS Secrets Manager Provider follows the same format in [AWS S3 Configuration Provider](#json-payload-format).
+The payload retrieved by AWS Secrets Manager Provider follows the same format in [AWS S3 Configuration Provider](#configuration-payload-format).
 
 ## AWS Parameter Store Config Provider
-Apart from AWS S3 and Secrets Manager, users can also store JSON payload in AWS Systems Manager Parameter Store. 
+Apart from AWS S3 and Secrets Manager, users can also store a configuration payload in AWS Systems Manager Parameter Store.
 To use it, specify the name of the parameter:
 
 <pre>
 jdbc:oracle:thin:@config-awsparameterstore://{parameter-name}
 </pre>
 
-The JSON payload stored in the parameter should follow the same format as described in [AWS S3 Configuration Provider](#json-payload-format).
+The payload stored in the parameter should follow the same format as described in [AWS S3 Configuration Provider](#configuration-payload-format).
 
 ## AWS AppConfig Freeform Config Provider
 The Oracle DataSource uses the prefix `jdbc:oracle:thin:@config-awsappconfig` to identify that the freeform
@@ -237,14 +283,30 @@ jdbc:oracle:thin:@config-awsappconfig://app-name?appconfig_environment=your-envi
 Alternatively, you can set the environment and profile via system properties (`aws.appconfig.environment, aws.appconfig.profile`) or
 environment variables (`AWS_APP_CONFIG_ENVIRONMENT, AWS_APP_CONFIG_PROFILE`).
 
+## Configuration Payload Parsers (JSON, Pkl, and Other Parsers)
+AWS S3, AWS Secrets Manager, AWS Parameter Store, and AWS AppConfig Freeform
+Config Providers extend `OracleConfigurationParsableProvider`, which parses
+payloads as JSON by default and honors the `parser` option for other parser
+types. To use a Pkl payload, or another parser type, add the `parser` option to
+the JDBC URL and include the corresponding parser provider on the runtime
+classpath. For Pkl, include `ojdbc-provider-pkl`.
+
+<pre>
+jdbc:oracle:thin:@config-awss3://{S3-URI}?parser=pkl
+jdbc:oracle:thin:@config-awssecretsmanager://{secret-name}?parser=pkl
+jdbc:oracle:thin:@config-awsparameterstore://{parameter-name}?parser=pkl
+jdbc:oracle:thin:@config-awsappconfig://{application-identifier}?appconfig_environment={environment-id-or-name}&appconfig_profile={profile-id-or-name}&parser=pkl
+</pre>
+
 ## Common Parameters for Centralized Config Providers
-AWS S3 Configuration Provider and AWS Secrets Manager Configuration Provider
-share the same sets of parameters for authentication configuration.
+AWS S3 Configuration Provider, AWS Secrets Manager Configuration Provider, AWS
+Parameter Store Configuration Provider, and AWS AppConfig Freeform Configuration
+Provider share the same set of parameters for authentication configuration.
 
 ### Configuring Authentication
 
 The Centralized Config Providers in this module use the
-[Default credentials provider chain](https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/credentials-chain.html) to provide authorization and authentication to S3 and Secrets Manager services.
+[Default credentials provider chain](https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/credentials-chain.html) to provide authorization and authentication to AWS services.
 The user can provide an optional parameter `AUTHENTICATION` (case-ignored) which is mapped with the following Credential Class.
 
 <table>
@@ -290,7 +352,7 @@ If `AWS_REGION` is specified in the URL, the provider uses it as the value of Re
 ## AWS Secrets Manager Username Provider
 The Secrets Manager Username Provider provides Oracle JDBC with a database username
 that is managed by the Secrets Manager service. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html)
-identified by the name `ojdbc-provider-aws-secretsmanager-username`.
+identified by the name `ojdbc-provider-aws-secrets-manager-username`.
 
 In addition to the set of [common parameters](#common-parameters-for-resource-providers),
 this provider also supports the parameters listed below.
@@ -370,7 +432,7 @@ that configures this provider can be found in
 ## AWS Secrets Manager Password Provider
 The Secrets Manager Password Provider provides Oracle JDBC with a database password
 that is managed by the AWS Secrets Manager service. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html)
-identified by the name `ojdbc-provider-aws-secretsmanager-password`.
+identified by the name `ojdbc-provider-aws-secrets-manager-password`.
 
 In addition to the set of [common parameters](#common-parameters-for-resource-providers),
 this provider also supports the parameters listed below.
@@ -451,7 +513,7 @@ that configures this provider can be found in
 
 The TCPS Wallet Provider provides Oracle JDBC with keys and certificates managed by the AWS Secrets Manager service
 to establish secure TLS connections with an Autonomous Database. This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified by the name
-`ojdbc-provider-aws-secretsmanager-tls`.
+`ojdbc-provider-aws-secrets-manager-tls`.
 
 For example, when connecting to Autonomous Database Serverless with mutual TLS (mTLS), you need to configure the JDBC-thin
 driver with its client certificate. If this certificate is stored in a wallet file (e.g., `cwallet.sso`, `ewallet.p12`, `ewallet.pem`),
@@ -529,7 +591,7 @@ An example of a [connection properties file](https://docs.oracle.com/en/database
 
 The SEPS Wallet Provider provides Oracle JDBC with a username and password managed by the AWS Secrets Manager service,
 where the base64 encoding of a Secure External Password Store (SEPS) wallet file is stored as a secret. This is a
-[Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified by the name `ojdbc-provider-aws-secretsmanager-seps`.
+[Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html) identified by the name `ojdbc-provider-aws-secrets-manager-seps`.
 
 - The SEPS wallet securely stores encrypted database credentials, including the username, password, and connection strings.
   These credentials can be stored as default values, such as **oracle.security.client.default_username** and **oracle.security.client.default_password**,
@@ -656,7 +718,7 @@ An example of a [connection properties file](https://docs.oracle.com/en/database
 
 The Connection String Provider provides Oracle JDBC with a connection string managed by the AWS Secrets Manager service.
 This is a [Resource Provider](https://docs.oracle.com/en/database/oracle/oracle-database/23/jajdb/oracle/jdbc/spi/OracleResourceProvider.html)
-identified by the name `ojdbc-provider-aws-secretsmanager-tnsnames`.
+identified by the name `ojdbc-provider-aws-secrets-manager-tnsnames`.
 
 This provider retrieves and decodes a `tnsnames.ora` file stored as a secret in AWS Secrets Manager.
 
@@ -794,18 +856,20 @@ Parameter names are recognized when appended to the name of a connection propert
 For example, when the connection property `oracle.jdbc.provider.password` identifies a provider,
 any of the parameter names listed above may be appended to it:
 ```properties
-oracle.jdbc.provider.password=ojdbc-provider-aws-secretsmanager-password
+oracle.jdbc.provider.password=ojdbc-provider-aws-secrets-manager-password
+oracle.jdbc.provider.password.secretName=my-secret
 oracle.jdbc.provider.password.authenticationMethod=aws-default
 oracle.jdbc.provider.password.awsRegion=us-west-2
 oracle.jdbc.provider.password.fieldName=password
 ```
-In the example above, the parameter names `authenticationMethod`, `awsRegion`, and `fieldName`
+In the example above, the parameter names `secretName`, `authenticationMethod`, `awsRegion`, and `fieldName`
 are appended to the property `oracle.jdbc.provider.password`, effectively configuring the Secrets Manager Password Provider.
 
 These same parameter names can be appended to the name of any other property that identifies a provider.
 For instance, a provider identified by the connection property `oracle.jdbc.provider.username` can be configured with the same parameters:
 ```properties
-oracle.jdbc.provider.username=ojdbc-provider-aws-secretsmanager-username
+oracle.jdbc.provider.username=ojdbc-provider-aws-secrets-manager-username
+oracle.jdbc.provider.username.secretName=my-secret
 oracle.jdbc.provider.username.authenticationMethod=aws-default
 oracle.jdbc.provider.username.awsRegion=eu-central-1
 oracle.jdbc.provider.username.fieldName=username

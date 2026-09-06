@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2023 Oracle and/or its affiliates.
+ ** Copyright (c) 2026 Oracle and/or its affiliates.
  **
  ** The Universal Permissive License (UPL), Version 1.0
  **
@@ -23,8 +23,8 @@
  ** either these or other terms.
  **
  ** This license is subject to the following condition:
- ** The above copyright notice and either this complete permission notice or at
- ** a minimum a reference to the UPL must be included in all copies or
+ ** The above copyright notice and either this complete permission notice or
+ ** at a minimum a reference to the UPL must be included in all copies or
  ** substantial portions of the Software.
  **
  ** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
@@ -36,18 +36,46 @@
  ** SOFTWARE.
  */
 
-package oracle.jdbc.provider.opentelemetry;
+package oracle.jdbc.provider.oson;
+
+import oracle.jdbc.provider.util.cli.ProviderJarInfo;
 
 /**
- * MBean interface for the OpenTelemetryTraceEventListener, it exposes two
- * attributes: Enabled and SensitiveDataEnabled.
+ * Entry point for running this provider jar directly (ie: {@code java
+ * -jar ojdbc-provider-jackson-oson-<version>.jar}). This module has no
+ * interactive setup wizard, so passing {@code --setup} just explains
+ * that instead of launching one.
  */
-public interface OpenTelemetryTraceEventListenerMBean {
-  void setEnabled(boolean enabled);
+public final class JacksonOsonProviderInfo extends ProviderJarInfo {
 
-  void setSensitiveDataEnabled(boolean enabled);
+  private static final String README_URL =
+    "https://github.com/oracle/ojdbc-extensions/blob/main/ojdbc-provider-jackson-oson/README.md";
 
-  boolean isEnabled();
+  private JacksonOsonProviderInfo() {}
 
-  boolean isSensitiveDataEnabled();
+  /**
+   * Prints the info banner.
+   *
+   * @param args Ignored, except that {@code --setup} prints an explanation
+   * that this module has no interactive setup wizard.
+   */
+  public static void main(String[] args) {
+    new JacksonOsonProviderInfo().start(args);
+  }
+
+  @Override
+  protected String displayName() {
+    return "OSON Provider for Jackson";
+  }
+
+  @Override
+  protected String description() {
+    return "Provides support for serializing and deserializing Oracle "
+      + "JSON (OSON) data using Jackson APIs.";
+  }
+
+  @Override
+  protected String readmeUrl() {
+    return README_URL;
+  }
 }

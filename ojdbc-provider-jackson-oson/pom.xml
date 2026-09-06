@@ -78,6 +78,12 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
                     <archive>
+                        <manifest>
+                            <mainClass>oracle.jdbc.provider.oson.JacksonOsonProviderInfo</mainClass>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <addClasspath>true</addClasspath>
+                            <classpathLayoutType>simple</classpathLayoutType>
+                        </manifest>
                         <manifestEntries>
                             <Automatic-Module-Name>com.oracle.database.jdbc.provider.jackson.oson</Automatic-Module-Name>
                         </manifestEntries>

@@ -142,10 +142,32 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.21.1</version>
+      <version>2.21.5</version>
       <scope>test</scope>
     </dependency>
 
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>oracle.jdbc.provider.spring.SpringProviderSetup</mainClass>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+              <addClasspath>true</addClasspath>
+              <classpathLayoutType>simple</classpathLayoutType>
+            </manifest>
+            <manifestEntries>
+              <Automatic-Module-Name>com.oracle.database.jdbc.provider.spring</Automatic-Module-Name>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

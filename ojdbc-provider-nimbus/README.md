@@ -20,6 +20,30 @@ compatible with later JDK versions. The coordinates for the latest release are:
 </dependency>
 ```
 
+## Command-Line Setup Helper
+
+The Nimbus provider jar includes an interactive setup helper for generating
+provider configuration from the command line.
+
+The helper generates resource-provider connection properties for the Access
+Token provider. It does not contact any authorization server or validate
+credentials; it only prints the values you configure.
+
+### Running the helper
+
+The helper is launched from the provider jar with the `--setup` flag:
+
+```bash
+java -jar ojdbc-provider-nimbus-1.1.0.jar --setup
+```
+
+Running the jar without `--setup` prints a short info banner (name,
+version, a one-line description, and a link to docs) and exits
+immediately, without reading from standard input.
+
+For direct `java -jar` execution, `ojdbc-provider-common-1.1.0.jar` must be
+present in the same directory as this jar.
+
 ## Access Token Provider
 The Nimbus Access Token Provider provides Oracle JDBC with an access token that 
 authorizes logins to an Autonomous Database. This is a

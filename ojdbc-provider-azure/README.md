@@ -9,6 +9,8 @@ This module contains providers for integration between Oracle JDBC and Azure.
 <dd>Provides connection properties managed by the App Configuration service</dd>
 <dt><a href="#azure-vault-config-provider">Azure Vault Config Provider</a></dt>
 <dd>Provides connection properties managed by the Key Vault service</dd>
+<dt><a href="#configuration-payload-parsers-json-pkl-and-other-parsers">Configuration Payload Parsers (JSON, Pkl, and Other Parsers)</a></dt>
+<dd>Parser selection for Azure Vault configuration payloads</dd>
 <dt><a href="#common-parameters-for-centralized-config-providers">Common Parameters for Centralized Config Providers</a></dt>
 <dd>Common parameters supported by the config providers</dd>
 <dt><a href="#caching-configuration">Caching configuration</a></dt>
@@ -47,6 +49,48 @@ JDK versions. The coordinates for the latest release are:
   <version>1.1.0</version>
 </dependency>
 ```
+
+## Command-Line Setup Helper
+
+The Azure provider jar includes an interactive setup helper for generating
+provider configuration from the command line.
+
+The helper can generate either a centralized configuration JDBC URL or a set
+of resource-provider connection properties. It does not connect to Azure or
+validate credentials; it only prints the values you configure.
+
+### Running the helper
+
+The helper is launched from the provider jar with the `--setup` flag:
+
+```bash
+java -jar ojdbc-provider-azure-1.1.0.jar --setup
+```
+
+Running the jar without `--setup` prints a short info banner (name,
+version, a one-line description, and a link to this README) and exits
+immediately, without reading from standard input.
+
+For direct `java -jar` execution, `ojdbc-provider-common-1.1.0.jar` must be
+present in the same directory as this jar.
+
+### What the helper does
+
+Once running, the helper presents a menu with two main choices: adding a
+centralized configuration URL, or adding a resource provider.
+
+If you choose a centralized configuration URL, it asks whether to use Azure
+App Configuration or Azure Vault, the value that service needs, and how to
+authenticate (Default, Service Principal, Managed Identity, or Interactive),
+then assembles the resulting `jdbc:oracle:thin:@config-azure...` URL for you.
+
+If you choose a resource provider, it asks which one (Access Token, Username,
+Password, Connection String, TCPS Wallet, or SEPS Wallet), the values that
+provider needs, and how to authenticate.
+
+You can repeat either choice as many times as you like to build up multiple
+providers or URLs, then export everything at once, either printed to the
+terminal or appended to a file.
 
 ## Azure App Configuration Provider
 
@@ -160,7 +204,7 @@ This property should be included inside the jdbc object of the JSON payload:
 
 
 ## Azure Vault Config Provider
-Similar to [OCI Vault Config Provider](../ojdbc-provider-oci/README.md#oci-vault-config-provider), JSON Payload can also be stored in the content of Azure Key Vault Secret.
+Similar to [OCI Vault Config Provider](../ojdbc-provider-oci/README.md#oci-vault-config-provider), a configuration payload can also be stored in the content of Azure Key Vault Secret.
 The Oracle Data Source uses a new prefix `jdbc:oracle:thin:@config-azurevault://`. Users only need to indicate the Vault Secret’s secret identifier using the following syntax, where option-value pairs separated by `&` are optional authentication parameters that vary by provider:
 
 <pre>
@@ -169,7 +213,18 @@ jdbc:oracle:thin:@config-azurevault://{secret-identifier}[?option1=value1&option
 
 For more details about the option-value pairs, see [Common Parameters for Centralized Config Providers](#common-parameters-for-centralized-config-providers).
 
-To view an example format of JSON Payload, please refer to [JSON Payload format](../ojdbc-provider-oci/README.md#json-payload-format).
+To view an example format of the configuration payload, please refer to [Configuration Payload Format](../ojdbc-provider-oci/README.md#configuration-payload-format).
+
+## Configuration Payload Parsers (JSON, Pkl, and Other Parsers)
+Azure Vault Config Provider extends `OracleConfigurationParsableProvider`, which
+parses payloads as JSON by default and honors the `parser` option for other
+parser types. To use a Pkl payload, or another parser type, add the `parser`
+option to the JDBC URL and include the corresponding parser provider on the
+runtime classpath. For Pkl, include `ojdbc-provider-pkl`.
+
+<pre>
+jdbc:oracle:thin:@config-azurevault://{secret-identifier}?parser=pkl
+</pre>
 
 ## Common Parameters for Centralized Config Providers
 Provider that are classified as Centralized Config Providers in this module share the same sets of parameters for authentication configuration.
@@ -228,6 +283,23 @@ The user can provide an optional parameter `AUTHENTICATION` (case-ignored) which
   <tr><td><b>AZURE_REDIRECT_URL</b></td></tr>
 </tbody>
 </table>
+
+### Interactive Authentication Caching
+
+When `AUTHENTICATION=AZURE_INTERACTIVE` or `AUTHENTICATION=AZURE_DEVICE_CODE`
+(or `authenticationMethod=interactive` / `authenticationMethod=device-code` for
+[Resource Providers](#configuring-authentication-for-resource-providers)) is
+configured, a browser-based or device-code login is only prompted once for a given
+identity: any subsequent request that presents the same `AZURE_TENANT_ID`,
+`AZURE_CLIENT_ID`, and `AZURE_REDIRECT_URL` reuses the credential from that login,
+rather than prompting for another login. For example, a main configuration and an
+embedded [password](#password-json-object) or
+[wallet_location](#wallet_location-json-object) object configured with the same
+identity share a single login between them.
+
+Reuse relies on the Azure Identity library's own in-memory token caching, which
+automatically refreshes an access token before it expires without a new login. See
+[Token caching in the Azure Identity client library](https://github.com/Azure/azure-sdk-for-java/blob/azure-identity_1.18.0/sdk/identity/azure-identity/TOKEN_CACHING.md).
 
 ### DefaultAzureCredential
 
@@ -810,13 +882,17 @@ with a username and password.
 <dt>device-code</dt>
 <dd>
 Authenticate interactively by logging in to an Azure account in a web browser.
-A browser link is output to the standard output stream.
+A browser link is output to the standard output stream. See
+<a href="#interactive-authentication-caching">Interactive Authentication Caching</a>
+for details on how a login may be reused across multiple resource requests.
 </dd>
 <dt>interactive</dt>
 <dd>
 Authenticate interactively by logging in to a cloud account with your
 default web browser. The browser window is opened automatically. The optional
 <code>tenantId</code> parameter may be configured to target a specific tenant.
+See <a href="#interactive-authentication-caching">Interactive Authentication Caching</a>
+for details on how a login may be reused across multiple resource requests.
 </dd>
 <dt>auto-detect</dt>
 <dd>
