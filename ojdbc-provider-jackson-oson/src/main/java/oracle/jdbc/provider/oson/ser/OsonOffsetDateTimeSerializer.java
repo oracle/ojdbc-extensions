@@ -113,7 +113,7 @@ public class OsonOffsetDateTimeSerializer extends OffsetDateTimeSerializer {
    */
   @Override
   public void serialize(OffsetDateTime value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-    if(_formatter != null || _shape != null) {
+    if (_formatter != null || (_shape != null && _shape != JsonFormat.Shape.ANY)) {
       super.serialize(value, gen, provider);
       return;
     }

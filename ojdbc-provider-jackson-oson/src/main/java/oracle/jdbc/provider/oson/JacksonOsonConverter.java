@@ -41,7 +41,7 @@ package oracle.jdbc.provider.oson;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import oracle.jdbc.spi.OsonConverter;
 import oracle.sql.json.OracleJsonGenerator;
 import oracle.sql.json.OracleJsonParser;
@@ -91,7 +91,10 @@ public class JacksonOsonConverter implements OsonConverter{
   private static final Logger logger = Logger.getLogger(JacksonOsonConverter.class.getName());
   
   static {
-    om.findAndRegisterModules();
+    // Register JavaTimeModule before OsonModule. Jackson uses the last
+    // registered serializer for a type, so the OSON serializers must be
+    // registered after JavaTimeModule to preserve the extended mappings.
+    om.registerModule(new JavaTimeModule());
     om.registerModule(new OsonModule());
     om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
   }
