@@ -106,7 +106,7 @@ public class OsonLocalDateTimeSerializer extends LocalDateTimeSerializer {
    */
   @Override
   public void serialize(LocalDateTime value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-    if(_formatter!= null || _shape!= null ) {
+    if (_formatter != null || (_shape != null && _shape != JsonFormat.Shape.ANY)) {
       super.serialize(value, gen, provider);
       return;
     }
