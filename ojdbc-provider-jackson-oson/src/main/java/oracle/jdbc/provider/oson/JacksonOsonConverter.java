@@ -41,12 +41,12 @@ package oracle.jdbc.provider.oson;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import oracle.jdbc.spi.OsonConverter;
 import oracle.sql.json.OracleJsonGenerator;
 import oracle.sql.json.OracleJsonParser;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -86,20 +86,53 @@ import java.util.logging.Logger;
  */
 public class JacksonOsonConverter implements OsonConverter{
 
-  private static final OsonFactory osonFactory = new OsonFactory();
-  private static final ObjectMapper om = new ObjectMapper(osonFactory);
+  private final OsonFactory osonFactory;
+  private final ObjectMapper om;
   private static final Logger logger = Logger.getLogger(JacksonOsonConverter.class.getName());
-  
-  static {
-    om.findAndRegisterModules();
-    om.registerModule(new OsonModule());
-    om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+  /**
+   * Creates a converter with its own OSON factory and object mapper.
+   */
+  public JacksonOsonConverter() {
+    this(new OsonFactory());
   }
 
   /**
-   * Default constructor.
+   * Creates a converter using the given OSON factory.
+   *
+   * @param osonFactory OSON factory used by this converter
+   * @throws NullPointerException if the factory is {@code null}
    */
-  public JacksonOsonConverter(){}
+  public JacksonOsonConverter(OsonFactory osonFactory) {
+    this.osonFactory = Objects.requireNonNull(osonFactory, "osonFactory");
+    this.om = createConfiguredMapper(osonFactory);
+  }
+
+  /**
+   * Creates a new object mapper configured for OSON.
+   *
+   * <p>The returned mapper is separate from the converter's internal mapper.
+   * Changing it does not affect this converter or another mapper.</p>
+   *
+   * @return a newly configured object mapper
+   */
+  public ObjectMapper createObjectMapper() {
+    return createConfiguredMapper(osonFactory);
+  }
+
+  /**
+   * Creates and configures an object mapper for OSON.
+   *
+   * @param factory factory used by the mapper
+   * @return configured object mapper
+   */
+  private static ObjectMapper createConfiguredMapper(OsonFactory factory) {
+    ObjectMapper mapper = new ObjectMapper(factory);
+    mapper.findAndRegisterModules();
+    mapper.registerModule(new OsonModule());
+    mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    return mapper;
+  }
 
   /**
    * Serializes an object into Oson format using the provided {@link OracleJsonGenerator}.
@@ -140,30 +173,42 @@ public class JacksonOsonConverter implements OsonConverter{
   }
 
   /**
-   * Converts a value from one type to another using Jackson's {@link ObjectMapper}.
+   * Converts a value to the requested Java type.
    *
    * @param fromValue the value to convert
    * @param javaType the target type
    * @return the converted value
+   * @deprecated Create a converter, call {@link #createObjectMapper()}, and
+   * call {@link ObjectMapper#convertValue(Object, JavaType)} on the returned mapper.
    */
+  @Deprecated
   public static Object convertValue(Object fromValue, JavaType javaType) {
     logger.log(Level.FINEST, "Converting value to JavaType");
-    return om.convertValue(fromValue, javaType);
+    return createConfiguredMapper(new OsonFactory()).convertValue(fromValue, javaType);
   }
 
   /**
-   * Get the object mapper instances with registered custom modules.
-   * @return the Object mapper with registered modules
+   * Returns a new OSON-configured object mapper.
+   * The mapper is not shared with this converter or another caller.
+   *
+   * @return a new object mapper with the registered custom modules
+   * @deprecated Create a converter and use its {@link #createObjectMapper()} method.
    */
+  @Deprecated
   public static ObjectMapper getObjectMapper() {
-    return om;
+    return createConfiguredMapper(new OsonFactory());
   }
 
   /**
-   * Get the OsonFactory instance.
-   * @return the OsonFactory
+   * Returns a new OSON factory.
+   * The factory is not shared with this converter or another caller.
+   *
+   * @return a new OSON factory
+   * @deprecated Create a {@link JacksonOsonConverter} with an explicitly
+   * supplied {@link OsonFactory} when a specific factory is needed.
    */
+  @Deprecated
   public static OsonFactory getOsonFactory() {
-    return osonFactory;
+    return new OsonFactory();
   }
 }

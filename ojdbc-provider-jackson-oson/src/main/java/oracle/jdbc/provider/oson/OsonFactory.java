@@ -47,6 +47,7 @@ import oracle.sql.json.OracleJsonParser;
 import java.io.*;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -73,7 +74,34 @@ public class OsonFactory extends JsonFactory {
   /**
    * {@link OracleJsonFactory} object to create generator/parser instances.
    */
-  private static final OracleJsonFactory factory = new OracleJsonFactory();
+  private final OracleJsonFactory factory;
+
+  /**
+   * Creates an OSON factory with a new Oracle JSON factory.
+   */
+  public OsonFactory() {
+    this(new OracleJsonFactory());
+  }
+
+  /**
+   * Creates an OSON factory using the supplied Oracle JSON factory.
+   *
+   * @param factory Oracle JSON factory used to create OSON generators and parsers
+   * @throws NullPointerException if {@code factory} is {@code null}
+   */
+  public OsonFactory(OracleJsonFactory factory) {
+    this.factory = Objects.requireNonNull(factory, "factory");
+  }
+
+  /**
+   * Returns the Oracle JSON factory used by this OSON factory.
+   *
+   * @return the Oracle JSON factory used to create OSON generators and parsers
+   */
+  public OracleJsonFactory getOracleJsonFactory() {
+    return factory;
+  }
+
   /**
    * Creates a JSON generator that writes to the given output stream, using UTF-8 encoding.
    *
