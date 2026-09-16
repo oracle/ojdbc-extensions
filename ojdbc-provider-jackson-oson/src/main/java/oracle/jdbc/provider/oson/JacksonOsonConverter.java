@@ -104,7 +104,7 @@ public class JacksonOsonConverter implements OsonConverter{
    * @throws NullPointerException if the factory is {@code null}
    */
   public JacksonOsonConverter(OsonFactory osonFactory) {
-    this.osonFactory = Objects.requireNonNull(osonFactory, "osonFactory");
+    this.osonFactory = Objects.requireNonNull(osonFactory, "osonFactory must not be null");
     this.om = createConfiguredMapper(osonFactory);
   }
 
