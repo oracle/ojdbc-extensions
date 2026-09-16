@@ -173,7 +173,7 @@ public class JacksonOsonConverter implements OsonConverter{
   }
 
   /**
-   * Converts a value to the requested Java type.
+   * Converts a value from one type to another using Jackson's {@link ObjectMapper}.
    *
    * @param fromValue the value to convert
    * @param javaType the target type
@@ -189,7 +189,7 @@ public class JacksonOsonConverter implements OsonConverter{
 
   /**
    * Returns a new OSON-configured object mapper.
-   * The mapper is not shared with this converter or another caller.
+   * Each call returns an independent mapper that is not shared with another caller.
    *
    * @return a new object mapper with the registered custom modules
    * @deprecated Create a converter and use its {@link #createObjectMapper()} method.
@@ -201,7 +201,7 @@ public class JacksonOsonConverter implements OsonConverter{
 
   /**
    * Returns a new OSON factory.
-   * The factory is not shared with this converter or another caller.
+   * Each call returns an independent factory that is not shared with another caller.
    *
    * @return a new OSON factory
    * @deprecated Create a {@link JacksonOsonConverter} with an explicitly
