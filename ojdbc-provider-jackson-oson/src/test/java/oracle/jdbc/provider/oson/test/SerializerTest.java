@@ -142,7 +142,7 @@ public class SerializerTest {
       Employee employee = EmployeeInstances.getEmployee();
 
       JacksonOsonConverter conv = new JacksonOsonConverter();
-      ObjectMapper mapper = conv.getObjectMapper();
+      ObjectMapper mapper = conv.createObjectMapper();
       OsonFactory jsonFactory = new OsonFactory();
       OracleJsonFactory oracleJsonFactory = new OracleJsonFactory();
       try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -175,7 +175,7 @@ public class SerializerTest {
       AnnonationTest employee = AnnotationTestInstances.getRandomInstance();
 
       JacksonOsonConverter conv = new JacksonOsonConverter();
-      ObjectMapper mapper = conv.getObjectMapper();
+      ObjectMapper mapper = conv.createObjectMapper();
       OsonFactory jsonFactory = new OsonFactory();
       OracleJsonFactory oracleJsonFactory = new OracleJsonFactory();
       try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -208,7 +208,7 @@ public class SerializerTest {
       Employee employee = EmployeeInstances.getEmployee();
 
       JacksonOsonConverter conv = new JacksonOsonConverter();
-      ObjectMapper mapper = conv.getObjectMapper();
+      ObjectMapper mapper = conv.createObjectMapper();
       OsonFactory jsonFactory = new OsonFactory();
       OracleJsonFactory oracleJsonFactory = new OracleJsonFactory();
       try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
