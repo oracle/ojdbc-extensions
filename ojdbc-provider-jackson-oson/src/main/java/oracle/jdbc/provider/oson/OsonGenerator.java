@@ -174,16 +174,12 @@ public class OsonGenerator extends GeneratorBase {
    */
   @Override
   public void writeEndArray() throws IOException {
-    int status = _writeContext.writeValue();
-    if(status != _writeContext.STATUS_OK_AFTER_COMMA) {
-      _reportError("error: expecting end array");
-    }
     if (!_writeContext.inArray()) {
       _reportError("Current context not an ARRAY but " + _writeContext.getTypeDesc());
     }
     logger.log(Level.FINEST, "writeEndArray");
     gen.writeEnd();
-    _writeContext = _writeContext.getParent();
+    _writeContext = _writeContext.clearAndGetParent();
   }
 
   /**
@@ -206,16 +202,16 @@ public class OsonGenerator extends GeneratorBase {
    */
   @Override
   public void writeEndObject() throws IOException {
+    if (!_writeContext.inObject()) {
+      _reportError("Current context not an OBJECT but " + _writeContext.getTypeDesc());
+    }
     int status = _writeContext.writeValue();
     if (status != JsonWriteContext.STATUS_EXPECT_NAME) {
       _reportError("error: expecting end object");
     }
-    if (!_writeContext.inObject()) {
-      _reportError("Current context not an OBJECT but " + _writeContext.getTypeDesc());
-    }
     logger.log(Level.FINEST, "writeEndObject");
     gen.writeEnd();
-    _writeContext = _writeContext.getParent();
+    _writeContext = _writeContext.clearAndGetParent();
   }
 
   /**
