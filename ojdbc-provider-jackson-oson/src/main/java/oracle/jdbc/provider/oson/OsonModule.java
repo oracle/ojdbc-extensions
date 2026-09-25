@@ -48,6 +48,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.BeanPropertyWriter;
 import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 import com.fasterxml.jackson.databind.ser.PropertyWriter;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.persistence.Convert;
 import oracle.jdbc.provider.oson.deser.*;
 import oracle.jdbc.provider.oson.ser.*;
@@ -160,6 +161,19 @@ public class OsonModule extends SimpleModule {
 
     logger.log(Level.FINEST, "OsonModule instantiated.");
 
+  }
+
+  /**
+   * JavaTimeModule must be installed before this module so that the OSON
+   * serializers registered here take precedence for overlapping Java time
+   * types. Declaring the dependency also keeps the order correct when this
+   * module is discovered through Jackson's service-loader mechanism.
+   *
+   * @return the JavaTimeModule dependency
+   */
+  @Override
+  public Iterable<? extends com.fasterxml.jackson.databind.Module> getDependencies() {
+    return Collections.singletonList(new JavaTimeModule());
   }
 
   @Override
