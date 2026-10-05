@@ -158,6 +158,48 @@ this project:
 Each module listed above is distributed on the Maven Central Repository as a
 separate jar file. Coordinates can be found by visiting the links above.
 
+### Oracle JDBC Driver Dependency
+
+The providers in this project are extensions of the Oracle JDBC driver and
+do not include the driver itself. Every module declares the Oracle JDBC
+driver (`ojdbc8`) as a `provided` dependency, which means:
+
+- The driver is **not** added to your application as a transitive dependency.
+- Your application must declare its own Oracle JDBC driver, such as `ojdbc8`,
+  `ojdbc11`, or `ojdbc17`, depending on your Java version.
+- You do **not** need to exclude `ojdbc8` when using a different driver.
+
+For example:
+
+```xml
+<!-- The provider module -->
+<dependency>
+  <groupId>com.oracle.database.jdbc</groupId>
+  <artifactId>ojdbc-provider-azure</artifactId>
+  <version>${ojdbc-extensions.version}</version>
+</dependency>
+
+<!-- Your own Oracle JDBC driver -->
+<dependency>
+  <groupId>com.oracle.database.jdbc</groupId>
+  <artifactId>ojdbc11</artifactId>
+  <version>${oracle.jdbc.version}</version>
+</dependency>
+```
+
+#### Choosing a driver version
+
+Each release of this project is built and tested against a specific version
+of the Oracle JDBC driver. Using that version or a newer one is recommended,
+because most providers rely on driver APIs that are not available in older versions.
+
+To find the driver version used by a given release, look at the `jdbc.version`
+property in the parent pom of that release:
+
+- On Maven Central:
+  `https://repo1.maven.org/maven2/com/oracle/database/jdbc/ojdbc-extensions/<version>/ojdbc-extensions-<version>.pom`
+- On GitHub: the [`pom.xml`](pom.xml) file at the tag of that release.
+
 ## Examples
 
 Examples for Oracle JDBC Driver Extensions can be found at [ojdbc-provider-samples/src/main/java](./ojdbc-provider-samples/src/main/java)
