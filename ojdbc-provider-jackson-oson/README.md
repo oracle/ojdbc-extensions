@@ -48,23 +48,11 @@ JDK versions. The coordinates for the latest release are:
 </dependency>
 ```
 ### Note
-The extension uses ojdbc8 as it's dependency. If the application environment has a different version of JDBC, 
-be sure to exclude ojdbc8 from the dependencies.
-It can be done in maven as:
-
-```xml
-<dependency>
-  <groupId>com.oracle.database.jdbc</groupId>
-  <artifactId>ojdbc-provider-jackson-oson</artifactId>
-  <version>1.1.0</version>
-    <exclusions>
-        <exclusion>
-            <groupId>com.oracle.database.jdbc</groupId> 
-            <artifactId>ojdbc8</artifactId>
-        </exclusion>
-    </exclusions>
-</dependency>
-```
+This module does not include the Oracle JDBC driver. Your application must
+declare its own driver (`ojdbc8`, `ojdbc11`, `ojdbc17`), and no exclusion
+of `ojdbc8` is needed. See
+[Oracle JDBC Driver Dependency](../README.md#oracle-jdbc-driver-dependency)
+for details, including how to find the driver version used by each release.
 
 ## Running This Jar Directly
 
