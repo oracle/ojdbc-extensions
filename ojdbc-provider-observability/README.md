@@ -200,6 +200,27 @@ configuration.setEnabledTracers("OTEL,JFR");
 configuration.setSensitiveDataEnabled(true);
 ```
 
+### Disabling the provider
+
+The provider is enabled by default once it is configured. It can be disabled:
+
+* at runtime, by setting the `Enabled` attribute of the MBean to `false`. No
+traces are exported while it is disabled, and setting it back to `true`
+re-enables tracing.
+```java
+server.setAttribute(objectName, new Attribute("Enabled", false));
+```
+or by using the ObservabilityConfiguration object directly:
+```java
+configuration.setEnabled(false);
+```
+* at startup, by removing the `oracle.jdbc.provider.traceEventListener`
+connection property, or by setting it to the Oracle JDBC driver's built-in
+no-op provider:
+```java
+oracle.jdbc.provider.traceEventListener=ojdbc-default-trace-event-listener-provider
+```
+
 ## Backward compatibility
 
 ### Usage
