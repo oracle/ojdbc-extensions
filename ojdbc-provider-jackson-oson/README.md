@@ -44,7 +44,7 @@ JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-jackson-oson</artifactId>
-  <version>1.1.0</version>
+  <version>1.1.1</version>
 </dependency>
 ```
 ### Note
@@ -56,7 +56,7 @@ It can be done in maven as:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-jackson-oson</artifactId>
-  <version>1.1.0</version>
+  <version>1.1.1</version>
     <exclusions>
         <exclusion>
             <groupId>com.oracle.database.jdbc</groupId> 
@@ -71,13 +71,13 @@ It can be done in maven as:
 Running the jar directly gives you a friendly introduction:
 
 ```bash
-java -jar ojdbc-provider-jackson-oson-1.1.0.jar
+java -jar ojdbc-provider-jackson-oson-1.1.1.jar
 ```
 
 It prints the module's name and version, a short description, and a
 link to the docs. 
 
-For direct `java -jar` execution, `ojdbc-provider-common-1.1.0.jar` must
+For direct `java -jar` execution, `ojdbc-provider-common-1.1.1.jar` must
 be present in the same directory as this jar.
 
 ## Building the provider module
