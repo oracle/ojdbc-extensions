@@ -122,7 +122,7 @@ public abstract class ProviderJarInfo {
   }
 
   /**
-   * @return The jar's version from its manifest (eg: "1.1.0"), or
+   * @return The jar's version from its manifest (eg: "1.1.1"), or
    * "unknown" when not running from a built jar (eg: from an IDE).
    */
   protected final String version() {
