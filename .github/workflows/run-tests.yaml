@@ -48,7 +48,7 @@ jobs:
           
           # Generate oci config
           echo "${{ secrets.TEST_OCI_API_KEY }}" > $HOME/.oci/oci-api-key.pem
-          echo "${{ secrets.TEST_OCI_CONFIG_PROFILE }}" > $HOME/.oci/config
+          echo "${{ secrets.TEST_OCI_CONFIG_PROFILE }}" > $HOME/.oci/config 
           
           # Convert .pem to .pfx file
           openssl pkcs12 -export -in ${{ secrets.TEST_AZURE_CLIENT_CERTIFICATE_PATH }} -passout pass:${{ secrets.TEST_AZURE_CLIENT_PFX_PASSWORD }} -out ojdbc-provider-azure/ojdbc-provider-test-app.pfx
