@@ -10,11 +10,11 @@
   <parent>
     <groupId>com.oracle.database.jdbc</groupId>
     <artifactId>ojdbc-extensions</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
   </parent>
   
   <properties>
-    <pkl.version>0.30.0</pkl.version>
+    <pkl.version>0.32.1</pkl.version>
     <java.version>17</java.version>
   </properties>
 

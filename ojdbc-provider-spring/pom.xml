@@ -49,7 +49,7 @@
   <parent>
     <groupId>com.oracle.database.jdbc</groupId>
     <artifactId>ojdbc-extensions</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
   </parent>
 
   <properties>
@@ -69,7 +69,7 @@
       <dependency>
         <groupId>org.springframework.security</groupId>
         <artifactId>spring-security-bom</artifactId>
-        <version>6.5.9</version>
+        <version>6.5.11</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
