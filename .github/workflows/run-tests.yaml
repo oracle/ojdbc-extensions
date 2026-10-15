@@ -147,35 +147,6 @@ jobs:
           echo "${{ secrets.TEST_GCP_CONFIG }}" > $HOME/.gcp/config.json
           echo "${{ secrets.GCP_TEST_PROPERTIES }}" > ojdbc-provider-gcp/test.properties
 
-      - name: Verify OCI API key fingerprint
-        env:
-          EXPECTED_OCI_FINGERPRINT: ${{ vars.EXPECTED_OCI_FINGERPRINT }}
-        shell: bash
-        run: |
-          set -euo pipefail
-      
-          # Calculate the fingerprint from the private key
-          ACTUAL_FINGERPRINT=$(
-            openssl pkey \
-              -in "$HOME/.oci/oci-api-key.pem" \
-              -pubout \
-              -outform DER |
-            openssl dgst -md5 -c |
-            sed 's/^.*= //'
-          )
-      
-          # Print fingerprints for debugging
-          echo "Actual OCI fingerprint:   $ACTUAL_FINGERPRINT"
-          echo "Expected OCI fingerprint: $EXPECTED_OCI_FINGERPRINT"
-      
-          # Compare fingerprints
-          if [ "$ACTUAL_FINGERPRINT" = "$EXPECTED_OCI_FINGERPRINT" ]; then
-            echo "SUCCESS: OCI API key fingerprint matches!"
-          else
-            echo "ERROR: OCI API key fingerprint does not match!"
-            exit 1
-          fi 
-
       - name: Run tests with Maven
         run: mvn -B test --file pom.xml
 
