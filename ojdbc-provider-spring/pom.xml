@@ -84,19 +84,6 @@
     <dependency>
       <groupId>com.oracle.database.jdbc</groupId>
       <artifactId>ojdbc8</artifactId>
-      <!--
-      The parent pom declares a 23.26.0.0.0 dependency, while this child pom
-      declares 23.26.2.0.0. The parent is overridden to get the
-      oracle.jdbc.EndUserSecurityContext API, which is first introduced in
-      23.26.2.0.0. The parent remains on 23.26.0.0.0 because the
-      ojdbc-provider-azure module depends on
-      oracle.jdbc.util.OracleConfigurationCache and
-      oracle.jdbc.OracleConfigurationProviderNetworkError, which are no longer
-      present in 23.26.2.0.0.
-      TODO: Eventually, all modules should move up to 23.26.2 or newer, and the
-        version override here should be removed.
-      -->
-      <version>23.26.2.0.0</version>
     </dependency>
 
     <dependency>
