@@ -48,7 +48,7 @@ jobs:
           
           # Generate oci config
           echo "${{ secrets.TEST_OCI_API_KEY }}" > $HOME/.oci/oci-api-key.pem
-          echo "${{ secrets.TEST_OCI_CONFIG_PROFILE }}" > $HOME/.oci/config
+          echo "${{ secrets.TEST_OCI_CONFIG }}" > $HOME/.oci/config
           
           # Convert .pem to .pfx file
           openssl pkcs12 -export -in ${{ secrets.TEST_AZURE_CLIENT_CERTIFICATE_PATH }} -passout pass:${{ secrets.TEST_AZURE_CLIENT_PFX_PASSWORD }} -out ojdbc-provider-azure/ojdbc-provider-test-app.pfx
@@ -91,7 +91,7 @@ jobs:
           " >> ojdbc-provider-azure/test.properties
           
           # Generate ojdbc-provider-oci/test.properties
-          echo -e "OCI_CONFIG_FILE=${{ secrets.TEST_OCI_CONFIG_FILE }}\n
+          echo -e "OCI_CONFIG_FILE=${{ vars.TEST_OCI_CONFIG_FILE_LOCATION }}\n
           OCI_CONFIG_PROFILE=DEFAULT\n
           OCI_CLOUD_SHELL=false\n
           OCI_INSTANCE_PRINCIPAL=false\n
@@ -146,7 +146,6 @@ jobs:
           # Generate GCP config
           echo "${{ secrets.TEST_GCP_CONFIG }}" > $HOME/.gcp/config.json
           echo "${{ secrets.GCP_TEST_PROPERTIES }}" > ojdbc-provider-gcp/test.properties
-          
 
       - name: Run tests with Maven
         run: mvn -B test --file pom.xml
