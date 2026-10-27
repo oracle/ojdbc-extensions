@@ -14,7 +14,7 @@ out/
 .settings
 .classpath
 
-# Assume all properties file might contain security sensitive information,
+# Assume properties files may contain security sensitive information,
 # such as a password. The first expression below excludes them all.
 # The second expression overrides the first one to allow example properties
 # files. Example files follow a naming convention; They have a prefix of:
@@ -26,6 +26,9 @@ out/
 **/*.swp
 **/*.swo
 
-# Environment variables
+# Assume environment variables may contain security sensitive information.
+# Ignore any file not maked as an example.
 **/*.env
 !**/*.example.env
+
+**/*.class
