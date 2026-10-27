@@ -45,8 +45,10 @@ import oracle.jdbc.provider.spring.context.ApplicationContextHolder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.util.MultiValueMap;
 
 import java.util.Collection;
+import java.util.Optional;
 
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.REQUIRED;
 import static oracle.jdbc.provider.parameter.Parameter.CommonAttribute.SENSITIVE;
@@ -88,6 +90,16 @@ public final class OAuth2ResourceParameters {
     Parameter.create();
 
   /**
+   * <p>
+   * User defined parameters for token request. This is useful for Azure, which
+   * requires "requested_token_use=on_behalf_of" when using the JWT bearer
+   * grant.
+   * </p>
+   */
+  public static final Parameter<MultiValueMap<String,String>> REQUEST_PARAMETERS =
+    Parameter.create();
+
+  /**
    * spring.security.oauth2.client.provider.${provider-id}.token-uri
    */
   public static final ProviderParameter<String> TOKEN_URI;
@@ -117,6 +129,10 @@ public final class OAuth2ResourceParameters {
    */
   public static final RegistrationParameter<String> SCOPE;
 
+  /**
+   * Parameters configured by Spring properties under the namespace of
+   * <code>spring.security.oauth2.client.provider.{registration-id}.</code>
+   */
   private static final ProviderParameter<?>[] PROVIDER_PARAMETERS = {
 
     TOKEN_URI = new ProviderParameter<>(
@@ -125,6 +141,10 @@ public final class OAuth2ResourceParameters {
       String.class),
   };
 
+  /**
+   * Parameters configured by Spring properties under the namespace of
+   * <code>spring.security.oauth2.client.registration.{registration-id}.</code>
+   */
   private static final RegistrationParameter<?>[] REGISTRATION_PARAMETERS = {
 
     PROVIDER = new RegistrationParameter<>(
@@ -159,15 +179,18 @@ public final class OAuth2ResourceParameters {
 
   /**
    * <p>
-   * Returns a copy of a ParameterSet that is configured with OAuth 2.0
-   * parameters read from Spring properties. The input ParameterSet must
+   * Returns a copy of a ParameterSet with additional OAuth 2.0 parameters that
+   * are read from Spring properties. The input ParameterSet must
    * contain a {@link #REGISTRATION_ID} indicating which OAuth 2.0 client
-   * registration to read properties from.
+   * registration in the Spring properties to read from.
    * </p><p>
-   * The ParameterSet returned by this
-   * method is suitable for use by {@link OAuth2ResourceFactory} and its
-   * subclasses. This method will not overwrite any parameter that is already
-   * configured in the original ParameterSet.
+   * When a Spring application is starting up, its properties may not yet be
+   * available yet. This method will return an empty Optional in that case.
+   * </p><p>
+   * The ParameterSet returned by this method is suitable for use by
+   * {@link OAuth2ResourceFactory} and its subclasses. This method will not
+   * overwrite any parameter that is already configured in the original
+   * ParameterSet.
    *</p>
    *
    * @param parameterSet Existing parameters. Not null.
@@ -175,13 +198,15 @@ public final class OAuth2ResourceParameters {
    * @return A copy of the original ParameterSet, with the addition of Spring
    * properties. Not null.
    */
-  public static ParameterSet addSpringProperties(ParameterSet parameterSet) {
-    ParameterSetBuilder builder = parameterSet.copyBuilder();
+  public static Optional<ParameterSet> addSpringProperties(
+    ParameterSet parameterSet) {
     ApplicationContext applicationContext = ApplicationContextHolder.get();
 
     if (applicationContext == null) {
-      return builder.build();
+      return Optional.empty();
     }
+
+    ParameterSetBuilder builder = parameterSet.copyBuilder();
 
     builder.add(
       "spring-application-context-id",
@@ -206,7 +231,7 @@ public final class OAuth2ResourceParameters {
       }
     }
 
-    return builder.build();
+    return Optional.of(builder.build());
   }
 
   /**
@@ -333,6 +358,11 @@ public final class OAuth2ResourceParameters {
      */
     public Class<T> valueClass() {
       return valueClass;
+    }
+
+    @Override
+    public String toString() {
+      return springPropertyName("[registration-id]");
     }
 
     /**

@@ -47,31 +47,31 @@ import org.springframework.security.oauth2.core.OAuth2AccessToken;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Optional;
 
 /**
  * <p>
- * An {@link OAuth2ResourceFactory} factory that simply returns a token
- * that authorizes access to a resource. This token can be used as
- * authentication for an HTTP request, or even a SQL execution request via
- * {@link oracle.jdbc.EndUserSecurityContext#withDatabaseAccessToken(CharSequence)}
+ * An {@link OAuth2ResourceFactory} factory that returns a token that authorizes
+ * access to a resource. This token can be used by Oracle JDBC for authorizing
+ * database access.
  * </p><p>
  * The {@link #request(ParameterSet)} method of this factory must be called with
  * a {@link ParameterSet} containing {@link Parameter}s declared by the
  * {@link OAuth2ResourceFactory} superclass.
  * </p>
- *
- * @implNote {@link #getInstance()} does not return an instance of
- * {@link oracle.jdbc.provider.cache.CachedResourceFactory} because the
- * {@link OAuth2ResourceFactory} superclass is assumed to already be obtaining
- * instances of {@link OAuth2AuthorizedClient} from a cache before calling
- * {@link #request(OAuth2AuthorizedClient, ParameterSet)} on this class. This
- * factory will simply extract the access token from the
- * {@link OAuth2AuthorizedClient}, but it does not actually make a request to
- * an authorization endpoint.
  */
 public class OAuth2AccessTokenFactory
   extends OAuth2ResourceFactory<OAuth2AccessToken> {
 
+  /**
+   * This factory should not be wrapped in a
+   * {@link oracle.jdbc.provider.cache.CachedResourceFactory}. This is because
+   * the super-class {@link OAuth2ResourceFactory#request(ParameterSet)} method
+   * may access information from the
+   * {@link org.springframework.security.core.context.SecurityContextHolder},
+   * and this information is not part of the {@link ParameterSet} that is used
+   * as a cache key.
+   */
   private static final OAuth2AccessTokenFactory INSTANCE =
     new OAuth2AccessTokenFactory();
 
@@ -81,7 +81,7 @@ public class OAuth2AccessTokenFactory
    * Returns The sole instance of this singleton class
    * @return The sole instance of this singleton class
    */
-  public static ResourceFactory<OAuth2AccessToken> getInstance() {
+  public static ResourceFactory<Optional<OAuth2AccessToken>> getInstance() {
     return INSTANCE;
   }
 

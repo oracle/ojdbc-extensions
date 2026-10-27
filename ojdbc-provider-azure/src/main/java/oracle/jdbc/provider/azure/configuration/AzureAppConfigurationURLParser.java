@@ -108,7 +108,7 @@ public class AzureAppConfigurationURLParser {
     if (urlMatcher.matches()) {
       name = urlMatcher.group(1);
       parameters =
-        PARAMETER_SET_PARSER.parseNamedValues(UriParameters.parse(url));
+        PARAMETER_SET_PARSER.parseNamedValues(UriParameters.parseUri(url));
       prefix = parameters.getOptional(KEY);
     }
     else {

@@ -43,7 +43,9 @@ import oracle.jdbc.provider.factory.Resource;
 import oracle.jdbc.provider.factory.ResourceFactory;
 import oracle.jdbc.provider.parameter.Parameter;
 import oracle.jdbc.provider.parameter.ParameterSet;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
@@ -51,87 +53,108 @@ import org.springframework.security.oauth2.client.JwtBearerOAuth2AuthorizedClien
 import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
-import org.springframework.security.oauth2.client.endpoint.JwtBearerGrantRequest;
+import org.springframework.security.oauth2.client.TokenExchangeOAuth2AuthorizedClientProvider;
+import org.springframework.security.oauth2.client.endpoint.RestClientClientCredentialsTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.RestClientJwtBearerTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.RestClientTokenExchangeTokenResponseClient;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.security.oauth2.client.ClientCredentialsOAuth2AuthorizedClientProvider;
+import org.springframework.util.MultiValueMap;
+
+import java.util.Optional;
 
 import static oracle.jdbc.provider.spring.oauth.OAuth2ResourceParameters.CLIENT_ID;
 import static oracle.jdbc.provider.spring.oauth.OAuth2ResourceParameters.CLIENT_SECRET;
 import static oracle.jdbc.provider.spring.oauth.OAuth2ResourceParameters.GRANT_TYPE;
 import static oracle.jdbc.provider.spring.oauth.OAuth2ResourceParameters.REGISTRATION_ID;
+import static oracle.jdbc.provider.spring.oauth.OAuth2ResourceParameters.REQUEST_PARAMETERS;
 import static oracle.jdbc.provider.spring.oauth.OAuth2ResourceParameters.SCOPE;
 import static oracle.jdbc.provider.spring.oauth.OAuth2ResourceParameters.TOKEN_URI;
 
 /**
+ * <p>
  * Abstract ResourceFactory designed for extension by subclasses that
  * request resources as an authorized OAuth 2.0 client. This ResourceFactory
  * integrates with the OAuth 2.0 API of Spring Security. It must be configured
  * to request resources with {@link Parameter}s defined in
  * {@link OAuth2ResourceParameters}.
- *
+ * </p><p>
+ * Subclasses should NOT be wrapped by
+ * {@link oracle.jdbc.provider.cache.CachedResourceFactory}. This is because
+ * the super-class {@link OAuth2ResourceFactory#request(ParameterSet)} method
+ * may return a resource that depends on information from the
+ * {@link SecurityContextHolder}, and this information may not be part of the
+ * {@link ParameterSet} that is used as a cache key.
+ * </p><p>
+ * Instead of relying on <code>CachedResourceFactory</code>, this factory
+ * relies on Spring's built-in cache, the
+ * {@link InMemoryClientRegistrationRepository}.
+ * </p>
  * @param <T> The type of resource requested by a subclass of this factory.
  */
-public abstract class OAuth2ResourceFactory<T> implements ResourceFactory<T> {
+public abstract class OAuth2ResourceFactory<T>
+  implements ResourceFactory<Optional<T>> {
 
   /**
-   * A cache of {@link OAuth2AuthorizedClientManager} instances. Each instance
-   * of OAuth2AuthorizedClientManager caches resources for authorized OAUTH 2.0
-   * clients. Instances are themselves cached by this field so that they can
-   * be reused and repeated calls to authorization endpoints can be avoided.
+   * A factory for client managers that are configured by a
+   * <code>ParameterSet</code>. Instances of
+   * <code>OAuth2AuthorizedClientManager</code> are cached so that any
+   * resources they retain may be reused across requests.
    */
   private static final ResourceFactory<OAuth2AuthorizedClientManager>
     CLIENT_MANAGER_FACTORY =
       CachedResourceFactory.create(new ClientManagerFactory());
 
+  /**
+   * A placeholder instance of Authentication that represents an unauthenticated
+   * user in the SecurityContextHolder. This is useful for the client
+   * credentials grant. Although no principal is required for this grant, an
+   * <code>OAuth2AuthorizationRequest.Builder</code> requires one to be
+   * configured. The construction of an AnonymousAuthenticationToken here is
+   * replicating Spring's OAuth2ClientHttpRequestInterceptor.
+   */
+  private static final Authentication ANONYMOUS_AUTHENTICATION =
+    new AnonymousAuthenticationToken(
+      "anonymous",
+      "anonymousUser",
+      AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS"));
+
   @Override
-  public final Resource<T> request(ParameterSet parameterSet)
+  public final Resource<Optional<T>> request(ParameterSet parameterSet)
     throws IllegalStateException, IllegalArgumentException {
 
-    OAuth2AuthorizedClientManager clientManager =
-      CLIENT_MANAGER_FACTORY.request(parameterSet).getContent();
+    String registrationId = parameterSet.getRequired(REGISTRATION_ID);
 
-    AuthorizationGrantType grantType = parameterSet.getRequired(GRANT_TYPE);
+    return Optional.ofNullable(
+        SecurityContextHolder.getContext().getAuthentication())
+      .or(() ->
+        Optional.of(ANONYMOUS_AUTHENTICATION))
+      .map(authentication ->
+        // The authorize method may return null when the authentication is
+        // not the right type of principal for a grant type. For instance, if
+        // the authentication is not a Jwt and the grant type is JWT bearer,
+        // then the authorize method returns null.
+        CLIENT_MANAGER_FACTORY.request(parameterSet)
+          .getContent()
+          .authorize(
+            OAuth2AuthorizeRequest.withClientRegistrationId(registrationId)
+              .principal(authentication)
+              .build()))
+      .map(client ->
+        Resource.map(
+          request(client, parameterSet),
+          Optional::of))
+      .orElseGet(() ->
+        Resource.createPermanentResource(
+          Optional.empty(),
+          false));
 
-    OAuth2AuthorizeRequest request;
-    if (AuthorizationGrantType.JWT_BEARER.equals(grantType))  {
-      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-      if (!(authentication instanceof JwtAuthenticationToken jwtAuth)) {
-        throw new IllegalStateException("JWT_BEARER grant requested but no JwtAuthenticationToken found in SecurityContext");
-      }
-
-      request = OAuth2AuthorizeRequest.withClientRegistrationId(
-                  parameterSet.getRequired(REGISTRATION_ID))
-                .principal(jwtAuth)
-                .build();
-    } else {
-      // For client credentials (or other client-only grants), a synthetic principal is sufficient
-      request = OAuth2AuthorizeRequest.withClientRegistrationId(
-                  parameterSet.getRequired(REGISTRATION_ID))
-                .principal("client-credentials")
-                .build();
-    }
-
-    OAuth2AuthorizedClient authorizedClient = clientManager.authorize(request);
-
-    // The authorize method is specified to return null if the grant type of
-    // client registration is not supported.
-    if (authorizedClient == null) {
-      String grantTypeStr = grantType.getValue();
-
-      throw new IllegalStateException(
-        "Unable to authorize as an OAUTH 2.0 client using " + grantTypeStr
-          + " and the following parameters: " + parameterSet);
-    }
-
-    return request(authorizedClient, parameterSet);
   }
 
   /** Constructor that is declared only to clear a JavaDoc warning */
@@ -175,48 +198,98 @@ public abstract class OAuth2ResourceFactory<T> implements ResourceFactory<T> {
       ParameterSet parameterSet)
       throws IllegalStateException, IllegalArgumentException {
 
-      String registrationId = parameterSet.getRequired(REGISTRATION_ID);
-
-      ClientRegistration clientRegistration =
-        ClientRegistration
-          .withRegistrationId(registrationId)
-          .tokenUri(parameterSet.getOptional(TOKEN_URI))
-          .authorizationGrantType(parameterSet.getRequired(GRANT_TYPE))
-          .clientId(parameterSet.getOptional(CLIENT_ID))
-          .clientSecret(parameterSet.getOptional(CLIENT_SECRET))
-          .scope(parameterSet.getOptional(SCOPE))
-          .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+      ClientRegistration registration =
+        ClientRegistration.withRegistrationId(
+            parameterSet.getRequired(REGISTRATION_ID))
+          .tokenUri(
+            parameterSet.getOptional(TOKEN_URI))
+          .authorizationGrantType(
+            parameterSet.getRequired(GRANT_TYPE))
+          .clientId(
+            parameterSet.getOptional(CLIENT_ID))
+          .clientSecret(
+            parameterSet.getOptional(CLIENT_SECRET))
+          .scope(
+            parameterSet.getOptional(SCOPE))
+          .clientAuthenticationMethod(
+            ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
           .build();
 
-      ClientRegistrationRepository clientRegistrationRepository =
-         new InMemoryClientRegistrationRepository(clientRegistration);
+      ClientRegistrationRepository repository =
+        new InMemoryClientRegistrationRepository(registration);
 
-      // Setup OAuth2AuthorizedClientService (token cache)
-      OAuth2AuthorizedClientService authorizedClientService =
-        new InMemoryOAuth2AuthorizedClientService(clientRegistrationRepository);
+      OAuth2AuthorizedClientService service =
+        new InMemoryOAuth2AuthorizedClientService(repository);
 
-      AuthorizedClientServiceOAuth2AuthorizedClientManager authorizedClientManager =
-              new AuthorizedClientServiceOAuth2AuthorizedClientManager(
-                      clientRegistrationRepository, authorizedClientService);
+      AuthorizedClientServiceOAuth2AuthorizedClientManager manager =
+        new AuthorizedClientServiceOAuth2AuthorizedClientManager(
+          repository,
+          service);
 
-      AuthorizationGrantType grantType = parameterSet.getRequired(GRANT_TYPE);
-      if (AuthorizationGrantType.JWT_BEARER.equals(grantType)) {
-        // Configure On-Behalf-Of (OBO) with JWT Bearer grant
-        JwtBearerOAuth2AuthorizedClientProvider provider = new JwtBearerOAuth2AuthorizedClientProvider();
-        RestClientJwtBearerTokenResponseClient responseClient = new RestClientJwtBearerTokenResponseClient();
-        responseClient.addParametersConverter((JwtBearerGrantRequest req) -> {
-          LinkedMultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-          params.add("requested_token_use", "on_behalf_of");
-          return params;
-        });
-        provider.setAccessTokenResponseClient(responseClient);
-        authorizedClientManager.setAuthorizedClientProvider(provider);
-      } else {
-        // Default to client credentials grant with 60s clock skew
-        ClientCredentialsOAuth2AuthorizedClientProvider provider = new ClientCredentialsOAuth2AuthorizedClientProvider();
-        authorizedClientManager.setAuthorizedClientProvider(provider);
-      }
-      return Resource.createPermanentResource(authorizedClientManager, false);
+      manager.setAuthorizedClientProvider(createProvider(parameterSet));
+
+      return Resource.createPermanentResource(manager, false);
     }
   }
+
+  /**
+   * Creates a provider configured by the grant type and request parameters
+   * within a parameter set.
+   *
+   * @throws IllegalArgumentException If the grant type is not recognized.
+   */
+  private static OAuth2AuthorizedClientProvider createProvider(
+    ParameterSet parameterSet
+  ) {
+    AuthorizationGrantType grantType =
+      parameterSet.getRequired(GRANT_TYPE);
+
+    MultiValueMap<String, String> requestParameters =
+      parameterSet.getOptional(REQUEST_PARAMETERS);
+
+    if (AuthorizationGrantType.JWT_BEARER.equals(grantType)) {
+      JwtBearerOAuth2AuthorizedClientProvider jwtBearerProvider =
+        new JwtBearerOAuth2AuthorizedClientProvider();
+
+      if (requestParameters != null) {
+        RestClientJwtBearerTokenResponseClient responseClient =
+          new RestClientJwtBearerTokenResponseClient();
+        responseClient.addParametersConverter(request -> requestParameters);
+        jwtBearerProvider.setAccessTokenResponseClient(responseClient);
+      }
+
+      return jwtBearerProvider;
+    }
+    else if (AuthorizationGrantType.TOKEN_EXCHANGE.equals(grantType)) {
+      TokenExchangeOAuth2AuthorizedClientProvider tokenExchangeProvider =
+        new TokenExchangeOAuth2AuthorizedClientProvider();
+
+      if (requestParameters != null) {
+        RestClientTokenExchangeTokenResponseClient responseClient =
+          new RestClientTokenExchangeTokenResponseClient();
+        responseClient.addParametersConverter(request -> requestParameters);
+        tokenExchangeProvider.setAccessTokenResponseClient(responseClient);
+      }
+
+      return tokenExchangeProvider;
+    }
+    else if (AuthorizationGrantType.CLIENT_CREDENTIALS.equals(grantType)) {
+      ClientCredentialsOAuth2AuthorizedClientProvider clientCredentialsProvider =
+        new ClientCredentialsOAuth2AuthorizedClientProvider();
+
+      if (requestParameters != null) {
+        RestClientClientCredentialsTokenResponseClient responseClient =
+          new RestClientClientCredentialsTokenResponseClient();
+        responseClient.addParametersConverter(request -> requestParameters);
+        clientCredentialsProvider.setAccessTokenResponseClient(responseClient);
+      }
+
+      return clientCredentialsProvider;
+    }
+    else {
+      throw new IllegalArgumentException(
+        "Unrecognized grant type: " + grantType);
+    }
+  }
+
 }
