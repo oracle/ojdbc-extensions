@@ -41,9 +41,13 @@ package  oracle.jdbc.provider.parameter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -52,19 +56,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public final class UriParameters {
 
   private UriParameters(){}
-
-  /**
-   * Returns name=value pairs parsed from a URI.
-   *
-   * @param uri URI to be parsed
-   * @return name=value pairs expressed as {@code name=value[&name=value...]}
-   */
-  public static Map<String, String> parse(CharSequence uri) {
-    if (uri == null)
-      return Collections.emptyMap();
-
-    return parseQuery(toURI(uri));
-  }
 
   /**
    * Returns a URI query in the form of {@code name=value[&name=value...]} for
@@ -90,6 +81,44 @@ public final class UriParameters {
 
   /**
    * <p>
+   * Returns name=value pairs, delimited by {@code &}, from the
+   * query of a URI.
+   * </p><p>
+   * This method first validates the input CharSequence as conforming to the URI
+   * format before parsing its query. Use {@link #parseQuery(String)} to
+   * parse application/x-www-form-urlencoded input that does not appear within a
+   * URI.
+   * </p><p>
+   * This method will throw an <code>IllegalArgumentException</code> if the
+   * query of the URI contains a duplicated key, as in
+   * {@code name=A&name=B}. It also uses case-insensitive
+   * matching for names. Use
+   * {@link #parseMultiValueQuery(String)} to allow duplicate and
+   * case-insensitive keys, both of which are allowed according to
+   * <a href="https://url.spec.whatwg.org/?utm_source=chatgpt.com#urlencoded-parsing">
+   * section 5.1 of the WHATWG URL Standard
+   * </a>.
+   * </p>
+   *
+   * @param uri URI to be parsed. May be null.
+   *
+   * @return Map of name=value pairs. Not null. May be empty if there are no
+   * name=value pairs, or the URI is null.
+   *
+   * @throws IllegalArgumentException If the input is not a valid URI.
+   */
+  public static Map<String, String> parseUri(CharSequence uri) {
+
+    if (uri == null) {
+      return Collections.emptyMap();
+    }
+
+    URI parsedUri = toURI(uri);
+    return parseQuery(parsedUri.getRawQuery());
+  }
+
+  /**
+   * <p>
    * Converts an ojdbc-resource URI to a URI object.
    * </p><p>
    * This method handles the case where an "opaque" URI is given:
@@ -103,10 +132,15 @@ public final class UriParameters {
    * </pre>
    * This is done to usability, as humans do not typically retain the rules of
    * a URI syntax parser in their brain. A human may omit the "//" for brevity.
-   * If {@link #parse(CharSequence) were to return an empty map because a "//"
-   * is missing, it would not be obvious for a human to understand why their
+   * If {@link #parseUri(CharSequence) were to return an empty map because a
+   * "//" is missing, it would not be obvious for a human to understand why their
    * parameters are not being recognized.
    * </p>
+   *
+   * @implNote There is no such thing as an ojdbc-resource URI scheme. That was
+   * an old idea that was abandoned for a better idea. The original doc is
+   * left here in case someone wants to know why this code is doing what it
+   * does.
    */
   private static URI toURI(CharSequence uriCharSequence) {
     URI uri = URI.create(uriCharSequence.toString());
@@ -126,38 +160,151 @@ public final class UriParameters {
   }
 
   /**
-   * Returns name=value pairs expressed as "name=value[&name=value...]",
-   * parsed from the query section of a given {@code uri}.
+   * <p>
+   * Returns name=value pairs parsed from application/x-www-form-urlencoded
+   * input. This format commonly appears in the query of a URI, but may also
+   * appear elsewhere, such as in the body of an HTTP POST request.
+   * </p><p>
+   * This method will throw an <code>IllegalArgumentException</code> if the
+   * query of the URI contains a duplicated key, as in
+   * {@code name=A&name=B}. It also uses case-insensitive
+   * matching for names, mean this is a duplicate key:
+   * {@code name=A&NAME=B}. Use {@link #parseMultiValueQuery(String)} to allow
+   * duplicate and case-insensitive keys, both of which are allowed according to
+   * <a href="https://url.spec.whatwg.org/?utm_source=chatgpt.com#urlencoded-parsing">
+   * section 5.1 of the WHATWG URL Standard
+   * </a>.
+   * </p>
+   *
+   * @param query application/x-www-form-urlencoded input to be parsed. May be
+   * null.
+   *
+   * @return Map of name=value pairs. Not null. May be empty if there are no
+   * name=value pairs, or the URI is null.
+   *
+   * @throws IllegalArgumentException If the input does not conform to the
+   * application/x-www-form-urlencoded format.
    */
-  private static Map<String, String> parseQuery(URI uri) {
+  public static Map<String, String> parseQuery(String query) {
+
+    if (query == null || query.isEmpty()) {
+      return Collections.emptyMap();
+    }
+
     Map<String, String> values = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
-    String query = uri.getRawQuery();
+    parseQuery(
+      query,
+      (name, value) -> {
 
-    if (query == null)
+        if (values.containsKey(name)) {
+          throw new IllegalArgumentException(
+            "Duplicate parameter name: \"" + name + "\"");
+        }
+
+        values.put(name, value);
+      });
+
+    return values;
+  }
+
+  /**
+   * <p>
+   * Returns name=value pairs parsed from application/x-www-form-urlencoded
+   * input. This format commonly appears in the query of a URI, but may also
+   * appear elsewhere, such as in the body of an HTTP POST request.
+   * </p><p>
+   * This method may collect multiple values for the same key into a
+   * <code>List</code>, and it uses case-sensitive matching for names. This
+   * behavior is allowed according to
+   * <a href="https://url.spec.whatwg.org/?utm_source=chatgpt.com#urlencoded-parsing">
+   * section 5.1 of the WHATWG URL Standard
+   * </a>.
+   * </p>
+   *
+   * @param query application/x-www-form-urlencoded input to be parsed. May be
+   * null.
+   *
+   * @return Map of name=value pairs. Not null. May be empty if there are no
+   * name=value pairs, or the URI is null.
+   *
+   * @throws IllegalArgumentException If the input does not conform to the
+   * application/x-www-form-urlencoded format.
+   */
+  public static Map<String, List<String>> parseMultiValueQuery(String query) {
+
+    if (query == null || query.isEmpty()) {
       return Collections.emptyMap();
+    }
+
+    Map<String, List<String>> map = new HashMap<>();
+
+    parseQuery(
+      query,
+      (name, value) ->
+        map.computeIfAbsent(
+          name,
+          sameName -> new ArrayList<>(1))
+        .add(value));
+
+    return map;
+
+  }
+
+  /**
+   * <p>
+   * Returns name=value pairs parsed from application/x-www-form-urlencoded
+   * input. This format commonly appears in the query of a URI, but may also
+   * appear elsewhere, such as in the body of an HTTP POST request.
+   * </p><p>
+   * Each name=value pair is fed into a <code>pairConsumer</code> function,
+   * which may be used to store the entries in a collection, or perform
+   * validations. Any RuntimeException thrown from the function will get thrown
+   * out of this method.
+   * </p>
+   *
+   * @param query application/x-www-form-urlencoded input to be parsed. May be
+   * null.
+   *
+   * @param pairConsumer Consumes name=value pairs. The first argument to this
+   * function is the name which appears on left hand side of the '=' operator.
+   * The second argument is the value which appears on the right hand side of
+   * the '=' operator. Null values are not input to the function. The function
+   * is not called if a '=' operator does not appear in a {@code &} delimited
+   * entry. The function cannot be null.
+   *
+   * @throws IllegalArgumentException If the input does not conform to the
+   * application/x-www-form-urlencoded format.
+   */
+  public static void parseQuery(
+    String query,
+    BiConsumer<String, String> pairConsumer
+  ) {
+
+    if (query == null || query.isEmpty()) {
+      return;
+    }
 
     for (String nameEqualsValue : query.split("&", -1)) {
-      if (nameEqualsValue.isEmpty())
+
+      if (nameEqualsValue.isEmpty()) {
         continue;
+      }
 
       int valueSeparatorIndex = nameEqualsValue.indexOf('=');
-      if (valueSeparatorIndex < 0)
+
+      if (valueSeparatorIndex < 0) {
         continue;
+      }
 
       String name = decodeQueryComponent(
         nameEqualsValue.substring(0, valueSeparatorIndex));
+
       String value = decodeQueryComponent(
         nameEqualsValue.substring(valueSeparatorIndex + 1));
 
-      if (values.containsKey(name))
-        throw new IllegalArgumentException(
-          "Duplicate parameter name: \"" + name + "\"");
-
-      values.put(name, value);
+      pairConsumer.accept(name, value);
     }
-
-    return values;
   }
 
   /**

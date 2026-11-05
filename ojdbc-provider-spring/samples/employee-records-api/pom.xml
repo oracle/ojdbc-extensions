@@ -45,7 +45,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.3.4</version>
+    <version>4.1.1</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
@@ -57,22 +57,23 @@
 
   <properties>
     <java.version>17</java.version>
-    <oracle.jdbc.version>23.26.2.0.0</oracle.jdbc.version>
+    <oracle.jdbc.version>23.26.4.0.0</oracle.jdbc.version>
     <oracle.security.version>23.8.0.25.04</oracle.security.version>
   </properties>
 
   <dependencies>
-    <!-- Oracle OJDBC Spring provider -->
+
+    <!-- Use Spring to provide the per-operation security context for Oracle JDBC -->
     <dependency>
       <groupId>com.oracle.database.jdbc</groupId>
       <artifactId>ojdbc-provider-spring</artifactId>
       <version>1.1.0</version>
     </dependency>
 
-    <!-- Azure token provider for JDBC -->
+    <!-- Use Nimbus to provide tokens for database logon with JDBC -->
     <dependency>
       <groupId>com.oracle.database.jdbc</groupId>
-      <artifactId>ojdbc-provider-azure</artifactId>
+      <artifactId>ojdbc-provider-nimbus</artifactId>
       <version>1.1.0</version>
     </dependency>
 
@@ -80,7 +81,7 @@
     <dependency>
       <groupId>com.oracle.database.jdbc</groupId>
       <artifactId>ojdbc8</artifactId>
-      <version>23.26.2.0.0</version>
+      <version>${oracle.jdbc.version}</version>
     </dependency>
 
     <!-- Oracle Wallet/SSL jars for TCPS -->
@@ -114,11 +115,17 @@
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
 
-
     <!-- AOP -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-aop</artifactId>
+      <version>3.5.9</version>
+    </dependency>
+
+    <!-- This module includes RunAsToken -->
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-access</artifactId>
     </dependency>
 
     <!-- Test -->

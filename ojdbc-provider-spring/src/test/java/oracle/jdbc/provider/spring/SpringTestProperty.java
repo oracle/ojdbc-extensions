@@ -35,107 +35,27 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  *  SOFTWARE.
  */
+
 package oracle.jdbc.provider.spring;
 
-import java.util.Map;
-
 /**
- * <p>
- * Names of properties that configure Spring Security tests. Descriptions and
- * examples of each property can be found in the "example-test.properties" file
- * within the root directory of the ojdbc-provider-spring module.
- * </p><p>
- * Many test properties can be mapped to a Spring property for configuring an
- * OAuth 2.0 client registration or provider. A list of such Spring properties
- * <a href="https://docs.spring.io/spring-security/reference/servlet/oauth2/login/core.html#oauth2login-boot-property-mappings">
- * may be found here
- * </a>. This enum class implements a {@link #toSpringProperty(String)} method
- * so that tests may create client registration and provider configurations
- * at runtime. See the getSpringPropertyParameters method in
- * {@link oracle.jdbc.provider.spring.resource.SpringSecurityContextProviderTest}
- * for an example of that. The SpringSecurityContextProvider is able to
- * read this configuration via its
- * {@link oracle.jdbc.provider.spring.context.ApplicationContextHolder} class.
- * This is an alternative way to configure the provider, as opposed to
- * passing a parameters Map to
- * {@link oracle.jdbc.spi.EndUserSecurityContextProvider#getEndUserSecurityContext(Map)}.
- * It is though that most users will opt for Spring's configuration over
- * JDBC connection properties, so it is important to test this scenario.
- * </p>
+ * Properties that configure tests in the ojdbc-provider-spring module. The
+ * {@link SpringOAuth2TestProperty} should be used for properties that configure
+ * Spring's OAuth 2 component, which are listed here:
+ * https://docs.spring.io/spring-security/reference/servlet/oauth2/login/core.html#oauth2login-boot-property-mappings
  */
 public enum SpringTestProperty {
-  AZURE_TOKEN_URI(SpringPropertyType.PROVIDER, "token-uri"),
-  AZURE_CLIENT_ID(SpringPropertyType.REGISTRATION, "client-id"),
-  AZURE_CLIENT_SECRET(SpringPropertyType.REGISTRATION, "client-secret"),
-  AZURE_SCOPE(SpringPropertyType.REGISTRATION, "scope"),
-  OCI_TOKEN_URI(SpringPropertyType.PROVIDER, "token-uri"),
-  OCI_CLIENT_ID(SpringPropertyType.REGISTRATION, "client-id"),
-  OCI_CLIENT_SECRET(SpringPropertyType.REGISTRATION, "client-secret"),
-  OCI_SCOPE(SpringPropertyType.REGISTRATION, "scope");
 
-  /**
-   * Prefix of the Spring property that this test property maps to, such as
-   * "spring.security.oauth2.client.registration." for both
-   * {@link #AZURE_CLIENT_ID} and {@link #OCI_CLIENT_ID}.
-   * This field is null if there is no spring property associated to this test
-   * property.
-   */
-  final SpringPropertyType springPropertyType;
-
-  /**
-   * Name of Spring property that this test property maps to, such as
-   * "client-id" for both {@link #AZURE_CLIENT_ID} and {@link #OCI_CLIENT_ID}.
-   * This field is null if there is no spring property associated to this test
-   * property.
-   */
-  final String springName;
-
-  SpringTestProperty(SpringPropertyType springPropertyType, String springName) {
-    this.springPropertyType = springPropertyType;
-    this.springName = springName;
-  }
-
-  public String springName() {
-    return springName;
-  }
-
-  /**
-   * Composes a fully-qualified Spring property name from a given ID string,
-   * such as "spring.security.oauth2.client.registration.example.client-id" if
-   * the identifier is "example" and this is {@link #AZURE_CLIENT_ID} or
-   * {@link #OCI_CLIENT_ID}.
-   *
-   * @param identifier The identifier of an OAUTH 2.0 client registration or
-   * provider. Not null.
-   *
-   * @return The fully-qualified Spring property name, or null if this test
-   * property cannot be configured as a Spring property.
-   */
-  public String toSpringProperty(String identifier) {
-    if (springPropertyType == SpringPropertyType.NONE) {
-      return null;
-    }
-
-    return springPropertyType.prefix + identifier + "." + springName;
-  }
-
-  public enum SpringPropertyType {
-    NONE(null),
-    REGISTRATION("spring.security.oauth2.client.registration."),
-    PROVIDER("spring.security.oauth2.client.provider.");
-
-    /**
-     * Prefix for this type of Spring property, identifying it as a client
-     * registration or provider.
-     */
-    private final String prefix;
-
-    SpringPropertyType(String value) {
-      this.prefix = value;
-    }
-
-    public String prefix() {
-      return prefix;
-    }
-  }
+  // These next properties are used for a resource owner password credential
+  // (ROPC) grant. The ROPC grant type is not supported by Spring, and so these
+  // properties are declared here rather than in SpringOAuth2TestProperty.
+  AZURE_DOWNSTREAM_CLIENT_ID,
+  AZURE_DOWNSTREAM_USERNAME,
+  AZURE_DOWNSTREAM_PASSWORD,
+  AZURE_DOWNSTREAM_SCOPE,
+  OCI_DOWNSTREAM_CLIENT_ID,
+  OCI_DOWNSTREAM_CLIENT_SECRET,
+  OCI_DOWNSTREAM_USERNAME,
+  OCI_DOWNSTREAM_PASSWORD,
+  OCI_DOWNSTREAM_SCOPE,
 }
