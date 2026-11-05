@@ -43,7 +43,6 @@ import oracle.jdbc.provider.parameter.ParameterSet;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.env.Environment;
 
 /**

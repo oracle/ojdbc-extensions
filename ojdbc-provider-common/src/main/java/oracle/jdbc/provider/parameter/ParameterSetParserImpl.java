@@ -41,8 +41,6 @@ package  oracle.jdbc.provider.parameter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -101,7 +99,7 @@ final class ParameterSetParserImpl implements ParameterSetParser {
 
   @Override
   public ParameterSet parseUrl(CharSequence url) {
-    Map<String, String> parameters = UriParameters.parse(url);
+    Map<String, String> parameters = UriParameters.parseUri(url);
     return parseNamedValues(parameters);
   }
 

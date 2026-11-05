@@ -40,7 +40,7 @@ package oracle.jdbc.provider.spring.resource;
 
 import oracle.jdbc.EndUserSecurityContext;
 
-import oracle.jdbc.provider.parameter.ParameterSet;
+import oracle.jdbc.provider.parameter.UriParameters;
 import oracle.jdbc.provider.resource.AbstractResourceProvider;
 import oracle.jdbc.provider.resource.ResourceParameter;
 import oracle.jdbc.provider.spring.oauth.OAuth2AccessTokenFactory;
@@ -50,13 +50,19 @@ import oracle.sql.json.OracleJsonException;
 import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonValue;
 import oracle.sql.json.OracleJsonValue.OracleJsonType;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.AuthenticationTrustResolver;
+import org.springframework.security.authentication.AuthenticationTrustResolverImpl;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2Token;
 import org.springframework.security.oauth2.server.resource.authentication.AbstractOAuth2TokenAuthenticationToken;
 import oracle.sql.json.OracleJsonObject;
+import org.springframework.util.MultiValueMap;
 
 import java.io.StringReader;
 import java.util.Arrays;
@@ -65,10 +71,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static oracle.jdbc.provider.spring.oauth.OAuth2ResourceParameters.REGISTRATION_ID;
+import static oracle.jdbc.provider.spring.oauth.OAuth2ResourceParameters.REQUEST_PARAMETERS;
 
 /**
  * <p>
@@ -79,7 +87,7 @@ import static oracle.jdbc.provider.spring.oauth.OAuth2ResourceParameters.REGISTR
  * allows the end user's {@link Authentication} to be accessed on the
  * thread which executes JDBC API calls.
  * </p><p>
- * The provider will be invoked by Oracle JDBC driver whenever a database
+ * The provider will be invoked by the Oracle JDBC driver whenever a database
  * round-trip happens. The context will be piggybacked to the database to
  * enforce data security.
  * </p><p>
@@ -116,9 +124,21 @@ public final class SpringSecurityContextProvider
    */
   private static final ResourceParameter AUTHORITY_ATTRIBUTE_PREFIX_PARAMETER;
 
+  /**
+   * Explicit opt-in to forwarding the Spring authentication token to the database.
+   */
+  private static final ResourceParameter ENABLE_TOKEN_FORWARDING;
+
   private static final ResourceParameter[] PARAMETERS = {
+
     new ResourceParameter(
       "registrationId", REGISTRATION_ID),
+
+     new ResourceParameter(
+      "requestParameters", REQUEST_PARAMETERS, null,
+       value ->
+         MultiValueMap.fromMultiValue(
+           UriParameters.parseMultiValueQuery(value))),
 
     DATA_ROLES_PARAMETER = new ResourceParameter(
       "dataRoles", null, false, false,
@@ -135,6 +155,10 @@ public final class SpringSecurityContextProvider
     AUTHORITY_ATTRIBUTE_PREFIX_PARAMETER = new ResourceParameter(
       "authorityAttributesPrefix", null, false, false,
       (value, parameterSetBuilder) -> {}),
+
+    ENABLE_TOKEN_FORWARDING = new ResourceParameter(
+      "enableTokenForwarding", "false", false, false,
+      (value, parameterSetBuilder) -> {}),
   };
 
   /**
@@ -144,6 +168,15 @@ public final class SpringSecurityContextProvider
   private static final OracleJsonFactory JSON_FACTORY = new OracleJsonFactory();
 
   /**
+   * This is Spring's built-in check to verify if an instance of
+   * {@link Authentication} represents an authenticated client, and not a
+   * placeholder for an unauthenticated client, such as
+   * {@link AnonymousAuthenticationToken}
+   */
+  private static final AuthenticationTrustResolver TRUST_RESOLVER =
+    new AuthenticationTrustResolverImpl();
+
+  /**
    * This public no-arg constructor is required by
    * {@link java.util.ServiceLoader}
    */
@@ -151,61 +184,76 @@ public final class SpringSecurityContextProvider
     super("spring", "end-user-security-context", PARAMETERS);
   }
 
-
   @Override
   public EndUserSecurityContext getEndUserSecurityContext(
     Map<Parameter, CharSequence> parameters) {
 
-    AbstractOAuth2TokenAuthenticationToken<?> authentication =
-      getEndUserAuthentication();
+    Optional<Authentication> authentication =
+      Optional.ofNullable(
+          SecurityContextHolder.getContext().getAuthentication())
+        .filter(TRUST_RESOLVER::isAuthenticated);
 
-    if (authentication == null) {
-      return null;
-    }
-
-    String databaseAccessToken = getDatabaseAccessToken(parameters);
-
-    EndUserSecurityContext endUserSecurityContext =
-      EndUserSecurityContext.createWithToken(
-        databaseAccessToken,
-        authentication.getToken().getTokenValue());
-
-    endUserSecurityContext =
-      withDataRoles(
-        endUserSecurityContext,
-        getFixedDataRoles(parameters),
-        getAuthorityPrefixDataRoles(parameters, authentication));
-
-    endUserSecurityContext =
-      withAttributes(
-        endUserSecurityContext,
-        getFixedAttributes(parameters),
-        getAuthorityPrefixAttributes(parameters, authentication));
-
-    return endUserSecurityContext;
+    return createEndUserSecurityContext(parameters, authentication)
+      .map(context ->
+        context.withDataRoles(
+          getDataRoles(parameters, authentication)))
+      .map(context ->
+        context.withAttributes(
+          getAttributes(parameters, authentication)))
+      .orElse(null);
   }
 
   /**
-   * Returns security-token based authentication for the current end user of a
-   * Spring application, or <b>null</b> if no such authentication is currently
-   * available.
+   * <p>
+   * Returns an <code>EndUserSecurityContext</code> that contains a database
+   * access token, and may also contain an end user token.
+   * </p><p>
+   * This method may return an empty <code>Optional</code> if there is no
+   * authenticated end user and this provider is configured to require one. The
+   * requirement for an authenticated end user may arise from the OAuth 2 grant
+   * type (token-exchange, jwt-bearer, etc), or from the
+   * <code>enableTokenForwarding</code> parameter.
+   * </p>
+   * @param parameters Parameters that configure this provider. Not null, may
+   * not contain null.
    *
-   * @return The authentication based on an end user token, <b>or null</b>.
+   * @param authentication An <code>Optional</code> containing authentication
+   * for the current end user, or an empty <code>Optional</code> if there is
+   * none.
    */
-  private static AbstractOAuth2TokenAuthenticationToken<?> getEndUserAuthentication() {
-
-    Authentication authentication =
-      SecurityContextHolder.getContext().getAuthentication();
-
+  private Optional<EndUserSecurityContext> createEndUserSecurityContext(
+    Map<Parameter, CharSequence> parameters,
+    Optional<Authentication> authentication
+  ) {
     if (
-      authentication == null
-        || !authentication.isAuthenticated()
-        || !(authentication instanceof AbstractOAuth2TokenAuthenticationToken<?>)
+      Optional.ofNullable(
+          parameters.get(ENABLE_TOKEN_FORWARDING))
+        .map(CharSequence::toString)
+        .filter("true"::equalsIgnoreCase)
+        .isPresent()
     ) {
-      return null;
-    }
 
-    return (AbstractOAuth2TokenAuthenticationToken<?>)authentication;
+      Optional<String> endUserToken =
+        authentication.filter(
+            AbstractOAuth2TokenAuthenticationToken.class::isInstance)
+          .map(AbstractOAuth2TokenAuthenticationToken.class::cast)
+          .map(AbstractOAuth2TokenAuthenticationToken::getToken)
+          .map(OAuth2Token::getTokenValue);
+
+      if (endUserToken.isEmpty()) {
+        return Optional.empty();
+      }
+
+      return getDatabaseAccessToken(parameters)
+        .map(databaseAccessToken ->
+          EndUserSecurityContext.createWithToken(
+            databaseAccessToken,
+            endUserToken.get()));
+    }
+    else {
+      return getDatabaseAccessToken(parameters)
+        .map(EndUserSecurityContext::createWithToken);
+    }
   }
 
   /**
@@ -217,17 +265,68 @@ public final class SpringSecurityContextProvider
    *
    * @return A database access token. Not null.
    */
-  private String getDatabaseAccessToken(
+  private Optional<String> getDatabaseAccessToken(
     Map<Parameter, CharSequence> parameters) {
 
-    ParameterSet parameterSet =
-      OAuth2ResourceParameters.addSpringProperties(
-        parseParameterValues(parameters));
+    return OAuth2ResourceParameters.addSpringProperties(
+        parseParameterValues(parameters))
+      .flatMap(parameterSet ->
+        OAuth2AccessTokenFactory.getInstance()
+          .request(parameterSet)
+          .getContent())
+      .map(OAuth2AccessToken::getTokenValue);
+  }
 
-    return OAuth2AccessTokenFactory.getInstance()
-      .request(parameterSet)
-      .getContent()
-      .getTokenValue();
+  /**
+   * Returns DATA ROLE names that this provider has been
+   * configured to include in an <code>EndUserSecurityContext</code> provided
+   * to Oracle JDBC.
+   *
+   * @param parameters Parameters that configure this provider. Not null, may
+   * not contain null.
+   *
+   * @return DATA ROLE names. Not null, not containing null, may be empty.
+   */
+  private static Set<String> getDataRoles(
+    Map<Parameter, CharSequence> parameters,
+    Optional<Authentication> authentication
+  ) {
+    Set<String> dataRoles = getFixedDataRoles(parameters);
+
+    if (authentication.isPresent()) {
+      dataRoles = merge(
+        dataRoles,
+        getAuthorityPrefixDataRoles(
+          parameters,
+          authentication.get()));
+    }
+
+    return dataRoles;
+  }
+
+  /**
+   * Returns a new Set that contains all entries from both input Sets.
+   *
+   * @param current A Set containing values. Not null.
+   *
+   * @param next A Set containing values. Not null.
+   *
+   * @return A Set containing values from both the current Set and next Set.
+   * Not null, not containing null, may be empty.
+   */
+  private static <T> Set<T> merge(Set<T> current, Set<T> next) {
+
+    if (current.isEmpty()) {
+      return next;
+    }
+
+    if (next.isEmpty()) {
+      return current;
+    }
+
+    Set<T> merged = new HashSet<>(current);
+    merged.addAll(next);
+    return merged;
   }
 
   /**
@@ -268,6 +367,11 @@ public final class SpringSecurityContextProvider
     Map<Parameter, CharSequence> parameters,
     Authentication authentication
   ) {
+
+    if (authentication == null) {
+      return Collections.emptySet();
+    }
+
     CharSequence prefix =
       parameters.get(AUTHORITY_ROLE_PREFIX_PARAMETER);
 
@@ -279,37 +383,34 @@ public final class SpringSecurityContextProvider
   }
 
   /**
-   * Returns a copy of an EndUserSecurityContext that contains all data role
-   * names in the given sets, or returns the original EndUserSecurityContext if
-   * all sets are null or empty.
+   * Returns END USER CONTEXT ATTRIBUTE values that this provider has been
+   * configured to include in an <code>EndUserSecurityContext</code> provided
+   * to Oracle JDBC.
    *
-   * @param endUserSecurityContext Context to copy. Not null.
-   * @param dataRoleSets Roles to add, not null, may not contain null.
-   * @return Context with all data roles. Not null.
+   * @param parameters Parameters that configure this provider. Not null, may
+   * not contain null.
+   *
+   * @param authentication An <code>Optional</code> containing authentication
+   * for the current end user, or an empty <code>Optional</code> if there is
+   * none.
+   *
+   * @return END USER CONTEXT ATTRIBUTE values. Not null, not containing null,
+   * may be empty.
    */
-  @SafeVarargs
-  private static EndUserSecurityContext withDataRoles(
-    EndUserSecurityContext endUserSecurityContext,
-    Set<String>... dataRoleSets) {
+  private static Map<String, OracleJsonObject> getAttributes(
+    Map<Parameter, CharSequence> parameters,
+    Optional<Authentication> authentication
+  ) {
+    Map<String, OracleJsonObject> attributes = getFixedAttributes(parameters);
 
-    HashSet<String> merged = null;
-    for (Set<String> dataRoles : dataRoleSets) {
-
-      if (dataRoles == null || dataRoles.isEmpty()) {
-        continue;
-      }
-
-      if (merged == null) {
-        merged = new HashSet<>(dataRoles);
-      }
-      else {
-        merged.addAll(dataRoles);
-      }
+    if (authentication.isPresent()) {
+      attributes =
+        merge(
+          attributes,
+          getAuthorityPrefixAttributes(parameters, authentication.get()));
     }
 
-    return merged == null
-      ? endUserSecurityContext
-      : endUserSecurityContext.withDataRoles(merged);
+    return attributes;
   }
 
   /**
@@ -353,6 +454,10 @@ public final class SpringSecurityContextProvider
   private static Map<String, OracleJsonObject> getAuthorityPrefixAttributes(
     Map<Parameter, CharSequence> parameters,
     Authentication authentication) {
+
+    if (authentication == null) {
+      return Collections.emptyMap();
+    }
 
     CharSequence authorityPrefix =
       parameters.get(AUTHORITY_ATTRIBUTE_PREFIX_PARAMETER);
@@ -474,33 +579,6 @@ public final class SpringSecurityContextProvider
   }
 
   /**
-   * Returns a copy of an EndUserSecurityContext that contains all END USER
-   * CONTEXT attributes in the given maps, or returns the original
-   * EndUserSecurityContext if all maps are null or empty. If multiple maps
-   * contain the same key, then attributes in the map at the highest array index
-   * overwrite those in maps of lower indices.
-   *
-   * @param endUserSecurityContext Context to copy. Not null.
-   * @param attributesMaps Attributes to add, not null, may not contain null.
-   * @return Context with all data roles. Not null.
-   */
-  @SafeVarargs
-  private static EndUserSecurityContext withAttributes(
-    EndUserSecurityContext endUserSecurityContext,
-    Map<String, OracleJsonObject>... attributesMaps) {
-
-    Map<String, OracleJsonObject> merged = null;
-
-    for (Map<String, OracleJsonObject> attributes : attributesMaps) {
-      merged = merge(merged, attributes);
-    }
-
-    return merged == null
-      ? endUserSecurityContext
-      : endUserSecurityContext.withAttributes(merged);
-  }
-
-  /**
    * Merges JSON objects contained with maps:
    * <pre>{@code
    *   Map<String, OracleJsonObject> merged = merge(
@@ -554,6 +632,7 @@ public final class SpringSecurityContextProvider
    * representations with the prefix omitted.
    *
    * @param prefix Prefix to match. Not null.
+   *
    * @param authentication Authentication with {@link GrantedAuthority} objects.
    * Not null.
    *

@@ -38,9 +38,12 @@
 
 package oracle.jdbc.provider.spring.resource;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import oracle.jdbc.EndUserSecurityContext;
+import oracle.jdbc.provider.parameter.UriParameters;
 import oracle.jdbc.provider.resource.ResourceProviderTestUtil;
-import oracle.jdbc.provider.spring.SpringTestProperty;
+import oracle.jdbc.provider.spring.SpringOAuth2TestProperty;
 import oracle.jdbc.provider.spring.context.ApplicationContextHolder;
 import oracle.jdbc.provider.util.JsonWebTokenParser;
 import oracle.jdbc.spi.EndUserSecurityContextProvider;
@@ -63,10 +66,16 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.AbstractOAuth2TokenAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
@@ -81,16 +90,26 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static oracle.jdbc.provider.TestProperties.getOrAbort;
 import static oracle.jdbc.provider.resource.ResourceProviderTestUtil.getParameter;
-import static oracle.jdbc.provider.spring.SpringTestProperty.AZURE_CLIENT_ID;
-import static oracle.jdbc.provider.spring.SpringTestProperty.AZURE_CLIENT_SECRET;
-import static oracle.jdbc.provider.spring.SpringTestProperty.AZURE_SCOPE;
-import static oracle.jdbc.provider.spring.SpringTestProperty.AZURE_TOKEN_URI;
-import static oracle.jdbc.provider.spring.SpringTestProperty.OCI_CLIENT_ID;
-import static oracle.jdbc.provider.spring.SpringTestProperty.OCI_CLIENT_SECRET;
-import static oracle.jdbc.provider.spring.SpringTestProperty.OCI_SCOPE;
-import static oracle.jdbc.provider.spring.SpringTestProperty.OCI_TOKEN_URI;
+import static oracle.jdbc.provider.spring.SpringOAuth2TestProperty.AZURE_CLIENT_ID;
+import static oracle.jdbc.provider.spring.SpringOAuth2TestProperty.AZURE_CLIENT_SECRET;
+import static oracle.jdbc.provider.spring.SpringOAuth2TestProperty.AZURE_SCOPE;
+import static oracle.jdbc.provider.spring.SpringOAuth2TestProperty.AZURE_TOKEN_URI;
+import static oracle.jdbc.provider.spring.SpringOAuth2TestProperty.OCI_CLIENT_ID;
+import static oracle.jdbc.provider.spring.SpringOAuth2TestProperty.OCI_CLIENT_SECRET;
+import static oracle.jdbc.provider.spring.SpringOAuth2TestProperty.OCI_SCOPE;
+import static oracle.jdbc.provider.spring.SpringOAuth2TestProperty.OCI_TOKEN_URI;
+import static oracle.jdbc.provider.spring.SpringTestProperty.AZURE_DOWNSTREAM_CLIENT_ID;
+import static oracle.jdbc.provider.spring.SpringTestProperty.AZURE_DOWNSTREAM_USERNAME;
+import static oracle.jdbc.provider.spring.SpringTestProperty.AZURE_DOWNSTREAM_PASSWORD;
+import static oracle.jdbc.provider.spring.SpringTestProperty.AZURE_DOWNSTREAM_SCOPE;
+import static oracle.jdbc.provider.spring.SpringTestProperty.OCI_DOWNSTREAM_CLIENT_ID;
+import static oracle.jdbc.provider.spring.SpringTestProperty.OCI_DOWNSTREAM_CLIENT_SECRET;
+import static oracle.jdbc.provider.spring.SpringTestProperty.OCI_DOWNSTREAM_PASSWORD;
+import static oracle.jdbc.provider.spring.SpringTestProperty.OCI_DOWNSTREAM_SCOPE;
+import static oracle.jdbc.provider.spring.SpringTestProperty.OCI_DOWNSTREAM_USERNAME;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -112,6 +131,10 @@ public class SpringSecurityContextProviderTest {
    */
   private static final Parameter REGISTRATION_ID_PARAMETER =
     getParameter(PROVIDER, "registrationId");
+
+  /** Optional parameter that permits forwarding the Spring authentication token. */
+  private static final Parameter ENABLE_TOKEN_FORWARDING_PARAMETER =
+    getParameter(PROVIDER, "enableTokenForwarding");
 
   /**
    * Optional parameter that configures the names of data roles
@@ -138,6 +161,12 @@ public class SpringSecurityContextProviderTest {
    */
   private static final Parameter ATTRIBUTE_PREFIX_PARAMETER =
     getParameter(PROVIDER, "authorityAttributesPrefix");
+
+  /**
+   * Optional parameter that configures custom parameters for a token request.
+   */
+  private static final Parameter REQUEST_PARAMETERS_PARAMETER =
+    getParameter(PROVIDER, "requestParameters");
 
   /**
    * Value set as the {@link #REGISTRATION_ID_PARAMETER}. Repeated use of the
@@ -189,9 +218,9 @@ public class SpringSecurityContextProviderTest {
       assertTrue(
         URI.create(iss).getHost().endsWith(".identity.oraclecloud.com"), iss);
 
-      String sub = claims.get("sub");
-      assertNotNull(sub, "sub claim is not present");
-      assertEquals(getOrAbort(OCI_CLIENT_ID), sub);
+      String clientId = claims.get("client_id");
+      assertNotNull(clientId, "client_id claim is not present");
+      assertEquals(getOrAbort(OCI_CLIENT_ID), clientId);
     };
 
   /**
@@ -289,11 +318,11 @@ public class SpringSecurityContextProviderTest {
 
   /**
    * Verifies the case where an application user is authenticated and the
-   * provider is configured with the client ID and client secret of an Azure
-   * application via Spring properties.
+   * provider is configured to use the client credentials grant for an Azure
+   * application.
    */
   @Test
-  public void testAzureClientCredentialsSpringProperties() {
+  public void testAzureClientCredentials() {
     configureSpringProperties(
       AuthorizationGrantType.CLIENT_CREDENTIALS.getValue(),
       AZURE_TOKEN_URI, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_SCOPE);
@@ -302,18 +331,97 @@ public class SpringSecurityContextProviderTest {
 
   /**
    * Verifies the case where an application user is authenticated and the
+   * provider is configured to use JWT bearer grant for an Azure
+   * application. This requires the application user to be authenticated with
+   * a JWT that is used to request a database access token. It also requires
+   * custom request parameter of "requested_token_type=on_behalf_of".
+   */
+  @Test
+  public void testAzureJwtBearer() {
+    configureSpringProperties(
+      AuthorizationGrantType.JWT_BEARER.getValue(),
+      AZURE_TOKEN_URI, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_SCOPE);
+    Consumer<Map<String,String>> claimVerifier =
+      AZURE_CLAIM_VERIFIER;
+
+    Authentication authentication =
+      new JwtAuthenticationToken(
+        requestToken(
+          getOrAbort(AZURE_TOKEN_URI),
+          Map.of(
+            "grant_type", "password",
+            "scope", getOrAbort(AZURE_DOWNSTREAM_SCOPE),
+            "client_id", getOrAbort(AZURE_DOWNSTREAM_CLIENT_ID),
+            "username", getOrAbort(AZURE_DOWNSTREAM_USERNAME),
+            "password", getOrAbort(AZURE_DOWNSTREAM_PASSWORD))));
+    authentication.setAuthenticated(true);
+
+    SecurityContext securityContext =
+      SecurityContextHolder.createEmptyContext();
+    securityContext.setAuthentication(authentication);
+
+    SecurityContextHolder.setContext(securityContext);
+    try {
+      test(
+        Map.of(
+          REQUEST_PARAMETERS_PARAMETER,
+          "requested_token_use=on_behalf_of"),
+        claimVerifier);
+    }
+    finally {
+      SecurityContextHolder.clearContext();
+    }
+  }
+
+  /**
+   * Verifies the case where an application user is authenticated and the
    * provider is configured with the client ID and client secret of an OCI
    * application via Spring properties.
    */
   @Test
-  public void testOciClientCredentialsSpringProperties() {
+  public void testOciClientCredentials() {
     configureSpringProperties(
       AuthorizationGrantType.CLIENT_CREDENTIALS.getValue(),
       OCI_TOKEN_URI, OCI_CLIENT_ID, OCI_CLIENT_SECRET, OCI_SCOPE);
     test(OCI_CLAIM_VERIFIER);
   }
 
+  @Test
+  public void testOciTokenExchange() {
+    configureSpringProperties(
+      AuthorizationGrantType.TOKEN_EXCHANGE.getValue(),
+      OCI_TOKEN_URI, OCI_CLIENT_ID, OCI_CLIENT_SECRET, OCI_SCOPE);
+    Consumer<Map<String,String>> claimVerifier =
+      OCI_CLAIM_VERIFIER;
+
+    Authentication authentication =
+      new JwtAuthenticationToken(
+        requestToken(
+          getOrAbort(OCI_TOKEN_URI),
+          Map.of(
+            "grant_type", "password",
+            "scope", getOrAbort(OCI_DOWNSTREAM_SCOPE),
+            "client_id", getOrAbort(OCI_DOWNSTREAM_CLIENT_ID),
+            "client_secret", getOrAbort(OCI_DOWNSTREAM_CLIENT_SECRET),
+            "username", getOrAbort(OCI_DOWNSTREAM_USERNAME),
+            "password", getOrAbort(OCI_DOWNSTREAM_PASSWORD))));
+    authentication.setAuthenticated(true);
+
+    SecurityContext securityContext =
+      SecurityContextHolder.createEmptyContext();
+    securityContext.setAuthentication(authentication);
+
+    SecurityContextHolder.setContext(securityContext);
+    try {
+      test(Collections.emptyMap(), claimVerifier);
+    }
+    finally {
+      SecurityContextHolder.clearContext();
+    }
+  }
+
   /**
+   * Verifies
    * Executes a series of tests with the given JWT claims verifier.
    *
    * @param claimVerifier Verifies the claims of the 
@@ -497,10 +605,11 @@ public class SpringSecurityContextProviderTest {
   }
 
   /**
-   * Invokes {@link SpringSecurityContextProvider#getEndUserSecurityContext(Map)}
-   * with the given parameters, and then verifies the provided
-   * {@link EndUserSecurityContext}. This method will always set the required
-   * {@link #REGISTRATION_ID_PARAMETER} parameter, if it is not set already.
+   * Invokes
+   * {@link SpringSecurityContextProvider#getEndUserSecurityContext(Map)} and
+   * verifies the provided {@link EndUserSecurityContext}. This method
+   * exercises the enableTokenForwarding parameter, verifying cases where it is
+   * omitted or explicitly set.
    */
   private static void test(
     Map<Parameter, CharSequence> parameters,
@@ -511,10 +620,29 @@ public class SpringSecurityContextProviderTest {
       parameters.put(REGISTRATION_ID_PARAMETER, TEST_REGISTRATION_ID);
     }
 
+    // Expect no token forwarding by default
+    parameters.remove(ENABLE_TOKEN_FORWARDING_PARAMETER);
     verifyEndUserSecurityContext(
       parameters,
       PROVIDER.getEndUserSecurityContext(parameters),
-      claimVerifier);
+      claimVerifier,
+      false);
+
+    // No token forwarding if explicitly disabled either
+    parameters.put(ENABLE_TOKEN_FORWARDING_PARAMETER, "false");
+    verifyEndUserSecurityContext(
+      parameters,
+      PROVIDER.getEndUserSecurityContext(parameters),
+      claimVerifier,
+      false);
+
+    // Only expect token forwarding if explicitly enabled
+    parameters.put(ENABLE_TOKEN_FORWARDING_PARAMETER, "true");
+    verifyEndUserSecurityContext(
+      parameters,
+      PROVIDER.getEndUserSecurityContext(parameters),
+      claimVerifier,
+      true);
   }
 
   /**
@@ -529,9 +657,18 @@ public class SpringSecurityContextProviderTest {
   private static void verifyEndUserSecurityContext(
     Map<Parameter, CharSequence> parameters,
     EndUserSecurityContext endUserSecurityContext,
-    Consumer<Map<String,String>> claimVerifier) {
+    Consumer<Map<String,String>> claimVerifier,
+    boolean expectEndUserToken
+  ) {
 
-    verifyEndUserToken(endUserSecurityContext);
+    if (expectEndUserToken) {
+      verifyEndUserToken(endUserSecurityContext);
+    }
+    else {
+      assertTrue(endUserSecurityContext.endUserToken().isEmpty());
+    }
+
+    assertTrue(endUserSecurityContext.endUserName().isEmpty());
     verifyDatabaseAccessToken(endUserSecurityContext, claimVerifier);
     verifyDataRoles(parameters, endUserSecurityContext);
     verifyAttributes(parameters, endUserSecurityContext);
@@ -544,6 +681,7 @@ public class SpringSecurityContextProviderTest {
   private static void verifyEndUserToken(EndUserSecurityContext endUserSecurityContext) {
     Authentication authentication =
       SecurityContextHolder.getContext().getAuthentication();
+
     final char[] endUserToken;
     if (
       authentication instanceof AbstractOAuth2TokenAuthenticationToken<?> token
@@ -744,19 +882,94 @@ public class SpringSecurityContextProviderTest {
   }
 
   /**
+   * Requests JWT for an end user. This is meant for verifying the jwt-bearer
+   * grant type where the original token is requested using a resource owner
+   * password credential (ROPC) grant. Spring does not support ROPC, so
+   * HttpClient is used.
+   */
+  private static Jwt requestToken(
+    String tokenUri,
+    Map<String, String> parameters
+  ) {
+    try {
+      HttpClient client = HttpClient.newHttpClient();
+
+      HttpRequest request =
+        HttpRequest.newBuilder(URI.create(tokenUri))
+          .header("Content-Type", "application/x-www-form-urlencoded")
+          .POST(HttpRequest.BodyPublishers.ofString(
+            UriParameters.toString(parameters)
+          ))
+          .build();
+
+      HttpResponse<InputStream> response =
+        client.send(
+          request,
+          HttpResponse.BodyHandlers.ofInputStream());
+
+      final OracleJsonObject responseObject;
+
+      try (InputStream body = response.body()) {
+
+        if (response.statusCode() != 200) {
+          throw new AssertionError(
+            response
+              + "\nBODY:\n"
+              + new String(body.readAllBytes(), UTF_8));
+        }
+
+        responseObject =
+          new OracleJsonFactory()
+            .createJsonTextValue(body)
+            .asJsonObject();
+      }
+
+      String accessToken = responseObject.getString("access_token");
+
+      String base64Headers = accessToken.substring(0, accessToken.indexOf('.'));
+      Map<String, Object> headers =
+        new ObjectMapper().readValue(
+          Base64.getUrlDecoder().wrap(
+            new ByteArrayInputStream(base64Headers.getBytes(UTF_8))),
+          new TypeReference<Map<String,Object>>() { });
+
+      int payloadStart = base64Headers.length() + 1;
+      String base64Payload = accessToken.substring(
+        payloadStart,
+        accessToken.indexOf('.', payloadStart));
+      Map<String, Object> payload =
+        new ObjectMapper().readValue(
+          Base64.getUrlDecoder().wrap(
+            new ByteArrayInputStream(base64Payload.getBytes(UTF_8))),
+          new TypeReference<Map<String,Object>>() { });
+
+      return new Jwt(
+        accessToken,
+        Instant.now(),
+        Instant.now().plusSeconds(
+          responseObject.getLong("expires_in")),
+        headers,
+        payload);
+    }
+    catch (Exception ioException) {
+      throw new AssertionError(ioException);
+    }
+  }
+
+  /**
    * Asserts that
    * {@link SpringSecurityContextProvider#getEndUserSecurityContext(Map)}
    * returns null. This is to verify cases where the
    * {@link SecurityContextHolder} has been set up in a way where it won't
-   * provide information about an authenticated application user.
+   * provide information about an authenticated application user, and the
+   * enableTokenForwarding parameter is set to true. In this case, the provider
+   * cannot provide a security context because there is no end user token.
    */
   private static void assertNullEndUserSecurityContext() {
-    Map<Parameter, CharSequence> parameters =
-      Map.of(REGISTRATION_ID_PARAMETER, "assertNullEndUserSecurityContext");
-    EndUserSecurityContext applicationSecurityContext =
-      PROVIDER.getEndUserSecurityContext(parameters);
-
-    assertNull(applicationSecurityContext);
+    Map<Parameter, CharSequence> parameters = new HashMap<>();
+    parameters.put(REGISTRATION_ID_PARAMETER, "assertNullEndUserSecurityContext");
+    parameters.put(ENABLE_TOKEN_FORWARDING_PARAMETER, "true");
+    assertNull(PROVIDER.getEndUserSecurityContext(parameters));
   }
 
   /**
@@ -771,12 +984,12 @@ public class SpringSecurityContextProviderTest {
    */
   private static void configureSpringProperties(
     String grantType,
-    SpringTestProperty... testProperties) {
+    SpringOAuth2TestProperty... testProperties) {
 
     Map<String, Object> springProperties = new HashMap<>();
 
     String registrationPrefix =
-      SpringTestProperty.SpringPropertyType.REGISTRATION.prefix()
+      SpringOAuth2TestProperty.SpringPropertyType.REGISTRATION.prefix()
         + TEST_REGISTRATION_ID;
 
     springProperties.put(
@@ -787,7 +1000,7 @@ public class SpringSecurityContextProviderTest {
       registrationPrefix + ".authorization-grant-type",
       grantType);
 
-    for (SpringTestProperty property : testProperties) {
+    for (SpringOAuth2TestProperty property : testProperties) {
       String springPropertyName =
         property.toSpringProperty(TEST_REGISTRATION_ID);
 

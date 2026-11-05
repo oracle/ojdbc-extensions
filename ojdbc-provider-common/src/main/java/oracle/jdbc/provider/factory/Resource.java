@@ -40,6 +40,7 @@ package  oracle.jdbc.provider.factory;
 
 import java.time.OffsetDateTime;
 import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * <p>
@@ -122,6 +123,30 @@ public interface Resource<T> {
     Objects.requireNonNull(value, "value is null");
 
     return new PermanentResource<>(value, isSensitive);
+  }
+
+  /**
+   * Creates a resource by mapping the content of another resource. The new
+   * resource retains the security sensitivity and validity of the original
+   * resource: An invocation of {@link #isSensitive()} or {@link #isValid()} on
+   * the new resource will return the same result as the original resource.
+   *
+   * @param resource Resource with content to map. Not null.
+   *
+   * @param wrapFunction Function that maps content. Not null.
+   *
+   * @return Resource containing the mapped content, with the same security
+   * sensitivity and expiration as the original resource. Not null.
+   *
+   * @param <T> Class of original content
+   *
+   * @param <U> Class of mapped content
+   */
+  static <T,U> Resource<U> map(
+    Resource<T> resource,
+    Function<T,U> wrapFunction
+  ) {
+    return new WrappedResource<>(resource, wrapFunction);
   }
 
 }

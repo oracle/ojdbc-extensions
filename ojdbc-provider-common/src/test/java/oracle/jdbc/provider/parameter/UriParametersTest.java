@@ -40,6 +40,8 @@ package oracle.jdbc.provider.parameter;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -53,29 +55,80 @@ class UriParametersTest {
 
   @Test
   void preservesEncodedSeparatorsWithinValues() {
-    Map<String, String> values = UriParameters.parse(
-      "config-provider-name://config?value=/path%26mode%3Dstrict&tag=dev");
+    String query = "value=/path%26mode%3Dstrict&tag=dev";
 
-    assertEquals("/path&mode=strict", values.get("value"));
-    assertEquals("dev", values.get("tag"));
+    Map<String, String> parseUriResult =
+      UriParameters.parseUri("config-provider-name://config?" + query);
+    assertEquals("/path&mode=strict", parseUriResult.get("value"));
+    assertEquals("dev", parseUriResult.get("tag"));
+
+    Map<String, String> parseQueryResult =
+      UriParameters.parseQuery(query);
+    assertEquals("/path&mode=strict", parseQueryResult.get("value"));
+    assertEquals("dev", parseQueryResult.get("tag"));
+
+    Map<String, List<String>> parseMultiValueQueryResult =
+      UriParameters.parseMultiValueQuery(query);
+    assertEquals(
+      List.of("/path&mode=strict"),
+      parseMultiValueQueryResult.get("value"));
+    assertEquals(
+      List.of("dev"),
+      parseMultiValueQueryResult.get("tag"));
   }
 
   @Test
   void preservesEqualsWithinValues() {
-    Map<String, String> values = UriParameters.parse(
-      "config-provider-name://config?secret=abc=def&tag=dev");
+    String query = "secret=abc=def&tag=dev";
 
-    assertEquals("abc=def", values.get("secret"));
-    assertEquals("dev", values.get("tag"));
+    Map<String, String> parseUriResult =
+      UriParameters.parseUri("config-provider-name://config?" + query);
+    assertEquals("abc=def", parseUriResult.get("secret"));
+    assertEquals("dev", parseUriResult.get("tag"));
+
+    Map<String, String> parseQueryResult =
+      UriParameters.parseQuery(query);
+    assertEquals("abc=def", parseQueryResult.get("secret"));
+    assertEquals("dev", parseQueryResult.get("tag"));
+
+    Map<String, List<String>> parseMultiValueQueryResult =
+      UriParameters.parseMultiValueQuery(query);
+    assertEquals(
+      List.of("abc=def"),
+      parseMultiValueQueryResult.get("secret"));
+    assertEquals(
+      List.of("dev"),
+      parseMultiValueQueryResult.get("tag"));
   }
 
   @Test
   void rejectsDuplicateParameterNamesIgnoringCase() {
-    IllegalArgumentException exception = assertThrows(
-      IllegalArgumentException.class,
-      () -> UriParameters.parse(
-        "config-provider-name://config?mode=default&MODE=interactive"));
+    String query = "mode=default&MODE=interactive";
 
-    assertEquals("Duplicate parameter name: \"MODE\"", exception.getMessage());
+    IllegalArgumentException parseUriException = assertThrows(
+      IllegalArgumentException.class,
+      () -> UriParameters.parseUri(
+        "config-provider-name://config?" + query));
+    assertEquals(
+      "Duplicate parameter name: \"MODE\"", parseUriException.getMessage());
+
+    IllegalArgumentException parseQueryException = assertThrows(
+      IllegalArgumentException.class,
+      () -> UriParameters.parseQuery(query));
+    assertEquals(
+      "Duplicate parameter name: \"MODE\"", parseQueryException.getMessage());
+
+    // parseMultiValueQuery uses case-sensitive matching for the names.
+    // into a list.
+    assertEquals(
+      Map.of(
+        "mode", List.of("default"),
+        "MODE", List.of("interactive")),
+      UriParameters.parseMultiValueQuery(query));
+
+    // parseMultiValueQuery collects the values of duplicate names into a List
+    assertEquals(
+      Map.of("mode", List.of("default", "interactive")),
+      UriParameters.parseMultiValueQuery(query.toLowerCase(Locale.ROOT)));
   }
 }
