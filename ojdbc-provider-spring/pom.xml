@@ -84,12 +84,6 @@
     <dependency>
       <groupId>com.oracle.database.jdbc</groupId>
       <artifactId>ojdbc8</artifactId>
-      <!--
-      Override the parent's 23.26.2.0.0 dependency for the single-token
-      EndUserSecurityContext.createWithToken(CharSequence) factory introduced
-      in 23.26.4.0.0.
-      -->
-      <version>23.26.4.0.0</version>
     </dependency>
 
     <dependency>
