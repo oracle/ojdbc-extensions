@@ -62,7 +62,7 @@ public class VaultTokenAuthentication extends AbstractDedicatedVaultAuthenticati
   @Override
   public CachedToken generateToken(ParameterSet parameterSet) {
     String vaultToken = parameterSet.getRequired(VAULT_TOKEN);
-    return new CachedToken(OpaqueAccessToken.create(vaultToken.toCharArray(), null));
+    return new CachedToken(OpaqueAccessToken.create(vaultToken, null));
   }
 
   @Override
