@@ -221,8 +221,6 @@ public class JFREventFactory {
         return new XSNamespaceOps(traceContext, configuration);
       case XS_SET_SESSION_PARAMETER:
         return new XSSetSessionParameter(traceContext, configuration);
-      case XS_STATE_SYNC_OP:
-        return new XSStateSyncOp(traceContext, configuration);
       default:
         logger.warning("Unknown round trip received: " + traceContext.databaseFunction());
         return new RoundTripEvent(traceContext, configuration);
@@ -897,15 +895,6 @@ public class JFREventFactory {
   @Category({"Oracle JDBC", "Round trips"})
   static class XSSetSessionParameter extends RoundTripEvent{
     public XSSetSessionParameter(TraceContext traceContext, ObservabilityConfiguration configuration) {
-      super(traceContext, configuration);
-    }
-  }
-
-  @Name("oracle.jdbc.provider.observability.RoundTrip.XS_STATE_SYNC_OP")
-  @Label("XS State Sync OP")
-  @Category({"Oracle JDBC", "Round trips"})
-  static class XSStateSyncOp extends RoundTripEvent{
-    public XSStateSyncOp(TraceContext traceContext, ObservabilityConfiguration configuration) {
       super(traceContext, configuration);
     }
   }

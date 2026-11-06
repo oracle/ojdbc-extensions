@@ -42,7 +42,7 @@ classpath:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ucp-provider-observability</artifactId>
-  <version>1.1.0</version>
+  <version>1.1.1</version>
 </dependency>
 ```
 

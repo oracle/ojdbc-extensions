@@ -254,7 +254,7 @@ public abstract class AbstractDedicatedVaultAuthentication {
       long leaseDurationInSeconds = authObj.getLong(LEASE_DURATION_FIELD);
 
       OffsetDateTime expiration = OffsetDateTime.now().plusSeconds(leaseDurationInSeconds);
-      OpaqueAccessToken opaqueToken = OpaqueAccessToken.create(clientToken.toCharArray(), expiration);
+      OpaqueAccessToken opaqueToken = OpaqueAccessToken.create(clientToken, expiration);
 
       return new CachedToken(opaqueToken);
     } catch (Exception e) {

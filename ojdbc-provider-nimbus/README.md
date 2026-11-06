@@ -16,7 +16,7 @@ compatible with later JDK versions. The coordinates for the latest release are:
 <dependency>
   <groupId>com.oracle.database.jdbc</groupId>
   <artifactId>ojdbc-provider-nimbus</artifactId>
-  <version>1.1.0</version>
+  <version>1.1.1</version>
 </dependency>
 ```
 
@@ -34,14 +34,14 @@ credentials; it only prints the values you configure.
 The helper is launched from the provider jar with the `--setup` flag:
 
 ```bash
-java -jar ojdbc-provider-nimbus-1.1.0.jar --setup
+java -jar ojdbc-provider-nimbus-1.1.1.jar --setup
 ```
 
 Running the jar without `--setup` prints a short info banner (name,
 version, a one-line description, and a link to docs) and exits
 immediately, without reading from standard input.
 
-For direct `java -jar` execution, `ojdbc-provider-common-1.1.0.jar` must be
+For direct `java -jar` execution, `ojdbc-provider-common-1.1.1.jar` must be
 present in the same directory as this jar.
 
 ## Access Token Provider
