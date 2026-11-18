@@ -52,18 +52,6 @@
     <version>1.1.1</version>
   </parent>
 
-  <properties>
-    <!--
-      This child module overrides the Java version from the parent pom.xml,
-      which specifies 1.8 for the three properties below this comment. This
-      module instead uses Java 17, which is the version that Spring libraries
-      are compiled for.
-    -->
-    <maven.compiler.target>17</maven.compiler.target>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.release>17</maven.compiler.release>
-  </properties>
-
   <dependencyManagement>
     <dependencies>
       <dependency>
