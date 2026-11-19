@@ -70,6 +70,10 @@ import java.util.Properties;
  * <p>
  *   A provider of configuration from OCI Database Tools Connection.
  * </p>
+ * <p>
+ *   Supported key store types: SSO, PKCS12, PEM, Java KeyStore and Java
+ *   TrustStore. PKCS12 requires Oracle JDBC 23.26.4 or later.
+ * </p>
  */
 public class OciDatabaseToolsConnectionProvider
     implements OracleConfigurationCachableProvider {
@@ -178,7 +182,7 @@ public class OciDatabaseToolsConnectionProvider
 
       for (DatabaseToolsKeyStore keyStore : connection.getKeyStores()) {
         // Get the base64 content of the Wallet, which has a format of KeyStore,
-        // TrustStore, PKCS12, or SSO
+        // TrustStore, PKCS12, PEM, or SSO
         String base64KeyStoreContent =
           getSecret(keyStore.getKeyStoreContent())
             .getBase64Secret();
@@ -215,12 +219,14 @@ public class OciDatabaseToolsConnectionProvider
               .CONNECTION_PROPERTY_THIN_JAVAX_NET_SSL_TRUSTSTOREPASSWORD,
             String.valueOf(getSecret(keyStorePassword).toCharArray()));
           break;
-        case Pkcs12:
         case Sso:
           walletProps.put(
             OracleConnection.CONNECTION_PROPERTY_WALLET_LOCATION,
             "data:;base64," + base64KeyStoreContent);
           break;
+        // PKCS12 and PEM wallets are configured the same way: the wallet as a
+        // data URI, plus its password.
+        case Pkcs12:
         case Pem:
           walletProps.put(
             OracleConnection.CONNECTION_PROPERTY_WALLET_LOCATION,
