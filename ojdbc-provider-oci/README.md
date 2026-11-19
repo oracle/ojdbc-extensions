@@ -127,6 +127,13 @@ jdbc:oracle:thin:@config-ocidbtools://ocid1.databasetoolsconnection.oc1.phx.ama.
 Provider can now support Database Tools Connections with Proxy Authentication,
 only if username is provided in Proxy Authentication Info, without the password and roles.
 
+The key stores of a Database Tools Connection can be of type SSO, PKCS12, PEM,
+Java KeyStore or Java TrustStore. For PKCS12 and PEM key stores, the key store
+password is passed to the driver as the `oracle.net.wallet_password` property.
+A PKCS12 key store requires Oracle JDBC driver version 23.26.4 or later, and
+may also need the Oracle PKI provider, as described in
+[Wallet_location JSON Object](#wallet_location-json-object).
+
 ## OCI Object Storage Config Provider
 The Oracle Data Source uses a new prefix `jdbc:oracle:thin:@config-ociobject://` to be able to identify that the configuration parameters should be loaded using OCI Object Storage. Users only need to indicate the URL Path of the Object containing the configuration payload using the following syntax, where option-value pairs separated by `&` are optional authentication parameters that vary by provider:
 
@@ -233,28 +240,32 @@ For the JSON type of provider (OCI Object Storage, HTTPS, File) the password is 
 
 ### Wallet_location JSON Object
 
-The "oracle.net.wallet_location" connection property is not allowed in the "jdbc" object due to security reasons. Instead, users should use the "wallet_location" object to specify the wallet in the configuration.
+The `oracle.net.wallet_location` connection property is not allowed in the `jdbc` object due to security reasons. Instead, users should use the `wallet_location` object to specify the wallet in the configuration.
 
-For the JSON type of provider (OCI Object Storage, HTTPS, File) the wallet_location is an object itself with the same spec as the [password JSON object](#password-json-object) mentioned above.
+For the JSON type of provider (OCI Object Storage, HTTPS, File) the `wallet_location` is an object itself with the same spec as the [password JSON object](#password-json-object) mentioned above.
 
-The value stored in the secret should be the Base64 representation of a supported wallet file. This is equivalent to setting the "oracle.net.wallet_location" connection property in a regular JDBC application using the following format:
+The value stored in the secret should be the Base64 representation of a supported wallet file. This is equivalent to setting the `oracle.net.wallet_location` connection property in a regular JDBC application using the following format:
 
 ```
 data:;base64,<Base64 representation of the wallet file>
 ```
 
 #### Supported formats:
-- `cwallet.sso` (SSO Wallet)
-- `ewallet.pem`(PEM Wallet)
+- `cwallet.sso` (SSO wallet)
+- `ewallet.pem` (PEM wallet)
+- `ewallet.p12` (PKCS12 wallet), requires Oracle JDBC driver version 23.26.4 or later
 
-If the PEM wallet is encrypted, you must also set the wallet password using the `oracle.net.wallet_password` property.
-This property should be included inside the "jdbc" object of the JSON payload.
+A wallet password must be set using the `oracle.net.wallet_password` property for a PKCS12 wallet and for an encrypted PEM wallet.
+This property should be included inside the jdbc object of the JSON payload:
 
 ```
 "jdbc": {
   "oracle.net.wallet_password": "<your-password>"
 }
 ```
+
+<i>*Note: For an `ewallet.p12` wallet, you may need to register the Oracle PKI provider (from the `oraclepki` library) before connecting:
+`Security.insertProviderAt(new oracle.security.pki.OraclePKIProvider(), 1)`.</i>
 
 <i>*Note: When storing a wallet as a secret in OCI Vault, choose the Plain-Text secret type template instead of Base64 to prevent double decoding when the provider retrieves the value.</i> 
 

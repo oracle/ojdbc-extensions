@@ -476,8 +476,9 @@ data:;base64,<Base64 representation of the wallet file>
 #### Supported formats
 - `cwallet.sso` (SSO wallet)
 - `ewallet.pem` (PEM wallet)
+- `ewallet.p12` (PKCS12 wallet), requires Oracle JDBC driver version 23.26.4 or later
 
-If the PEM wallet is encrypted, you must also set the wallet password using the `oracle.net.wallet_password` property.
+A wallet password must be set using the `oracle.net.wallet_password` property for a PKCS12 wallet and for an encrypted PEM wallet.
 This property should be included inside the jdbc object of the JSON payload:
 
 ```
@@ -485,6 +486,9 @@ This property should be included inside the jdbc object of the JSON payload:
   "oracle.net.wallet_password": "<your-password>"
 }
 ```
+
+<i>*Note: For an `ewallet.p12` wallet, you may need to register the Oracle PKI provider (from the `oraclepki` library) before connecting:
+`Security.insertProviderAt(new oracle.security.pki.OraclePKIProvider(), 1)`.</i>
 
 <i>*Note: When storing a wallet in HCP Vault Dedicated, store the raw Base64-encoded wallet bytes directly. The provider will automatically detect and handle the encoding correctly.</i>
 
